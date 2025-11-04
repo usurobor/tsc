@@ -1,6 +1,6 @@
 # C≡ (Coherence Calculus, C-Calculus)
 
-**Version:** 2.2.2 (Braided Algebra)\
+**Version:** 2.2.0 (Braided Algebra)\
 **Status:** Normative (Axiomatic Semantics)
 
 C≡ is a minimal language whose sole semantic object is the unitary process of **cohering ($\\mathbf{C}$)**. It provides the formal ground for TSC's ontology: **there is only $\\mathbf{C}$; everything else is articulation of $\\mathbf{C}$.**
@@ -139,9 +139,9 @@ ______________________________________________________________________
 **See also:**
 
 - **C≡ Kernel** (c-equiv-kernel.md) — intuitive bootstrap and measurement bridge
-- **Core v2.2.2** (tsc-core.md) — measurement calculus grounded in C≡
-- **Operational v2.2.2** (tsc-oper.md) — witness protocols and policy
+- **Core v2.2.0** (tsc-core.md) — measurement calculus grounded in C≡
+- **Operational v2.2.0** (tsc-oper.md) — witness protocols and policy
 
 ______________________________________________________________________
 
-**End — C≡ v2.2.2 (Normative Semantics).**
+**End — C≡ v2.2.0 (Normative Semantics).**

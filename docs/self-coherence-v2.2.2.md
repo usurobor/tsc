@@ -1,8 +1,8 @@
-# Self-Coherence Report v2.2.2
+# Self-Coherence Report v2.2.0
 
 **Status:** In Progress
 
-As required by Operational §12, this report will document the self-application measurement of TSC v2.2.2.
+As required by Operational §12, this report will document the self-application measurement of TSC v2.2.0.
 
 ## Expected Results
 
@@ -22,6 +22,6 @@ Full detailed report coming soon.
 
 ______________________________________________________________________
 
-**Version:** 2.2.2\
+**Version:** 2.2.0\
 **Date:** 2025-11-04\
 **Status:** ✅ PASS

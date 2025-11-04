@@ -2,7 +2,7 @@ cff-version: 1.2.0
 title: "TSC Framework"
 message: "If you use this repository, please cite it using the metadata below."
 type: software
-version: "2.2.2"
+version: "2.2.0"
 date-released: "2025-11-04"
 repository-code: "https://github.com/usurobor/tsc"
 url: "https://github.com/usurobor/tsc"

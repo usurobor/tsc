@@ -1,8 +1,8 @@
 # C≡ Kernel — Foundational Bootstrap & Working Notes
 
-**Version:** 2.0.0 (corresponds to TSC v2.2.2)\
+**Version:** 2.0.0 (corresponds to TSC v2.2.0)\
 **Status:** Kernel (normative bootstrap) + Annex (informative-but-binding)\
-**Dependency:** Informal bridge to C≡ v2.2.2, Core v2.2.2, Operational v2.2.2
+**Dependency:** Informal bridge to C≡ v2.2.0, Core v2.2.0, Operational v2.2.0
 
 ______________________________________________________________________
 
@@ -140,7 +140,7 @@ Operational runs a small state machine—OPTIMIZE, REINFLATE, MINIMAL_INFO, LOCK
 - Context contracts, seeds, sampler indices
 - Summary schemas/hashes; solver configs ($\\varepsilon$, costs, priors, iters)
 - Ensemble statistics: $\\overline{Coh}\_{ab}$, variance; witnesses; H_c, V_c, D_c (equivalently α_c, β_c, γ_c), C_Σ with CI
-- **Unit types:** When composing processes ($x \\odot_a y$), log which axis $a \\in {H,V,D}$ (or ${\\alpha,\\beta,\\gamma}$) was used, enabling audit of typed unit usage ($1_H, 1_V, 1_D$ or $1\_\\alpha, 1\_\\beta, 1\_\\gamma$). See C≡ v2.2.2 §1.3.
+- **Unit types:** When composing processes ($x \\odot_a y$), log which axis $a \\in {H,V,D}$ (or ${\\alpha,\\beta,\\gamma}$) was used, enabling audit of typed unit usage ($1_H, 1_V, 1_D$ or $1\_\\alpha, 1\_\\beta, 1\_\\gamma$). See C≡ v2.2.0 §1.3.
 
 This is sufficient for third parties to recompute the verdict. See Operational §7 for full provenance requirements.
 
@@ -154,10 +154,10 @@ ______________________________________________________________________
 
 **See also:**
 
-- **C≡ v2.2.2** (c-equiv.md) — full axiomatic foundation
-- **Core v2.2.2** (tsc-core.md) — measurement calculus
-- **Operational v2.2.2** (tsc-oper.md) — protocol and policy
-- **Glossary v2.2.2** (tsc-glossary.md) — multi-audience terminology with H/V/D ↔ α/β/γ mappings
+- **C≡ v2.2.0** (c-equiv.md) — full axiomatic foundation
+- **Core v2.2.0** (tsc-core.md) — measurement calculus
+- **Operational v2.2.0** (tsc-oper.md) — protocol and policy
+- **Glossary v2.2.0** (tsc-glossary.md) — multi-audience terminology with H/V/D ↔ α/β/γ mappings
 
 ______________________________________________________________________
 

@@ -1,10 +1,10 @@
-# TSC Core v2.2.2 - Complete Final Version
+# TSC Core v2.2.0 - Complete Final Version
 
 # Triadic Self-Coherence (TSC) — Core
 
-**Version:** 2.2.2 (Braided Algebra Integration)
+**Version:** 2.2.0 (Braided Algebra Integration)
 **Status:** Normative (measurement calculus)
-**Dependency:** This document depends on **C≡ v2.2.2** (C-Calculus).
+**Dependency:** This document depends on **C≡ v2.2.0** (C-Calculus).
 
 ______________________________________________________________________
 
@@ -390,4 +390,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**End — TSC Core v2.2.2 (Normative Measurement Calculus).**
+**End — TSC Core v2.2.0 (Normative Measurement Calculus).**

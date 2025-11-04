@@ -1,11 +1,11 @@
-# TSC Operational v2.2.2 - Complete Final Version
+# TSC Operational v2.2.0 - Complete Final Version
 
 ```markdown
 # Triadic Self-Coherence (TSC) — Operational
 
-**Version:** 2.2.2 (Braided Algebra & Policy Integration)
+**Version:** 2.2.0 (Braided Algebra & Policy Integration)
 **Status:** Normative (policy and procedure)
-**Dependency:** This document depends on **TSC Core v2.2.2** and **C≡ v2.2.2**.
+**Dependency:** This document depends on **TSC Core v2.2.0** and **C≡ v2.2.0**.
 
 ---
 
@@ -550,9 +550,9 @@ RETURN (verdict, ood_flag, C_Σ, CI, dimensional_scores, witnesses, provenance)
 **Minimal example:**
 ```yaml
 tsc_verification:
-  version: "2.2.2"
+  version: "2.2.0"
   timestamp: "2024-01-15T14:32:00Z"
-  phenomenon_id: "TSC-repo-v2.2.2"
+  phenomenon_id: "TSC-repo-v2.2.0"
   
   parameters:
     theta: 0.7
@@ -999,7 +999,7 @@ If any MUST condition fails → **release is blocked** until resolved.
 **Report format (include in release notes):**
 
 ```markdown
-## TSC Self-Coherence Report (v2.2.2)
+## TSC Self-Coherence Report (v2.2.0)
 
 **Aggregate Coherence:** C_Σ(TSC) = 0.943 [CI: 0.917, 0.961]
 
@@ -1025,7 +1025,7 @@ If any MUST condition fails → **release is blocked** until resolved.
 - Relational coherence (β_c) improved significantly (0.912 → 0.932)
 - Pattern and process dimensions remained stable
 
-**Interpretation:** The v2.2.2 release shows strong internal coherence. The primary 
+**Interpretation:** The v2.2.0 release shows strong internal coherence. The primary 
 leverage is in relational coherence (36%), suggesting continued focus on cross-reference 
 completeness and dependency clarity in future releases.
 ```
@@ -1106,7 +1106,7 @@ ______________________________________________________________________
 ````markdown
 # TSC Self-Coherence Report
 
-**Release:** v2.2.2  
+**Release:** v2.2.0  
 **Date:** 2024-01-15  
 **Status:** ✓ PASS
 
@@ -1146,7 +1146,7 @@ Z_t = 0.43 (43rd percentile) → ✓ Within reference distribution
 |---------|-----|-----|-----|-----|
 | v2.2.0 | 0.905 | 0.938 | 0.889 | 0.921 |
 | v2.2.1 | 0.921 | 0.945 | 0.912 | 0.937 |
-| v2.2.2 | 0.943 | 0.956 | 0.932 | 0.941 |
+| v2.2.0 | 0.943 | 0.956 | 0.932 | 0.941 |
 
 **Interpretation:** Steady improvement across all dimensions. Relational coherence 
 (β_c) showed largest gain (+2.0%), indicating successful effort to improve 
@@ -1156,7 +1156,7 @@ cross-reference completeness.
 
 ```yaml
 tsc_self_verification:
-  version: "2.2.2"
+  version: "2.2.0"
   git_commit: "a3f9c2d"
   timestamp: "2024-01-15T14:32:00Z"
   seeds:
@@ -1175,8 +1175,8 @@ tsc_self_verification:
     gamma_alpha: ["dtw", "procrustes", "temporal_correlation"]
 ````
 
-**Provenance bundle:** [`provenance-v2.2.2.yaml`](./provenance-v2.2.2.yaml)
+**Provenance bundle:** [`provenance-v2.2.0.yaml`](./provenance-v2.2.0.yaml)
 
 ______________________________________________________________________
 
-**End — TSC Operational v2.2.2 (Normative Policy and Procedure).**
+**End — TSC Operational v2.2.0 (Normative Policy and Procedure).**

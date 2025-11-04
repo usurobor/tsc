@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [v2.2.2] – 2025-11-04
+## [v2.2.0] – 2025-11-04
 **Status:** Braided Algebra Integration & Python 3.10+ Upgrade
 
 ### Breaking Changes
@@ -51,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Examples serve as **specifications** showing expected C_Σ (not measurements yet)
 
 ### Notes
-- Tag v2.2.2 includes examples and test fixes
+- Tag v2.2.0 includes examples and test fixes
 - All conformance tests passing (5 examples × 3 tests + 1 glider test = 16 total)
 - Self-coherence measurement deferred to v2.3.0 (no fabricated numbers)
 
@@ -130,4 +130,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **v1.2.x** (Sep-Oct 2025): Operational layer evolution
 - **v2.0.0** (Oct 29, 2025): C≡-native rewrite (breaking)
 - **v2.1.0** (Oct 30, 2025): Progressive disclosure & tooling
-- **v2.2.2** (Nov 4, 2025): Braided algebra + Python 3.10+ upgrade
+- **v2.2.0** (Nov 4, 2025): Braided algebra + Python 3.10+ upgrade

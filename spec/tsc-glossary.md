@@ -1,8 +1,8 @@
-# TSC Glossary v2.2.2
+# TSC Glossary v2.2.0
 
-**Version:** 2.2.2 (Braided Algebra)
+**Version:** 2.2.0 (Braided Algebra)
 **Status:** Informative (multi-audience terminology reference)
-**Corresponds to:** C≡ v2.2.2, Core v2.2.2, Operational v2.2.2
+**Corresponds to:** C≡ v2.2.0, Core v2.2.0, Operational v2.2.0
 
 ______________________________________________________________________
 
@@ -36,7 +36,7 @@ ______________________________________________________________________
 
 **Intuition:** "Cohering" is whatever keeps a system **recognizably that thing** over time, despite constant internal change. We measure whether our three structural views fit together as descriptions of this one happening.
 
-**Math:** The unique structure (up to isomorphism) satisfying axioms C1-C6. Formally: a duoidal-style triple of braided monoids on carrier set $D$, with designated element $\\mathbf{C} \\in D$ such that $\\mathbf{C}^{I}\_{a}(\\mathbf{C}, \\mathbf{C}) = \\mathbf{C}$ for all axes $a$. See C≡ v2.2.2 $\\S 0-3$.
+**Math:** The unique structure (up to isomorphism) satisfying axioms C1-C6. Formally: a duoidal-style triple of braided monoids on carrier set $D$, with designated element $\\mathbf{C} \\in D$ such that $\\mathbf{C}^{I}\_{a}(\\mathbf{C}, \\mathbf{C}) = \\mathbf{C}$ for all axes $a$. See C≡ v2.2.0 $\\S 0-3$.
 
 **Philosophy:** Not a substance, property, or relation—a **process**. The framework is validated by **self-application** (empirically testing $\\mathbf{C}\_{\\Sigma}(\\text{TSC})$).
 
@@ -274,10 +274,10 @@ ______________________________________________________________________
 ## See Also
 
 - **C≡ Kernel v2.0.0** — Intuitive bootstrap (focus on Intuition + Philosophy levels)
-- **C≡ v2.2.2** — Axiomatic foundation (focus on Math level)
-- **Core v2.2.2** — Measurement calculus (focus on Math + Engineering levels)
-- **Operational v2.2.2** — Protocol and policy (focus on Engineering level)
+- **C≡ v2.2.0** — Axiomatic foundation (focus on Math level)
+- **Core v2.2.0** — Measurement calculus (focus on Math + Engineering levels)
+- **Operational v2.2.0** — Protocol and policy (focus on Engineering level)
 
 ______________________________________________________________________
 
-**End — TSC Glossary v2.2.2 (Multi-Audience Terminology Reference).**
+**End — TSC Glossary v2.2.0 (Multi-Audience Terminology Reference).**

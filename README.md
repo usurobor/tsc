@@ -248,14 +248,14 @@ ______________________________________________________________________
 
 TSC is defined by four normative documents:
 
-1. **[C≡ v2.2.2](spec/c-equiv.md)** — Axiomatic foundation (braided monoidal structure)
-1. **[Core v2.2.2](spec/tsc-core.md)** — Measurement calculus (how to compute C_Σ)
-1. **[Operational v2.2.2](spec/tsc-oper.md)** — Protocol and policy (how to run measurements)
-1. **[Glossary v2.2.2](spec/tsc-glossary.md)** — Multi-audience terminology reference
+1. **[C≡ v2.2.0](spec/c-equiv.md)** — Axiomatic foundation (braided monoidal structure)
+1. **[Core v2.2.0](spec/tsc-core.md)** — Measurement calculus (how to compute C_Σ)
+1. **[Operational v2.2.0](spec/tsc-oper.md)** — Protocol and policy (how to run measurements)
+1. **[Glossary v2.2.0](spec/tsc-glossary.md)** — Multi-audience terminology reference
 
 **Bootstrap:** Start with [C≡ Kernel v2.0.0](spec/c-equiv-kernel.md) for intuitive intro.
 
-### Self-Coherence Results (v2.2.2)
+### Self-Coherence Results (v2.2.0)
 
 As required by Operational §12, every release must report self-application:
 
@@ -269,9 +269,9 @@ As required by Operational §12, every release must report self-application:
 | S₃ (axis perm)   | All within CI | -         | ✅ PASS |
 | ρ (role gauge)   | All within CI | -         | ✅ PASS |
 
-**Interpretation:** The v2.2.2 specification is self-consistent under its own measurement standards.
+**Interpretation:** The v2.2.0 specification is self-consistent under its own measurement standards.
 
-[Full self-coherence report →](docs/self-coherence-v2.2.2.md)
+[Full self-coherence report →](docs/self-coherence-v2.2.0.md)
 
 ### Key Mathematical Properties
 
@@ -424,14 +424,14 @@ ______________________________________________________________________
 ### Normative Documents (Must Read)
 
 1. **[C≡ Kernel v2.0.0](spec/c-equiv-kernel.md)** — Intuitive bootstrap (start here)
-1. **[C≡ v2.2.2](spec/c-equiv.md)** — Axiomatic foundation (6 axioms)
-1. **[Core v2.2.2](spec/tsc-core.md)** — Measurement calculus (formulas)
-1. **[Operational v2.2.2](spec/tsc-oper.md)** — Protocol and policy (procedures)
+1. **[C≡ v2.2.0](spec/c-equiv.md)** — Axiomatic foundation (6 axioms)
+1. **[Core v2.2.0](spec/tsc-core.md)** — Measurement calculus (formulas)
+1. **[Operational v2.2.0](spec/tsc-oper.md)** — Protocol and policy (procedures)
 
 ### Reference Documents (As Needed)
 
-1. **[Glossary v2.2.2](spec/tsc-glossary.md)** — Multi-audience terminology
-1. **[Self-Coherence Report v2.2.2](docs/self-coherence-v2.2.2.md)** — Release validation
+1. **[Glossary v2.2.0](spec/tsc-glossary.md)** — Multi-audience terminology
+1. **[Self-Coherence Report v2.2.0](docs/self-coherence-v2.2.0.md)** — Release validation
 
 ### Document Dependency Graph
 
@@ -533,7 +533,7 @@ If you use TSC in research, please cite:
   title = {TSC: Triadic Self-Coherence Framework},
   author = {Peter Lisovin},
   year = {2025},
-  version = {2.2.2},
+  version = {2.2.0},
   url = {https://github.com/usurobor/tsc}
 }
 ```
@@ -548,4 +548,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**End — TSC v2.2.2 README**
+**End — TSC v2.2.0 README**
