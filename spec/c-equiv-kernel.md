@@ -21,11 +21,16 @@ It is short on purpose: humans can read this and *use* the system.
 - **Symbol:** `≡` means *cohering* — the holding‑together that keeps happening.
 
 - **Triadic articulation:** the same `≡` is *co‑labeled* three ways during measurement:
-  - **α** — pattern stability (what holds)
-  - **β** — relational coherence (how parts fit)
-  - **γ** — process stability (how it unfolds)
+  - **H (Horizontal)** / Cohered / Pattern (α) — snapshot stability across space (what holds)
+  - **V (Vertical)** / Coherer / Relation (β) — how parts stand together (what fits)
+  - **D (Deep)** / Cohering / Process (γ) — stability across time (what unfolds)
 
-These are **labels of one happening**, not three separate spaces. Your verifier later checks whether the three descriptions fit one thing. (Core keeps the math; Operational runs the protocol.)
+**Why three naming systems?**
+- **Geometric (H/V/D):** Enforces co-equality, dissolves dimensional confusion (no hierarchy)
+- **Role (Cohered/Coherer/Cohering):** Philosophical framing (non-hierarchical stance)
+- **Math (α/β/γ):** Technical formulas and computations
+
+These are **labels of one happening**, not three separate spaces. The geometric labels prevent the intuitive bias that might place Process above Pattern—a bias that would violate S₃ symmetry (role interchangeability). Your verifier later checks whether the three descriptions fit one thing. (Core keeps the math; Operational runs the protocol.)
 
 ### 2) Two Rules (The Whole Logic)
 
@@ -34,19 +39,19 @@ These are **labels of one happening**, not three separate spaces. Your verifier 
   (We never get paradox by iterating "≡"; self‑application stabilizes.)
 
 - **Role symmetry (S₃‑symmetry):**  
-  If you permute the labels α/β/γ, the *situation* stays the same.  
+  If you permute the labels H/V/D (or α/β/γ), the *situation* stays the same.  
   (Our math and decisions must not depend on which label we used.)
 
 ### 3) What We Actually Measure
 
-1. **Make observations** in each axis (α,β,γ) → **summaries** (geometry + distributions).
+1. **Make observations** in each axis (H/V/D or α/β/γ) → **summaries** (geometry + distributions).
 2. **Compare** summaries pairwise by **alignments** (an ensemble of correspondence solvers).  
    The comparison returns a **coherence score** in [0,1].
 3. Reduce to three dimension scores and an aggregate:
-   - **α_c** — stability of α across repeats
-   - **β_c** — cross-axis fit from the pairwise ensemble
-   - **γ_c** — dynamical stability
-   - **C_Σ = (α_c · β_c · γ_c)^(1/3)** — overall coherence (with CI)
+   - **H_c (α_c)** — stability of H-axis (pattern) across repeats
+   - **V_c (β_c)** — cross-axis fit from the pairwise ensemble (relation)
+   - **D_c (γ_c)** — dynamical stability (process)
+   - **C_Σ = (H_c · V_c · D_c)^(1/3) = (α_c · β_c · γ_c)^(1/3)** — overall coherence (with CI)
 
 4. **Verdict & governance:** confidence intervals, witness floors (variance/entropy/Lipschitz), and OOD gate drive PASS/FAIL and controller state.
 
@@ -55,7 +60,7 @@ These are **labels of one happening**, not three separate spaces. Your verifier 
 ### 4) Why This Matters (And Composes)
 
 - **Reality‑agnostic:** We don't posit inner images or hidden spaces. We compare **articulations** of one happening.
-- **Reproducible:** Runs ship a provenance bundle so anyone can recompute α_c, β_c, γ_c, C_Σ.
+- **Reproducible:** Runs ship a provenance bundle so anyone can recompute H_c, V_c, D_c, C_Σ (equivalently: α_c, β_c, γ_c, C_Σ).
 - **Compositional:** Coherent pieces tend to stay coherent when combined (log‑concave behavior under aligned product).
 
 ### 5) What This Kernel Is **Not**
@@ -79,7 +84,7 @@ how "co‑labels of one happening" are compared **without** reintroducing repres
 
 - **Happening:** `≡` (cohering).
 
-- **Articulation operators:** for each axis $a\in\{\alpha,\beta,\gamma\}$, an **articulation** produces observations $O_a = A_a(≡) \subseteq \Omega_a$ ("observe in context Ω_a"). Core §0 defines these formally.
+- **Articulation operators:** for each axis $a\in\{H,V,D\}$ (equivalently $\{\alpha,\beta,\gamma\}$), an **articulation** produces observations $O_a = A_a(≡) \subseteq \Omega_a$ ("observe in context Ω_a"). Core §0 defines these formally.
 
 - **Summary:** $S_a = (d_a, p_a, \mathcal{H}_a, \mathcal{I}_a)$ — geometry, distributions, entropy, invariants. See Core §0 for full specification.
 
@@ -91,10 +96,16 @@ how "co‑labels of one happening" are compared **without** reintroducing repres
 
 ### B. The Three Scores and the Aggregate (Core Handshake)
 
-- **α_c** — within‑axis stability (repeat the α articulation and compare). See Core §3.1.
-- **β_c** — geometric mean of pairwise ensemble coherences across (α,β), (β,γ), (γ,α). See Core §3.3.
-- **γ_c** — dynamical stability (e.g., Wasserstein between successive summary distributions). See Core §3.2.
-- **Aggregate:** $C_Σ = (α_c \cdot β_c \cdot γ_c)^{1/3}$ with **95% CI**. See Core §4.
+**Notation:** We use both naming systems interchangeably:
+- **H_c ≡ α_c** (pattern stability)
+- **V_c ≡ β_c** (relational coherence)
+- **D_c ≡ γ_c** (process stability)
+
+**Definitions:**
+- **H_c (α_c)** — within‑axis stability (repeat the H-axis articulation and compare). See Core §3.1.
+- **V_c (β_c)** — geometric mean of pairwise ensemble coherences across (H,V), (V,D), (D,H) or equivalently (α,β), (β,γ), (γ,α). See Core §3.3.
+- **D_c (γ_c)** — dynamical stability (e.g., Wasserstein between successive summary distributions). See Core §3.2.
+- **Aggregate:** $C_Σ = (H_c \cdot V_c \cdot D_c)^{1/3} = (α_c \cdot β_c \cdot γ_c)^{1/3}$ with **95% CI**. See Core §4.
 
 - **Witnesses & OOD:** ensemble variance must be under floor; entropy/Lipschitz/sample floors apply; track stability statistic $Z_t$ vs $Z_{crit}$. Operational governs PASS/FAIL/DEGENERATE and controller transitions.
 
@@ -118,8 +129,8 @@ Operational runs a small state machine—OPTIMIZE, REINFLATE, MINIMAL_INFO, LOCK
 
 - Context contracts, seeds, sampler indices
 - Summary schemas/hashes; solver configs ($\varepsilon$, costs, priors, iters)
-- Ensemble statistics: $\overline{Coh}_{ab}$, variance; witnesses; α_c, β_c, γ_c, C_Σ with CI
-- **Unit types:** When composing processes ($x \odot_a y$), log which axis $a \in \{\alpha,\beta,\gamma\}$ was used, enabling audit of typed unit usage ($1_\alpha, 1_\beta, 1_\gamma$). See C≡ v2.2.2 §1.3.
+- Ensemble statistics: $\overline{Coh}_{ab}$, variance; witnesses; H_c, V_c, D_c (equivalently α_c, β_c, γ_c), C_Σ with CI
+- **Unit types:** When composing processes ($x \odot_a y$), log which axis $a \in \{H,V,D\}$ (or $\{\alpha,\beta,\gamma\}$) was used, enabling audit of typed unit usage ($1_H, 1_V, 1_D$ or $1_\alpha, 1_\beta, 1_\gamma$). See C≡ v2.2.2 §1.3.
 
 This is sufficient for third parties to recompute the verdict. See Operational §7 for full provenance requirements.
 
@@ -127,12 +138,15 @@ This is sufficient for third parties to recompute the verdict. See Operational �
 
 C≡ asserts *labels of one happening*, not inner images. Core is a **measurement calculus**; Operational is **policy**. That's the whole stack.
 
+The geometric labels (H/V/D) enforce co-equality and prevent dimensional confusion. The role names (Cohered/Coherer/Cohering) provide philosophical framing. The mathematical notation (α/β/γ) enables precise computation. All three systems work together to maintain the framework's non-hierarchical, dimensional integrity.
+
 ---
 
 **See also:**
 - **C≡ v2.2.2** (c-equiv.md) — full axiomatic foundation
 - **Core v2.2.2** (tsc-core.md) — measurement calculus
 - **Operational v2.2.2** (tsc-oper.md) — protocol and policy
+- **Glossary v2.2.2** (tsc-glossary.md) — multi-audience terminology with H/V/D ↔ α/β/γ mappings
 
 ---
 
