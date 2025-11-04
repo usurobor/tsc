@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsc-framework"
-version = "2.1.0"
+version = "2.2.2"
 description = "Triadic Self-Coherence (TSC) reference CLI and conformance tests"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -24,7 +24,8 @@ dev = [
   "pytest>=8.2.0",
   "ruff>=0.6.9",
   "mdformat>=0.7.17",
-  "mdformat-gfm>=0.3.5"
+  "mdformat-gfm>=0.3.5",
+  "mypy>=1.8.0",
 ]
 
 [project.scripts]

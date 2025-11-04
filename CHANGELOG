@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v2.2.2] – 2025-11-04
+**Status:** Braided Algebra Integration & Python 3.10+ Upgrade
+
+### Breaking Changes
+- **Requires Python 3.10+** for structural pattern matching
+- Controller API changed: `verify_tsc_plus()` now returns `VerifyResult` dataclass (was 5-tuple)
+
+### Added
+- **Pattern matching** in controller (`transition()` and `interpret()` functions)
+- **Named result type** (`VerifyResult` dataclass) replacing 5-tuple return
+- **Philosophical examples** with expected C_Σ values:
+  - `examples/philosophical/emergence.md` (Boids: C_Σ ≈ 0.88 ± 0.05)
+  - `examples/philosophical/free-will.md` (Two-stage choice: C_Σ ≈ 0.76 ± 0.07)
+  - `examples/philosophical/consciousness.md` (Masked perception: C_Σ ≈ 0.92)
+- **Enhanced Makefile** with new targets:
+  - `typecheck` - mypy type checking
+  - `self-coherence` - placeholder for v2.3.0 self-application
+  - `all` - CI simulation (lint + typecheck + test)
+  - `clean` - remove cache files
+- **mypy** to dev dependencies for type checking
+
+### Changed
+- **Controller refactored** to use Python 3.10+ features:
+  - Structural pattern matching replaces isinstance chains
+  - Fixed mutable default arguments with `default_factory`
+  - Preserved functional programming principles
+- **Import organization** updated to use `collections.abc` (Python 3.10+ convention)
+- **Makefile `fmt` target** now auto-fixes lint issues
+- **Markdown formatting** standardized across all `.md` files
+
+### Fixed
+- **Conformance tests** updated to use `tsc_yaml_v2` parser with threshold 0.3
+- **Import sorting** and formatting issues resolved
+- **Test fixtures** for philosophical examples (16/16 tests passing)
+
+### Documentation
+- **Self-coherence status:** PENDING (deferred to v2.3.0)
+- **Three naming systems clarified** as co-equal (not legacy):
+  - H/V/D (Horizontal/Vertical/Deep) - geometric labels
+  - Cohered/Coherer/Cohering - philosophical roles
+  - α/β/γ (alpha/beta/gamma) - mathematical notation
+- Examples serve as **specifications** showing expected C_Σ (not measurements yet)
+
+### Notes
+- Tag v2.2.2 includes examples and test fixes
+- All conformance tests passing (5 examples × 3 tests + 1 glider test = 16 total)
+- Self-coherence measurement deferred to v2.3.0 (no fabricated numbers)
+
+---
+
 ## [v2.1.0] – 2025-10-30
 **Status:** Progressive Disclosure & Tooling
 
@@ -74,138 +124,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [v1.2.9] – 2025-10-28
-**Status:** Stable / Final Consolidation
-
-### Changed
-- Consolidated all v1.2.x logic into unified specification
-- Standardized file naming to `tsc-core` / `tsc-operational`
-- Retired global cadence in favor of per-agent cadence \(K_i\)
-
-### Added
-- Compliance schema and audit checklist
-- Observability schema (YAML format)
-
-### Fixed
-- No new mechanics introduced (consolidation only)
-
----
-
-## [v1.2.8] – 2025-10-20
-**Status:** Hardened Verification & Onboarding
-
-### Added
-- **Verification Sampling Policy** \(π_{verify}\) for adversarial verification
-- **J_cost** = information rate + verification cost
-- **HANDSHAKE** state for new-agent onboarding
-- Secured distributed trust initialization (α_i = 0)
-
-### Changed
-- Expanded "Simplify" actions to cover verification cost optimization
-
----
-
-## [v1.2.7] – 2025-10-15
-**Status:** Full Control Formalization
-
-### Added
-- **LOCKDOWN** state for OOD isolation
-- **τ-budget** as managed controller resource
-- Fixed decision threshold at 0.80 (removed adaptive θ_t)
-
-### Changed
-- Unified sensitivity tuning under meta-controller \(R_{meta}\)
-- Linked distributed agents axiomatically to core composition law
-
----
-
-## [v1.2.6] – 2025-10-10
-**Status:** Meta-Stability & Distributed Dynamics
-
-### Added
-- Hysteresis to prevent controller state oscillation
-- Formal \(I(C)\) information definition
-- Programmatic "Simplify" action
-- Distributed cadence \(K_i\) tied to trust α_i
-
----
-
-## [v1.2.5] – 2025-10-06
-**Status:** Adaptive Dynamics & Minimal-Information Control
-
-### Added
-- `STATE_MINIMAL_INFO` for resource-constrained operation
-
-### Changed
-- Made `REINFLATE` objective adaptive with dynamic witness weights
-- Introduced uncertainty-gated cadence \(K\)
-- Replaced "H-first fallback" with minimal-information state
-- Clarified meta-controller as preconditioner for Φ_info optimization
-
----
-
-## [v1.2.4] – 2025-10-02
-**Status:** Info-Theoretic Control & Isometry
-
-### Added
-- Information-theoretic Lyapunov candidate Φ_info
-- Gauge-isometry objective to \(R_{meta}\)
-- Formal `STATE_REINFLATE` safe mode
-
-### Changed
-- Hardened D_c metric against collapse via entropy/variance floors
-
----
-
-## [v1.2.3] – 2025-09-29
-**Status:** Hardened Witnesses & Meta-Gauging
-
-### Added
-- Entropy floor H_min to prevent multimodal collapse
-- Meta-optimization for gauge sharpness
-- Trust-weighted consensus for multi-agent coherence
-
----
-
-## [v1.2.2] – 2025-09-26
-**Status:** Gauge & Risk-Aware Addendum
-
-### Added
-- Gauge normalization and variance witness
-- CI-based verification with confidence intervals
-- Risk-aware thresholds
-- Lyapunov formulation for controller convergence
-
----
-
-## [v1.1.19] – 2025-09-25
-**Status:** Immutable Core (Stable)
-
-### Changed
-- Final v1.1.x refinements before v1.2 operational layer
-- This version cited in v1.2.9 as immutable mathematical foundation
-
----
-
-## [v1.1.17] – 2025-09-20
-**Status:** Immutable Core Foundation
-
-### Added
-- **Triadic Axioms** (A1–A4) defining coherence framework
-- **Coherence metrics** \(H_c, V_c, D_c, C_\Sigma\)
-- **Controller contraction proof** for \(R\)
-- **Final coalgebra uniqueness** theorem
-
-### Notes
-- This version is mathematically authoritative and immutable
-- Foundation for all subsequent operational layers
-
----
-
 ## Version History Summary
 
 - **v1.1.x** (Sep 2025): Immutable mathematical core
 - **v1.2.x** (Sep-Oct 2025): Operational layer evolution
 - **v2.0.0** (Oct 29, 2025): C≡-native rewrite (breaking)
 - **v2.1.0** (Oct 30, 2025): Progressive disclosure & tooling
-
+- **v2.2.2** (Nov 4, 2025): Braided algebra + Python 3.10+ upgrade
