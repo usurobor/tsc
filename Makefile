@@ -29,7 +29,7 @@ lint:
 fmt:
 	$(PYTHON) -m ruff format .
 	$(PYTHON) -m mdformat .
-	
+
 typecheck:
 	$(PYTHON) -m mypy reference/ --strict --ignore-missing-imports || echo "⚠ mypy not installed; run 'pip install mypy'"
 
@@ -46,7 +46,9 @@ linkcheck:
 
 self-coherence:
 	@echo "🔬 Running TSC self-application verification..."
-	$(PYTHON) -m reference.self_coherence --verify || echo "⚠ self-coherence module not yet implemented (v2.3.0)"
+	$(PYTHON) -m reference.cli.tsc self --out coherence_report.json || true
+	@echo ""
+	@cat coherence_report.json | $(PYTHON) -m json.tool | grep -E '"(C_sigma|verdict)"'
 
 all: lint typecheck test
 	@echo "✓ All checks passed"
@@ -58,3 +60,4 @@ clean:
 	find . -type d -name .ruff_cache -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@echo "✓ Cache files cleaned"
+

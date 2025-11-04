@@ -16,6 +16,21 @@ tsc measure ./my-project --axes=structure,calls,evolution
 
 **What it means:** Your code’s structure, call patterns, and git history tell the same story. [Implementation Guide →](#for-engineers)
 
+## Self-Measurement
+
+TSC v2.3.0 can measure its own coherence:
+```bash
+tsc self --out coherence_report.json
+```
+
+**Current Status (v2.3.0 Baseline):**
+- **C_Σ** = 0.238 (Verdict: FAIL)
+- **S₃ Witness:** PASS ✅
+- **Braided Witness:** FAIL ❌
+
+The FAIL verdict is expected and demonstrates honest measurement. The repository is not yet fully self-coherent. See [docs/self-coherence-v2.3.0.md](docs/self-coherence-v2.3.0.md) for details and roadmap.
+
+**Target:** Achieve C_Σ ≥ 0.90 by v2.4.0.
 ______________________________________________________________________
 
 ### 🤔 Philosophers: A Question
