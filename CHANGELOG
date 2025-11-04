@@ -6,6 +6,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## [v2.3.0] – 2025-11-04
+**Status:** Self-Application Baseline (Measurement Capability)
+
+### Breaking Changes
+- CLI restructured: `tsc <file>` → `tsc compute <file>`
+- Added `tsc self` subcommand for repository self-measurement
+
+### Added
+- **Self-measurement capability** (`tsc self`) per Operational §11
+- **α-axis** (pattern stability): parallel re-articulation via independent parsers
+- **β-axis** (relational coherence): typed term graph with ensemble alignment
+- **γ-axis** (process stability): temporal drift via git history
+- **Bootstrap CI** via resampling across axis replicates (Core §0.1)
+- **S₃ permutation witness** with all 6 permutations tested (Operational §4.2)
+- **Braided interchange witness** via AST normalization (Operational §4.1)
+- **Full provenance bundle** (git commit, dirty flag, python version, seeds)
+- `docs/self-coherence-v2.3.0.md` with baseline results and roadmap
+- GitHub Action (`.github/workflows/self-coherence.yml`) runs on spec changes
+
+### Results (Baseline Measurement)
+- **C_Σ** = 0.238 (CI: [0.093, 0.297])
+- **Verdict:** FAIL (expected - repository not yet self-coherent)
+- **S₃ Witness:** PASS (implementation S₃-symmetric)
+- **Braided Witness:** FAIL (92% equations don't normalize)
+- **Axis Scores:**
+  - α_c = 0.306 (pattern: moderate)
+  - β_c = 0.061 (relation: very weak - needs cross-references)
+  - γ_c = 0.721 (process: good)
+
+### Interpretation
+The measurement system is working correctly. The FAIL verdict indicates genuine issues in the repository that drive improvement work:
+- v2.3.1: Fix braided parser
+- v2.3.2: Strengthen cross-references (raise β_c)
+- v2.4.0: Achieve C_Σ ≥ 0.90 (self-coherence gate)
+
+### Technical Details
+- Pure Python implementation (numpy optional for acceleration)
+- Deterministic (seeded) for reproducibility
+- Git history required for γ_c (fails explicitly if unavailable)
+- AST-based term rewriting for braided witness
+- No fake data or fallbacks
+
+### Compliance
+- ✅ Core §0.1: Proper bootstrap CI
+- ✅ Operational §4.2: S₃ permutation test
+- ✅ Operational §4.1: Braided witness
+- ✅ Operational §3: Explicit failure on missing data
+- ✅ Operational §11.7: Complete provenance
+
+---
 
 ## [v2.2.0] – 2025-11-04
 **Status:** Braided Algebra Integration & Python 3.10+ Upgrade

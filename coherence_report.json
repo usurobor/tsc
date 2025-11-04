@@ -1,0 +1,93 @@
+{
+  "version": "v2.3.0-rc1",
+  "scores": {
+    "alpha_c": 0.3059346788009392,
+    "beta_c": 0.06081006262521794,
+    "gamma_c": 0.720597923862251,
+    "C_sigma": 0.23755584573903052
+  },
+  "ci": {
+    "C_sigma_lo": 0.09282845850145371,
+    "C_sigma_hi": 0.29660331226098335,
+    "n_boot": 1000
+  },
+  "witnesses": {
+    "S3_permutation": {
+      "permutations": {
+        "\u03b1-\u03b2-\u03b3": {
+          "C_sigma": 0.1946098310678454,
+          "within_CI": true
+        },
+        "\u03b1-\u03b3-\u03b2": {
+          "C_sigma": 0.1946098310678454,
+          "within_CI": true
+        },
+        "\u03b2-\u03b1-\u03b3": {
+          "C_sigma": 0.1946098310678454,
+          "within_CI": true
+        },
+        "\u03b2-\u03b3-\u03b1": {
+          "C_sigma": 0.1946098310678454,
+          "within_CI": true
+        },
+        "\u03b3-\u03b1-\u03b2": {
+          "C_sigma": 0.1946098310678454,
+          "within_CI": true
+        },
+        "\u03b3-\u03b2-\u03b1": {
+          "C_sigma": 0.1946098310678454,
+          "within_CI": true
+        }
+      },
+      "baseline_CI": [
+        0.09282845850145371,
+        0.29660331226098335
+      ],
+      "passed": true
+    },
+    "braid_mean": 0.9230769230769231,
+    "braid_CI": [
+      0.7692307692307693,
+      1.0
+    ],
+    "tau_braid": 0.001,
+    "braid_pairs": 13
+  },
+  "axes_diag": {
+    "alpha": {
+      "A_keys": 1485,
+      "B_keys": 135
+    },
+    "beta": {
+      "terms": 57
+    },
+    "gamma": {
+      "has_git": true,
+      "dW": 0.08193219404630653
+    }
+  },
+  "params": {
+    "theta": 0.7,
+    "lambda_alpha": 4.0,
+    "lambda_beta": 4.0,
+    "lambda_gamma": 4.0,
+    "n_boot": 1000,
+    "tau_braid": 0.001,
+    "Theta": 0.9,
+    "seed": 42
+  },
+  "provenance": {
+    "git_commit": "6fee0f8",
+    "dirty": true,
+    "python": "3.11.14",
+    "p_ref_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "spec_files": [
+      "c-equiv-kernel.md",
+      "c-equiv.md",
+      "tsc-core.md",
+      "tsc-glossary.md",
+      "tsc-oper.md"
+    ]
+  },
+  "verdict": "FAIL"
+}

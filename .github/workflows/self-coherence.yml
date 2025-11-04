@@ -1,0 +1,74 @@
+name: Self-Coherence Check
+
+on:
+  pull_request:
+    paths:
+      - 'spec/**'
+      - 'reference/python/self_measure.py'
+  push:
+    branches: [main]
+    paths:
+      - 'spec/**'
+      - 'reference/python/self_measure.py'
+
+jobs:
+  self-measure:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full git history for γ_c
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[dev]"
+      
+      - name: Run self-measurement
+        id: measure
+        run: |
+          tsc self --out coherence_report.json || echo "verdict=FAIL" >> $GITHUB_OUTPUT
+        continue-on-error: true
+      
+      - name: Display results
+        run: |
+          echo "## Self-Coherence Report" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat coherence_report.json | python -m json.tool >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Extract key metrics
+          C_SIGMA=$(cat coherence_report.json | python -c "import sys, json; print(json.load(sys.stdin)['scores']['C_sigma'])")
+          VERDICT=$(cat coherence_report.json | python -c "import sys, json; print(json.load(sys.stdin)['verdict'])")
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**C_Σ:** $C_SIGMA" >> $GITHUB_STEP_SUMMARY
+          echo "**Verdict:** $VERDICT" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$VERDICT" = "FAIL" ]; then
+            echo "⚠️ **Note:** FAIL verdict is expected in v2.3.0 baseline. This indicates the repository needs improvement, not a bug in the measurement system." >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coherence-report-${{ github.sha }}
+          path: coherence_report.json
+          retention-days: 90
+      
+      - name: Check verdict (informational)
+        run: |
+          VERDICT=$(cat coherence_report.json | python -c "import sys, json; print(json.load(sys.stdin)['verdict'])")
+          if [ "$VERDICT" = "FAIL" ]; then
+            echo "::warning::Self-coherence check failed. See coherence_report.json for details."
+            echo "This is expected in v2.3.0 baseline. Target: achieve PASS by v2.4.0."
+          else
+            echo "::notice::Self-coherence check passed!"
+          fi
