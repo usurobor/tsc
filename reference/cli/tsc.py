@@ -1,79 +1,99 @@
-# reference/cli/tsc.py
-from __future__ import annotations
+"""
+reference/cli/tsc.py — TSC Command Line Interface
 
+Commands:
+  compute  Compute C_Σ from a TSC YAML file
+  self     Compute C_Σ for the TSC repository itself
+"""
+
+import json
 import sys
 from pathlib import Path
 
 import click
-from rich.console import Console
-from rich.table import Table
 
-try:
-    # v2.1: reference-only import; no stable public API commitment.
-    from reference.python.tsc_controller import compute_c_from_file
-except Exception:  # pragma: no cover - import fallback path
-    compute_c_from_file = None
-
-console = Console()
+from reference.python.tsc_controller import compute_c_from_file
 
 
-@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
-@click.argument("input_path", type=click.Path(exists=True, path_type=Path))
-@click.option(
-    "--format",
-    "out_format",
-    type=click.Choice(["text", "json"], case_sensitive=False),
-    default="text",
-    show_default=True,
-    help="Output format.",
-)
-@click.option(
-    "--seed",
-    type=int,
-    default=None,
-    show_default=False,
-    help="Optional RNG seed (if your implementation uses one).",
-)
-def main(input_path: Path, out_format: str, seed: int | None) -> None:
-    """
-    TSC CLI (v2.1): run the reference TSC computation on INPUT_PATH.
+@click.group()
+def main():
+    """TSC Framework CLI."""
+    pass
 
-    INPUT_PATH can point to an example (*.md) or a data file understood by the reference.
-    """
-    if compute_c_from_file is None:
-        console.print(
-            "[bold red]Error:[/bold red] TSC reference implementation not wired yet.\n"
-            "Please implement [bold]reference/python/tsc_controller.py::compute_c_from_file[/bold] "
-            "or copy your reference code into [bold]reference/python/[/bold].\n"
-            "See QUICKSTART.md for details.",
-            highlight=False,
-        )
-        sys.exit(2)
 
+@main.command("compute")
+@click.argument("path", type=click.Path(exists=True))
+@click.option("--format", type=click.Choice(["text", "json"]), default="text")
+@click.option("--seed", type=int, default=None)
+def compute(path: str, format: str, seed: int | None):
+    """Compute C_Σ from a TSC YAML file."""
     try:
-        if seed is None:
-            c_value: float = compute_c_from_file(str(input_path))
+        c_sigma = compute_c_from_file(path, seed=seed)
+
+        if format == "json":
+            click.echo(json.dumps({"C_sigma": c_sigma, "path": path}, indent=2))
         else:
-            c_value = compute_c_from_file(str(input_path), seed=seed)
-    except NotImplementedError:
-        console.print(
-            "[bold red]NotImplementedError:[/bold red] compute_c_from_file() is a stub.\n"
-            "Wire up the reference algorithm in [bold]tsc_controller.py[/bold].",
-            highlight=False,
-        )
+            click.echo(f"C_Σ = {c_sigma:.4f}")
+
+        # Exit code based on threshold (0.3 for examples)
+        sys.exit(0 if c_sigma >= 0.3 else 1)
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
         sys.exit(2)
 
-    payload = {"path": str(input_path), "c": float(c_value), "seed": seed}
 
-    if out_format.lower() == "json":
-        console.print_json(data=payload)
-    else:
-        table = Table(show_header=True, header_style="bold")
-        table.add_column("Path")
-        table.add_column("C_Σ")
-        table.add_column("Seed")
-        table.add_row(payload["path"], f"{payload['c']:.6f}", str(payload["seed"]))
-        console.print(table)
+@main.command("self")
+@click.option("--out", default="coherence_report.json", help="Output report path")
+@click.option("--theta", default=0.7, type=float, help="Struct vs dist weight")
+@click.option("--lambda-alpha", "lambda_alpha", default=4.0, type=float)
+@click.option("--lambda-beta", "lambda_beta", default=4.0, type=float)
+@click.option("--lambda-gamma", "lambda_gamma", default=4.0, type=float)
+@click.option("--n-boot", "n_boot", default=1000, type=int, help="Bootstrap samples")
+@click.option("--tau-braid", "tau_braid", default=1e-3, type=float, help="Braided threshold")
+@click.option("--Theta", "Theta_", default=0.90, type=float, help="CI_lo gate threshold")
+@click.option("--seed", default=42, type=int, help="Random seed")
+def self_measure(
+    out: str,
+    theta: float,
+    lambda_alpha: float,
+    lambda_beta: float,
+    lambda_gamma: float,
+    n_boot: int,
+    tau_braid: float,
+    Theta_: float,
+    seed: int,
+):
+    """Compute C_Σ for the TSC repository and emit provenance bundle."""
+    try:
+        from reference.python.self_measure import Params, write_report
+
+        params = Params(
+            theta=theta,
+            lambda_alpha=lambda_alpha,
+            lambda_beta=lambda_beta,
+            lambda_gamma=lambda_gamma,
+            n_boot=n_boot,
+            tau_braid=tau_braid,
+            Theta=Theta_,
+            seed=seed,
+        )
+
+        click.echo("Computing C_Σ(TSC)...")
+        rep = write_report(out, params)
+
+        click.echo(json.dumps(rep, indent=2))
+        click.echo(f"\nReport written to: {out}")
+        click.echo(f"Verdict: {rep['verdict']}")
+
+        sys.exit(0 if rep["verdict"] == "PASS" else 1)
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        import traceback
+
+        traceback.print_exc()
+        sys.exit(2)
 
 
 if __name__ == "__main__":
