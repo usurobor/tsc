@@ -29,7 +29,6 @@ from dataclasses import dataclass, field, replace
 from enum import Enum, auto
 from typing import Any, Literal
 
-
 # ===== v2.1 CLI/TEST ENTRY POINT =====
 
 
@@ -370,9 +369,7 @@ def transition(
                 if n.ood_clear >= cfg.M_Z:
                     eff.append(ResetCounters(("lockdown", "drift")))
                     return (
-                        ControllerState(
-                            State.OPTIMIZE, tau, replace(n, ood_clear=0, drift=0)
-                        ),
+                        ControllerState(State.OPTIMIZE, tau, replace(n, ood_clear=0, drift=0)),
                         tuple(eff),
                     )
                 return replace(ctrl, counters=n), tuple(eff)
@@ -384,9 +381,7 @@ def transition(
                 n = replace(c, handshake_passes=c.handshake_passes + 1)
                 if n.handshake_passes >= cfg.M_H:
                     return (
-                        ControllerState(
-                            State.OPTIMIZE, tau, replace(n, handshake_passes=0)
-                        ),
+                        ControllerState(State.OPTIMIZE, tau, replace(n, handshake_passes=0)),
                         tuple(eff),
                     )
                 return replace(ctrl, counters=n), tuple(eff)
@@ -411,9 +406,7 @@ def transition(
                         if n.drift > cfg.M_M:
                             eff.append(ApplySimplifyActions("J_cost"))
                             return (
-                                ControllerState(
-                                    State.MINIMAL_INFO, tau.shrink_worst(), n
-                                ),
+                                ControllerState(State.MINIMAL_INFO, tau.shrink_worst(), n),
                                 tuple(eff),
                             )
                         eff.extend(
@@ -453,9 +446,7 @@ class Hooks:
 
     def oversample_failing_dimensions(self, policy: VerifyPolicy) -> None: ...
 
-    def reduce_tau_for_worst_dimension(
-        self, tau: TauBudget, witnesses: WitnessStatus
-    ) -> TauBudget:
+    def reduce_tau_for_worst_dimension(self, tau: TauBudget, witnesses: WitnessStatus) -> TauBudget:
         return tau
 
     def recenter_and_retune_lambda_mu(self) -> None: ...
@@ -468,9 +459,7 @@ class Hooks:
     def reset_counters(self, names: tuple[str, ...]) -> None: ...
 
     # Optional policy checks for MINIMAL_INFO → exit
-    def witnesses_above_margins_for(
-        self, required_steps: int, epsilon_H: float
-    ) -> bool:
+    def witnesses_above_margins_for(self, required_steps: int, epsilon_H: float) -> bool:
         return False
 
     def pass_M_M_with_non_increasing_J_cost(self, required_steps: int) -> bool:

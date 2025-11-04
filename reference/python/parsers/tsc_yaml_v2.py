@@ -28,7 +28,7 @@ Detects TSC blocks in three locations (priority order):
 Example Usage
 -------------
     from reference.python.parsers.tsc_yaml_v2 import parse_tsc_document
-    
+
     parsed = parse_tsc_document("examples/philosophical/consciousness.md")
     # Returns ParsedInput with VerifyEnv containing provisional metrics
 
@@ -38,7 +38,7 @@ TODOs for Real Implementation
    - Entropic optimal transport for HV/VD
    - Procrustes or CPD for HD
    - Cost matrix construction from feature vectors
-   
+
 2. Implement witness health extraction from alignment diagnostics:
    - Plan sparsity → H_variance
    - Dual potentials → H_lipschitz
@@ -60,9 +60,10 @@ import json
 import math
 import random
 import re
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any
 
 try:
     import yaml
@@ -92,15 +93,15 @@ _FRONT_MATTER = re.compile(r"^---\s*(.*?)\s*---", re.DOTALL)
 def _load_yaml_or_json(txt: str) -> dict[str, Any]:
     """
     Load a YAML/JSON snippet with graceful fallback.
-    
+
     Prefers YAML if pyyaml is available; otherwise tries JSON.
     Wraps top-level lists for uniformity.
-    
+
     Parameters
     ----------
     txt : str
         Raw YAML or JSON text
-        
+
     Returns
     -------
     dict
@@ -114,7 +115,7 @@ def _load_yaml_or_json(txt: str) -> dict[str, Any]:
             return data
         # Wrap top-level lists for uniformity
         return {"_": data}
-    
+
     # JSON fallback
     try:
         data = json.loads(txt)
@@ -128,22 +129,22 @@ def _load_yaml_or_json(txt: str) -> dict[str, Any]:
 def _first_tsc_block(s: str) -> dict[str, Any]:
     """
     Find first TSC YAML block in document.
-    
+
     Searches in priority order:
     1. YAML front-matter (--- ... ---)
     2. Fenced code blocks (```yaml ... ```)
     3. Whole-file YAML
-    
+
     Parameters
     ----------
     s : str
         Document text
-        
+
     Returns
     -------
     dict
         Parsed TSC block
-        
+
     Raises
     ------
     NotImplementedError
@@ -153,32 +154,24 @@ def _first_tsc_block(s: str) -> dict[str, Any]:
     m = _FRONT_MATTER.search(s)
     if m:
         d = _load_yaml_or_json(m.group(1))
-        if "tsc" in d or any(
-            k in d for k in ("O_H", "O_V", "O_D", "aligners", "observations")
-        ):
+        if "tsc" in d or any(k in d for k in ("O_H", "O_V", "O_D", "aligners", "observations")):
             return d.get("tsc", d)
 
     # Try fenced YAML blocks
     for fm in _YAML_FENCE.findall(s):
         d = _load_yaml_or_json(fm)
-        if "tsc" in d or any(
-            k in d for k in ("O_H", "O_V", "O_D", "aligners", "observations")
-        ):
+        if "tsc" in d or any(k in d for k in ("O_H", "O_V", "O_D", "aligners", "observations")):
             return d.get("tsc", d)
 
     # Try whole-file YAML
     try:
         d = _load_yaml_or_json(s)
-        if "tsc" in d or any(
-            k in d for k in ("O_H", "O_V", "O_D", "aligners", "observations")
-        ):
+        if "tsc" in d or any(k in d for k in ("O_H", "O_V", "O_D", "aligners", "observations")):
             return d.get("tsc", d)
     except Exception:
         pass
 
-    raise NotImplementedError(
-        "No TSC YAML found (expected 'tsc:' block or compatible structure)"
-    )
+    raise NotImplementedError("No TSC YAML found (expected 'tsc:' block or compatible structure)")
 
 
 # ============================================================================
@@ -199,7 +192,7 @@ def _get_state(s: str | None) -> State:
 def _floors_from(d: Mapping[str, Any] | None) -> WitnessFloors:
     """
     Parse witness health floors from YAML.
-    
+
     Uses spec-aligned defaults if not provided.
     """
     if not d:
@@ -223,15 +216,13 @@ def _policy_from(d: Mapping[str, Any] | None) -> VerifyPolicy:
     """Parse verification policy from YAML."""
     if not d:
         return VerifyPolicy()
-    return VerifyPolicy(
-        name=str(d.get("name", "default")), params=dict(d.get("params", {}))
-    )
+    return VerifyPolicy(name=str(d.get("name", "default")), params=dict(d.get("params", {})))
 
 
 def _cfg_from(d: Mapping[str, Any] | None) -> PolicyConfig:
     """
     Parse controller policy configuration from YAML.
-    
+
     Includes decision thresholds (Theta), OOD gates (Z_crit),
     and state transition parameters.
     """
@@ -262,7 +253,7 @@ def _clamp01(x: float) -> float:
 def _geomean3(a: float, b: float, c: float) -> float:
     """
     Geometric mean of three values with degeneracy protection.
-    
+
     Used for C_Σ = (H_c · V_c · D_c)^(1/3)
     """
     a, b, c = max(a, 1e-12), max(b, 1e-12), max(c, 1e-12)
@@ -278,7 +269,7 @@ def _geomean3(a: float, b: float, c: float) -> float:
 class ParsedTSC:
     """
     Intermediate parse result containing all TSC block components.
-    
+
     This structure is converted to ParsedInput for controller consumption.
     """
 
@@ -298,7 +289,7 @@ class ParsedTSC:
 def _parse_core(doc: Mapping[str, Any]) -> ParsedTSC:
     """
     Parse TSC YAML structure into typed components.
-    
+
     Extracts observations, aligners, thresholds, and provisional values.
     """
     # Window / sampling
@@ -313,10 +304,10 @@ def _parse_core(doc: Mapping[str, Any]) -> ParsedTSC:
 
     # Aligner configurations
     aligners = dict(doc.get("aligners", {}))
-    
+
     # Provisional values (used until real aligners implemented)
     provisional = dict(doc.get("provisional", {}))
-    
+
     # OOD detection config
     ood = dict(doc.get("ood", {}))
 
@@ -343,17 +334,17 @@ def _parse_core(doc: Mapping[str, Any]) -> ParsedTSC:
 def _make_env(parsed: ParsedTSC, seed: int | None) -> VerifyEnv:
     """
     Construct VerifyEnv with provisional metric computation.
-    
+
     This function creates the measurement callbacks expected by the controller.
     Currently uses stubs; real alignment ensembles go here.
-    
+
     Parameters
     ----------
     parsed : ParsedTSC
         Parsed TSC structure
     seed : int | None
         Random seed for deterministic CI computation
-        
+
     Returns
     -------
     VerifyEnv
@@ -369,14 +360,12 @@ def _make_env(parsed: ParsedTSC, seed: int | None) -> VerifyEnv:
     # Provisional Metrics (STUB - replace with real aligners)
     # ========================================================================
 
-    def _infer_stub_score(
-        items: Sequence[Mapping[str, Any]], keys: Sequence[str]
-    ) -> float:
+    def _infer_stub_score(items: Sequence[Mapping[str, Any]], keys: Sequence[str]) -> float:
         """
         Heuristic coherence score from observations.
-        
+
         Looks for numeric confidence/score fields; falls back to count-based score.
-        
+
         TODO: Replace with actual alignment ensemble computation.
         """
         vals: list[float] = []
@@ -394,7 +383,7 @@ def _make_env(parsed: ParsedTSC, seed: int | None) -> VerifyEnv:
     def compute_metrics(I: Iterable[int]) -> Metrics:
         """
         Compute dimensional coherence metrics.
-        
+
         Current: Provisional values from YAML or inferred from observations
         TODO: Implement real alignment ensembles:
               - Entropic OT for HV/VD
@@ -408,13 +397,9 @@ def _make_env(parsed: ParsedTSC, seed: int | None) -> VerifyEnv:
 
         # Infer from observations if not explicitly provided
         if not isinstance(H_c, (int, float)):
-            H_c = _infer_stub_score(
-                parsed.O_H, ("confidence", "p", "score", "weight")
-            )
+            H_c = _infer_stub_score(parsed.O_H, ("confidence", "p", "score", "weight"))
         if not isinstance(V_c, (int, float)):
-            V_c = _infer_stub_score(
-                parsed.O_V, ("confidence", "clarity", "score", "p")
-            )
+            V_c = _infer_stub_score(parsed.O_V, ("confidence", "clarity", "score", "p"))
         if not isinstance(D_c, (int, float)):
             D_c = _infer_stub_score(parsed.O_D, ("confidence", "p", "score"))
 
@@ -432,9 +417,7 @@ def _make_env(parsed: ParsedTSC, seed: int | None) -> VerifyEnv:
         lo = _clamp01(C_sigma - w)
         hi = _clamp01(C_sigma + w)
 
-        return Metrics(
-            H_c=H_c, V_c=V_c, D_c=D_c, C_sigma=C_sigma, C_sigma_CI=(lo, hi)
-        )
+        return Metrics(H_c=H_c, V_c=V_c, D_c=D_c, C_sigma=C_sigma, C_sigma_CI=(lo, hi))
 
     # ========================================================================
     # Witness Health (STUB - extract from alignment diagnostics)
@@ -447,7 +430,7 @@ def _make_env(parsed: ParsedTSC, seed: int | None) -> VerifyEnv:
     def compute_witnesses(I: Iterable[int]) -> WitnessStatus:
         """
         Compute witness health indicators.
-        
+
         Current: Proxy from observation counts
         TODO: Extract from alignment diagnostics:
               - Plan sparsity → variance
@@ -508,12 +491,12 @@ def _make_env(parsed: ParsedTSC, seed: int | None) -> VerifyEnv:
 def is_tsc_yaml(path: str) -> bool:
     """
     Predicate: does this file contain TSC v2.1.1 YAML structure?
-    
+
     Used by parser dispatch in parsers/__init__.py
     """
     try:
         text = Path(path).read_text(encoding="utf-8")
-        
+
         _first_tsc_block(text)  # Raises if not found
         return True
     except (NotImplementedError, FileNotFoundError, OSError):
@@ -523,17 +506,17 @@ def is_tsc_yaml(path: str) -> bool:
 def parse_tsc_document(path: str, seed: int | None = None) -> ParsedInput:
     """
     Parse TSC v2.1.1 format document.
-    
+
     Extracts structured observations (O_H, O_V, O_D), aligner configs,
     and constructs VerifyEnv with provisional metrics.
-    
+
     Parameters
     ----------
     path : str
         Path to markdown or YAML file containing TSC block
     seed : int | None
         Random seed for deterministic CI computation
-        
+
     Returns
     -------
     ParsedInput
@@ -543,7 +526,7 @@ def parse_tsc_document(path: str, seed: int | None = None) -> ParsedInput:
         - floors: Witness health thresholds
         - cfg: Controller policy config
         - env: VerifyEnv with measurement callbacks
-        
+
     Examples
     --------
     >>> from reference.python.parsers.tsc_yaml_v2 import parse_tsc_document

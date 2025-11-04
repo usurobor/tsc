@@ -35,10 +35,8 @@ from reference.python.parsers.tsc_yaml_v2 import (
 PARSERS: list[ParserEntry] = [
     # Cellular automaton patterns
     (is_cellular_automaton, cellular_automaton_parser),
-    
     # Philosophical examples with tsc: YAML blocks
     (is_tsc_yaml, parse_tsc_document),
-    
     # Fallback: always matches
     (is_stub, stub_parser),
 ]
