@@ -473,7 +473,7 @@ END IF
 
 RETURN (verdict, ood_flag, C_Σ, CI, dimensional_scores, witnesses, provenance)
 
-```
+````
 ---
 
 ### Verdict Semantics
@@ -594,106 +594,107 @@ tsc_verification:
     master: 42
     bootstrap: 123
     MFI_sampling: 456
-```
+````
 
------
+______________________________________________________________________
 
 ## 8 · Diagnostics and Leverage Interpretation
 
 **Purpose.** Use dimensional leverage (Core §8) to guide operational decisions and resource allocation.
 
------
+______________________________________________________________________
 
 ### 8.1 Leverage-Driven Budget Allocation
 
-**Computation.** For each dimension $a \in {\alpha, \beta, \gamma}$:
+**Computation.** For each dimension $a \\in {\\alpha, \\beta, \\gamma}$:
 $$
-\lambda_a = -\ln(\max(a_c, \varepsilon))
+\\lambda_a = -\\ln(\\max(a_c, \\varepsilon))
 $$
 
 **Normalized allocation weights (Recognition Flow $R_C$):**
 $$
-R_C = \left(\frac{\lambda_{\alpha}}{\lambda_{\Sigma}}, \frac{\lambda_{\beta}}{\lambda_{\Sigma}}, \frac{\lambda_{\gamma}}{\lambda_{\Sigma}}\right)
+R_C = \\left(\\frac{\\lambda\_{\\alpha}}{\\lambda\_{\\Sigma}}, \\frac{\\lambda\_{\\beta}}{\\lambda\_{\\Sigma}}, \\frac{\\lambda\_{\\gamma}}{\\lambda\_{\\Sigma}}\\right)
 $$
-where $\lambda_{\Sigma} = (\lambda_{\alpha} + \lambda_{\beta} + \lambda_{\gamma})/3$.
+where $\\lambda\_{\\Sigma} = (\\lambda\_{\\alpha} + \\lambda\_{\\beta} + \\lambda\_{\\gamma})/3$.
 
 **Allocation policy:**
 
-- If $\lambda_{\alpha}$ dominates ($> 0.4$ of total leverage) → increase $\alpha$-axis bootstrap depth, expand resampling
-- If $\lambda_{\beta}$ dominates → expand alignment ensemble $|\mathcal{A}_{ab}|$, increase solver fidelity
-- If $\lambda_{\gamma}$ dominates → refine temporal sampling $\Delta t$, increase observation density
+- If $\\lambda\_{\\alpha}$ dominates ($> 0.4$ of total leverage) → increase $\\alpha$-axis bootstrap depth, expand resampling
+- If $\\lambda\_{\\beta}$ dominates → expand alignment ensemble $|\\mathcal{A}\_{ab}|$, increase solver fidelity
+- If $\\lambda\_{\\gamma}$ dominates → refine temporal sampling $\\Delta t$, increase observation density
 
------
+______________________________________________________________________
 
 ### 8.2 Diagnostic Reporting
 
 **For each verification, report:**
 
 1. **Leverage breakdown:**
-   
+
    ```
    λ_α = 0.045  (23% of total)  ← Pattern stability high
    λ_β = 0.071  (36% of total)  ← Relational coherence moderate
    λ_γ = 0.061  (31% of total)  ← Process stability moderate
    λ_Σ = 0.059  (aggregate)
    ```
+
 1. **Bottleneck identification:**
 
-- Dimension with highest $\lambda_a$ is the **coherence bottleneck**
+- Dimension with highest $\\lambda_a$ is the **coherence bottleneck**
 - Recommend targeted improvements for that dimension
 
 1. **Trend analysis:**
 
-- Track $\lambda_a$ across versions/time
+- Track $\\lambda_a$ across versions/time
 - Flag if any dimension shows increasing leverage (degrading coherence)
 
------
+______________________________________________________________________
 
 ### 8.3 Energy-Coherence Duality
 
-**Interpretation.** The aggregate leverage $\lambda_{\Sigma}$ can be viewed as **coherence energy**:
+**Interpretation.** The aggregate leverage $\\lambda\_{\\Sigma}$ can be viewed as **coherence energy**:
 $$
-E_{\Sigma} = \lambda_{\Sigma} = -\ln(C_{\Sigma})
+E\_{\\Sigma} = \\lambda\_{\\Sigma} = -\\ln(C\_{\\Sigma})
 $$
 
-**Minimization equivalence:** Minimizing $E_{\Sigma}$ (energy) is equivalent to maximizing $C_{\Sigma}$ (coherence).
+**Minimization equivalence:** Minimizing $E\_{\\Sigma}$ (energy) is equivalent to maximizing $C\_{\\Sigma}$ (coherence).
 
-**Use case:** Optimization algorithms can target $\lambda_{\Sigma}$ directly as an additive objective function (easier than multiplicative $C_{\Sigma}$).
+**Use case:** Optimization algorithms can target $\\lambda\_{\\Sigma}$ directly as an additive objective function (easier than multiplicative $C\_{\\Sigma}$).
 
------
+______________________________________________________________________
 
 ## 9 · Controller State Transitions (Extended Policy)
 
 **Purpose.** Define detailed transition logic and hysteresis to prevent state oscillation.
 
------
+______________________________________________________________________
 
 ### 9.1 Transition Conditions (Detailed)
 
 **HANDSHAKE → OPTIMIZE**
 
-- **Trigger:** $\mathrm{Var}*{ab} < \tau*{\text{var}}$ for all three pairs $(ab) \in {(\alpha\beta), (\beta\gamma), (\gamma\alpha)}$ for $N=3$ consecutive runs
+- **Trigger:** $\\mathrm{Var}*{ab} < \\tau*{\\text{var}}$ for all three pairs $(ab) \\in {(\\alpha\\beta), (\\beta\\gamma), (\\gamma\\alpha)}$ for $N=3$ consecutive runs
 - **Pre-check:** All witnesses must have passed in the last run
 - **Action on transition:**
   - Lock current alignment ensemble specs (freeze hyperparameters)
-  - Record baseline $C_{\Sigma}$ distribution (for OOD reference)
+  - Record baseline $C\_{\\Sigma}$ distribution (for OOD reference)
   - Switch to production budget (standard solver tolerances)
 
 **OPTIMIZE → REINFLATE**
 
 - **Trigger (either):**
   - CI width $> 0.15$ (large uncertainty)
-  - OR $\mathrm{Var}*{ab} > \tau*{\text{var}}$ for any pair (unstable ensemble)
+  - OR $\\mathrm{Var}*{ab} > \\tau*{\\text{var}}$ for any pair (unstable ensemble)
   - (Both conditions checked for $N=2$ consecutive runs)
 - **Action on transition:**
-  - Increase solver regularization by 2× (e.g., entropic OT: $\varepsilon \leftarrow 2\varepsilon$)
+  - Increase solver regularization by 2× (e.g., entropic OT: $\\varepsilon \\leftarrow 2\\varepsilon$)
   - Add robust cost functions to ensemble (e.g., Huber loss variants)
   - Expand priors (e.g., increase prior weight by 50%)
-  - Increase bootstrap depth to $1.5 \times N_{\text{boot}}$
+  - Increase bootstrap depth to $1.5 \\times N\_{\\text{boot}}$
 
 **OPTIMIZE → LOCKDOWN**
 
-- **Trigger:** $Z_t \ge Z_{\text{crit}}$ (out-of-distribution detected)
+- **Trigger:** $Z_t \\ge Z\_{\\text{crit}}$ (out-of-distribution detected)
 - **Hysteresis:** **None** (immediate transition for safety)
 - **Action on transition:**
   - Freeze all alignment ensembles (use last known-good)
@@ -703,7 +704,7 @@ $$
 
 **LOCKDOWN → REINFLATE**
 
-- **Trigger:** $Z_t < Z_{\text{crit}}$ for $N=5$ consecutive runs (distribution has stabilized)
+- **Trigger:** $Z_t < Z\_{\\text{crit}}$ for $N=5$ consecutive runs (distribution has stabilized)
 - **Action on transition:**
   - Resume full alignment ensemble evaluation
   - Maintain elevated robustness (from REINFLATE policy)
@@ -711,7 +712,7 @@ $$
 
 **REINFLATE → OPTIMIZE**
 
-- **Trigger:** $\mathrm{Var}*{ab} < \tau*{\text{var}}$ for all pairs for $N=2$ consecutive runs
+- **Trigger:** $\\mathrm{Var}*{ab} < \\tau*{\\text{var}}$ for all pairs for $N=2$ consecutive runs
 - **Action on transition:**
   - Restore standard solver tolerances
   - Return to baseline priors
@@ -722,15 +723,15 @@ $$
 - **Trigger:** Manual flag OR resource constraint (e.g., wall time exceeded, memory limit)
 - **Action:**
   - Switch to coarse alignment methods (k-means, nearest neighbor)
-  - Reduce bootstrap depth to $0.5 \times N_{\text{boot}}$
-  - Relax witness tolerances by 2× (e.g., $\tau_{\text{braid}} \leftarrow 2 \tau_{\text{braid}}$)
+  - Reduce bootstrap depth to $0.5 \\times N\_{\\text{boot}}$
+  - Relax witness tolerances by 2× (e.g., $\\tau\_{\\text{braid}} \\leftarrow 2 \\tau\_{\\text{braid}}$)
   - Flag all results as “COARSE_MODE” in provenance
 
------
+______________________________________________________________________
 
 ### 9.2 Hysteresis and Debouncing
 
-**Rationale.** Prevent rapid state oscillation due to noise in $\mathrm{Var}_{ab}$ or CI estimates.
+**Rationale.** Prevent rapid state oscillation due to noise in $\\mathrm{Var}\_{ab}$ or CI estimates.
 
 **Mechanism:** Most transitions require $N$ consecutive trigger events (default $N=2$).
 
@@ -738,55 +739,55 @@ $$
 
 **Debouncing window:** When a trigger occurs but is not yet consecutive, start a window of length $W$ runs (default $W=5$). If trigger does not recur within window, reset counter.
 
------
+______________________________________________________________________
 
 ## 10 · Out-of-Distribution Detection (Normative Method)
 
 **Purpose.** Detect when current observations diverge from established patterns, indicating potential distribution shift, concept drift, or measurement context change.
 
------
+______________________________________________________________________
 
 ### 10.1 Reference Distribution Maintenance
 
 **Initialization (HANDSHAKE state):**
 
 - Collect first $K$ verification results (default $K=10$)
-- Form initial reference distribution: $\text{ref} = {C_{\Sigma}^{(1)}, \ldots, C_{\Sigma}^{(K)}}$
+- Form initial reference distribution: $\\text{ref} = {C\_{\\Sigma}^{(1)}, \\ldots, C\_{\\Sigma}^{(K)}}$
 
 **Rolling window (OPTIMIZE state):**
 
 - Maintain fixed-size window of last $W$ results (default $W=20$)
-- For each new verification, add $C_{\Sigma}^{(t)}$ and remove oldest if $|\text{ref}| > W$
+- For each new verification, add $C\_{\\Sigma}^{(t)}$ and remove oldest if $|\\text{ref}| > W$
 
 **Robust statistics:**
 
-- Compute $\text{median}(\text{ref})$ and $\text{MAD}(\text{ref})$ (median absolute deviation)
-- MAD is robust to outliers: $\text{MAD} = \text{median}(|C_{\Sigma}^{(i)} - \text{median}(\text{ref})|)$
+- Compute $\\text{median}(\\text{ref})$ and $\\text{MAD}(\\text{ref})$ (median absolute deviation)
+- MAD is robust to outliers: $\\text{MAD} = \\text{median}(|C\_{\\Sigma}^{(i)} - \\text{median}(\\text{ref})|)$
 
------
+______________________________________________________________________
 
 ### 10.2 Stability Statistic Computation
 
 **Robust z-score (default method):**
 $$
-Z_t = \frac{|C_{\Sigma}^{(t)} - \text{median}(\text{ref})|}{1.4826 \cdot \text{MAD}(\text{ref})}
+Z_t = \\frac{|C\_{\\Sigma}^{(t)} - \\text{median}(\\text{ref})|}{1.4826 \\cdot \\text{MAD}(\\text{ref})}
 $$
 
 The factor $1.4826$ scales MAD to match standard deviation for Gaussian distributions.
 
-**Alternative (small sample, $|\text{ref}| < 10$):** Bootstrap percentile method:
+**Alternative (small sample, $|\\text{ref}| < 10$):** Bootstrap percentile method:
 
-1. Bootstrap resample $\text{ref}$ to generate 1000 samples
-1. Compute percentile rank of $C_{\Sigma}^{(t)}$ in bootstrap distribution
-1. $Z_t = |\text{percentile rank} - 0.5| \times 2$ (distance from median, normalized to [0,1])
+1. Bootstrap resample $\\text{ref}$ to generate 1000 samples
+1. Compute percentile rank of $C\_{\\Sigma}^{(t)}$ in bootstrap distribution
+1. $Z_t = |\\text{percentile rank} - 0.5| \\times 2$ (distance from median, normalized to [0,1])
 
------
+______________________________________________________________________
 
 ### 10.3 OOD Gate and Actions
 
 **Gate condition:**
 $$
-Z_t \ge Z_{\text{crit}} \quad \text{(default } Z_{\text{crit}} = 0.95 \text{, approximately 2σ)}
+Z_t \\ge Z\_{\\text{crit}} \\quad \\text{(default } Z\_{\\text{crit}} = 0.95 \\text{, approximately 2σ)}
 $$
 
 **Actions when gate triggered:**
@@ -795,67 +796,67 @@ $$
 1. **Trigger controller transition** to LOCKDOWN (§5)
 1. **Log diagnostic info:**
 
-- Current $C_{\Sigma}^{(t)}$ and $Z_t$
+- Current $C\_{\\Sigma}^{(t)}$ and $Z_t$
 - Reference distribution statistics (median, MAD, range)
 - Hypothesis: “Possible distribution shift or context change”
 
 1. **Recommendation:** Investigate phenomenon for changes (new data sources, modified articulations, environmental drift)
 
-**Recovery:** OOD flag is cleared when $Z_t < Z_{\text{crit}}$ for 5 consecutive runs.
+**Recovery:** OOD flag is cleared when $Z_t < Z\_{\\text{crit}}$ for 5 consecutive runs.
 
------
+______________________________________________________________________
 
 ## 11 · Reflexive Self-Application (Meta-Verification)
 
-**Purpose.** TSC defines coherence and **applies this definition to itself**. This section specifies how to measure $C_{\Sigma}(\text{TSC})$ across releases.
+**Purpose.** TSC defines coherence and **applies this definition to itself**. This section specifies how to measure $C\_{\\Sigma}(\\text{TSC})$ across releases.
 
------
+______________________________________________________________________
 
 ### 11.1 Purpose and Scope
 
 **Reflexive self-application** validates the TSC framework by measuring its own coherence. This is an empirical test of:
 
-- **C≡ Axiom C1:** Self-application of cohering yields cohering ($\mathbf{C} \odot_a \mathbf{C} = \mathbf{C}$)
-- **Core Axiom A4:** Self-articulation stability (applying $A_a$ twice should give results equivalent to $A_a(\mathbf{C})$)
+- **C≡ Axiom C1:** Self-application of cohering yields cohering ($\\mathbf{C} \\odot_a \\mathbf{C} = \\mathbf{C}$)
+- **Core Axiom A4:** Self-articulation stability (applying $A_a$ twice should give results equivalent to $A_a(\\mathbf{C})$)
 
 **Not circularity.** The measurement calculus (Core) is independent of the measured object. We apply TSC’s coherence measurement to TSC’s artifacts (specs, code, documentation). The framework and the phenomenon are distinct.
 
-**Release requirement.** Every TSC release MUST include a self-coherence report ($C_{\Sigma}(\text{TSC})$) in the release notes.
+**Release requirement.** Every TSC release MUST include a self-coherence report ($C\_{\\Sigma}(\\text{TSC})$) in the release notes.
 
------
+______________________________________________________________________
 
-### 11.2 Articulation of TSC as $\alpha/\beta/\gamma$
+### 11.2 Articulation of TSC as $\\alpha/\\beta/\\gamma$
 
 Treat the living TSC repository and specification set as a triadic phenomenon:
 
-**$\alpha$-axis (Pattern Stability):**
+**$\\alpha$-axis (Pattern Stability):**
 
-- **Observations $O_{\alpha}$:** All specification files (`.md`), formal schemas (JSON/YAML), normative diagrams
-- **Summary $S_{\alpha}$:**
-  - $d_{\alpha}$: Embedding dimension of term vectors (via TF-IDF or word2vec on spec corpus)
-  - $p_{\alpha}$: Distribution over concept classes (e.g., “axiom”, “parameter”, “witness”, “protocol”)
-  - $\mathcal{H}_{\alpha}$: Entropy of term usage (uniform usage → high entropy, jargon-heavy → low entropy)
-  - $\mathcal{I}_{\alpha}$: Detected invariants (e.g., consistent notation, preserved formal structure)
+- **Observations $O\_{\\alpha}$:** All specification files (`.md`), formal schemas (JSON/YAML), normative diagrams
+- **Summary $S\_{\\alpha}$:**
+  - $d\_{\\alpha}$: Embedding dimension of term vectors (via TF-IDF or word2vec on spec corpus)
+  - $p\_{\\alpha}$: Distribution over concept classes (e.g., “axiom”, “parameter”, “witness”, “protocol”)
+  - $\\mathcal{H}\_{\\alpha}$: Entropy of term usage (uniform usage → high entropy, jargon-heavy → low entropy)
+  - $\\mathcal{I}\_{\\alpha}$: Detected invariants (e.g., consistent notation, preserved formal structure)
 
-**$\beta$-axis (Relational Coherence):**
+**$\\beta$-axis (Relational Coherence):**
 
-- **Observations $O_{\beta}$:** Cross-reference graph (section citations), dependency graph (Core → Operational → C≡), term co-occurrence matrix
-- **Summary $S_{\beta}$:**
-  - $d_{\beta}$: Graph diameter or effective dimension of citation network
-  - $p_{\beta}$: Distribution over edge types (“defines”, “uses”, “tests”, “extends”)
-  - $\mathcal{H}_{\beta}$: Entropy of connection patterns (well-connected → high entropy, siloed → low entropy)
-  - $\mathcal{I}_{\beta}$: Preserved symmetries (e.g., S₃ symmetry in axis treatment, bidirectional citations)
+- **Observations $O\_{\\beta}$:** Cross-reference graph (section citations), dependency graph (Core → Operational → C≡), term co-occurrence matrix
+- **Summary $S\_{\\beta}$:**
+  - $d\_{\\beta}$: Graph diameter or effective dimension of citation network
+  - $p\_{\\beta}$: Distribution over edge types (“defines”, “uses”, “tests”, “extends”)
+  - $\\mathcal{H}\_{\\beta}$: Entropy of connection patterns (well-connected → high entropy, siloed → low entropy)
+  - $\\mathcal{I}\_{\\beta}$: Preserved symmetries (e.g., S₃ symmetry in axis treatment, bidirectional citations)
 
-**$\gamma$-axis (Process Stability):**
+**$\\gamma$-axis (Process Stability):**
 
-- **Observations $O_{\gamma}$:** Version history (git commits), change logs, controller state transitions, witness statistics across releases
-- **Summary $S_{\gamma}$:**
-  - $d_{\gamma}$: Dimension of trajectory embedding (e.g., PCA on change vectors)
-  - $p_{\gamma}$: Distribution over change types (“refactor”, “bugfix”, “extension”, “clarification”)
-  - $\mathcal{H}_{\gamma}$: Entropy of state transitions (diverse changes → high entropy, narrow focus → low entropy)
-  - $\mathcal{I}_{\gamma}$: Conserved quantities (e.g., parameter count, witness count, Core axiom count)
+- **Observations $O\_{\\gamma}$:** Version history (git commits), change logs, controller state transitions, witness statistics across releases
+- **Summary $S\_{\\gamma}$:**
+  - $d\_{\\gamma}$: Dimension of trajectory embedding (e.g., PCA on change vectors)
+  - $p\_{\\gamma}$: Distribution over change types (“refactor”, “bugfix”, “extension”, “clarification”)
+  - $\\mathcal{H}\_{\\gamma}$: Entropy of state transitions (diverse changes → high entropy, narrow focus → low entropy)
+  - $\\mathcal{I}\_{\\gamma}$: Conserved quantities (e.g., parameter count, witness count, Core axiom count)
 
------
+______________________________________________________________________
 
 ### 11.3 Summary Construction for TSC
 
@@ -863,76 +864,76 @@ Treat the living TSC repository and specification set as a triadic phenomenon:
 
 1. **Extract corpus:** Concatenate all `.md` spec files (C≡, Core, Operational)
 1. **Tokenize:** Extract terms (n-grams, n=1 to 3)
-1. **Compute $d_{\alpha}$:** PCA or manifold learning on term co-occurrence matrix → intrinsic dimension
-1. **Compute $p_{\alpha}$:** Empirical distribution over concept classes (label terms via regex or manual tagging)
-1. **Compute $\mathcal{H}_{\alpha}$:** Shannon entropy of $p_{\alpha}$
-1. **Detect $\mathcal{I}_{\alpha}$:** Check for notation consistency (e.g., all $\lambda$ parameters use same symbol), structural invariants (e.g., all sections have Purpose statement)
+1. **Compute $d\_{\\alpha}$:** PCA or manifold learning on term co-occurrence matrix → intrinsic dimension
+1. **Compute $p\_{\\alpha}$:** Empirical distribution over concept classes (label terms via regex or manual tagging)
+1. **Compute $\\mathcal{H}\_{\\alpha}$:** Shannon entropy of $p\_{\\alpha}$
+1. **Detect $\\mathcal{I}\_{\\alpha}$:** Check for notation consistency (e.g., all $\\lambda$ parameters use same symbol), structural invariants (e.g., all sections have Purpose statement)
 
 **β-axis summary (Relation):**
 
 1. **Build citation graph:** Parse all cross-references (e.g., “see Core §4”, “C≡ Axiom C2”)
-1. **Compute $d_{\beta}$:** Graph diameter or effective dimension via spectral methods
-1. **Compute $p_{\beta}$:** Distribution over edge types (classify citations as “defines”, “uses”, “tests”, “extends”)
-1. **Compute $\mathcal{H}_{\beta}$:** Entropy of edge type distribution
-1. **Detect $\mathcal{I}_{\beta}$:** Verify S₃ symmetry (e.g., axis names ${\alpha,\beta,\gamma}$ appear with equal frequency), check for orphaned sections (no incoming citations)
+1. **Compute $d\_{\\beta}$:** Graph diameter or effective dimension via spectral methods
+1. **Compute $p\_{\\beta}$:** Distribution over edge types (classify citations as “defines”, “uses”, “tests”, “extends”)
+1. **Compute $\\mathcal{H}\_{\\beta}$:** Entropy of edge type distribution
+1. **Detect $\\mathcal{I}\_{\\beta}$:** Verify S₃ symmetry (e.g., axis names ${\\alpha,\\beta,\\gamma}$ appear with equal frequency), check for orphaned sections (no incoming citations)
 
 **γ-axis summary (Process):**
 
 1. **Extract version history:** All commits between previous release and current
-1. **Compute $d_{\gamma}$:** PCA on change vectors (e.g., lines added/deleted per file)
-1. **Compute $p_{\gamma}$:** Distribution over change types (classify commits via message parsing)
-1. **Compute $\mathcal{H}_{\gamma}$:** Entropy of change type distribution
-1. **Detect $\mathcal{I}_{\gamma}$:** Track conserved quantities (e.g., Core axiom count should remain stable, parameter count should grow slowly)
+1. **Compute $d\_{\\gamma}$:** PCA on change vectors (e.g., lines added/deleted per file)
+1. **Compute $p\_{\\gamma}$:** Distribution over change types (classify commits via message parsing)
+1. **Compute $\\mathcal{H}\_{\\gamma}$:** Entropy of change type distribution
+1. **Detect $\\mathcal{I}\_{\\gamma}$:** Track conserved quantities (e.g., Core axiom count should remain stable, parameter count should grow slowly)
 
------
+______________________________________________________________________
 
 ### 11.4 Dimensional Scores and Aggregation
 
 **Floors and thresholds (normative defaults for self-application):**
 
-- $\Theta = 0.90$ (higher threshold for self-application than general use)
-- $\varepsilon = 1 \times 10^{-5}$ (standard numerical floor)
-- $\tau_{\text{braid}} = 1 \times 10^{-3}$ (standard MFI tolerance)
+- $\\Theta = 0.90$ (higher threshold for self-application than general use)
+- $\\varepsilon = 1 \\times 10^{-5}$ (standard numerical floor)
+- $\\tau\_{\\text{braid}} = 1 \\times 10^{-3}$ (standard MFI tolerance)
 
 **α_c (Pattern Stability):**
 
-- Compare current release summary $S_{\alpha}^{(t)}$ to previous release $S_{\alpha}^{(t-1)}$
-- Compute Wasserstein distance $W_1(p_{\alpha}^{(t)}, p_{\alpha}^{(t-1)})$ over concept classes
-- $\alpha_c = \exp(-\lambda_{\alpha} \cdot W_1)$ with $\lambda_{\alpha} = 4.0$
+- Compare current release summary $S\_{\\alpha}^{(t)}$ to previous release $S\_{\\alpha}^{(t-1)}$
+- Compute Wasserstein distance $W_1(p\_{\\alpha}^{(t)}, p\_{\\alpha}^{(t-1)})$ over concept classes
+- $\\alpha_c = \\exp(-\\lambda\_{\\alpha} \\cdot W_1)$ with $\\lambda\_{\\alpha} = 4.0$
 
 **β_c (Relational Coherence):**
 
-- For each pair $(a,b) \in {(\alpha,\beta), (\beta,\gamma), (\gamma,\alpha)}$:
+- For each pair $(a,b) \\in {(\\alpha,\\beta), (\\beta,\\gamma), (\\gamma,\\alpha)}$:
   - Apply alignment ensemble (e.g., graph matching, co-occurrence alignment, structural correspondence)
-  - Compute $\overline{\mathrm{Coh}}_{ab}$
-- $\beta_c = (\overline{\mathrm{Coh}}*{\alpha\beta} \cdot \overline{\mathrm{Coh}}*{\beta\gamma} \cdot \overline{\mathrm{Coh}}_{\gamma\alpha})^{1/3}$
+  - Compute $\\overline{\\mathrm{Coh}}\_{ab}$
+- $\\beta_c = (\\overline{\\mathrm{Coh}}*{\\alpha\\beta} \\cdot \\overline{\\mathrm{Coh}}*{\\beta\\gamma} \\cdot \\overline{\\mathrm{Coh}}\_{\\gamma\\alpha})^{1/3}$
 
 **γ_c (Process Stability):**
 
 - Compare change distributions across release windows
-- $\gamma_c = \exp(-\lambda_{\gamma} \cdot W_1(p_{\gamma}^{(t-1 \to t)}, p_{\gamma}^{(t-2 \to t-1)}))$
-- Measures stability of evolution pattern (consistent change types → high $\gamma_c$)
+- $\\gamma_c = \\exp(-\\lambda\_{\\gamma} \\cdot W_1(p\_{\\gamma}^{(t-1 \\to t)}, p\_{\\gamma}^{(t-2 \\to t-1)}))$
+- Measures stability of evolution pattern (consistent change types → high $\\gamma_c$)
 
 **Aggregate:**
 $$
-C_{\Sigma}(\text{TSC}) = (\alpha_c \cdot \beta_c \cdot \gamma_c)^{1/3}
+C\_{\\Sigma}(\\text{TSC}) = (\\alpha_c \\cdot \\beta_c \\cdot \\gamma_c)^{1/3}
 $$
 
------
+______________________________________________________________________
 
 ### 11.5 Witness Verification for TSC
 
 **Braided Interchange (TSC corpus):**
 
 1. Sample quadruples of spec sections $(x, y, z, w)$ (e.g., “Core §2”, “Core §4”, “C≡ §1”, “Operational §3”)
-1. Define composition $\odot_a$ as “logical dependency” (e.g., $x \odot_{\alpha} y$ = “section $x$ uses definitions from section $y$”)
-1. Test: Does $(x \odot_{\alpha} y) \odot_{\beta} (z \odot_{\alpha} w) \cong (x \odot_{\beta} z) \odot_{\alpha} (y \odot_{\beta} w)$?
+1. Define composition $\\odot_a$ as “logical dependency” (e.g., $x \\odot\_{\\alpha} y$ = “section $x$ uses definitions from section $y$”)
+1. Test: Does $(x \\odot\_{\\alpha} y) \\odot\_{\\beta} (z \\odot\_{\\alpha} w) \\cong (x \\odot\_{\\beta} z) \\odot\_{\\alpha} (y \\odot\_{\\beta} w)$?
 1. Implementation: Check if cross-references compose associatively (no circular or contradictory dependencies)
-1. Gate: $\delta_{\text{MFI}} \le \tau_{\text{braid}}$
+1. Gate: $\\delta\_{\\text{MFI}} \\le \\tau\_{\\text{braid}}$
 
 **S₃ invariance:**
 
-1. Compute $C_{\Sigma}(\text{TSC})$ with standard axis assignment (Pattern=α, Relation=β, Process=γ)
+1. Compute $C\_{\\Sigma}(\\text{TSC})$ with standard axis assignment (Pattern=α, Relation=β, Process=γ)
 1. Permute axis labels (e.g., Pattern=β, Relation=γ, Process=α)
 1. Verify all permuted results within CI of reference
 
@@ -943,55 +944,55 @@ $$
 - Baseline: Resource → α, Interaction → β, Experience → γ
 - Rotated: Resource → β, Interaction → γ, Experience → α
 
-1. Verify $C_{\Sigma}$ remains stable (within CI)
+1. Verify $C\_{\\Sigma}$ remains stable (within CI)
 
 **Scale equivariance:**
 
-1. Compute $\gamma_c$ with standard release window ($\Delta t$ = 1 release)
-1. Compute $\gamma_c$ with expanded window ($\Delta t$ = 2 releases)
-1. Verify $|\gamma_c^{(1)} - \gamma_c^{(2)}| \le \tau_{\delta}$
+1. Compute $\\gamma_c$ with standard release window ($\\Delta t$ = 1 release)
+1. Compute $\\gamma_c$ with expanded window ($\\Delta t$ = 2 releases)
+1. Verify $|\\gamma_c^{(1)} - \\gamma_c^{(2)}| \\le \\tau\_{\\delta}$
 
------
+______________________________________________________________________
 
 ### 11.6 Controller Policy for Self-Application
 
 **Initial release (HANDSHAKE):**
 
-- Establish baseline $C_{\Sigma}(\text{TSC})$
+- Establish baseline $C\_{\\Sigma}(\\text{TSC})$
 - Build reference distribution (requires at least 3 releases)
 - Calibrate witness tolerances for spec corpus
 
 **Production releases (OPTIMIZE):**
 
-- Maintain $\text{CI}*{\text{lo}}(C*{\Sigma}(\text{TSC})) \ge 0.90$
-- Track $\delta_{\text{MFI}}$ across versions (should remain stable or decrease)
+- Maintain $\\text{CI}*{\\text{lo}}(C*{\\Sigma}(\\text{TSC})) \\ge 0.90$
+- Track $\\delta\_{\\text{MFI}}$ across versions (should remain stable or decrease)
 - Monitor dimensional leverage to identify focus areas
 
 **Major refactors (REINFLATE):**
 
 - After structural changes (e.g., adding new axioms, reorganizing sections), re-calibrate
 - Expand CI estimation depth (more bootstrap samples)
-- Compare pre-refactor and post-refactor $C_{\Sigma}$ (should not decrease significantly)
+- Compare pre-refactor and post-refactor $C\_{\\Sigma}$ (should not decrease significantly)
 
 **Recognition flow for TSC (leverage-driven):**
 
-- If $\lambda_{\alpha}$ dominates → improve spec clarity (pattern dimension)
+- If $\\lambda\_{\\alpha}$ dominates → improve spec clarity (pattern dimension)
   - Action: Refactor definitions, add examples, improve notation consistency
-- If $\lambda_{\beta}$ dominates → improve cross-references (relational dimension)
+- If $\\lambda\_{\\beta}$ dominates → improve cross-references (relational dimension)
   - Action: Add forward/backward citations, resolve orphaned sections, verify dependency coherence
-- If $\lambda_{\gamma}$ dominates → improve version continuity (process dimension)
+- If $\\lambda\_{\\gamma}$ dominates → improve version continuity (process dimension)
   - Action: Write clearer change logs, maintain architectural stability, document migrations
 
------
+______________________________________________________________________
 
 ### 11.7 Release Gating and Report Format
 
 **Verdict Gate (normative for TSC releases):**
 
-- **MUST:** $\text{CI}*{\text{lo}}(C*{\Sigma}(\text{TSC})) \ge 0.90$
-- **MUST:** All witnesses pass ($\delta_{\text{MFI}} \le \tau_{\text{braid}}$, S₃ variance acceptable, etc.)
-- **MUST:** $Z_t < Z_{\text{crit}}$ (not OOD relative to previous releases)
-- **SHOULD:** Publish comparative analysis vs. previous version (trend in $C_{\Sigma}$, dimensional leverage shifts)
+- **MUST:** $\\text{CI}*{\\text{lo}}(C*{\\Sigma}(\\text{TSC})) \\ge 0.90$
+- **MUST:** All witnesses pass ($\\delta\_{\\text{MFI}} \\le \\tau\_{\\text{braid}}$, S₃ variance acceptable, etc.)
+- **MUST:** $Z_t < Z\_{\\text{crit}}$ (not OOD relative to previous releases)
+- **SHOULD:** Publish comparative analysis vs. previous version (trend in $C\_{\\Sigma}$, dimensional leverage shifts)
 
 If any MUST condition fails → **release is blocked** until resolved.
 
@@ -1029,28 +1030,28 @@ leverage is in relational coherence (36%), suggesting continued focus on cross-r
 completeness and dependency clarity in future releases.
 ```
 
------
+______________________________________________________________________
 
 ## 12 · Release Witnessing (Normative Requirements)
 
 **Purpose.** Every TSC release MUST include comprehensive verification of its own coherence and publish the results as part of the release documentation.
 
------
+______________________________________________________________________
 
 ### 12.1 Required Release Artifacts
 
 **1. Self-coherence score:**
 
-- $C_{\Sigma}(\text{TSC})$ with 95% CI
-- Dimensional breakdown ($\alpha_c, \beta_c, \gamma_c$)
-- Dimensional leverage ($\lambda_{\alpha}, \lambda_{\beta}, \lambda_{\gamma}, \lambda_{\Sigma}$)
+- $C\_{\\Sigma}(\\text{TSC})$ with 95% CI
+- Dimensional breakdown ($\\alpha_c, \\beta_c, \\gamma_c$)
+- Dimensional leverage ($\\lambda\_{\\alpha}, \\lambda\_{\\beta}, \\lambda\_{\\gamma}, \\lambda\_{\\Sigma}$)
 
 **2. Witness results:**
 
-- Braided Interchange: $\delta_{\text{MFI}}$ with CI and gate status
+- Braided Interchange: $\\delta\_{\\text{MFI}}$ with CI and gate status
 - S₃ Invariance: variance across permutations and gate status
 - ρ-Invariance: role rotation test results and gate status
-- Scale Equivariance: $\delta_{\text{scale}}$ and gate status
+- Scale Equivariance: $\\delta\_{\\text{scale}}$ and gate status
 - Lipschitz/Variance: ensemble statistics and gate status
 
 **3. OOD status:**
@@ -1073,26 +1074,26 @@ completeness and dependency clarity in future releases.
 
 **6. Comparative analysis:**
 
-- Trend in $C_{\Sigma}$ over last 5 releases (chart or table)
+- Trend in $C\_{\\Sigma}$ over last 5 releases (chart or table)
 - Dimensional leverage shifts (which dimension improved/degraded)
 - Witness stability trends
 
------
+______________________________________________________________________
 
 ### 12.2 Release Gate (Normative Checklist)
 
 Before tagging a release, verify:
 
-- [ ] $\text{CI}*{\text{lo}}(C*{\Sigma}(\text{TSC})) \ge 0.90$ (MUST)
+- [ ] $\\text{CI}*{\\text{lo}}(C*{\\Sigma}(\\text{TSC})) \\ge 0.90$ (MUST)
 - [ ] All witnesses pass (MUST)
-- [ ] $Z_t < Z_{\text{crit}}$ (not OOD) (MUST)
+- [ ] $Z_t < Z\_{\\text{crit}}$ (not OOD) (MUST)
 - [ ] Self-coherence report included in release notes (MUST)
 - [ ] Provenance bundle published (SHOULD)
 - [ ] Comparative analysis vs. previous release (SHOULD)
 
 If any MUST condition fails, the release is **blocked** until the issue is resolved.
 
------
+______________________________________________________________________
 
 ### 12.3 Publication Format
 
@@ -1102,7 +1103,7 @@ If any MUST condition fails, the release is **blocked** until the issue is resol
 
 **Minimal example:**
 
-```markdown
+````markdown
 # TSC Self-Coherence Report
 
 **Release:** v2.2.2  
@@ -1172,10 +1173,10 @@ tsc_self_verification:
     alpha_beta: ["gromov_wasserstein", "entropic_ot", "structural_match"]
     beta_gamma: ["graph_matching", "spectral_align", "embedding_align"]
     gamma_alpha: ["dtw", "procrustes", "temporal_correlation"]
-```
+````
 
 **Provenance bundle:** [`provenance-v2.2.2.yaml`](./provenance-v2.2.2.yaml)
 
----
+______________________________________________________________________
 
 **End — TSC Operational v2.2.2 (Normative Policy and Procedure).**

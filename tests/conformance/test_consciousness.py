@@ -30,19 +30,21 @@ def test_consciousness_parser_detects_file():
     """Verify the tsc_yaml_v2 parser detects consciousness.md"""
     if not EXAMPLE.exists():
         pytest.skip(f"Missing example: {EXAMPLE}")
-    
+
     # The file should be detected as TSC YAML (has tsc: YAML block)
     from reference.python.parsers.tsc_yaml_v2 import is_tsc_yaml
+
     assert is_tsc_yaml(str(EXAMPLE))
+
 
 def test_consciousness_cli_runs():
     """Verify CLI processes consciousness example without errors"""
     if not EXAMPLE.exists():
         pytest.skip(f"Missing example: {EXAMPLE}")
-    
+
     runner = CliRunner()
     result = runner.invoke(tsc_main, [str(EXAMPLE), "--format", "json"])
-    
+
     assert result.exit_code == 0, f"CLI failed: {result.output}"
 
 
@@ -50,17 +52,17 @@ def test_consciousness_c_sigma_valid():
     """Verify returned C_Σ is in valid range [0,1]"""
     if not EXAMPLE.exists():
         pytest.skip(f"Missing example: {EXAMPLE}")
-    
+
     runner = CliRunner()
     result = runner.invoke(tsc_main, [str(EXAMPLE), "--format", "json"])
     assert result.exit_code == 0
-    
+
     payload = json.loads(result.output)
     c = float(payload["c"])
-    
+
     # Basic validity check
     assert 0.0 <= c <= 1.0, f"C_Σ out of range: {c}"
-    
+
     # Provisional check: should show meaningful coherence (not near 0)
     # Once witnesses are implemented, tighten to expected range: 0.88 <= c <= 0.96
     assert c >= 0.5, f"C_Σ too low (witnesses not yet implemented): {c}"

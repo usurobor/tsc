@@ -3,6 +3,7 @@
 Thanks for your interest in contributing! This guide explains how to propose changes and what we expect.
 
 ## Table of Contents
+
 - [Code of Conduct](#code-of-conduct)
 - [Support Matrix](#support-matrix)
 - [How Can I Contribute?](#how-can-i-contribute)
@@ -40,6 +41,7 @@ Participation is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By contr
 ### Contributing Code
 
 We welcome:
+
 - Bug fixes
 - New parsers for additional data formats
 - Performance improvements
@@ -49,18 +51,21 @@ We welcome:
 ## Development Setup
 
 1. **Fork & clone**
+
 ```bash
    git clone https://github.com/usurobor/tsc.git
    cd tsc
 ```
 
 2. **Install dev dependencies**
+
 ```bash
    python3 -m pip install --upgrade pip
    pip install -e ".[dev]"
 ```
 
 3. **Run tests & linters**
+
 ```bash
    pytest
    make lint    # or: ruff check .
@@ -68,6 +73,7 @@ We welcome:
 ```
 
 **No-make fallbacks (all platforms):**
+
 ```bash
 ruff format .
 ruff check .
@@ -91,6 +97,7 @@ pytest
 - Avoid classes unless necessary
 
 ### Type Hints
+
 ```python
 # Good
 def parse_file(path: str, seed: int | None = None) -> ParsedInput:
@@ -110,12 +117,14 @@ def parse_file(path, seed=None):
 ## Submitting Changes
 
 ### Branching
+
 ```bash
 git checkout -b feat/your-feature-name
 # or: fix/bug-name, docs/topic, test/area
 ```
 
 ### Commit Messages (Conventional Commits)
+
 ```text
 feat: add time-series parser
 fix: correct temporal coherence calculation
@@ -130,13 +139,14 @@ Use `BREAKING CHANGE:` in commit footer for breaking API changes.
 ### Pull Request Process
 
 1. Ensure tests pass: `pytest`
-2. Run linting: `ruff check .`
-3. Format code: `ruff format .`
-4. Update `CHANGELOG.md` for significant changes
-5. Push to your fork
-6. Create PR with clear description
+1. Run linting: `ruff check .`
+1. Format code: `ruff format .`
+1. Update `CHANGELOG.md` for significant changes
+1. Push to your fork
+1. Create PR with clear description
 
 **PR Requirements:**
+
 - [ ] All tests pass
 - [ ] Code is linted and formatted
 - [ ] New features have tests
@@ -153,15 +163,16 @@ See [QUICKSTART.md](QUICKSTART.md#5-add-support-for-your-data-format) for full g
 **Quick checklist:**
 
 1. Create `reference/python/parsers/your_format.py`
-2. Implement:
+1. Implement:
    - `is_your_format(path: str) -> bool` (predicate)
    - `your_format_parser(path: str, seed: int | None) -> ParsedInput` (parser)
-3. Register in `reference/python/parsers/__init__.py`
-4. Add example: `examples/your_format/`
-5. Add test: `tests/conformance/`
-6. Update docs
+1. Register in `reference/python/parsers/__init__.py`
+1. Add example: `examples/your_format/`
+1. Add test: `tests/conformance/`
+1. Update docs
 
 **Parser requirements:**
+
 - Pure function (file I/O allowed)
 - Returns valid `ParsedInput`
 - Deterministic given `seed`

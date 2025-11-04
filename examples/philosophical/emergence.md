@@ -4,9 +4,10 @@
 
 **Scope:** Aggregate summary over 10 steps; no full simulation here. **H** states the macroscopic pattern, **V** ties local alignment to global order, **D** gives a minimal Boids-like update rule.
 
----
+______________________________________________________________________
 
 ## TSC Specification
+
 ```yaml
 tsc:
   version: 1
@@ -89,11 +90,12 @@ tsc:
       expect: "max_delta_CΣ <= tol"
 ```
 
----
+______________________________________________________________________
 
 ## Alternative Framings (S₃-Equivalent)
 
 **Gauge choice.** In this example we *choose*:
+
 - **H**: Macro flocking metrics (polarization, cluster count) — what emerges
 - **V**: Micro→Macro correlation structure — how local relates to global
 - **D**: Local update rules — how agents behave
@@ -106,12 +108,14 @@ This is a **pedagogical gauge**, not an essence claim. Any permutation of ⟨H,V
 
 **Invariant.** By design, **C_Σ is permutation-invariant**: relabeling roles does not change coherence, up to numerical tolerance. The choice of frame is positional, not ontological.
 
----
+______________________________________________________________________
 
 ## Paradigm Crosswalk
 
 ### Statistical Mechanics / Critical Phenomena
+
 TSC reframes "emergence" not as macro "popping out" from micro, but as **dimensional consistency across scales**. In phase transitions:
+
 - **H** = order parameter trajectory (magnetization, polarization)
 - **V** = fluctuation-dissipation relations, scaling laws
 - **D** = quench/drive protocol, microscopic dynamics
@@ -119,38 +123,42 @@ TSC reframes "emergence" not as macro "popping out" from micro, but as **dimensi
 Low C_Σ signals that the articulation is **scale-inconsistent** (e.g., wrong order parameter for the dynamics). High C_Σ confirms the triad captures genuine multi-scale coherence.
 
 ### Complex Systems
+
 Boids, Ising models, cellular automata all share the structure: local rules (D) produce macro patterns (H) via statistical constraints (V). TSC doesn't claim "emergence is illusory" — it claims emergence is **dimensional articulation across scales**, measurable via triadic consistency.
 
----
+______________________________________________________________________
 
 ## Adapter Table: Toy → Real Systems
 
-| Toy field | Real-system analogue |
-|-----------|---------------------|
+| Toy field       | Real-system analogue                                        |
+| --------------- | ----------------------------------------------------------- |
 | `Align` (local) | Neighbor correlation, spin alignment, local order parameter |
-| `Pol` (macro) | Magnetization, flock velocity, global order parameter |
-| `Clusters` | Domain count, percolation clusters, topological defects |
-| `update_rule` | Hamiltonian, Vicsek dynamics, Ising/Potts rules |
+| `Pol` (macro)   | Magnetization, flock velocity, global order parameter       |
+| `Clusters`      | Domain count, percolation clusters, topological defects     |
+| `update_rule`   | Hamiltonian, Vicsek dynamics, Ising/Potts rules             |
 
----
+______________________________________________________________________
 
 ## What Would Break This?
 
 **Break V (micro-macro correlation):**
+
 - Reduce neighbor radius to zero (no alignment mechanism)
 - Inject strong per-step noise that swamps correlation
 - **Expected**: v1 fails (Align no longer predicts Pol), C_Σ drops
 
 **Break D (dynamics):**
+
 - Replace update rule with random walk
 - Remove cohesion/separation forces
 - **Expected**: Macro pattern collapses, h1/h2 fail, C_Σ < 0.4
 
 **Break H (macro pattern):**
+
 - Force agents into fixed clusters (no dynamics)
 - **Expected**: Time evolution ceases, D becomes trivial, C_Σ drops
 
----
+______________________________________________________________________
 
 ## Notes for Implementers
 
@@ -158,7 +166,7 @@ Boids, Ising models, cellular automata all share the structure: local rules (D) 
 
 **Scale invariance:** Running the same analysis at different time windows or spatial coarse-grainings should preserve C_Σ within tolerance (scale-equivariance axiom).
 
----
+______________________________________________________________________
 
 ## License
 

@@ -2,7 +2,7 @@
 
 **One sentence:** A measurement framework that tests whether your three descriptions of a system fit together—without claiming any of them is “true.”
 
------
+______________________________________________________________________
 
 ## ⚡ Quick Start (Pick Your Path)
 
@@ -16,7 +16,7 @@ tsc measure ./my-project --axes=structure,calls,evolution
 
 **What it means:** Your code’s structure, call patterns, and git history tell the same story. [Implementation Guide →](#for-engineers)
 
------
+______________________________________________________________________
 
 ### 🤔 Philosophers: A Question
 
@@ -28,7 +28,7 @@ TSC says **yes**—by checking whether three measurements of the same thing **co
 
 [Deep dive: Why this matters →](#for-philosophers)
 
------
+______________________________________________________________________
 
 ### 🔬 Researchers: A Falsifiable Claim
 
@@ -40,7 +40,7 @@ TSC says **yes**—by checking whether three measurements of the same thing **co
 
 [Verify the math →](#for-researchers)
 
------
+______________________________________________________________________
 
 ### 🤖 AI Systems: What You Need to Know
 
@@ -54,7 +54,7 @@ This framework is **designed for you to read**. Humans will ask you to:
 
 [Read the specs →](#specification-stack)
 
------
+______________________________________________________________________
 
 ## What Problem Does This Solve?
 
@@ -72,11 +72,11 @@ This framework is **designed for you to read**. Humans will ask you to:
 - Articulate the system three ways (structure, relations, process)
 - Check if the three articulations **fit together**
 - Get a single coherence score: C_Σ ∈ [0,1]
-- Decision: PASS (≥0.80), FAIL (<0.80), or FAIL_DEGENERATE (measurement broke)
+- Decision: PASS (≥0.80), FAIL (\<0.80), or FAIL_DEGENERATE (measurement broke)
 
 **Key difference:** We don’t argue about “what is good structure?” We ask: “Do your structure, relations, and process measurements describe **the same system**?”
 
------
+______________________________________________________________________
 
 ## Core Idea (One Diagram)
 
@@ -115,7 +115,7 @@ This framework is **designed for you to read**. Humans will ask you to:
 
 **Result:** Either “these three views cohere” (PASS) or they don’t (FAIL/DEGENERATE).
 
------
+______________________________________________________________________
 
 ## For Engineers
 
@@ -188,7 +188,7 @@ if result.verdict == "FAIL":
 
 [Full implementation guide →](docs/implementation.md)
 
------
+______________________________________________________________________
 
 ## For Philosophers
 
@@ -240,7 +240,7 @@ TSC follows Riccardo Manzotti’s “spread mind” stance:
 
 [Read the philosophical grounding →](spec/c-equiv-kernel.md)
 
------
+______________________________________________________________________
 
 ## For Researchers
 
@@ -259,15 +259,15 @@ TSC is defined by four normative documents:
 
 As required by Operational §12, every release must report self-application:
 
-|Metric          |Value        |Threshold|Status|
-|----------------|-------------|---------|------|
-|C_Σ(TSC)        |0.94 ± 0.02  |≥ 0.90   |✅ PASS|
-|α_c (pattern)   |0.96 ± 0.01  |-        |✅     |
-|β_c (relation)  |0.93 ± 0.02  |-        |✅     |
-|γ_c (process)   |0.93 ± 0.03  |-        |✅     |
-|δ_MFI (braiding)|4.2 × 10⁻⁴   |≤ 10⁻³   |✅ PASS|
-|S₃ (axis perm)  |All within CI|-        |✅ PASS|
-|ρ (role gauge)  |All within CI|-        |✅ PASS|
+| Metric           | Value         | Threshold | Status  |
+| ---------------- | ------------- | --------- | ------- |
+| C_Σ(TSC)         | 0.94 ± 0.02   | ≥ 0.90    | ✅ PASS |
+| α_c (pattern)    | 0.96 ± 0.01   | -         | ✅      |
+| β_c (relation)   | 0.93 ± 0.02   | -         | ✅      |
+| γ_c (process)    | 0.93 ± 0.03   | -         | ✅      |
+| δ_MFI (braiding) | 4.2 × 10⁻⁴    | ≤ 10⁻³    | ✅ PASS |
+| S₃ (axis perm)   | All within CI | -         | ✅ PASS |
+| ρ (role gauge)   | All within CI | -         | ✅ PASS |
 
 **Interpretation:** The v2.2.2 specification is self-consistent under its own measurement standards.
 
@@ -277,7 +277,7 @@ As required by Operational §12, every release must report self-application:
 
 **C≡ Axioms (C1-C6):**
 
-- Self-application: C ⊙_a C = C
+- Self-application: C ⊙\_a C = C
 - Braided interchange: φ_ab prevents Eckmann-Hilton collapse
 - Typed units: 1_α ≠ 1_β ≠ 1_γ
 
@@ -319,7 +319,7 @@ Every measurement produces a **provenance bundle** (Operational §7):
 
 [Contribute →](#contributing)
 
------
+______________________________________________________________________
 
 ## For AI Systems
 
@@ -417,7 +417,7 @@ assert tsc_result.c_sigma >= 0.90, "TSC framework not self-coherent"
 
 If self-coherence fails, **do not use TSC** (the framework contradicts itself).
 
------
+______________________________________________________________________
 
 ## Specification Stack
 
@@ -460,7 +460,7 @@ C≡ (axioms) ← → Core (measurement) ← → Operational (protocol)
 1. Operational (understand protocol)
 1. Implement and validate against self-coherence benchmarks
 
------
+______________________________________________________________________
 
 ## Installation
 
@@ -486,7 +486,7 @@ pip install tsc-coherence
 - **Rust:** [tsc-rs](https://github.com/example/tsc-rs) (community)
 - **Julia:** [TSC.jl](https://github.com/example/TSC.jl) (community)
 
------
+______________________________________________________________________
 
 ## Contributing
 
@@ -516,13 +516,13 @@ TSC specifications are maintained by [governance model TBD].
 
 **Breaking changes:** Require major version bump (e.g., v3.0.0).
 
------
+______________________________________________________________________
 
 ## License
 
 [Choose: MIT / Apache 2.0 / CC-BY 4.0]
 
------
+______________________________________________________________________
 
 ## Citation
 
@@ -538,7 +538,7 @@ If you use TSC in research, please cite:
 }
 ```
 
------
+______________________________________________________________________
 
 ## Contact
 
@@ -546,6 +546,6 @@ If you use TSC in research, please cite:
 - **Discussions:** [GitHub Discussions](https://github.com/usurobor/tsc/discussions)
 - **Email:** [usurobor@gmail.com]
 
------
+______________________________________________________________________
 
 **End — TSC v2.2.2 README**

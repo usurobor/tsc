@@ -20,15 +20,16 @@ Fixes #(issue)
 
 <!-- List the key changes -->
 
-- 
-- 
-- 
+-
+-
+-
 
 ## Testing
 
 <!-- Describe how you tested these changes -->
 
 **Test commands run:**
+
 ```bash
 pytest
 make lint
@@ -36,11 +37,13 @@ make fmt
 ```
 
 **New tests added:**
+
 - [ ] Yes
 - [ ] No (explain why not)
 - [ ] N/A
 
 **Manual testing performed:**
+
 <!-- Describe any manual testing, especially for new parsers -->
 
 ## Checklist
@@ -73,8 +76,11 @@ make fmt
 ## Breaking Changes
 
 <!-- If this is a breaking change, describe: -->
+
 <!-- 1. What breaks -->
+
 <!-- 2. Migration path for users -->
+
 <!-- 3. Why this change is necessary -->
 
 ## Screenshots (if applicable)

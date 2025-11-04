@@ -3,6 +3,7 @@
 This guide assumes Python **3.10+**.
 
 ## 1) Install
+
 ```bash
 python3 -m pip install --upgrade pip
 pip install -e ".[dev]"
@@ -15,18 +16,21 @@ This exposes a `tsc` CLI (via an internal reference package). It does not imply 
 The reference controller is **pure and immutable**. To work with your data, you write **pure parser functions** that transform files into verification inputs.
 
 ### It works immediately:
+
 ```bash
 tsc examples/cellular-automata/glider.md --format text
 # Returns computed C_Σ from parsed frames
 ```
 
 The system includes two parsers:
+
 - **Cellular automaton parser** - extracts grids from markdown frames
 - **Stub parser** - returns fixed values (fallback)
 
 Parser selection is automatic via predicate dispatch.
 
 ### File structure:
+
 ```
 reference/python/
 ├── tsc_controller.py          # Pure v2.0.0 state machine (untouched)
@@ -38,6 +42,7 @@ reference/python/
 ```
 
 ## 3) Run the CLI
+
 ```bash
 # Text output
 tsc examples/cellular-automata/glider.md --format text
@@ -50,6 +55,7 @@ tsc examples/cellular-automata/random-soup.md --format json --seed 42
 ```
 
 ## 4) Run tests
+
 ```bash
 pytest
 ```
@@ -61,6 +67,7 @@ pytest
 ## 5) Add support for your data format
 
 Write a pure parser function in `reference/python/parsers/my_format.py`:
+
 ```python
 # reference/python/parsers/my_format.py
 
@@ -129,6 +136,7 @@ __all__ = ["is_my_format", "my_format_parser"]
 ```
 
 Register in `parsers/__init__.py` (just 2 lines):
+
 ```python
 # Add import
 from reference.python.parsers.my_format import is_my_format, my_format_parser
@@ -148,10 +156,11 @@ See `parsers/stub.py` for a minimal complete example, or `parsers/cellular_autom
 ## 6) Calibrate tolerance bands (once)
 
 1. Run ≥200 trials per case (vary seeds, or sampling windows)
-2. Compute median and MAD; set bounds to median ± 3×MAD (clip to [0,1])
-3. Update assertions in `tests/conformance/` and commit with a short note (N, seeds, machine)
+1. Compute median and MAD; set bounds to median ± 3×MAD (clip to [0,1])
+1. Update assertions in `tests/conformance/` and commit with a short note (N, seeds, machine)
 
 ## 7) Developer UX
+
 ```bash
 make setup      # install dev deps
 make lint       # code style
@@ -161,6 +170,7 @@ make quickstart # run glider example
 ```
 
 ## 8) Project structure
+
 ```
 /spec/              # Normative specifications
 /examples/          # Positive/negative control examples

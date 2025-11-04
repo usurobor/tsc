@@ -4,9 +4,10 @@
 
 **Scope:** Minimal table with contexts and reason scores for two actions (A, B). **H** captures reasons-responsiveness and replay-stability; **V** constrains how noise interacts with reasons; **D** specifies the decision procedure.
 
----
+______________________________________________________________________
 
 ## TSC Specification
+
 ```yaml
 tsc:
   version: 1
@@ -84,11 +85,12 @@ tsc:
       expect: "max_delta_CΣ <= tol"
 ```
 
----
+______________________________________________________________________
 
 ## Alternative Framings (S₃-Equivalent)
 
 **Gauge choice.** In this example we *choose*:
+
 - **H**: Reasons-responsiveness in choices (observable policy)
 - **V**: Noise×Reasons interaction (how indeterminism relates to deliberation)
 - **D**: Two-stage generate-then-filter procedure
@@ -101,51 +103,56 @@ This is a **pedagogical gauge**, not an essence claim. Any permutation of ⟨H,V
 
 **Invariant.** By design, **C_Σ is permutation-invariant**: relabeling roles does not change coherence, up to numerical tolerance.
 
----
+______________________________________________________________________
 
 ## Paradigm Crosswalk
 
 ### Compatibilist Guidance Control (Fischer & Ravizza)
+
 Put "guidance/mesh to reasons" into **V** (the constraint that choices track reasons appropriately); **H** is the observed policy across contexts; **D** is the deliberative procedure (how the agent generates and selects).
 
 TSC reframes guidance control not as a *definition* of free will, but as a **dimensional consistency claim**: does the agent's process (D) produce patterns (H) that satisfy the guidance constraint (V)? Low C_Σ indicates poor mesh; high C_Σ indicates coherent reasons-responsiveness.
 
 ### Dennett Two-Stage Model
+
 Stage-1 variation sits in **D** (generator of candidate considerations); selection pressure (valuation, deliberation) sits in **V** (constraint determining which candidates survive); **H** is the realized profile of choices across contexts.
 
 TSC doesn't adjudicate "true free will" — it measures whether the two-stage structure articulates coherently as a triad.
 
----
+______________________________________________________________________
 
 ## Adapter Table: Toy → Real Decision Tasks
 
-| Toy field | Real-task analogue |
-|-----------|-------------------|
-| `A, B` (options) | Gambles, actions, career choices with utilities/values |
-| `choice` | Observed decision (behavioral data) |
-| `replay` | Counterfactual choice under same reasons, resampled noise |
-| `stage_1` | Brainstorm, candidate generation, spontaneous ideation |
-| `stage_2` | Deliberation, evaluation, selection by valuation |
+| Toy field        | Real-task analogue                                        |
+| ---------------- | --------------------------------------------------------- |
+| `A, B` (options) | Gambles, actions, career choices with utilities/values    |
+| `choice`         | Observed decision (behavioral data)                       |
+| `replay`         | Counterfactual choice under same reasons, resampled noise |
+| `stage_1`        | Brainstorm, candidate generation, spontaneous ideation    |
+| `stage_2`        | Deliberation, evaluation, selection by valuation          |
 
----
+______________________________________________________________________
 
 ## What Would Break This?
 
 **Break H (reasons-responsiveness):**
+
 - Force stage-2 to ignore reasons scores (choose randomly or anti-reason)
 - **Expected**: h1 fails (accuracy drops to ~50%), C_Σ < 0.4
 
 **Break V (noise-reasons interaction):**
+
 - Make stage-1 variance overwhelm reasons (σ >> 1)
 - Or remove noise entirely (deterministic selection)
 - **Expected**: v1 fails (no smooth logit curve), or v2 fails (flips everywhere), C_Σ drops
 
 **Break D (procedure):**
+
 - Invert the reasons signal (anti-guidance)
 - Scramble stage order
 - **Expected**: All dimensions collapse, C_Σ → 0.2
 
----
+______________________________________________________________________
 
 ## Notes for Implementers
 
@@ -155,7 +162,7 @@ TSC doesn't adjudicate "true free will" — it measures whether the two-stage st
 
 **Dimensional leverage:** If C_Σ is lower than expected, check λ_V first (noise-reasons interaction is hardest to capture with sparse contexts).
 
----
+______________________________________________________________________
 
 ## License
 

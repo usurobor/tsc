@@ -43,10 +43,10 @@ Please include the following information:
 We follow coordinated vulnerability disclosure:
 
 1. You report the vulnerability privately
-2. We confirm the issue and determine severity
-3. We develop and test a fix
-4. We release a security advisory and patched version
-5. Public disclosure occurs after users have had time to upgrade (typically 7-14 days after patch release)
+1. We confirm the issue and determine severity
+1. We develop and test a fix
+1. We release a security advisory and patched version
+1. Public disclosure occurs after users have had time to upgrade (typically 7-14 days after patch release)
 
 ### Recognition
 
@@ -57,9 +57,9 @@ We maintain a security acknowledgments section in our release notes. If you'd li
 When using TSC:
 
 1. **Keep dependencies updated**: Run `pip install --upgrade tsc-framework` regularly
-2. **Validate input files**: TSC parsers execute file I/O; only parse files from trusted sources
-3. **Sandbox execution**: When parsing untrusted data, run TSC in isolated environments
-4. **Review parser code**: Custom parsers execute arbitrary Python; audit third-party parsers before use
+1. **Validate input files**: TSC parsers execute file I/O; only parse files from trusted sources
+1. **Sandbox execution**: When parsing untrusted data, run TSC in isolated environments
+1. **Review parser code**: Custom parsers execute arbitrary Python; audit third-party parsers before use
 
 ## Known Security Considerations
 
@@ -79,6 +79,7 @@ The reference implementation does not make network requests. If you add custom p
 ## Security Updates
 
 Security advisories are published at:
+
 - GitHub Security Advisories: https://github.com/usurobor/tsc/security/advisories
 - CHANGELOG.md (with `[SECURITY]` tag)
 

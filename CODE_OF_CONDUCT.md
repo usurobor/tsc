@@ -17,6 +17,6 @@ reporter of any incident.
 
 ## Appeals
 
-If you disagree with an enforcement action, you may appeal by emailing the 
+If you disagree with an enforcement action, you may appeal by emailing the
 uninvolved maintainer within 14 days. Appeals are reviewed by maintainers who
 were not involved in the original decision.

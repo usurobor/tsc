@@ -1,33 +1,27 @@
----
-name: glider
-role: positive_control
-target: high_coherence
-metric: C_Σ
-expected_value: "~0.996"
-expected_outcome: PASS
-grid: "variable"
-frames: 8
-symbols: ["#", "."]
-license: CC0-1.0
----
+______________________________________________________________________
+
+## name: glider role: positive_control target: high_coherence metric: C_Σ expected_value: "~0.996" expected_outcome: PASS grid: "variable" frames: 8 symbols: ["#", "."] license: CC0-1.0
 
 # Conway's Life Glider (Positive Control for Coherence)
 
-**Why this exists:** This is the *success case* to pair with `random-soup.md` (low coherence, C_Σ ≈ 0.24; FAIL).  
+**Why this exists:** This is the *success case* to pair with `random-soup.md` (low coherence, C_Σ ≈ 0.24; FAIL).\
 Your TSC implementation should report **high coherence** on this file: **C_Σ ≈ 0.996 → PASS**.
 
-**What it is:** A glider in Conway's Game of Life—a stable pattern that translates diagonally with period 4.  
+**What it is:** A glider in Conway's Game of Life—a stable pattern that translates diagonally with period 4.\
 Each frame shows one step in the 4-step cycle, demonstrating perfect H/V/D coherence.
 
 **How to use:** Run the exact same pipeline you used for `random-soup.md` on these frames.
 You should observe:
+
 - `glider.md` → **high** C_Σ (~0.996), **PASS**
 - `random-soup.md` → **low** C_Σ (~0.25), FAIL
 
 If `glider.md` scores low, your implementation likely has issues with pattern recognition, symmetry detection, or temporal coherence measurement.
 
----
+______________________________________________________________________
+
 ## Reference parameters
+
 - Frames: 8 (two complete cycles)
 - Grid: Variable size (centered on glider)
 - Rule: B3/S23 (Conway's Life)
@@ -35,14 +29,16 @@ If `glider.md` scores low, your implementation likely has issues with pattern re
 - Expected C_Σ: ~0.996 (tolerate ~±0.003 depending on implementation details)
 - Status: **PASS** (positive control)
 
----
+______________________________________________________________________
+
 ## 1. Articulation
 
 - **H (pattern):** 5-cell motif class, identified up to translation/rotation.
 - **V (relation):** neighbor relation; translational symmetry group `G = Z²`.
 - **D (process):** Life update rule (B3/S23); one step `U_D`.
 
----
+______________________________________________________________________
+
 ## 2. Witnesses & Registrations
 
 - **w_H:** extract motif class ID from grid snapshots; `μ_H` = class code.
@@ -51,26 +47,32 @@ If `glider.md` scores low, your implementation likely has issues with pattern re
 
 Independence: `w_*` run on separate pipelines with distinct preprocessing seeds.
 
----
+______________________________________________________________________
+
 ## 3. Ensemble Checks
 
 ### 3.1 Commutation
+
 - Run: `μ_H ∘ U_D` vs `U_D ∘ μ_H` (with `μ_V` contextualization).
 - Expectation: equivalence up to known displacement; `E_comm ≈ 1`.
 
 ### 3.2 Conservation
+
 - V-invariants: cell count modulo translation; glider's displacement per 4 steps.
 - Check: invariants visible in H and preserved by D; `E_cons ≈ 1`.
 
 ### 3.3 Symmetry
+
 - `G = Z²` translations. Verify D-equivariance: `U_D(g·x) = g·U_D(x)`, ∀g ∈ G
 - Score: near 1 across runs (violations ≈ 0).
 
 ### 3.4 Scale
+
 - Coarse-grain: group 2×2 blocks; Fine-grain: sub-cell sampling (super-resolution sim).
 - `C_Σ^(s)` stable within τ = 0.02; `E_scale ≈ 1`.
 
----
+______________________________________________________________________
+
 ## 4. Frames
 
 Below are the 8 frames showing two complete glider cycles. Trailing spaces are significant: there are none.
@@ -142,7 +144,8 @@ Below are the 8 frames showing two complete glider cycles. Trailing spaces are s
 ....#
 ...##
 
----
+______________________________________________________________________
+
 ## 5. Expected Scores
 
 - `H_c = 0.995` (pattern stability across frames)
@@ -152,7 +155,8 @@ Below are the 8 frames showing two complete glider cycles. Trailing spaces are s
 
 Permutation test (random role relabeling): `ΔC_Σ < 1e-4`.
 
----
+______________________________________________________________________
+
 ## Reproducibility
 
 - Rule: Conway's Life B3/S23

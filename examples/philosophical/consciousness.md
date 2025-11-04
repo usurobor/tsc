@@ -1,30 +1,31 @@
 # Consciousness — a TSC (Triadic Self‑Coherence) exemplar
+
 *Version:* examples v2.1.1 • aligns with **spec/tsc-core.md v2.0.0** and **spec/tsc-oper.md v2.0.0**
 
-> **What this file is.** A **didactic, philosophy‑first** demonstration that treats a conscious event as one phenomenon ≡ articulated triadically as **H (pattern)**, **V (relation)**, **D (process)** and then asks a single question: *do these three articulations describe one coherent event?*  
+> **What this file is.** A **didactic, philosophy‑first** demonstration that treats a conscious event as one phenomenon ≡ articulated triadically as **H (pattern)**, **V (relation)**, **D (process)** and then asks a single question: *do these three articulations describe one coherent event?*\
 > **What this file is not.** Not a theory that "explains consciousness," not a replacement for empirical science, not a commitment to internal representations. It is a **consistency check** across three inseparable dimensions of one event.
 
----
+______________________________________________________________________
 
 ## 0) Coherence‑first stance (recognition, not assumption)
 
-- **Given:** There is cohering (≡). Any event we care about already articulates as **H/V/D**.  
-- **Task:** Recognize that triadic articulation and **measure** whether the articulations **cohere** (no privileged dimension; full S₃ role symmetry).  
+- **Given:** There is cohering (≡). Any event we care about already articulates as **H/V/D**.
+- **Task:** Recognize that triadic articulation and **measure** whether the articulations **cohere** (no privileged dimension; full S₃ role symmetry).
 - **Outcome:** A single score **C_Σ ∈ [0,1]** summarizing dimensional consistency, plus diagnostics showing where and why coherence is lost.
 
----
+______________________________________________________________________
 
 ## 1) Phenomenon and articulation
 
 **Phenomenon:** brief masked letter perception with report (toy paradigm). Each *trial* is a conscious event candidate.
 
-- **H (pattern / cohered):** compact neural features per trial (stable pattern in measurement space).  
-- **V (relation / coherer):** phenomenal distinctions per trial (clarity, location, confidence) as *relational structure* among trials (similar/different).  
+- **H (pattern / cohered):** compact neural features per trial (stable pattern in measurement space).
+- **V (relation / coherer):** phenomenal distinctions per trial (clarity, location, confidence) as *relational structure* among trials (similar/different).
 - **D (process / cohering):** the task protocol as unfolding process (masking, SOA, prompt, report), including dispositions to act (button press, reaction time).
 
 > **S₃ note.** We pick this articulation for pedagogy. Any **permutation of {H,V,D}** is an *equally valid* articulation of the same event; **C_Σ** must be invariant to relabeling (§4).
 
----
+______________________________________________________________________
 
 ## 2) TSC block (YAML) — toy observations, ensemble, expectations
 
@@ -139,7 +140,7 @@ tsc:
 
 **Interpretation:** The three articulations tell the **same structural story**: clear phenomenal distinctions (V) align with stronger pattern (H) and with the process‑level dispositions (D). The geometric mean **C_Σ ≈ 0.92** indicates one coherent phenomenon (currently returns ~0.67 due to provisional stubs).
 
----
+______________________________________________________________________
 
 ## 3) Negative control (break coherence)
 
@@ -149,33 +150,33 @@ Two ways to fail intentionally:
 
 \`\`\`yaml
 tsc_negative:
-  description: "Shuffle V across trials (destroys HV relational consistency)"
-  perturbation: "permute(O_V.id)"
-  expectation:
-    H_c: "~0.92"     # unchanged (H stability is internal)
-    V_c: "~0.91"     # unchanged individually
-    D_c: "~0.94"     # unchanged individually
-    # But cross-dimension consistency collapses; aggregate coherence drops
-    C_sigma: "≈ 0.35–0.45"
-  diagnostic_signature:
-    permutation_test: "FAIL (HV)"
-    ensemble_variance: "↑ (instability across aligners)"
+description: "Shuffle V across trials (destroys HV relational consistency)"
+perturbation: "permute(O_V.id)"
+expectation:
+H_c: "~0.92" # unchanged (H stability is internal)
+V_c: "~0.91" # unchanged individually
+D_c: "~0.94" # unchanged individually
+\# But cross-dimension consistency collapses; aggregate coherence drops
+C_sigma: "≈ 0.35–0.45"
+diagnostic_signature:
+permutation_test: "FAIL (HV)"
+ensemble_variance: "↑ (instability across aligners)"
 \`\`\`
 
 ### 3.2 Flip report labels in D for high‑clarity trials
 
 \`\`\`yaml
 tsc_negative_2:
-  description: "Invert D.report for the 6 highest V.clarity trials"
-  expectation:
-    C_sigma: "≈ 0.40–0.55"     # D contradicts HV; verdict should fail if Θ=0.80
-  diagnostic_signature:
-    conservation_check: "violated (disposition mis‑conserves V‑implied quantity)"
+description: "Invert D.report for the 6 highest V.clarity trials"
+expectation:
+C_sigma: "≈ 0.40–0.55" # D contradicts HV; verdict should fail if Θ=0.80
+diagnostic_signature:
+conservation_check: "violated (disposition mis‑conserves V‑implied quantity)"
 \`\`\`
 
 > **Reading failures.** Low **C_Σ** means *either* incoherent articulation *or* ill‑posed measurement. Use witness swap, scale sweep, permutation, and ensemble ablation to separate these cases.
 
----
+______________________________________________________________________
 
 ## 4) S₃‑equivalent framings (make symmetry visible)
 
@@ -183,77 +184,81 @@ tsc_negative_2:
 
 **120° rotation:** H←V, V←D, D←H
 
-* H: phenomenal distinctions as the *pattern we compare*,
-* V: process relations (who‑follows‑whom in the trial dynamics) as *coherer*,
-* D: neural updates as the *unfolding process*.
+- H: phenomenal distinctions as the *pattern we compare*,
+- V: process relations (who‑follows‑whom in the trial dynamics) as *coherer*,
+- D: neural updates as the *unfolding process*.
   **Claim:** **C_Σ** remains within the tolerance band (numerical differences only from change of metric families).
 
 **240° rotation:** H←D, V←H, D←V
 
-* H: protocol‑level regularities as pattern,
-* V: neural constraints as coherer,
-* D: phenomenal unfolding (clarity → confidence) as process.
+- H: protocol‑level regularities as pattern,
+- V: neural constraints as coherer,
+- D: phenomenal unfolding (clarity → confidence) as process.
   **Claim:** same verdict; different **diagnostic leverage** (which subscore dominates) depending on summaries/metrics.
 
 > **Purpose of this section:** prevent reification of any one assignment as "the essence" of consciousness. Roles are **positional**, not essential; the phenomenon is the **triad**.
 
----
+______________________________________________________________________
 
 ## 5) Paradigm crosswalk (orientation, not endorsement)
 
 This exemplar is intentionally **minimal**. Here is how common paradigms can be *reframed* triadically without competition:
 
-* **Global Neuronal Workspace (GNW):** "Ignition/broadcast" is a **D**‑level process; broadcast constraints are **V**‑like; the widespread pattern is **H**. TSC asks whether these articulations **cohere** for an event, not which is ontologically fundamental.
-* **Integrated Information Theory (IIT):** structural/causal organization (Φ, cause–effect repertoires) is **V**‑like; candidate phenomenal distinctions are **V**; observed macro‑pattern **H**; system dynamics **D**. TSC treats these as three co‑dimensions of one event and tests S₃‑invariant **C_Σ** rather than privileging any single measure.
-* **Predictive Processing (PP):** model constraints and precisions are **V**; prediction‑error fields and activations as **H**; inference/update flow as **D**. Again, TSC compares for **dimensional consistency**.
+- **Global Neuronal Workspace (GNW):** "Ignition/broadcast" is a **D**‑level process; broadcast constraints are **V**‑like; the widespread pattern is **H**. TSC asks whether these articulations **cohere** for an event, not which is ontologically fundamental.
+- **Integrated Information Theory (IIT):** structural/causal organization (Φ, cause–effect repertoires) is **V**‑like; candidate phenomenal distinctions are **V**; observed macro‑pattern **H**; system dynamics **D**. TSC treats these as three co‑dimensions of one event and tests S₃‑invariant **C_Σ** rather than privileging any single measure.
+- **Predictive Processing (PP):** model constraints and precisions are **V**; prediction‑error fields and activations as **H**; inference/update flow as **D**. Again, TSC compares for **dimensional consistency**.
 
 > **Manzotti‑compatible reading:** no inner "pictures." **H and V are co‑dimensions of D** (the happening), not maps between separate spaces. TSC compares **structures** across dimensions; it does not translate **contents**.
 
----
+______________________________________________________________________
 
 ## 6) How to read the outcomes (philosophy → math → engineering)
 
-* **Philosophy (stance):** There is one event articulated triadically.
-* **Math (invariants):** S₃‑invariant aggregation, geometric mean **C_Σ**, degenerate‑guard (any 0 collapses C_Σ), refinement‑monotonicity.
-* **Engineering (practice):** pick summaries and an alignment **ensemble** *before* observation; log ensemble variance; report **C_Σ** plus witness floors; run permutation/scale/ablation diagnostics.
+- **Philosophy (stance):** There is one event articulated triadically.
+- **Math (invariants):** S₃‑invariant aggregation, geometric mean **C_Σ**, degenerate‑guard (any 0 collapses C_Σ), refinement‑monotonicity.
+- **Engineering (practice):** pick summaries and an alignment **ensemble** *before* observation; log ensemble variance; report **C_Σ** plus witness floors; run permutation/scale/ablation diagnostics.
 
----
+______________________________________________________________________
 
 ## 7) Appendix — minimal CTB sketch (illustrative)
 
 > **Note:** CTB (c≡) is a tiny notation that normalizes all syntax to **≡**. This snippet is illustrative; the formal CTB spec lives elsewhere.
 
 \`\`\`ctb
+
 # One triadic event with named articulations
+
 E := ≡{ H: reportability_pattern
-      , V: phenomenal_structure
-      , D: protocol_process }
+, V: phenomenal_structure
+, D: protocol_process }
 
 # Coherence predicate (Θ from thresholds)
+
 coherent(E, Θ) := (CΣ(E.H, E.V, E.D) ≥ Θ)
 
 # S₃ invariance law (schematic)
+
 ∀π ∈ S3. CΣ(E.H, E.V, E.D) = CΣ(E.π(H), E.π(V), E.π(D))
 \`\`\`
 
----
+______________________________________________________________________
 
 ## 8) FAQ (micro)
 
-* **Is this reductionist or dualist?** Neither. It is **triadic** and **co‑inductive**: three inseparable dimensions of one phenomenon.
-* **What if reports are unreliable?** Then **D** undermines coherence; diagnostics should flag instability and suggest better instrumentation.
-* **Can C_Σ be high while one subscore is low?** The geometric mean penalizes imbalance; sustained low H_c/V_c/D_c lowers **C_Σ** and focuses investigation via **λ_X = −log X_c**.
+- **Is this reductionist or dualist?** Neither. It is **triadic** and **co‑inductive**: three inseparable dimensions of one phenomenon.
+- **What if reports are unreliable?** Then **D** undermines coherence; diagnostics should flag instability and suggest better instrumentation.
+- **Can C_Σ be high while one subscore is low?** The geometric mean penalizes imbalance; sustained low H_c/V_c/D_c lowers **C_Σ** and focuses investigation via **λ_X = −log X_c**.
 
----
+______________________________________________________________________
 
 ## 9) Checklist (for maintainers)
 
-* The **tsc** block uses only neutral names; no commitments to "inner images."
-* **S₃ section** present with two non‑trivial permutations.
-* **Negative controls** included and interpreted.
-* **Crosswalk** frames, not competes; **Manzotti‑compatible** note explicit.
-* Numbers are **illustrative**; update bands if reference implementation produces tighter estimates.
+- The **tsc** block uses only neutral names; no commitments to "inner images."
+- **S₃ section** present with two non‑trivial permutations.
+- **Negative controls** included and interpreted.
+- **Crosswalk** frames, not competes; **Manzotti‑compatible** note explicit.
+- Numbers are **illustrative**; update bands if reference implementation produces tighter estimates.
 
----
+______________________________________________________________________
 
 **Notes (source memory):** The reframing of consciousness as a **coherence question** across H/V/D and the emphasis that low alignment is a *measurement property* rather than a metaphysical chasm, plus the advice to increase measurement bandwidth to test the gap, were articulated earlier in our shared notes. The triadic, S₃‑invariant treatment and philosophy anchors were also part of that converged direction.
