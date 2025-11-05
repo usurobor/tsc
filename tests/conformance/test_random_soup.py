@@ -17,13 +17,15 @@ def test_random_soup_c_in_range(seed: int):
         pytest.skip(f"Missing example: {EXAMPLE}")
 
     runner = CliRunner()
-    result = runner.invoke(tsc_main, [str(EXAMPLE), "--format", "json", "--seed", str(seed)])
-    assert result.exit_code == 0, result.output
+    result = runner.invoke(
+        tsc_main, ["compute", str(EXAMPLE), "--format", "json", "--seed", str(seed)]
+    )
+    assert result.exit_code in [0, 1], result.output  # May fail coherence threshold
 
     import json
 
     payload = json.loads(result.output)
-    c = float(payload["c"])
+    c = float(payload["c_sigma"])
 
     # Temporal coherence for random i.i.d. frames
     # Expected ~0.25-0.35 depending on Jaccard implementation details

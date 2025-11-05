@@ -10,27 +10,26 @@ EXAMPLE = Path("examples/cellular-automata/glider.md")
 
 pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
-
+# tests/conformance/test_glider.py
 def test_cli_help_smoke():
     runner = CliRunner()
     result = runner.invoke(tsc_main, ["--help"])
     assert result.exit_code == 0
-    assert "TSC CLI (v2.1)" in result.output
-
+    assert "TSC CLI (v2.3.0)" in result.output 
 
 def test_glider_c_in_range():
     if not EXAMPLE.exists():
         pytest.skip(f"Missing example: {EXAMPLE}")
 
     runner = CliRunner()
-    result = runner.invoke(tsc_main, [str(EXAMPLE), "--format", "json"])
+    result = runner.invoke(tsc_main, ["compute", str(EXAMPLE), "--format", "json"])
     assert result.exit_code == 0, result.output
 
     # Parse JSON-like output printed by rich (it's strict JSON)
     import json
 
     payload = json.loads(result.output)
-    c = float(payload["c"])
+    c = float(payload["c_sigma"])
 
     # Initial band; tighten after calibration
     assert 0.994 <= c <= 0.999

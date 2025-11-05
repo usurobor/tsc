@@ -38,7 +38,7 @@ def test_emergence_cli_runs():
         pytest.skip(f"Missing example: {EXAMPLE}")
 
     runner = CliRunner()
-    result = runner.invoke(tsc_main, [str(EXAMPLE), "--format", "json"])
+    result = runner.invoke(tsc_main, ["compute", str(EXAMPLE), "--format", "json"])
 
     assert result.exit_code == 0, f"CLI failed: {result.output}"
 
@@ -49,11 +49,11 @@ def test_emergence_c_sigma_valid():
         pytest.skip(f"Missing example: {EXAMPLE}")
 
     runner = CliRunner()
-    result = runner.invoke(tsc_main, [str(EXAMPLE), "--format", "json"])
+    result = runner.invoke(tsc_main, ["compute", str(EXAMPLE), "--format", "json"])
     assert result.exit_code == 0
 
     payload = json.loads(result.output)
-    c = float(payload["c"])
+    c = float(payload["c_sigma"])
 
     # Basic validity check
     assert 0.0 <= c <= 1.0, f"C_Σ out of range: {c}"

@@ -1,3 +1,4 @@
+# reference/cli/tsc.py
 """
 reference/cli/tsc.py — TSC Command Line Interface
 
@@ -16,7 +17,7 @@ from reference.python.tsc_controller import compute_c_from_file
 
 @click.group()
 def main():
-    """TSC Framework CLI."""
+    """TSC CLI (v2.3.0)"""
     pass
 
 
@@ -30,11 +31,10 @@ def compute(path: str, format: str, seed: int | None):
         c_sigma = compute_c_from_file(path, seed=seed)
 
         if format == "json":
-            click.echo(json.dumps({"C_sigma": c_sigma, "path": path}, indent=2))
+            click.echo(json.dumps({"c_sigma": c_sigma, "path": path}, indent=2))
         else:
             click.echo(f"C_Σ = {c_sigma:.4f}")
 
-        # Exit code based on threshold (0.3 for examples)
         sys.exit(0 if c_sigma >= 0.3 else 1)
 
     except Exception as e:

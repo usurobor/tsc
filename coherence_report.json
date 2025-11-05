@@ -77,10 +77,10 @@
     "seed": 42
   },
   "provenance": {
-    "git_commit": "6fee0f8",
+    "git_commit": "e4b4b9d",
     "dirty": true,
     "python": "3.11.14",
-    "p_ref_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "p_ref_hash": "sha256:68622f3f73b5759f128c0e0585104a983dd52c16f310c6b9855fdc82f7e37f85",
     "spec_files": [
       "c-equiv-kernel.md",
       "c-equiv.md",
