@@ -15,7 +15,7 @@ def test_cli_help_smoke():
     runner = CliRunner()
     result = runner.invoke(tsc_main, ["--help"])
     assert result.exit_code == 0
-    assert "TSC CLI (v2.3.0)" in result.output 
+    assert "TSC CLI (v2.3.0)" in result.output
 
 def test_glider_c_in_range():
     if not EXAMPLE.exists():
