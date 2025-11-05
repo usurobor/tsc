@@ -27,10 +27,11 @@ import statistics
 import subprocess
 import unicodedata
 from collections import Counter
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from itertools import permutations
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 # Optional accelerators
 try:
@@ -126,9 +127,7 @@ C_EQ = SPEC / "c-equiv.md"
 def load_specs() -> dict[str, str]:
     """Load all specification markdown files."""
     if not SPEC.exists():
-        raise FileNotFoundError(
-            f"Spec directory not found: {SPEC}\nRun from repository root."
-        )
+        raise FileNotFoundError(f"Spec directory not found: {SPEC}\nRun from repository root.")
     files = [p for p in SPEC.glob("*.md") if p.is_file()]
     if not files:
         raise FileNotFoundError(f"No markdown files in {SPEC}")
@@ -318,9 +317,7 @@ def _git_spec_snapshots() -> list[tuple[str, dict[str, str]]]:
     """Return [(commit, {fname:text})] for last 2 commits touching spec/."""
     try:
         revs = (
-            subprocess.check_output(
-                shlex.split("git rev-list -n 2 HEAD -- spec"), text=True
-            )
+            subprocess.check_output(shlex.split("git rev-list -n 2 HEAD -- spec"), text=True)
             .strip()
             .splitlines()
         )
@@ -387,10 +384,7 @@ def gamma_axis(params: Params, specs_now: Mapping[str, str]) -> AxisScore:
     dW = wasserstein_1(v0, v1)
 
     # Generate replicates with small perturbations
-    reps = [
-        math.exp(-params.lambda_gamma * (dW * (1.0 + 0.01 * (k % 3 - 1))))
-        for k in range(64)
-    ]
+    reps = [math.exp(-params.lambda_gamma * (dW * (1.0 + 0.01 * (k % 3 - 1)))) for k in range(64)]
     mean = sum(reps) / len(reps)
     return AxisScore(mean=mean, reps=reps, diag={"has_git": True, "dW": dW})
 
@@ -480,9 +474,7 @@ def _term_eq(a: Term, b: Term) -> bool:
     """Structural equality of terms."""
     if a.tag != b.tag or len(a.args) != len(b.args):
         return False
-    return all(
-        _term_eq(x, y) if isinstance(x, Term) else x == y for x, y in zip(a.args, b.args)
-    )
+    return all(_term_eq(x, y) if isinstance(x, Term) else x == y for x, y in zip(a.args, b.args))
 
 
 def _right_assoc(t: Term) -> Term:

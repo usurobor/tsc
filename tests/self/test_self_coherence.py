@@ -5,8 +5,6 @@ tests/self/test_self_coherence.py — Self-coherence test suite
 import json
 from pathlib import Path
 
-import pytest
-
 
 def test_self_coherence_runs_and_emits_report():
     """Test that self-measurement runs and emits a valid report."""

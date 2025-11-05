@@ -7,6 +7,7 @@ ______________________________________________________________________
 ## ⚡ Quick Start (Pick Your Path)
 
 ### 🔧 Engineers: Run This
+
 ```bash
 # Measure coherence of your codebase
 tsc measure ./my-project --axes=structure,calls,evolution
@@ -18,11 +19,13 @@ tsc measure ./my-project --axes=structure,calls,evolution
 ## Self-Measurement
 
 TSC v2.3.0 can measure its own coherence:
+
 ```bash
 tsc self --out coherence_report.json
 ```
 
 **Current Status (v2.3.0 Baseline):**
+
 - **C_Σ** = 0.238 (Verdict: FAIL)
 - **S₃ Witness:** PASS ✅
 - **Braided Witness:** FAIL ❌
@@ -30,6 +33,7 @@ tsc self --out coherence_report.json
 The FAIL verdict is expected and demonstrates honest measurement. The repository is not yet fully self-coherent. See [docs/self-coherence-v2.3.0.md](docs/self-coherence-v2.3.0.md) for details and roadmap.
 
 **Target:** Achieve C_Σ ≥ 0.90 by v2.4.0.
+
 ______________________________________________________________________
 
 ### 🤔 Philosophers: A Question
@@ -61,8 +65,8 @@ ______________________________________________________________________
 This framework is **designed for you to read**. Humans will ask you to:
 
 1. Evaluate whether a system coheres
-2. Explain why C_Σ is high or low
-3. Suggest improvements based on leverage (λ_a)
+1. Explain why C_Σ is high or low
+1. Suggest improvements based on leverage (λ_a)
 
 **Key:** You have access to the complete formal specification. Humans don't need to understand the math—you do.
 
@@ -86,13 +90,14 @@ ______________________________________________________________________
 - Articulate the system three ways (structure, relations, process)
 - Check if the three articulations **fit together**
 - Get a single coherence score: C_Σ ∈ [0,1]
-- Decision: PASS (≥0.80), FAIL (<0.80), or FAIL_DEGENERATE (measurement broke)
+- Decision: PASS (≥0.80), FAIL (\<0.80), or FAIL_DEGENERATE (measurement broke)
 
 **Key difference:** We don't argue about "what is good structure?" We ask: "Do your structure, relations, and process measurements describe **the same system**?"
 
 ______________________________________________________________________
 
 ## Core Idea (One Diagram)
+
 ```
          One System (C)
               |
@@ -121,10 +126,10 @@ ______________________________________________________________________
 **In words:**
 
 1. Observe the system three ways (α, β, γ)
-2. Summarize each observation (S_α, S_β, S_γ)
-3. Compare summaries pairwise using multiple alignment methods
-4. Aggregate to single score: C_Σ
-5. Apply witnesses (safety checks) and verdict gate
+1. Summarize each observation (S_α, S_β, S_γ)
+1. Compare summaries pairwise using multiple alignment methods
+1. Aggregate to single score: C_Σ
+1. Apply witnesses (safety checks) and verdict gate
 
 **Result:** Either "these three views cohere" (PASS) or they don't (FAIL/DEGENERATE).
 
@@ -133,11 +138,13 @@ ______________________________________________________________________
 ## For Engineers
 
 ### Installation
+
 ```bash
 pip install tsc-coherence  # (hypothetical - adapt to your implementation)
 ```
 
 ### Basic Usage
+
 ```python
 from tsc import measure_coherence
 
@@ -210,16 +217,16 @@ ______________________________________________________________________
 **Traditional measurement assumes:**
 
 1. There's a "true" state of the system
-2. Our measurement approximates that truth
-3. Better measurements → closer to truth
+1. Our measurement approximates that truth
+1. Better measurements → closer to truth
 
 **Problem:** We never have access to "the truth" to check our approximation.
 
 **TSC's alternative:**
 
 1. There's one **happening** (the system in process)
-2. We articulate it three ways (α, β, γ)
-3. We check if the three articulations **cohere** (fit together as descriptions of **one** happening)
+1. We articulate it three ways (α, β, γ)
+1. We check if the three articulations **cohere** (fit together as descriptions of **one** happening)
 
 **Key insight:** We don't need "truth" to test consistency. Three descriptions either fit together or they don't—we can measure that directly.
 
@@ -260,9 +267,9 @@ ______________________________________________________________________
 TSC is defined by four normative documents:
 
 1. **[C≡ v2.2.2](spec/c-equiv.md)** — Axiomatic foundation (braided monoidal structure)
-2. **[Core v2.2.2](spec/tsc-core.md)** — Measurement calculus (how to compute C_Σ)
-3. **[Operational v2.2.2](spec/tsc-oper.md)** — Protocol and policy (how to run measurements)
-4. **[Glossary v2.2.2](spec/tsc-glossary.md)** — Multi-audience terminology reference
+1. **[Core v2.2.2](spec/tsc-core.md)** — Measurement calculus (how to compute C_Σ)
+1. **[Operational v2.2.2](spec/tsc-oper.md)** — Protocol and policy (how to run measurements)
+1. **[Glossary v2.2.2](spec/tsc-glossary.md)** — Multi-audience terminology reference
 
 **Bootstrap:** Start with [C≡ Kernel v2.0.0](spec/c-equiv-kernel.md) for intuitive intro.
 
@@ -272,23 +279,23 @@ TSC is defined by four normative documents:
 
 As required by Operational §12, v2.3.0 delivers the first empirical self-application:
 
-| Metric           | Value         | Threshold | Status  |
-| ---------------- | ------------- | --------- | ------- |
-| C_Σ(TSC)         | 0.238         | ≥ 0.90    | ❌ FAIL |
-| CI               | [0.093, 0.297]| -         | -       |
-| α_c (pattern)    | 0.306         | -         | Moderate|
-| β_c (relation)   | 0.061         | -         | Very Low|
-| γ_c (process)    | 0.721         | -         | Good    |
-| δ_MFI (braiding) | 0.923         | ≤ 0.001   | ❌ FAIL |
-| S₃ (axis perm)   | All within CI | -         | ✅ PASS |
+| Metric           | Value          | Threshold | Status   |
+| ---------------- | -------------- | --------- | -------- |
+| C_Σ(TSC)         | 0.238          | ≥ 0.90    | ❌ FAIL  |
+| CI               | [0.093, 0.297] | -         | -        |
+| α_c (pattern)    | 0.306          | -         | Moderate |
+| β_c (relation)   | 0.061          | -         | Very Low |
+| γ_c (process)    | 0.721          | -         | Good     |
+| δ_MFI (braiding) | 0.923          | ≤ 0.001   | ❌ FAIL  |
+| S₃ (axis perm)   | All within CI  | -         | ✅ PASS  |
 
-**Interpretation:** 
+**Interpretation:**
 
 The FAIL verdict is **expected** and demonstrates **honest measurement**:
 
 - ✅ **Implementation correct:** S₃ witness passes (no role privilege, genuinely symmetric)
 - ❌ **Repository incoherent:** Specs don't cohere by their own standards
-- 🎯 **Actionable feedback:** 
+- 🎯 **Actionable feedback:**
   - Braided parser needs fixing (92% equations don't normalize)
   - Cross-references very weak (β_c = 0.061)
   - Pattern stability moderate (α_c = 0.306)
@@ -299,7 +306,7 @@ The FAIL verdict is **expected** and demonstrates **honest measurement**:
 
 **Roadmap to Self-Coherence:**
 
-- **v2.3.1** (Engineering): Fix braided parser → reduce δ_MFI from 0.923 to <0.01
+- **v2.3.1** (Engineering): Fix braided parser → reduce δ_MFI from 0.923 to \<0.01
 - **v2.3.2** (Content): Strengthen cross-references → raise β_c from 0.061 to 0.50+
 - **v2.4.0** (Integration): Achieve C_Σ ≥ 0.90 → PASS verdict, enable release gate
 
@@ -309,7 +316,7 @@ The FAIL verdict is **expected** and demonstrates **honest measurement**:
 
 **C≡ Axioms (C1-C6):**
 
-- Self-application: C ⊙_a C = C
+- Self-application: C ⊙\_a C = C
 - Braided interchange: φ_ab prevents Eckmann-Hilton collapse
 - Typed units: 1_α ≠ 1_β ≠ 1_γ
 
@@ -338,6 +345,7 @@ Every measurement produces a **provenance bundle** (Operational §7):
 **Guarantee:** Given the provenance bundle, third parties can reproduce C_Σ to numerical precision.
 
 **v2.3.0 Provenance Example:**
+
 ```json
 {
   "git_commit": "1a71d6c",
@@ -369,13 +377,14 @@ ______________________________________________________________________
 ### What You Should Do
 
 1. **Read the spec stack** (C≡, Core, Operational) in order
-2. **Understand the witnesses** (Operational §4)—they're safety checks
-3. **Implement or use the protocol** (Operational §3)
-4. **Always report provenance** (Operational §7)—reproducibility is mandatory
+1. **Understand the witnesses** (Operational §4)—they're safety checks
+1. **Implement or use the protocol** (Operational §3)
+1. **Always report provenance** (Operational §7)—reproducibility is mandatory
 
 ### Key Decision Points
 
 **When asked to measure coherence:**
+
 ```python
 # Pseudocode
 result = run_tsc_protocol(
@@ -394,6 +403,7 @@ else:  # PASS
 ```
 
 **When asked to explain low C_Σ:**
+
 ```python
 # Check leverage
 λ_α, λ_β, λ_γ = result.leverages
@@ -419,15 +429,16 @@ Focus effort on the axis with highest leverage:
 **FAIL_DEGENERATE causes:**
 
 1. **Braiding fails (δ_MFI > τ):** Articulations aren't actually orthogonal
-2. **High variance (Var_ab > τ):** Alignment methods disagree—comparison unstable
-3. **S₃ violation:** Results change when axes are permuted (implementation bug)
-4. **OOD (Z_t > Z_crit):** Measurement regime shifted (need recalibration)
+1. **High variance (Var_ab > τ):** Alignment methods disagree—comparison unstable
+1. **S₃ violation:** Results change when axes are permuted (implementation bug)
+1. **OOD (Z_t > Z_crit):** Measurement regime shifted (need recalibration)
 
 **When you see FAIL_DEGENERATE:** Tell the user the measurement is invalid (don't report C_Σ). Diagnose which witness failed.
 
 ### Self-Application Check
 
 Before trusting TSC for a critical decision, verify self-coherence:
+
 ```python
 # Measure TSC itself
 tsc_result = measure_coherence(
@@ -447,6 +458,7 @@ tsc_result = measure_coherence(
 **Expected (v2.3.0):** C_Σ(TSC) = 0.238 (FAIL) - Repository not yet self-coherent.
 
 **Target (v2.4.0):** C_Σ(TSC) ≥ 0.90 (PASS) - Achieve self-coherence through:
+
 - Fixing braided parser (v2.3.1)
 - Improving cross-references (v2.3.2)
 
@@ -459,16 +471,17 @@ ______________________________________________________________________
 ### Normative Documents (Must Read)
 
 1. **[C≡ Kernel v2.0.0](spec/c-equiv-kernel.md)** — Intuitive bootstrap (start here)
-2. **[C≡ v2.2.2](spec/c-equiv.md)** — Axiomatic foundation (6 axioms)
-3. **[Core v2.2.2](spec/tsc-core.md)** — Measurement calculus (formulas)
-4. **[Operational v2.2.2](spec/tsc-oper.md)** — Protocol and policy (procedures)
+1. **[C≡ v2.2.2](spec/c-equiv.md)** — Axiomatic foundation (6 axioms)
+1. **[Core v2.2.2](spec/tsc-core.md)** — Measurement calculus (formulas)
+1. **[Operational v2.2.2](spec/tsc-oper.md)** — Protocol and policy (procedures)
 
 ### Reference Documents (As Needed)
 
 1. **[Glossary v2.2.2](spec/tsc-glossary.md)** — Multi-audience terminology
-2. **[Self-Coherence Report v2.3.0](docs/self-coherence-v2.3.0.md)** — Baseline measurement
+1. **[Self-Coherence Report v2.3.0](docs/self-coherence-v2.3.0.md)** — Baseline measurement
 
 ### Document Dependency Graph
+
 ```
 C≡ Kernel (bootstrap)
     ↓
@@ -482,17 +495,17 @@ C≡ (axioms) ← → Core (measurement) ← → Operational (protocol)
 **Reading order for humans:**
 
 1. This README (orientation)
-2. C≡ Kernel (intuition)
-3. Glossary (when you hit unfamiliar terms)
-4. Core (if you need formulas)
-5. Operational (if you're implementing)
+1. C≡ Kernel (intuition)
+1. Glossary (when you hit unfamiliar terms)
+1. Core (if you need formulas)
+1. Operational (if you're implementing)
 
 **Reading order for machines:**
 
 1. C≡ (understand axioms)
-2. Core (understand measurement)
-3. Operational (understand protocol)
-4. Implement and validate against self-coherence benchmarks
+1. Core (understand measurement)
+1. Operational (understand protocol)
+1. Implement and validate against self-coherence benchmarks
 
 ______________________________________________________________________
 
@@ -501,6 +514,7 @@ ______________________________________________________________________
 **Note:** TSC is currently a **specification**, not a packaged library. Implementations are in progress.
 
 ### From Specification (DIY)
+
 ```bash
 git clone https://github.com/usurobor/tsc.git
 cd tsc/spec
@@ -508,6 +522,7 @@ cd tsc/spec
 ```
 
 ### Reference Implementation (Python - Coming Soon)
+
 ```bash
 pip install tsc-coherence
 ```
@@ -525,9 +540,9 @@ ______________________________________________________________________
 ### How to Contribute
 
 1. **Implementations:** Build TSC in your language, validate against self-coherence benchmarks
-2. **Articulation libraries:** Domain-specific articulation functions (code, orgs, ML)
-3. **Tooling:** CI/CD integrations, dashboards, alert systems
-4. **Documentation:** Tutorials, case studies, worked examples
+1. **Articulation libraries:** Domain-specific articulation functions (code, orgs, ML)
+1. **Tooling:** CI/CD integrations, dashboards, alert systems
+1. **Documentation:** Tutorials, case studies, worked examples
 
 ### Contribution Guidelines
 
@@ -559,6 +574,7 @@ ______________________________________________________________________
 ## Citation
 
 If you use TSC in research, please cite:
+
 ```bibtex
 @software{tsc2025,
   title = {TSC: Triadic Self-Coherence Framework},

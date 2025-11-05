@@ -1,7 +1,7 @@
 # TSC Self-Coherence v2.3.0 Baseline
 
-**Status:** Measurement Capability Delivered  
-**Verdict:** FAIL (Repository Incoherent - Expected)  
+**Status:** Measurement Capability Delivered\
+**Verdict:** FAIL (Repository Incoherent - Expected)\
 **Date:** 2025-11-04
 
 ## Executive Summary
@@ -11,6 +11,7 @@ The v2.3.0 self-measurement capability is **working correctly**. The FAIL verdic
 **Key Finding:** The implementation is S₃-symmetric and produces reproducible results with full provenance. The repository itself needs improvement.
 
 ## Measurement Results
+
 ```json
 {
   "C_sigma": 0.238,
@@ -26,6 +27,7 @@ The v2.3.0 self-measurement capability is **working correctly**. The FAIL verdic
 ### ✅ S₃ Permutation: PASS
 
 All 6 axis permutations produce consistent results within baseline CI:
+
 ```
 α-β-γ: 0.195 ✓
 α-γ-β: 0.195 ✓
@@ -38,6 +40,7 @@ All 6 axis permutations produce consistent results within baseline CI:
 **Interpretation:** Implementation is genuinely S₃-invariant. No role privilege detected.
 
 ### ❌ Braided Interchange: FAIL
+
 ```json
 {
   "braid_mean": 0.923,
@@ -50,25 +53,27 @@ All 6 axis permutations produce consistent results within baseline CI:
 **Critical Issue:** 92.3% of braided equations fail to normalize to equality.
 
 **Possible Causes:**
+
 1. Parser doesn't handle all C≡ notation (φ subscripts, implicit parens)
-2. Normalization incomplete (missing unit laws, commutativity)
-3. Equations in spec genuinely inconsistent (needs review)
+1. Normalization incomplete (missing unit laws, commutativity)
+1. Equations in spec genuinely inconsistent (needs review)
 
 **Action:** Debug which specific equations fail (v2.3.1).
 
 ## Axis Scores
 
-| Axis | Score | Interpretation |
-|------|-------|----------------|
-| **α** (pattern) | 0.306 | Moderate stability between parsers |
+| Axis             | Score | Interpretation                                |
+| ---------------- | ----- | --------------------------------------------- |
+| **α** (pattern)  | 0.306 | Moderate stability between parsers            |
 | **β** (relation) | 0.061 | **Very weak** - specs poorly cross-referenced |
-| **γ** (process) | 0.721 | Good temporal stability (git history) |
+| **γ** (process)  | 0.721 | Good temporal stability (git history)         |
 
 ### α-axis: Pattern Stability
 
 **Observation:** Two independent parsers (lexical TF vs structural signature) show moderate agreement.
 
 **Diagnostics:**
+
 - 1,485 lexical tokens extracted
 - 135 structural features (headings, bullets, definitions)
 - Cosine similarity moderate but not high
@@ -80,6 +85,7 @@ All 6 axis permutations produce consistent results within baseline CI:
 **Observation:** Term graph extremely sparse and disconnected.
 
 **Diagnostics:**
+
 - 57 canonical terms identified
 - Cross-reference frequency very low
 - Graph embeddings show poor alignment
@@ -87,6 +93,7 @@ All 6 axis permutations produce consistent results within baseline CI:
 **Root Cause:** Specs don't reference each other explicitly. Terms defined in glossary aren't consistently linked in other specs.
 
 **Fix (v2.3.2):** Add explicit cross-references:
+
 ```markdown
 Per [tsc-glossary.md](tsc-glossary.md), **coherence** is defined as...
 See §3.1 in [tsc-core.md](tsc-core.md) for the measurement calculus.
@@ -99,6 +106,7 @@ See §3.1 in [tsc-core.md](tsc-core.md) for the measurement calculus.
 **Observation:** Good temporal consistency across git snapshots.
 
 **Diagnostics:**
+
 - Git history: 2 snapshots found
 - Wasserstein distance: 0.082 (low drift)
 - λ_γ = 4.0 → γ_c = 0.721
@@ -106,6 +114,7 @@ See §3.1 in [tsc-core.md](tsc-core.md) for the measurement calculus.
 **Interpretation:** Specs evolve coherently over time. Process dimension is stable.
 
 ## Provenance
+
 ```json
 {
   "git_commit": "1a71d6c",
@@ -125,6 +134,7 @@ See §3.1 in [tsc-core.md](tsc-core.md) for the measurement calculus.
 **Reproducibility:** Re-running with same commit and seed will produce identical results (within floating-point tolerance).
 
 ## Parameters
+
 ```json
 {
   "theta": 0.7,
@@ -142,16 +152,17 @@ See §3.1 in [tsc-core.md](tsc-core.md) for the measurement calculus.
 
 ### v2.3.1: Fix Braided Parser (Engineering)
 
-**Goal:** Reduce braid_mean from 0.923 → <0.01
+**Goal:** Reduce braid_mean from 0.923 → \<0.01
 
 **Tasks:**
+
 1. Debug which equations fail normalization
-2. Extend parser to handle:
-   - Subscripted φ_{ab} notation
+1. Extend parser to handle:
+   - Subscripted φ\_{ab} notation
    - Implicit parentheses
    - Variable α-renaming
-3. Add to normalization:
-   - Unit laws (1_a ⊙_a x = x)
+1. Add to normalization:
+   - Unit laws (1_a ⊙\_a x = x)
    - Commutativity where declared
    - Hexagon coherence
 
@@ -162,10 +173,11 @@ See §3.1 in [tsc-core.md](tsc-core.md) for the measurement calculus.
 **Goal:** Raise β_c from 0.061 → 0.50+
 
 **Tasks:**
+
 1. Add explicit "see §X" links between all specs
-2. Reference glossary terms consistently with markdown links
-3. Create index of cross-references
-4. Add "References" section to each spec
+1. Reference glossary terms consistently with markdown links
+1. Create index of cross-references
+1. Add "References" section to each spec
 
 **Acceptance:** β_c ≥ 0.50
 
@@ -174,16 +186,19 @@ See §3.1 in [tsc-core.md](tsc-core.md) for the measurement calculus.
 **Goal:** C_Σ ≥ 0.90, all witnesses PASS
 
 **Gate:** Make self-coherence a release requirement
+
 - CI runs `tsc self` on every PR
 - Merges blocked if verdict ≠ PASS
 - Repository cannot release until self-coherent
 
 **Expected Timeline:**
+
 - v2.3.1: ~1 week (parser fixes)
 - v2.3.2: ~2 weeks (content improvements)
 - v2.4.0: ~1 month (integration + polish)
 
 ## How to Run
+
 ```bash
 # From repository root
 tsc self --out coherence_report.json
@@ -195,11 +210,13 @@ tsc self --Theta 0.95 --n-boot 2000 --seed 123
 ## Interpretation Guidelines
 
 **PASS Conditions:**
+
 1. CI_lo(C_Σ) ≥ Θ (default 0.90)
-2. braid_CI_hi ≤ τ_braid (default 0.001)
-3. S₃ witness passes (all permutations within CI)
+1. braid_CI_hi ≤ τ_braid (default 0.001)
+1. S₃ witness passes (all permutations within CI)
 
 **Current Status:**
+
 - ❌ Condition 1: FAIL (0.093 < 0.90)
 - ❌ Condition 2: FAIL (1.0 > 0.001)
 - ✅ Condition 3: PASS
@@ -207,6 +224,7 @@ tsc self --Theta 0.95 --n-boot 2000 --seed 123
 **Why This Matters:**
 
 A FAIL verdict means the repository articulations (pattern, relation, process) don't form a coherent triad. This is valuable feedback:
+
 - Not a measurement bug
 - Not arbitrary thresholds
 - Concrete issues to fix
@@ -218,6 +236,7 @@ A FAIL verdict means the repository articulations (pattern, relation, process) d
 ### Bootstrap CI Method
 
 CI computed by resampling across axis replicates (n_boot=1000):
+
 ```python
 for _ in range(n_boot):
     α = sample(α_reps)
@@ -235,6 +254,7 @@ All 6 permutations of {α, β, γ} recomputed with matched replicate indices. Ge
 ### AST Normalization
 
 Braided equations parsed into minimal AST:
+
 - Right-association
 - Middle-four interchange (MFI)
 - Fixpoint computation
@@ -243,9 +263,9 @@ Terms compared structurally after normalization.
 
 ## License
 
-CC-BY-4.0 (documentation)  
+CC-BY-4.0 (documentation)\
 Apache-2.0 (code)
 
----
+______________________________________________________________________
 
 **End of v2.3.0 Baseline Report**
