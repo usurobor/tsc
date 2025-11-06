@@ -41,6 +41,13 @@ except ImportError:
     np = None
     LA = None
 
+# Import shared braided equation parser
+from reference.python.braid_parser import (
+    extract_equations,
+    parse_equation,
+    normalize,
+    structural_equal,
+)
 # ============================================================================
 # Configuration
 # ============================================================================
@@ -449,112 +456,7 @@ def s3_witness_over_reps(
     return diag
 
 
-# ============================================================================
-# Braided Witness via AST (Patch D)
-# ============================================================================
-
-
-@dataclass
-class Term:
-    """Minimal AST for term rewriting."""
-
-    tag: str
-    args: tuple
-
-
-def Var(x):
-    return Term("Var", (x,))
-
-
-def Bin(op, l, r):
-    return Term("Bin", (op, l, r))
-
-
-def _term_eq(a: Term, b: Term) -> bool:
-    """Structural equality of terms."""
-    if a.tag != b.tag or len(a.args) != len(b.args):
-        return False
-    return all(_term_eq(x, y) if isinstance(x, Term) else x == y for x, y in zip(a.args, b.args))
-
-
-def _right_assoc(t: Term) -> Term:
-    """Right-associate binary operations."""
-    if t.tag == "Bin":
-        op, l, r = t.args
-        l = _right_assoc(l)
-        r = _right_assoc(r)
-        if l.tag == "Bin" and l.args[0] == op:
-            # (x ⊙ l1) ⊙ r  -> x ⊙ (l1 ⊙ r)
-            _, x, l1 = l.args
-            return _right_assoc(Bin(op, x, Bin(op, l1, r)))
-        return Term("Bin", (op, l, r))
-    if t.tag == "Phi":
-        return Term(t.tag, tuple(_right_assoc(x) if isinstance(x, Term) else x for x in t.args))
-    return t
-
-
-def _mfi_step(t: Term) -> Term:
-    """
-    Apply middle-four interchange:
-    (x ⊙a y) ⊙b (z ⊙a w) ↔ (x ⊙b z) ⊙a (y ⊙b w)
-    """
-    if t.tag == "Bin":
-        op, l, r = t.args
-        if op in {"⊙b", "⊙a"} and l.tag == "Bin" and r.tag == "Bin":
-            opa, x, y = l.args
-            opb, z, w = r.args
-            if opa == "⊙a" and opb == "⊙a" and op == "⊙b":
-                return Bin("⊙a", Bin("⊙b", x, z), Bin("⊙b", y, w))
-            if opa == "⊙b" and opb == "⊙b" and op == "⊙a":
-                return Bin("⊙b", Bin("⊙a", x, z), Bin("⊙a", y, w))
-    return t
-
-
-def _normalize(t: Term, max_steps: int = 64) -> Term:
-    """Normalize term via right-assoc + MFI to fixpoint."""
-    t = _right_assoc(t)
-    for _ in range(max_steps):
-        t2 = _right_assoc(_mfi_step(t))
-        if _term_eq(t2, t):
-            break
-        t = t2
-    return t
-
-
-def _parse_equation(s: str) -> tuple[Term, Term] | None:
-    """Parse equation string into AST pair."""
-    s = s.replace(" ", "")
-    if "=" not in s:
-        return None
-    L, R = s.split("=", 1)
-
-    def rec(u: str) -> Term:
-        depth = 0
-        split = None
-        op = None
-        for i, ch in enumerate(u):
-            if ch == "(":
-                depth += 1
-            elif ch == ")":
-                depth -= 1
-            elif depth == 0 and i + 1 < len(u) and u[i : i + 2] in ("⊙a", "⊙b"):
-                split = i
-                op = u[i : i + 2]
-                break
-        if split is not None:
-            left = rec(u[:split])
-            right = rec(u[split + 2 :])
-            return Bin(op, left, right)
-        if u.startswith("(") and u.endswith(")"):
-            return rec(u[1:-1])
-        return Var(u)
-
-    try:
-        return _normalize(rec(L)), _normalize(rec(R))
-    except Exception:
-        return None
-
-
+# ==========================================
 def braided_witness(
     params: Params, ceq_text: str, N: int = 50
 ) -> tuple[float, tuple[float, float, float], int]:
@@ -563,20 +465,27 @@ def braided_witness(
 
     Returns: (mean_δ, (CI_lo, median, CI_hi), n_pairs)
     """
-    lines = [ln for ln in ceq_text.splitlines() if "=" in ln]
+    # Use shared parser to extract equations
+    equations = extract_equations(ceq_text)
+    
+    # Parse equations into AST pairs
     pairs = []
-    for ln in lines:
-        pr = _parse_equation(ln)
-        if pr:
-            pairs.append(pr)
+    for eq in equations:
+        result = parse_equation(eq)
+        if result:
+            pairs.append(result)
 
     if not pairs:
         raise ValueError("No parseable braided equations found in spec/c-equiv*.md")
 
+    # Normalize and check equality
+    BASELINE_RULES = {"mfi", "assoc", "braid_unwrap"}
     vals = []
     for i in range(min(N, len(pairs))):
-        L, R = pairs[i]
-        equal = _term_eq(_normalize(L), _normalize(R))
+        lhs, rhs = pairs[i]
+        lhs_norm = normalize(lhs, BASELINE_RULES)
+        rhs_norm = normalize(rhs, BASELINE_RULES)
+        equal = structural_equal(lhs_norm, rhs_norm)
         vals.append(0.0 if equal else 1.0)
 
     m = statistics.mean(vals)
