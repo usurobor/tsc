@@ -153,7 +153,7 @@ def debug_braided_failures(ceq_text: str) -> dict[str, Any]:
     - diagnostics: {units_seen, axes_ops, braids_seen}
     - parse_errors: [{equation, error}]
     """
-    BASELINE_RULES = {"mfi", "assoc", "braid_unwrap"}
+    BASELINE_RULES = {"mfi", "assoc", "braid_unwrap", "unit"}  
 
     equations = extract_equations(ceq_text)
     total = len(equations)

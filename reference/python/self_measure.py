@@ -480,7 +480,8 @@ def braided_witness(
         raise ValueError("No parseable braided equations found in spec/c-equiv*.md")
 
     # Normalize and check equality
-    BASELINE_RULES = {"mfi", "assoc", "braid_unwrap"}
+    BASELINE_RULES = {"mfi", "assoc", "braid_unwrap", "unit"}  
+
     vals = []
     for i in range(min(N, len(pairs))):
         lhs, rhs = pairs[i]

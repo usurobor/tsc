@@ -54,7 +54,8 @@ class Braid:
 
 
 # Type alias for any AST node
-Term = Var | Unit | Bin | Braid
+from typing import Union
+Term = Union[Var, Unit, Bin, Braid]
 
 
 # ============================================================================
@@ -65,7 +66,47 @@ Term = Var | Unit | Bin | Braid
 def normalize_latex(text: str) -> str:
     """Normalize LaTeX notation to canonical Unicode."""
     # Handle double-escaped backslashes from file reading
-    text = text.replace("\\\\", "\\")
+    text = text.replace('\\\\', '\\')
+    
+    # === NEW: Transform function notation to infix BEFORE stripping superscripts ===
+    # C^{I}_{a}(x, y) → (x ⊙_a y)
+    # Matches: \mathbf{C}^{I}_{a}(args) or C^{I}_{a}(args)
+    import re
+    
+    def transform_func(match):
+        axis = match.group(1)
+        args = match.group(2)
+        # Parse the two arguments
+        parts = []
+        depth = 0
+        current = []
+        for ch in args:
+            if ch == ',' and depth == 0:
+                parts.append(''.join(current).strip())
+                current = []
+            else:
+                if ch in '({':
+                    depth += 1
+                elif ch in ')}':
+                    depth -= 1
+                current.append(ch)
+        if current:
+            parts.append(''.join(current).strip())
+        
+        if len(parts) == 2:
+            return f"({parts[0]} ⊙_{axis} {parts[1]})"
+        return match.group(0)  # fallback
+    
+    # Pattern: (mathbf{C} or C)^{I or R or E}_{axis}(args)
+    text = re.sub(
+        r'(?:\\mathbf\{C\}|C)\^[{]?[IRE][}]?_[{]?([a-z]+)[}]?\(([^)]+)\)',
+        transform_func,
+        text
+    )
+    
+    # === Continue with existing normalization ===
+    # Remove LaTeX sizing/delimiters
+    # ... rest unchanged
 
     # Remove LaTeX sizing/delimiters
     text = re.sub(r"\\big[lr]?\(", "(", text)
@@ -229,9 +270,53 @@ class Parser:
                 inner = self._parse_factor()
             return Braid(a, b, inner)
         if kind == "IDENT":
+            # Check for function call: C_a(x, y) or similar
+            name = val
             self.lex.pop()
-            return Var(val)
-        raise ValueError(f"Unexpected token {self.lex.peek()}")
+            
+            # Look for subscript (function with axis)
+            self.lex.skip_space()
+            if self.lex.peek()[0] == "UNDER":
+                axis = self._parse_axis()
+                self.lex.skip_space()
+                
+                # Check for function call parentheses
+                if self.lex.peek()[0] == "LPAREN":
+                    self.lex.pop()  # consume (
+                    
+                    # Parse comma-separated arguments
+                    args = []
+                    while True:
+                        self.lex.skip_space()
+                        if self.lex.peek()[0] == "RPAREN":
+                            break
+                        arg = self._parse_expr()
+                        args.append(arg)
+                        self.lex.skip_space()
+                        
+                        if self.lex.peek()[0] == "COMMA":
+                            self.lex.pop()
+                            continue
+                        elif self.lex.peek()[0] == "RPAREN":
+                            break
+                        else:
+                            raise ValueError("Expected ',' or ')' in function call")
+                    
+                    self.lex.pop()  # consume )
+                    
+                    # Transform: C_a(x, y) → Bin(a, x, y)
+                    if name in ['C', 'mathbf'] and len(args) == 2:
+                        return Bin(axis, args[0], args[1])
+                    elif len(args) == 1:
+                        return args[0]
+                    else:
+                        raise ValueError(f"Unexpected function {name}_{axis} with {len(args)} args")
+                
+                # Not a function call, just a subscripted variable
+                return Var(f"{name}_{axis}")
+            
+            # Plain variable
+            return Var(name)
 
     def _parse_expr(self):
         left = self._parse_factor()
@@ -349,21 +434,44 @@ def braid_unwrap(term: Term) -> tuple[Term, bool]:
 
     return go(term), changed
 
+def unit_elim(term: Term) -> tuple[Term, bool]:
+    """Unit elimination: 1_a ⊙_a x → x and x ⊙_a 1_a → x"""
+    changed = False
+    
+    def go(t):
+        nonlocal changed
+        if isinstance(t, Bin):
+            l = go(t.left)
+            r = go(t.right)
+            # Left unit: 1_a ⊙_a x → x
+            if isinstance(l, Unit) and l.axis == t.axis:
+                changed = True
+                return r
+            # Right unit: x ⊙_a 1_a → x
+            if isinstance(r, Unit) and r.axis == t.axis:
+                changed = True
+                return l
+            return Bin(t.axis, l, r)
+        elif isinstance(t, Braid):
+            inner = go(t.inner)
+            if inner is not t.inner:
+                changed = True
+            return Braid(t.a, t.b, inner)
+        else:
+            return t
+    
+    return go(term), changed
 
-def normalize(term: Term, rules: set[str], axis_order=None, max_iter=100) -> Term:
-    """
-    Normalize term to canonical form using specified rules.
-
-    Rules:
-    - 'assoc': Right-association
-    - 'mfi': Middle-four interchange
-    - 'braid_unwrap': Remove braid wrappers
-    """
+def normalize(term: Term, rules: Set[str], axis_order=None, max_iter=100) -> Term:
+    """..."""
     t = term
     for _ in range(max_iter):
         changed_any = False
         if "assoc" in rules:
             t, ch = right_assoc(t)
+            changed_any |= ch
+        if "unit" in rules:  # ADD THIS
+            t, ch = unit_elim(t)
             changed_any |= ch
         if "mfi" in rules:
             t, ch = mfi_step(t, axis_order=axis_order)
@@ -452,6 +560,10 @@ def extract_equations(text: str) -> list[str]:
         # Skip incomplete fragments
         normalized = normalize_latex(eq)
         if re.search(r"=\s*[a-z]\s*$", normalized):
+            continue
+
+        # Skip closure axiom (definitional, not verifiable)
+        if re.search(r'C.*\(.*C.*,.*C.*\).*=.*C', eq):
             continue
 
         filtered.append(eq)
