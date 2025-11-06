@@ -54,8 +54,9 @@ class Braid:
 
 
 # Type alias for any AST node
-from typing import Union
-Term = Union[Var, Unit, Bin, Braid]
+
+# Term = Union[Var, Unit, Bin, Braid]
+Term = Var | Unit | Bin | Braid
 
 
 # ============================================================================
@@ -66,13 +67,13 @@ Term = Union[Var, Unit, Bin, Braid]
 def normalize_latex(text: str) -> str:
     """Normalize LaTeX notation to canonical Unicode."""
     # Handle double-escaped backslashes from file reading
-    text = text.replace('\\\\', '\\')
-    
+    text = text.replace("\\\\", "\\")
+
     # === NEW: Transform function notation to infix BEFORE stripping superscripts ===
     # C^{I}_{a}(x, y) → (x ⊙_a y)
     # Matches: \mathbf{C}^{I}_{a}(args) or C^{I}_{a}(args)
     import re
-    
+
     def transform_func(match):
         axis = match.group(1)
         args = match.group(2)
@@ -81,29 +82,27 @@ def normalize_latex(text: str) -> str:
         depth = 0
         current = []
         for ch in args:
-            if ch == ',' and depth == 0:
-                parts.append(''.join(current).strip())
+            if ch == "," and depth == 0:
+                parts.append("".join(current).strip())
                 current = []
             else:
-                if ch in '({':
+                if ch in "({":
                     depth += 1
-                elif ch in ')}':
+                elif ch in ")}":
                     depth -= 1
                 current.append(ch)
         if current:
-            parts.append(''.join(current).strip())
-        
+            parts.append("".join(current).strip())
+
         if len(parts) == 2:
             return f"({parts[0]} ⊙_{axis} {parts[1]})"
         return match.group(0)  # fallback
-    
+
     # Pattern: (mathbf{C} or C)^{I or R or E}_{axis}(args)
     text = re.sub(
-        r'(?:\\mathbf\{C\}|C)\^[{]?[IRE][}]?_[{]?([a-z]+)[}]?\(([^)]+)\)',
-        transform_func,
-        text
+        r"(?:\\mathbf\{C\}|C)\^[{]?[IRE][}]?_[{]?([a-z]+)[}]?\(([^)]+)\)", transform_func, text
     )
-    
+
     # === Continue with existing normalization ===
     # Remove LaTeX sizing/delimiters
     # ... rest unchanged
@@ -273,17 +272,17 @@ class Parser:
             # Check for function call: C_a(x, y) or similar
             name = val
             self.lex.pop()
-            
+
             # Look for subscript (function with axis)
             self.lex.skip_space()
             if self.lex.peek()[0] == "UNDER":
                 axis = self._parse_axis()
                 self.lex.skip_space()
-                
+
                 # Check for function call parentheses
                 if self.lex.peek()[0] == "LPAREN":
                     self.lex.pop()  # consume (
-                    
+
                     # Parse comma-separated arguments
                     args = []
                     while True:
@@ -293,7 +292,7 @@ class Parser:
                         arg = self._parse_expr()
                         args.append(arg)
                         self.lex.skip_space()
-                        
+
                         if self.lex.peek()[0] == "COMMA":
                             self.lex.pop()
                             continue
@@ -301,20 +300,20 @@ class Parser:
                             break
                         else:
                             raise ValueError("Expected ',' or ')' in function call")
-                    
+
                     self.lex.pop()  # consume )
-                    
+
                     # Transform: C_a(x, y) → Bin(a, x, y)
-                    if name in ['C', 'mathbf'] and len(args) == 2:
+                    if name in ["C", "mathbf"] and len(args) == 2:
                         return Bin(axis, args[0], args[1])
                     elif len(args) == 1:
                         return args[0]
                     else:
                         raise ValueError(f"Unexpected function {name}_{axis} with {len(args)} args")
-                
+
                 # Not a function call, just a subscripted variable
                 return Var(f"{name}_{axis}")
-            
+
             # Plain variable
             return Var(name)
 
@@ -434,10 +433,11 @@ def braid_unwrap(term: Term) -> tuple[Term, bool]:
 
     return go(term), changed
 
+
 def unit_elim(term: Term) -> tuple[Term, bool]:
     """Unit elimination: 1_a ⊙_a x → x and x ⊙_a 1_a → x"""
     changed = False
-    
+
     def go(t):
         nonlocal changed
         if isinstance(t, Bin):
@@ -459,10 +459,11 @@ def unit_elim(term: Term) -> tuple[Term, bool]:
             return Braid(t.a, t.b, inner)
         else:
             return t
-    
+
     return go(term), changed
 
-def normalize(term: Term, rules: Set[str], axis_order=None, max_iter=100) -> Term:
+
+def normalize(term: Term, rules: set[str], axis_order=None, max_iter=100) -> Term:
     """..."""
     t = term
     for _ in range(max_iter):
@@ -563,7 +564,7 @@ def extract_equations(text: str) -> list[str]:
             continue
 
         # Skip closure axiom (definitional, not verifiable)
-        if re.search(r'C.*\(.*C.*,.*C.*\).*=.*C', eq):
+        if re.search(r"C.*\(.*C.*,.*C.*\).*=.*C", eq):
             continue
 
         filtered.append(eq)
