@@ -11,31 +11,34 @@ Provides:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, List, Set
 import re
 from collections import Counter
-
+from dataclasses import dataclass
+from typing import Any
 
 # ============================================================================
 # AST (Abstract Syntax Tree)
 # ============================================================================
 
+
 @dataclass(frozen=True)
 class Var:
     """Variable: x, y, z, etc."""
+
     name: str
 
 
 @dataclass(frozen=True)
 class Unit:
     """Typed unit: 1_a"""
+
     axis: str
 
 
 @dataclass(frozen=True)
 class Bin:
     """Binary operation: x ⊙_a y"""
+
     axis: str
     left: Any
     right: Any
@@ -44,6 +47,7 @@ class Bin:
 @dataclass(frozen=True)
 class Braid:
     """Braid/swap: φ_{ab}(inner)"""
+
     a: str
     b: str
     inner: Any
@@ -57,55 +61,56 @@ Term = Var | Unit | Bin | Braid
 # Text Normalization (LaTeX → Canonical)
 # ============================================================================
 
+
 def normalize_latex(text: str) -> str:
     """Normalize LaTeX notation to canonical Unicode."""
     # Handle double-escaped backslashes from file reading
-    text = text.replace('\\\\', '\\')
-    
+    text = text.replace("\\\\", "\\")
+
     # Remove LaTeX sizing/delimiters
-    text = re.sub(r'\\big[lr]?\(', '(', text)
-    text = re.sub(r'\\big[lr]?\)', ')', text)
-    text = re.sub(r'\\left\(', '(', text)
-    text = re.sub(r'\\right\)', ')', text)
-    text = re.sub(r'\\Big[lr]?\(', '(', text)
-    text = re.sub(r'\\Big[lr]?\)', ')', text)
-    
+    text = re.sub(r"\\big[lr]?\(", "(", text)
+    text = re.sub(r"\\big[lr]?\)", ")", text)
+    text = re.sub(r"\\left\(", "(", text)
+    text = re.sub(r"\\right\)", ")", text)
+    text = re.sub(r"\\Big[lr]?\(", "(", text)
+    text = re.sub(r"\\Big[lr]?\)", ")", text)
+
     # Fix escaped underscores
-    text = text.replace('\\_', '_')
-    text = text.replace('\\_{', '_{')
-    
+    text = text.replace("\\_", "_")
+    text = text.replace("\\_{", "_{")
+
     # Map operators
-    text = text.replace('\\odot', '⊙')
-    text = text.replace('\\otimes', '⊗')
-    text = text.replace('\\circ', '∘')
-    text = text.replace('\\varphi', 'φ')
-    text = text.replace('\\phi', 'φ')
-    text = text.replace('\\sigma', 'σ')
-    
+    text = text.replace("\\odot", "⊙")
+    text = text.replace("\\otimes", "⊗")
+    text = text.replace("\\circ", "∘")
+    text = text.replace("\\varphi", "φ")
+    text = text.replace("\\phi", "φ")
+    text = text.replace("\\sigma", "σ")
+
     # Remove text mode and bold
-    text = re.sub(r'\\mathbf\{([^}]+)\}', r'\1', text)
-    text = re.sub(r'\\text\{([^}]+)\}', r'\1', text)
-    text = re.sub(r'\\mathrm\{([^}]+)\}', r'\1', text)
-    
+    text = re.sub(r"\\mathbf\{([^}]+)\}", r"\1", text)
+    text = re.sub(r"\\text\{([^}]+)\}", r"\1", text)
+    text = re.sub(r"\\mathrm\{([^}]+)\}", r"\1", text)
+
     # Remove ALL superscripts aggressively
-    text = re.sub(r'\^\{[^}]*\}', '', text)
-    text = re.sub(r'\^[a-zA-Z⊤⊥]', '', text)
-    
+    text = re.sub(r"\^\{[^}]*\}", "", text)
+    text = re.sub(r"\^[a-zA-Z⊤⊥]", "", text)
+
     # Clean up spacing commands
-    text = text.replace('\\quad', ' ')
-    text = text.replace('\\,', '')
-    text = text.replace('\\;', '')
-    text = text.replace('\\!', '')
-    text = text.replace('\\:', '')
-    
+    text = text.replace("\\quad", " ")
+    text = text.replace("\\,", "")
+    text = text.replace("\\;", "")
+    text = text.replace("\\!", "")
+    text = text.replace("\\:", "")
+
     # Handle isomorphism/equivalence separators
-    text = text.replace(';\\cong;', '=')
-    text = text.replace('\\cong', '=')
-    text = text.replace('≅', '=')
-    
+    text = text.replace(";\\cong;", "=")
+    text = text.replace("\\cong", "=")
+    text = text.replace("≅", "=")
+
     # Remove remaining LaTeX commands
-    text = re.sub(r'\\[a-zA-Z]+', '', text)
-    
+    text = re.sub(r"\\[a-zA-Z]+", "", text)
+
     return text
 
 
@@ -114,19 +119,19 @@ def normalize_latex(text: str) -> str:
 # ============================================================================
 
 TOKEN_SPEC = [
-    ("SPACE",   r"\s+"),
-    ("LPAREN",  r"\("),
-    ("RPAREN",  r"\)"),
-    ("LBRACE",  r"\{"),
-    ("RBRACE",  r"\}"),
-    ("COMMA",   r","),
-    ("EQUAL",   r"[=≡≅]"),
-    ("UNDER",   r"_"),
-    ("ODOT",    r"⊙|\\odot|odot|\*|⋆|∘|•|⨂"),
-    ("UNIT",    r"1"),
-    ("BRAID",   r"φ|varphi|\\varphi|\\phi|sigma|\\sigma|σ|β|\\beta|braid"),
-    ("IDENT",   r"[A-Za-zΑ-Ωα-ω][A-Za-z0-9_Α-Ωα-ω]*"),
-    ("OTHER",   r"."),
+    ("SPACE", r"\s+"),
+    ("LPAREN", r"\("),
+    ("RPAREN", r"\)"),
+    ("LBRACE", r"\{"),
+    ("RBRACE", r"\}"),
+    ("COMMA", r","),
+    ("EQUAL", r"[=≡≅]"),
+    ("UNDER", r"_"),
+    ("ODOT", r"⊙|\\odot|odot|\*|⋆|∘|•|⨂"),
+    ("UNIT", r"1"),
+    ("BRAID", r"φ|varphi|\\varphi|\\phi|sigma|\\sigma|σ|β|\\beta|braid"),
+    ("IDENT", r"[A-Za-zΑ-Ωα-ω][A-Za-z0-9_Α-Ωα-ω]*"),
+    ("OTHER", r"."),
 ]
 TOKEN_RE = re.compile("|".join(f"(?P<{name}>{pat})" for name, pat in TOKEN_SPEC))
 
@@ -155,6 +160,7 @@ class Lexer:
 # ============================================================================
 # Parser (Text → AST)
 # ============================================================================
+
 
 class Parser:
     def __init__(self, s: str):
@@ -232,7 +238,7 @@ class Parser:
         while True:
             self.lex.skip_space()
             kind, val = self.lex.peek()
-            if kind == "ODOT" or (kind == "OTHER" and val in ['∘', '•']):
+            if kind == "ODOT" or (kind == "OTHER" and val in ["∘", "•"]):
                 self.notation_counts[f"ODOT:{val}"] += 1
                 self.lex.pop()
                 axis = self._parse_axis()
@@ -250,7 +256,7 @@ def parse_equation(eqline: str) -> tuple[Term, Term] | None:
         m = re.search(r"(?<![=])([=≡≅])(?![=])", s)
         if not m:
             return None
-        lhs_s, rhs_s = s[:m.start()], s[m.end():]
+        lhs_s, rhs_s = s[: m.start()], s[m.end() :]
         p1 = Parser(lhs_s)
         lhs = p1._parse_expr()
         p2 = Parser(rhs_s)
@@ -264,10 +270,11 @@ def parse_equation(eqline: str) -> tuple[Term, Term] | None:
 # Normalization Rules
 # ============================================================================
 
+
 def right_assoc(term: Term) -> tuple[Term, bool]:
     """Right-associate binary operations: (x ⊙ y) ⊙ z → x ⊙ (y ⊙ z)"""
     changed = False
-    
+
     def go(t):
         nonlocal changed
         if isinstance(t, Bin):
@@ -285,17 +292,17 @@ def right_assoc(term: Term) -> tuple[Term, bool]:
             return Braid(t.a, t.b, inner)
         else:
             return t
-    
+
     return go(term), changed
 
 
 def mfi_step(term: Term, axis_order=None) -> tuple[Term, bool]:
     """Apply middle-four interchange (braided monoidal law)."""
     changed = False
-    
+
     def key(a):
         return a if axis_order is None else axis_order(a)
-    
+
     def go(t):
         nonlocal changed
         if isinstance(t, Bin):
@@ -319,14 +326,14 @@ def mfi_step(term: Term, axis_order=None) -> tuple[Term, bool]:
             return Braid(t.a, t.b, inner)
         else:
             return t
-    
+
     return go(term), changed
 
 
 def braid_unwrap(term: Term) -> tuple[Term, bool]:
     """Unwrap braids that contain their MFI result: φ(result) → result"""
     changed = False
-    
+
     def go(t):
         nonlocal changed
         if isinstance(t, Braid):
@@ -339,14 +346,14 @@ def braid_unwrap(term: Term) -> tuple[Term, bool]:
         elif isinstance(t, Bin):
             return Bin(t.axis, go(t.left), go(t.right))
         return t
-    
+
     return go(term), changed
 
 
-def normalize(term: Term, rules: Set[str], axis_order=None, max_iter=100) -> Term:
+def normalize(term: Term, rules: set[str], axis_order=None, max_iter=100) -> Term:
     """
     Normalize term to canonical form using specified rules.
-    
+
     Rules:
     - 'assoc': Right-association
     - 'mfi': Middle-four interchange
@@ -378,71 +385,75 @@ def structural_equal(a: Term, b: Term) -> bool:
 # Equation Extraction
 # ============================================================================
 
-def extract_equations(text: str) -> List[str]:
+
+def extract_equations(text: str) -> list[str]:
     """
     Extract C≡ equations from markdown spec text.
-    
+
     Filters out definitions and meta-statements, keeps verifiable axioms.
     """
     eqs = []
-    
+
     # Extract from Display Math $$...$$
-    for match in re.finditer(r'\$\$(.*?)\$\$', text, re.DOTALL):
+    for match in re.finditer(r"\$\$(.*?)\$\$", text, re.DOTALL):
         content = match.group(1).strip()
-        for line in content.split('\n'):
+        for line in content.split("\n"):
             line = line.strip()
-            if ('=' in line or '≡' in line or 'cong' in line) and len(line) > 5:
+            if ("=" in line or "≡" in line or "cong" in line) and len(line) > 5:
                 eqs.append(line)
-                
+
     # Extract from Inline Math $...$
-    for match in re.finditer(r'(?<!\$)\$(?!\$)(.*?)\$(?!\$)', text):
+    for match in re.finditer(r"(?<!\$)\$(?!\$)(.*?)\$(?!\$)", text):
         content = match.group(1).strip()
-        if any(sym in content for sym in ['⊙', 'odot', '\\odot', 'varphi', '\\varphi', '1_', 'C^']) and len(content) > 10:
-            if '=' in content or '≡' in content or 'cong' in content:
+        if (
+            any(sym in content for sym in ["⊙", "odot", "\\odot", "varphi", "\\varphi", "1_", "C^"])
+            and len(content) > 10
+        ):
+            if "=" in content or "≡" in content or "cong" in content:
                 eqs.append(content)
-            
+
     # Fallback: Line-based for non-LaTeX
     lines = text.splitlines()
     in_code = False
     fence_re = re.compile(r"^\s*`{3,}")
-    
+
     for line in lines:
         if fence_re.match(line):
             in_code = not in_code
             continue
         if in_code:
             continue
-            
-        if any(sym in line for sym in ['⊙', 'odot', '\\odot', 'varphi', '\\varphi', '1_', 'C^']):
-            if '=' in line or '≡' in line:
+
+        if any(sym in line for sym in ["⊙", "odot", "\\odot", "varphi", "\\varphi", "1_", "C^"]):
+            if "=" in line or "≡" in line:
                 eqs.append(line.strip())
 
     # Surgical filtering
     filtered = []
     for eq in eqs:
         # Skip meta-statements and definitions
-        if ':=' in eq:
+        if ":=" in eq:
             continue
-        if 'text{NF}' in eq or 'NF[' in eq:
+        if "text{NF}" in eq or "NF[" in eq:
             continue
-        if re.search(r'\bLet\s', eq, re.IGNORECASE):
+        if re.search(r"\bLet\s", eq, re.IGNORECASE):
             continue
-        if re.search(r'\b(If|Then)\b.*\bthen\b', eq, re.IGNORECASE):
+        if re.search(r"\b(If|Then)\b.*\bthen\b", eq, re.IGNORECASE):
             continue
-        
+
         # Skip C6 Adjointness (extension, deferred)
-        if '\\top' in eq or '⊤' in eq:
+        if "\\top" in eq or "⊤" in eq:
             continue
-        
+
         # Skip role rotation
-        if 'ρ' in eq or '\\rho' in eq:
+        if "ρ" in eq or "\\rho" in eq:
             continue
-        
+
         # Skip incomplete fragments
         normalized = normalize_latex(eq)
-        if re.search(r'=\s*[a-z]\s*$', normalized):
+        if re.search(r"=\s*[a-z]\s*$", normalized):
             continue
-        
+
         filtered.append(eq)
-        
+
     return filtered

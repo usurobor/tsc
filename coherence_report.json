@@ -45,13 +45,13 @@
       ],
       "passed": true
     },
-    "braid_mean": 0.9230769230769231,
+    "braid_mean": 0.6,
     "braid_CI": [
-      0.7692307692307693,
+      0.2,
       1.0
     ],
     "tau_braid": 0.001,
-    "braid_pairs": 13
+    "braid_pairs": 5
   },
   "axes_diag": {
     "alpha": {
@@ -77,10 +77,10 @@
     "seed": 42
   },
   "provenance": {
-    "git_commit": "e4b4b9d",
+    "git_commit": "ca5265e",
     "dirty": true,
     "python": "3.11.14",
-    "p_ref_hash": "sha256:68622f3f73b5759f128c0e0585104a983dd52c16f310c6b9855fdc82f7e37f85",
+    "p_ref_hash": "sha256:760de67916b5c2e0039e25371ee4c0ec92a6e46d1fa4179af2479c87669041c6",
     "spec_files": [
       "c-equiv-kernel.md",
       "c-equiv.md",

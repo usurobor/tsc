@@ -3,3 +3,4 @@ tsc_framework.egg-info/
 __pycache__/
 *.pyc
 .swp
+braid_debug_report.json

@@ -44,10 +44,11 @@ except ImportError:
 # Import shared braided equation parser
 from reference.python.braid_parser import (
     extract_equations,
-    parse_equation,
     normalize,
+    parse_equation,
     structural_equal,
 )
+
 # ============================================================================
 # Configuration
 # ============================================================================
@@ -467,7 +468,7 @@ def braided_witness(
     """
     # Use shared parser to extract equations
     equations = extract_equations(ceq_text)
-    
+
     # Parse equations into AST pairs
     pairs = []
     for eq in equations:
