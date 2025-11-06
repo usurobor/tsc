@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 .swp
 braid_debug_report.json
+coherence_report.json
