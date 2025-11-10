@@ -9,6 +9,7 @@ import pytest
 
 pytestmark = pytest.mark.skip(reason="Self-measurement needs rewrite for v3.0.0 (term algebra)")
 
+
 def test_self_coherence_runs_and_emits_report():
     """Test that self-measurement runs and emits a valid report."""
     from reference.python.self_measure import write_report

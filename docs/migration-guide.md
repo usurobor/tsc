@@ -2,27 +2,28 @@
 
 **For users of TSC v2.x**
 
----
+______________________________________________________________________
 
 ## Conceptual Changes
 
 ### What v2.x Called Them vs. v3.0
 
-| v2.x Concept | v3.0 Equivalent | Changed? |
-|--------------|-----------------|----------|
-| α-axis (pattern) | α evaluator to (ℕ, ⊕, 0) | Formalized |
-| β-axis (relation) | β evaluator to (ℕ³, ⊔, 0³) | Formalized |
-| γ-axis (process) | γ evaluator to (ℕ×ℕ, ⊗, (0,0)) | Formalized |
-| C≡ axioms (C1-C6) | Term algebra + evaluators | **Replaced** |
-| Braided interchange | (removed) | **Removed** |
-| S₃ symmetry | S₃ gauge action | Refined |
-| C_Σ = geo3(α,β,γ) | C_Σ = (s_α·s_β·s_γ)^(1/3) | Unchanged |
+| v2.x Concept        | v3.0 Equivalent                | Changed?     |
+| ------------------- | ------------------------------ | ------------ |
+| α-axis (pattern)    | α evaluator to (ℕ, ⊕, 0)       | Formalized   |
+| β-axis (relation)   | β evaluator to (ℕ³, ⊔, 0³)     | Formalized   |
+| γ-axis (process)    | γ evaluator to (ℕ×ℕ, ⊗, (0,0)) | Formalized   |
+| C≡ axioms (C1-C6)   | Term algebra + evaluators      | **Replaced** |
+| Braided interchange | (removed)                      | **Removed**  |
+| S₃ symmetry         | S₃ gauge action                | Refined      |
+| C_Σ = geo3(α,β,γ)   | C_Σ = (s_α·s_β·s_γ)^(1/3)      | Unchanged    |
 
----
+______________________________________________________________________
 
 ## Code Changes
 
 ### Old (v2.x) Measurement
+
 ```python
 # This no longer works
 from tsc import measure_coherence
@@ -34,6 +35,7 @@ score = measure_coherence(
 ```
 
 ### New (v3.0) Measurement
+
 ```python
 from tsc import tri, Atom, Empty
 from tsc.measure import eval_alpha, eval_beta, eval_gamma, coherence
@@ -50,43 +52,47 @@ gamma_val = eval_gamma(term)
 score = coherence(term, spec)
 ```
 
----
+______________________________________________________________________
 
 ## What You Don't Need Anymore
 
 ### Removed Components
 
 **Parser infrastructure:**
+
 - ❌ `braid_parser.py` (400+ lines of LaTeX handling)
 - ❌ `normalize_latex()` function
 - ❌ Function notation transformer
 - ❌ Braided witness checker
 
 **Axiom checking:**
+
 - ❌ C1-C6 verification
 - ❌ Hexagon coherence tests
 - ❌ Braided interchange normalization
 
 **Why removed?** Not necessary—algebraic independence proven directly.
 
----
+______________________________________________________________________
 
 ## What You Still Need
 
 ### Kept Components
 
 **Measurement structure:**
+
 - ✅ Three-axis evaluation (now α, β, γ evaluators)
 - ✅ Geometric mean aggregation
 - ✅ S₃ symmetry checking
 - ✅ Bootstrap confidence intervals
 
 **Witnesses:**
+
 - ✅ S₃ permutation test
 - ✅ Variance floor
 - ✅ OOD detection (when implemented)
 
----
+______________________________________________________________________
 
 ## Implementation Path
 
@@ -95,6 +101,7 @@ score = coherence(term, spec)
 **Old approach:** Parse markdown → extract features → compute vectors
 
 **New approach:** Parse markdown → build tri(·,·,·) term → normalize
+
 ```python
 def extract_term(markdown_text):
     """Convert markdown to term algebra."""
@@ -116,6 +123,7 @@ def extract_term(markdown_text):
 ```
 
 ### Phase 2: Evaluation
+
 ```python
 # These are now deterministic algorithms, not heuristics
 alpha_val = eval_alpha(term)  # Returns int
@@ -124,6 +132,7 @@ gamma_val = eval_gamma(term)  # Returns (int, int)
 ```
 
 ### Phase 3: Scoring
+
 ```python
 # Need operational definitions (work in progress)
 s_alpha = score_alpha(term, spec)  # ∈ [0,1]
@@ -133,18 +142,20 @@ s_gamma = score_gamma(term, spec)  # ∈ [0,1]
 C_sigma = (s_alpha * s_beta * s_gamma) ** (1/3)
 ```
 
----
+______________________________________________________________________
 
 ## Benefits of v3.0
 
 ### For Practitioners
 
 **Simpler:**
+
 - No category theory required
 - No LaTeX syntax hell
 - Clear algorithmic definitions
 
 **More Rigorous:**
+
 - Proven independence (Theorem 2.3)
 - Decidable equivalence (nf algorithm)
 - Proof-assistant ready
@@ -152,16 +163,18 @@ C_sigma = (s_alpha * s_beta * s_gamma) ** (1/3)
 ### For Theorists
 
 **Cleaner Foundation:**
+
 - Elementary proofs (no Mac Lane)
 - Term algebra (standard PL theory)
 - Clear connection to monoid theory
 
 **Research Questions:**
+
 - Other evaluators with distinct profiles?
 - Completeness/universality theorems?
 - Extension to binding/variables?
 
----
+______________________________________________________________________
 
 ## Timeline
 
@@ -173,7 +186,7 @@ C_sigma = (s_alpha * s_beta * s_gamma) ** (1/3)
 
 **Q3 2025:** Applications (GitHub badge, blockchain oracle)
 
----
+______________________________________________________________________
 
 ## Questions?
 
