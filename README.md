@@ -7,7 +7,6 @@ ______________________________________________________________________
 ## ⚡ Quick Start (Pick Your Path)
 
 ### 🔧 Engineers: Run This
-
 ```bash
 # Measure coherence of your codebase
 tsc measure ./my-project --axes=structure,calls,evolution
@@ -19,7 +18,6 @@ tsc measure ./my-project --axes=structure,calls,evolution
 ## Self-Measurement
 
 TSC v2.3.0 can measure its own coherence:
-
 ```bash
 tsc self --out coherence_report.json
 ```
@@ -31,6 +29,9 @@ tsc self --out coherence_report.json
 - **Braided Witness:** FAIL ❌
 
 The FAIL verdict is expected and demonstrates honest measurement. The repository is not yet fully self-coherent. See [docs/self-coherence-v2.3.0.md](docs/self-coherence-v2.3.0.md) for details and roadmap.
+
+*Provenance note.* The reported C_Σ is computed by the **v2.3.x operational pipeline** against the v2.3.x repository state.  
+The **v3.0.x** specifications are normative but **not yet the measurement pipeline**; v3 self-measurement will be reported when the reference implementation lands.
 
 **Target:** Achieve C_Σ ≥ 0.90 by v2.4.0.
 
@@ -97,7 +98,6 @@ ______________________________________________________________________
 ______________________________________________________________________
 
 ## Core Idea (One Diagram)
-
 ```
          One System (C)
               |
@@ -138,13 +138,11 @@ ______________________________________________________________________
 ## For Engineers
 
 ### Installation
-
 ```bash
 pip install tsc-coherence  # (hypothetical - adapt to your implementation)
 ```
 
 ### Basic Usage
-
 ```python
 from tsc import measure_coherence
 
@@ -264,12 +262,20 @@ ______________________________________________________________________
 
 ### Formal Specification Stack
 
-TSC is defined by four normative documents:
+**Stable (v2.3.x)**
+1. **[C≡ Kernel v2.0.0](spec/c-equiv-kernel.md)**
+2. **[C≡ v2.2.2](spec/c-equiv.md)**
+3. **[Core v2.2.2](spec/tsc-core.md)**
+4. **[Operational v2.2.2](spec/tsc-oper.md)**
+5. **[Glossary v2.2.2](spec/tsc-glossary.md)**
 
-1. **[C≡ v2.2.2](spec/c-equiv.md)** — Axiomatic foundation (braided monoidal structure)
-1. **[Core v2.2.2](spec/tsc-core.md)** — Measurement calculus (how to compute C_Σ)
-1. **[Operational v2.2.2](spec/tsc-oper.md)** — Protocol and policy (how to run measurements)
-1. **[Glossary v2.2.2](spec/tsc-glossary.md)** — Multi-audience terminology reference
+**Development (v3.0.x)**
+1. **C≡ v3.0.25** — algebraic term language and evaluators
+2. **Core v3.0.1** — measurement calculus (Δ, Coh, β_c symmetry, C_Σ)
+3. **Operational v3.0.1** — protocol, witnesses, provenance
+4. **Glossary v3.x** (in progress)
+
+See **[What's new in v3 →](docs/v3-overview.md)** for a one-page summary. v3 docs will be linked here as they land.
 
 **Bootstrap:** Start with [C≡ Kernel v2.0.0](spec/c-equiv-kernel.md) for intuitive intro.
 
@@ -326,11 +332,29 @@ The FAIL verdict is **expected** and demonstrates **honest measurement**:
 - Log-concave composition: coherent modules stay coherent
 - Degeneracy guard: geometric mean prevents compensation
 
+**Pairwise symmetry in β_c.** When forming β_c from the three pairwise coherences, we use the **same ensemble size**, **same sensitivity λ**, and the **same θ (struct vs dist weighting)** across (α,β), (β,γ), (γ,α). This prevents accidental axis privilege.
+
 **Operational Witnesses:**
 
 - Braided Interchange (δ_MFI): tests C5' empirically
 - Variance floor: ensures alignment stability
 - OOD detection: catches regime shifts
+
+Curious about the algebraic backbone in v3? See **[What's new in v3](docs/v3-overview.md)** for the evaluator targets, idempotent profiles, and S₃ symmetry at a glance.
+
+### Aggregate Coherence
+```
+C_Σ = (αc · βc · γc)^(1/3)
+```
+
+**Flooring order.** Compute raw α_c, β_c, γ_c, then apply the floor ε (default 1e−6) before forming C_Σ. We publish both raw and floored values in reports.
+
+### Confidence Intervals
+
+**Bootstrap scheme (default B=1000).** Nested resampling:  
+(1) resample observation indices within each Ωₐ with replacement;  
+(2) resample alignment members σ ∈ 𝒜ₐᵦ with replacement;  
+recompute α_c, β_c, γ_c, C_Σ; report percentile CIs and bootstrap SE. Seeds and the ordered 𝒜ₐᵦ member lists are included in the provenance bundle.
 
 ### Reproducibility
 
@@ -345,7 +369,6 @@ Every measurement produces a **provenance bundle** (Operational §7):
 **Guarantee:** Given the provenance bundle, third parties can reproduce C_Σ to numerical precision.
 
 **v2.3.0 Provenance Example:**
-
 ```json
 {
   "git_commit": "1a71d6c",
@@ -384,7 +407,6 @@ ______________________________________________________________________
 ### Key Decision Points
 
 **When asked to measure coherence:**
-
 ```python
 # Pseudocode
 result = run_tsc_protocol(
@@ -403,7 +425,6 @@ else:  # PASS
 ```
 
 **When asked to explain low C_Σ:**
-
 ```python
 # Check leverage
 λ_α, λ_β, λ_γ = result.leverages
@@ -438,7 +459,6 @@ Focus effort on the axis with highest leverage:
 ### Self-Application Check
 
 Before trusting TSC for a critical decision, verify self-coherence:
-
 ```python
 # Measure TSC itself
 tsc_result = measure_coherence(
@@ -481,7 +501,6 @@ ______________________________________________________________________
 1. **[Self-Coherence Report v2.3.0](docs/self-coherence-v2.3.0.md)** — Baseline measurement
 
 ### Document Dependency Graph
-
 ```
 C≡ Kernel (bootstrap)
     ↓
@@ -514,7 +533,6 @@ ______________________________________________________________________
 **Note:** TSC is currently a **specification**, not a packaged library. Implementations are in progress.
 
 ### From Specification (DIY)
-
 ```bash
 git clone https://github.com/usurobor/tsc.git
 cd tsc/spec
@@ -522,7 +540,6 @@ cd tsc/spec
 ```
 
 ### Reference Implementation (Python - Coming Soon)
-
 ```bash
 pip install tsc-coherence
 ```
@@ -574,7 +591,6 @@ ______________________________________________________________________
 ## Citation
 
 If you use TSC in research, please cite:
-
 ```bibtex
 @software{tsc2025,
   title = {TSC: Triadic Self-Coherence Framework},
@@ -595,4 +611,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**End — TSC v2.3.0 README**
+**End — TSC v3.0.0 README**
