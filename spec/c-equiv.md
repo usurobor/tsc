@@ -1,14 +1,8 @@
-# C≡ v3.0.23 — Self-Articulating Foundation
+# C≡ v3.0.25 — Self-Articulating Foundation
 
-**Version:** 3.0.23  
+**Version:** 3.0.25  
 **Date:** November 2025  
 **Status:** Normative (with pedagogical scaffolding)
-
-**Changelog from 3.0.22:**
-- **Implementation aid (§3.2):** Added normalized tri remark for β—explicit formula when nf(t)=tri(U₁,U₂,U₃).
-- **Verification aid (§4.3):** Added worked σ example showing β equivariance with concrete permutation.
-- No mathematical changes; ergonomic improvements for implementers.
-
 ---
 
 ## 0. What Is C≡? (in one breath)
@@ -446,7 +440,7 @@ E_γ(tri(T₁,T₂,T₃)) = E_γ(T₁) ⊗ E_γ(T₂) ⊗ E_γ(T₃)
 - Via the isomorphism u ↦ u+1, the ⊙ operation becomes (u+1)(v+1) - 1, which is isomorphic to multiplication
 - Associative: (u ⊙ v) ⊙ w = u ⊙ (v ⊙ w)
 - Commutative: u ⊙ v = v ⊙ u
-- **Monotone:** Since (u+1)(v+1) is monotone in both arguments (product of positive naturals), ⊙ is monotone in each argument. This property is used in §5.0 to establish disruption monotonicity for γ.
+- **Monotone:** Since (u+1)(v+1) is monotone in both arguments (product of non-negative integers), ⊙ is monotone in each argument. This property is used in §5.0 to establish disruption monotonicity for γ.
 - **Idempotent:** only (0,0)
 
 **Connection to c-calculus (normative):** For nested articulation c(n,m), γ's second component grows multiplicatively—not because "separate atoms multiply," but because **indivisible wholeness articulates itself within itself**. The multiplication captures **depth of nested one-as-two**: the atom articulating itself at depth.
@@ -518,6 +512,8 @@ For normal forms:
 ```
 
 **Well-definedness:** `π_i(nf(t)) = nf(π_i(t))`
+
+**Proof sketch.** By structural induction. For `e` and `a`, the claim is immediate. For `t = tri(T₁,T₂,T₃)`, we have `nf(t) = contract(tri(nf(T₁), nf(T₂), nf(T₃)))`. If nf(T₁)=nf(T₂)=nf(T₃)=e, then nf(tri(T₁,T₂,T₃))=e and π_i(nf(t))=π_i(e)=e, while nf(π_i(t))=nf(T_i)=e (since nf(T_i)=e by assumption). Otherwise, `contract` is the identity and `π_i` selects `nf(T_i)` directly, so `π_i(nf(t)) = nf(T_i) = nf(π_i(t))` by the inductive hypothesis. ∎
 
 **Reading:** Projections let us focus on one position of the three that hold one-as-two. We're not extracting a part—we're **focusing on one aspect** of how the three positions hold unity-as-duality, without breaking the indivisibility.
 
@@ -808,7 +804,7 @@ To hold one-as-two without collapse or fragmentation requires **three positions*
 9. **Normal form nf** — recognizing when no atom is present (tri(e,e,e) → e)
 10. **Evaluators α, β, γ** — three independent measurements:
     - α: pattern (how many atoms—monoid homomorphism)
-    - β: relation (which positions hold atoms—via projections and presence, NOT homomorphic; E_β(a)=(1,1,1); normalized tri formula)
+    - β: relation (which positions hold atoms—via projections and presence, NOT homomorphic; E_β(a)=(1,1,1); normalized tri formula; projection/nf commutation proven; evaluator/nf commutation established)
     - γ: process (depth of nested atoms—monoid homomorphism, with ⊙ monotone)
 11. **Gauge S₃** — no privileged position; α,γ invariant; β equivariant (via direct identity π_i(σ·u) = π_{σ(i)}(u); verified by worked example)
 12. **Monotonicity** — disruption decreases evaluators (⟦t⟧ ≥ ⟦u⟧)
@@ -839,13 +835,18 @@ C≡ formalizes this: ≡ is the unlimited. tri(·,·,·) is the unlimited artic
 **Terms.** `T ::= e | a | tri(T,T,T)` where a ∈ 𝔄.  
 **Equivalence.** `e ~ tri(e,e,e)`; least congruence.  
 **nf.** As in §2.2; recognizes when no atom present.  
-**Projections.** `π_L, π_C, π_R` on normal forms; commute with `nf`.  
+**Projections.** `π_L, π_C, π_R` on normal forms; commute with `nf` (proven §4.1).  
 **Gauge.** σ ∈ S₃ acts by permuting positions; `nf` commutes.  
 **Evaluators.** 
 - α on `(ℕ,⊕,0)`: counts atoms (pattern)—monoid homomorphism
 - β via presence: `E_β(t) = (B(π_L(nf(t))), B(π_C(nf(t))), B(π_R(nf(t))))` where B to `(ℕ,max,0)` detects presence; base cases E_β(e)=(0,0,0), E_β(a)=(1,1,1); NOT constructed homomorphically; normalized tri: if nf(t)=tri(U₁,U₂,U₃) then E_β(t)=(B(U₁),B(U₂),B(U₃))
 - γ on `(ℕ×ℕ,⊗,(0,0))`: depth of nesting (process)—monoid homomorphism; ⊙ is monotone
 All apply post-`nf`; α,γ invariant; β equivariant under S₃ (via π_i(σ·u) = π_{σ(i)}(u)).  
+
+**Evaluator normalization.** For all t and all i∈{L,C,R}, `B(nf(t)) = B(t)` and `π_i(nf(t)) = nf(π_i(t))`, hence `E_●(nf(t)) = E_●(t)`. We therefore abbreviate `⟦t⟧_● ≔ E_●(nf(t))`.
+
+**Complexity.** `nf`, E_α, B, and E_γ compute in O(|t|). E_β computes in O(|t|) via one normalization pass and a bottom-up pass for B; the final triple readout from nf(t)=tri(U₁,U₂,U₃) is O(1).
+
 **Independence.** Distinct idempotent profiles.  
 **Monotonicity.** Disruption decreases evaluators: ⟦t⟧ ≥ ⟦u⟧ (§5.0).  
 **Disruption.** Contextual replacement by `e`; forms preorder ⪰.  
@@ -891,7 +892,7 @@ All apply post-`nf`; α,γ invariant; β equivariant under S₃ (via π_i(σ·u)
 
 ---
 
-**C≡ v3.0.23 complete.**
+**C≡ v3.0.25 complete.**
 
 **The atom is one-as-two.**  
 **Unity-as-duality held in three positions.**  
