@@ -1,8 +1,8 @@
-# TSC Core v3.0.0
+# TSC Core v3.0.1
 
-**Version:** 3.0.0  
+**Version:** 3.0.1  
 **Status:** Normative  
-**Foundation:** C≡ v3.0.0 (Term Algebra)
+**Foundation:** C≡ v3.0.25 (Term Algebra)
 
 ---
 
@@ -193,7 +193,7 @@ If κ < 1, then T is contraction on 𝒮³ with unique fixed point (S*α, S*β, 
 
 ### 7.2 Independence
 
-C≡ v3.0.0 Theorem 2.3 proves three evaluators are pairwise non-isomorphic via distinct idempotent profiles:
+C≡ v3.0.25 §3.4 proves three evaluators are pairwise non-isomorphic via distinct idempotent profiles:
 - α: idempotents exactly {0, M}
 - β: fully idempotent (all elements)
 - γ: idempotent only at (0,0)
@@ -297,4 +297,4 @@ Higher λₐ indicates dimension a contributes more to incoherence.
 
 ---
 
-**End — TSC Core v3.0.0**
+**End — TSC Core v3.0.1**
