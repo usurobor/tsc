@@ -58,6 +58,7 @@ def self_measure(
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         import traceback
+
         traceback.print_exc()
         sys.exit(2)
 

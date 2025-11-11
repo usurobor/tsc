@@ -12,7 +12,6 @@ import math
 import platform
 import random
 import re
-import statistics
 import subprocess
 import unicodedata
 from collections import Counter
@@ -43,7 +42,7 @@ def get_version() -> str:
         import tomllib
     except ImportError:
         import tomli as tomllib
-    
+
     pyproject = Path(__file__).parent.parent.parent / "pyproject.toml"
     with open(pyproject, "rb") as f:
         data = tomllib.load(f)
@@ -125,7 +124,7 @@ def _vec(counter: Mapping[str, int | float]) -> dict[str, float]:
 
 def parse_version(version_string: str) -> tuple[int, int, int]:
     """Parse version string to tuple for comparison."""
-    match = re.search(r'v?(\d+)\.(\d+)\.(\d+)', version_string)
+    match = re.search(r"v?(\d+)\.(\d+)\.(\d+)", version_string)
     if match:
         return (int(match.group(1)), int(match.group(2)), int(match.group(3)))
     return (0, 0, 0)
@@ -303,59 +302,64 @@ def gamma_axis(
     params: Params,
     specs_now: Mapping[str, str],
     current_scores: dict[str, float] | None = None,
-    current_version: str | None = None
+    current_version: str | None = None,
 ) -> AxisScore:
     """Compute γ_c: process coherence via self-improvement tracking."""
     if not DOCS.exists():
         DOCS.mkdir(exist_ok=True)
-        return AxisScore(mean=0.5, reps=[0.5]*64, diag={"note": "No previous report"})
-    
+        return AxisScore(mean=0.5, reps=[0.5] * 64, diag={"note": "No previous report"})
+
     if not current_scores:
-        return AxisScore(mean=0.5, reps=[0.5]*64, diag={"note": "No current scores"})
-    
+        return AxisScore(mean=0.5, reps=[0.5] * 64, diag={"note": "No current scores"})
+
     if not current_version:
         current_version = get_version()
-    
+
     current_ver_tuple = parse_version(current_version)
-    
+
     # Find reports from BEFORE current version
     prev_reports = []
     for report_path in DOCS.glob("self-coherence-v*.json"):
-        match = re.search(r'self-coherence-(v\d+\.\d+\.\d+)', report_path.name)
+        match = re.search(r"self-coherence-(v\d+\.\d+\.\d+)", report_path.name)
         if match:
             report_version = match.group(1)
             report_ver_tuple = parse_version(report_version)
-            
+
             if report_ver_tuple < current_ver_tuple:
                 prev_reports.append((report_ver_tuple, report_path))
-    
+
     if not prev_reports:
-        return AxisScore(mean=0.5, reps=[0.5]*64, diag={
-            "note": "No previous report found",
-            "current_version": current_version
-        })
-    
+        return AxisScore(
+            mean=0.5,
+            reps=[0.5] * 64,
+            diag={"note": "No previous report found", "current_version": current_version},
+        )
+
     prev_reports.sort(reverse=True)
     _, prev_report_path = prev_reports[0]
-    
+
     try:
         prev = json.loads(prev_report_path.read_text(encoding="utf-8"))
-        
-        roadmap = prev.get('roadmap', {})
-        next_step = roadmap.get('next_step', {})
-        
-        bottleneck = next_step.get('axis')
-        target = next_step.get('target_value')
-        prev_value = next_step.get('current_value')
-        
+
+        roadmap = prev.get("roadmap", {})
+        next_step = roadmap.get("next_step", {})
+
+        bottleneck = next_step.get("axis")
+        target = next_step.get("target_value")
+        prev_value = next_step.get("current_value")
+
         if not bottleneck or target is None or prev_value is None:
-            return AxisScore(mean=0.5, reps=[0.5]*64, diag={
-                "note": "Previous report missing roadmap",
-                "prev_report": prev_report_path.name
-            })
-        
-        curr_value = current_scores.get(f'{bottleneck}_c', 0.0)
-        
+            return AxisScore(
+                mean=0.5,
+                reps=[0.5] * 64,
+                diag={
+                    "note": "Previous report missing roadmap",
+                    "prev_report": prev_report_path.name,
+                },
+            )
+
+        curr_value = current_scores.get(f"{bottleneck}_c", 0.0)
+
         if curr_value >= target:
             γ_c = 1.0
             achieved = True
@@ -366,29 +370,28 @@ def gamma_axis(
             else:
                 γ_c = 0.5
             achieved = False
-        
+
         diag = {
             "prev_report": prev_report_path.name,
-            "prev_version": prev.get('version', 'unknown'),
+            "prev_version": prev.get("version", "unknown"),
             "current_version": current_version,
             "bottleneck": bottleneck,
             "prev_value": prev_value,
             "curr_value": curr_value,
             "target": target,
             "achieved": achieved,
-            "improvement": curr_value - prev_value
+            "improvement": curr_value - prev_value,
         }
-        
+
         reps = [γ_c * (1.0 + 0.01 * ((k % 5) - 2)) for k in range(64)]
         reps = [max(0.0, min(1.0, r)) for r in reps]
-        
+
         return AxisScore(mean=γ_c, reps=reps, diag=diag)
-        
+
     except Exception as e:
-        return AxisScore(mean=0.5, reps=[0.5]*64, diag={
-            "error": str(e),
-            "prev_report": prev_report_path.name
-        })
+        return AxisScore(
+            mean=0.5, reps=[0.5] * 64, diag={"error": str(e), "prev_report": prev_report_path.name}
+        )
 
 
 # ============================================================================
@@ -455,7 +458,7 @@ def s3_witness_over_reps(
 def measure_self(params: Params = Params()) -> dict[str, Any]:
     """Compute C_Σ(TSC) with full witness verification."""
     current_version = get_version()
-    
+
     specs = load_specs()
     glossary_text = (
         GLOSSARY.read_text(encoding="utf-8", errors="ignore") if GLOSSARY.exists() else ""
@@ -463,8 +466,8 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
 
     A = alpha_axis(params, specs)
     B = beta_axis(params, specs, glossary_text)
-    
-    current_scores = {'alpha_c': A.mean, 'beta_c': B.mean, 'gamma_c': 0.0}
+
+    current_scores = {"alpha_c": A.mean, "beta_c": B.mean, "gamma_c": 0.0}
     G = gamma_axis(params, specs, current_scores, current_version)
 
     C = geo3(A.mean, B.mean, G.mean)
@@ -474,7 +477,7 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
 
     verdict = "PASS" if (ci_lo >= params.Theta and s3_diag["passed"]) else "FAIL"
 
-    scores_only = {'alpha': A.mean, 'beta': B.mean, 'gamma': G.mean}
+    scores_only = {"alpha": A.mean, "beta": B.mean, "gamma": G.mean}
     bottleneck_axis = min(scores_only, key=scores_only.get)
     bottleneck_score = scores_only[bottleneck_axis]
 
@@ -490,62 +493,47 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
         "version": current_version,
         "date": datetime.now(timezone.utc).isoformat(),
         "verdict": verdict,
-        "scores": {
-            "alpha_c": A.mean,
-            "beta_c": B.mean,
-            "gamma_c": G.mean,
-            "C_sigma": C
-        },
-        "ci": {
-            "C_sigma_lo": ci_lo,
-            "C_sigma_hi": ci_hi,
-            "n_boot": params.n_boot
-        },
+        "scores": {"alpha_c": A.mean, "beta_c": B.mean, "gamma_c": G.mean, "C_sigma": C},
+        "ci": {"C_sigma_lo": ci_lo, "C_sigma_hi": ci_hi, "n_boot": params.n_boot},
         "bottleneck": {
             "axis": bottleneck_axis,
             "score": bottleneck_score,
-            "identified_at": current_version
+            "identified_at": current_version,
         },
         "roadmap": {
             "next_step": {
                 "axis": bottleneck_axis,
                 "current_value": bottleneck_score,
                 "target_value": 0.85,
-                "rationale": f"Improve {bottleneck_axis} axis to raise C_Σ above threshold"
+                "rationale": f"Improve {bottleneck_axis} axis to raise C_Σ above threshold",
             }
         },
-        "witnesses": {
-            "S3_permutation": s3_diag
-        },
-        "axes_diag": {
-            "alpha": A.diag,
-            "beta": B.diag,
-            "gamma": G.diag
-        },
+        "witnesses": {"S3_permutation": s3_diag},
+        "axes_diag": {"alpha": A.diag, "beta": B.diag, "gamma": G.diag},
         "params": asdict(params),
         "provenance": {
             "git_commit": git_commit,
             "dirty": dirty,
             "python": platform.python_version(),
-            "spec_files": sorted(list(specs.keys()))
-        }
+            "spec_files": sorted(list(specs.keys())),
+        },
     }
-    
+
     return report
 
 
 def write_report(params: Params = Params()) -> dict[str, Any]:
     """Compute measurement and write JSON report."""
     report = measure_self(params)
-    
+
     DOCS.mkdir(exist_ok=True)
-    
-    version = report['version']
+
+    version = report["version"]
     json_path = DOCS / f"self-coherence-{version}.json"
     json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    
+
     print(f"✅ Written: {json_path}")
-    
+
     return report
 
 
@@ -559,5 +547,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"ERROR: {e}")
         import traceback
+
         traceback.print_exc()
         raise SystemExit(2)

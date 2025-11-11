@@ -153,26 +153,31 @@ The markdown is **derived from** the JSON, never the other way around.
 ## Benefits
 
 ### 1. No Parsing Errors
+
 - JSON is machine-readable
 - No regex fragility
 - Schema validation possible
 
 ### 2. Deterministic
+
 - Same input → same output
 - Reproducible measurements
 - Clear format specification
 
 ### 3. Versionable
+
 - JSON schema can evolve
 - Old reports still readable
 - Migration path clear
 
 ### 4. Queryable
+
 - Tools can extract specific fields
 - No need to parse markdown
 - Easy to build tooling around
 
 ### 5. Human-Friendly
+
 - Markdown still generated for docs
 - Humans get nice formatting
 - But machines use JSON
@@ -241,6 +246,7 @@ print(f"Progress: {C_history}")
 ### From v2.x to v3.1.0
 
 Old v2.x reports (markdown-only) will still work:
+
 - γ_c will return neutral 0.5 if no JSON found
 - System will start tracking from v3.1.0 forward
 - No breaking changes for existing workflows
@@ -262,18 +268,21 @@ Then tools can handle multiple schema versions.
 ## Example Files
 
 See:
+
 - `example-self-coherence-v3.1.0.json` - What JSON looks like
 - `example-self-coherence-v3.1.0.md` - What generated MD looks like
 
 ## Summary
 
 **Before (v2.x):**
+
 - Markdown only
 - Regex parsing
 - Fragile
 - Hard to query
 
 **After (v3.1.0):**
+
 - JSON canonical
 - Markdown generated
 - Robust
