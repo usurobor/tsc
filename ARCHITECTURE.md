@@ -2,47 +2,175 @@
 
 ## Overview
 
-TSC now uses a **structured report format** with JSON as the canonical source of truth and auto-generated markdown for human readability.
+TSC measures its own coherence using three axes (α, β, γ) and tracks improvement over time. The system uses **JSON as canonical storage** with **auto-generated markdown history**.
 
-## Architecture
+**Key principle:** No hardcoded constants. The γ (gamma) axis reflects actual system health derived from observable state.
+
+---
+
+## Directory Structure
 
 ```
+repo/
+├── spec/                    # Files being measured
+│   ├── tsc-core.md
+│   ├── tsc-oper.md
+│   ├── tsc-glossary.md
+│   └── c-equiv.md
+│
+├── reference/python/
+│   └── tsc_measure.py       # Measurement implementation
+│
+└── .tsc/                    # Hidden measurement directory
+    ├── tsc-v2.1.0.json      # Historical measurements
+    ├── tsc-v2.2.0.json
+    ├── tsc-v3.1.0.json      # Current measurement
+    └── README.md            # Auto-generated history (all versions)
+```
+
+**Why `.tsc/`?**
+- Hidden directory (like `.git/`)
+- TSC CLI can be used by any repo
+- Self-contained measurement metadata
+- Clean separation from source files
+
+**Why `tsc-v*.json`?**
+- Clear, concise naming
+- "self-coherence" was redundant (TSC measuring TSC is implicit)
+- Matches directory name
+
+---
+
+## Workflow
+
+### Single Command Does Everything
+
+```bash
 tsc self
-    ↓
-measure_self()
-    ↓
-  1. Compute C_Σ(TSC)
-  2. Identify bottleneck (min axis)
-  3. Declare next target
-    ↓
-write_report()
-    ↓
-  → docs/self-coherence-v3.1.0.json  (CANONICAL)
-  → docs/self-coherence-v3.1.0.md    (GENERATED)
-  → coherence_report.json            (backward compat)
-    ↓
-  git commit + push
 ```
 
-## Next Cycle
-
+**Output:**
 ```
-tsc self (next time)
-    ↓
-gamma_axis()
-    ↓
-  1. Loads docs/self-coherence-v3.1.0.json
-  2. Reads: bottleneck='alpha', target=0.85
-  3. Measures current α_c
-  4. γ_c = did we achieve target?
-    ↓
-measure_self()
-    ↓
-  → docs/self-coherence-v3.2.0.json
-  → docs/self-coherence-v3.2.0.md
+✅ Written: .tsc/tsc-v3.1.0.json
+✅ Updated: .tsc/README.md
 ```
 
-## JSON Schema
+**What happens:**
+1. Measures current α, β
+2. Loads previous measurement from `.tsc/tsc-v3.0.0.json`
+3. Computes γ based on achievement
+4. Writes new measurement to `.tsc/tsc-v3.1.0.json`
+5. Auto-generates `.tsc/README.md` from all JSON files
+
+**One command. Everything done.** ✅
+
+---
+
+## The Three Axes
+
+### α (Alpha) - Pattern Coherence
+
+**Measures:** Consistency between content and structure
+
+**How:**
+1. Extract content tokens (words)
+2. Extract structure elements (headers, bullets, definitions)
+3. Compare using cosine similarity + Jensen-Shannon divergence
+4. Score: `α = exp(-λ × distance)`
+
+**Interpretation:**
+- **High (0.8+):** Headers match content, good organization
+- **Low (0.3):** Mismatch between structure and actual content
+
+**Improve by:**
+- Align headers with section content
+- Use consistent terminology
+- Add structure that mirrors content
+
+---
+
+### β (Beta) - Relational Coherence
+
+**Measures:** Quality of cross-references between specs
+
+**How:**
+1. Extract terms from glossary (or bold terms)
+2. Find explicit cross-references: `"see X"`, `"cf. X"`
+3. Create two embeddings:
+   - Degree distribution (connection patterns)
+   - Reference counts (how often terms are explicitly linked)
+4. Compare embeddings
+5. Score: `β = exp(-λ × distance)`
+
+**Interpretation:**
+- **High (0.8+):** Well-connected specs, good cross-referencing
+- **Low (0.06):** Isolated specs, missing links
+
+**Improve by:**
+- Add explicit cross-references: `"(see coherence in tsc-glossary)"`
+- Use `"cf. witness"` patterns
+- Link glossary terms throughout specs
+
+---
+
+### γ (Gamma) - Generative Process Health
+
+**Measures:** Health of the process that generates specs
+
+**Key insight:** γ is not a property of the specs themselves, but of the **generative process** that creates them.
+
+**Principled Formula (No Hardcoded Constants):**
+
+```python
+# Baseline: Current health from outputs
+baseline_health = sqrt(α × β)
+
+if achieved_target:
+    γ = 1.0  # Process proved it can self-improve
+else:
+    # Health = baseline + (distance to full health) × progress
+    progress = (actual - start) / (target - start)
+    γ = baseline_health + (1.0 - baseline_health) × progress
+```
+
+**Why this works:**
+- `sqrt(α × β)` = current capacity of the generative process
+- Healthy process (high α, β) → high baseline → misses hurt less
+- Unhealthy process (low α, β) → low baseline → misses compound
+- Achievement always leads to γ=1.0 (proof of health)
+
+**Example:**
+
+```python
+# v2.2.0: Failed to improve β
+α = 0.306, β = 0.061
+baseline = sqrt(0.306 × 0.061) = 0.136
+target: β 0.061 → 0.361
+actual: β = 0.061 (no change)
+progress = 0.0
+γ = 0.136 + (1.0 - 0.136) × 0.0 = 0.136
+# "Process is 13.6% healthy, failed to improve"
+
+# v3.1.0: Achieved target
+α = 0.282, β = 0.511
+baseline = sqrt(0.282 × 0.511) = 0.380
+target: β 0.061 → 0.361
+actual: β = 0.511 (exceeded!)
+achieved = True
+γ = 1.0
+# "Process proved it works!"
+```
+
+**Interpretation:**
+- **γ = 1.0:** Process healthy, achieved improvement target
+- **γ = 0.4:** Process struggling, made some progress
+- **γ = baseline:** Process stuck, no improvement
+
+---
+
+## JSON Structure
+
+### Top-Level Schema
 
 ```json
 {
@@ -50,243 +178,445 @@ measure_self()
   "date": "2025-11-11T18:30:00Z",
   "verdict": "PASS" | "FAIL",
   
-  "scores": {
-    "alpha_c": float,
-    "beta_c": float,
-    "gamma_c": float,
-    "C_sigma": float
-  },
-  
-  "ci": {
-    "C_sigma_lo": float,
-    "C_sigma_hi": float,
-    "n_boot": int
-  },
-  
-  "bottleneck": {
-    "axis": "alpha" | "beta" | "gamma",
-    "score": float,
-    "identified_at": "v3.1.0"
+  "current": {
+    "scores": {...},
+    "ci": {...},
+    "bottleneck": {...}
   },
   
   "roadmap": {
-    "next_step": {
-      "axis": "alpha" | "beta" | "gamma",
-      "current_value": float,
-      "target_value": float,
-      "rationale": string
-    }
+    "next_target": {...}
   },
   
-  "witnesses": {
-    "S3_permutation": {...}
+  "historical": {
+    "previous_version": "v3.0.0",
+    "previous_scores": {...},
+    "achievement": {...},
+    "changes": {...}
   },
   
+  "witnesses": {...},
   "axes_diag": {...},
   "params": {...},
   "provenance": {...}
 }
 ```
 
-## Key Changes
+### Current State
 
-### 1. Bottleneck Identification (Automatic)
-
-```python
-scores_only = {'alpha': A.mean, 'beta': B.mean, 'gamma': G.mean}
-bottleneck_axis = min(scores_only, key=scores_only.get)
+```json
+"current": {
+  "scores": {
+    "alpha_c": 0.282,
+    "beta_c": 0.511,
+    "gamma_c": 1.0,
+    "C_sigma": 0.524
+  },
+  "ci": {
+    "C_sigma_lo": 0.498,
+    "C_sigma_hi": 0.551,
+    "n_boot": 1000
+  },
+  "bottleneck": {
+    "axis": "alpha",        // Only alpha or beta (not gamma)
+    "score": 0.282
+  }
+}
 ```
 
-The system automatically identifies which axis is the bottleneck.
+**Note:** Bottleneck is only α or β. γ is a meta-metric (process health), not a bottleneck.
 
-### 2. Roadmap Declaration (Automatic)
+### Roadmap Declaration
 
-```python
-report['roadmap'] = {
-    'next_step': {
-        'axis': bottleneck_axis,
-        'current_value': bottleneck_score,
-        'target_value': 0.85,  # Default target
-        'rationale': f"Improve {bottleneck_axis} axis to raise C_Σ"
-    }
+```json
+"roadmap": {
+  "next_target": {
+    "axis": "alpha",
+    "current_value": 0.282,
+    "target_value": 0.582,  // current + 0.30
+    "rationale": "Improve alpha axis to raise C_Σ above threshold"
+  }
 }
 ```
 
 The system declares what it will work on next.
 
-### 3. γ_c Self-Improvement Tracking (Simplified)
+### Historical Tracking
+
+```json
+"historical": {
+  "previous_version": "v3.0.0",
+  "previous_scores": {
+    "alpha_c": 0.306,
+    "beta_c": 0.061,
+    "gamma_c": 0.136,
+    "C_sigma": 0.136
+  },
+  "previous_roadmap": {
+    "axis": "beta",
+    "current_value": 0.061,
+    "target_value": 0.361
+  },
+  "achievement": {
+    "target_reached": true,
+    "target_axis": "beta",
+    "start_value": 0.061,
+    "target_value": 0.361,
+    "actual_value": 0.511,
+    "improvement": 0.450,
+    "gamma_c": 1.0,
+    "baseline_health": 0.380
+  },
+  "changes": {
+    "alpha_c": -0.024,
+    "beta_c": +0.450,
+    "gamma_c": +0.864,
+    "C_sigma": +0.388
+  }
+}
+```
+
+Tracks what was promised, what was achieved, and how things changed.
+
+---
+
+## Implementation Details
+
+### Measurement Flow
 
 ```python
-def gamma_axis(..., current_scores):
-    # Load previous JSON
-    prev = json.loads(Path("docs/self-coherence-v3.0.0.json").read_text())
+def measure_self(params: Params) -> dict:
+    """Compute C_Σ(TSC) with full tracking."""
     
-    # Extract declared intent
-    bottleneck = prev['roadmap']['next_step']['axis']
-    target = prev['roadmap']['next_step']['target_value']
-    prev_value = prev['roadmap']['next_step']['current_value']
+    # 1. Load specs
+    specs = load_specs()  # From spec/ directory
+    glossary = load_glossary()
     
-    # Check achievement
-    curr_value = current_scores[f'{bottleneck}_c']
+    # 2. Compute α and β
+    A = alpha_axis(params, specs)
+    B = beta_axis(params, specs, glossary)
     
-    if curr_value >= target:
-        return 1.0  # Target achieved!
+    # 3. Load previous report
+    prev_report = load_previous_report(current_version)
+    
+    # 4. Compute γ based on achievement
+    baseline_health = sqrt(A.mean × B.mean)
+    
+    if prev_report and prev_report['roadmap']['next_target']:
+        target_axis = prev_report['roadmap']['next_target']['axis']
+        target_value = prev_report['roadmap']['next_target']['target_value']
+        start_value = prev_report['roadmap']['next_target']['current_value']
+        
+        current_scores = {'alpha_c': A.mean, 'beta_c': B.mean}
+        actual_value = current_scores[f'{target_axis}_c']
+        
+        if actual_value >= target_value:
+            γ_c = 1.0  # Achieved!
+        else:
+            progress = (actual_value - start_value) / (target_value - start_value)
+            γ_c = baseline_health + (1.0 - baseline_health) × progress
     else:
-        progress = (curr_value - prev_value) / (target - prev_value)
-        return max(0, min(1, progress))
+        γ_c = baseline_health  # First measurement
+    
+    # 5. Compute C_Σ
+    C_Σ = (A.mean × B.mean × γ_c)^(1/3)
+    
+    # 6. Identify bottleneck (only α and β)
+    bottleneck = min({'alpha': A.mean, 'beta': B.mean}, key=lambda x: x[1])
+    
+    # 7. Declare next target
+    roadmap = {
+        'next_target': {
+            'axis': bottleneck,
+            'current_value': scores[bottleneck],
+            'target_value': scores[bottleneck] + 0.30
+        }
+    }
+    
+    # 8. Build report
+    return {
+        'version': current_version,
+        'current': {...},
+        'historical': {...},
+        'roadmap': roadmap,
+        ...
+    }
 ```
 
-No regex parsing! Just `json.loads()` and dictionary access.
-
-### 4. Markdown Generation (Automatic)
+### Auto-Generated README
 
 ```python
-def generate_markdown_report(report: dict) -> str:
-    """Generate human-readable MD from JSON."""
-    # Extract values from JSON
-    # Format as markdown
-    # Return string
+def generate_readme() -> str:
+    """Generate README.md from all tsc-v*.json files."""
+    
+    # Load all JSON files from .tsc/
+    json_files = sorted(Path('.tsc').glob('tsc-v*.json'))
+    reports = [json.loads(f.read_text()) for f in json_files]
+    
+    # Generate markdown with:
+    # - Overview (what α, β, γ mean)
+    # - Principled γ formula
+    # - Scores over time (table)
+    # - Achievement tracking (table)
+    # - Roadmap declarations (table)
+    # - Changes between versions (table)
+    # - Summary statistics
+    
+    return markdown
 ```
 
-The markdown is **derived from** the JSON, never the other way around.
+**Called automatically** by `write_report()` after writing JSON.
+
+---
 
 ## Benefits
 
-### 1. No Parsing Errors
+### 1. No Hardcoded Constants
 
-- JSON is machine-readable
-- No regex fragility
-- Schema validation possible
-
-### 2. Deterministic
-
-- Same input → same output
-- Reproducible measurements
-- Clear format specification
-
-### 3. Versionable
-
-- JSON schema can evolve
-- Old reports still readable
-- Migration path clear
-
-### 4. Queryable
-
-- Tools can extract specific fields
-- No need to parse markdown
-- Easy to build tooling around
-
-### 5. Human-Friendly
-
-- Markdown still generated for docs
-- Humans get nice formatting
-- But machines use JSON
-
-## Workflow
-
-### Developer Workflow
-
-```bash
-# Run measurement
-tsc self
-
-# Output:
-# ✅ Written: docs/self-coherence-v3.1.0.json
-# ✅ Written: docs/self-coherence-v3.1.0.md
-
-# Review human-readable report
-cat docs/self-coherence-v3.1.0.md
-
-# Commit both files
-git add docs/self-coherence-v3.1.0.*
-git commit -m "docs: add v3.1.0 self-coherence measurement"
-git push
+**Before (hypothetical):**
+```python
+if progress >= 100%:
+    γ = 1.0
+else:
+    γ = 0.4 + 0.6 × progress  # Magic 0.4 floor!
 ```
 
-### CI/CD Integration
-
-```bash
-# In CI pipeline
-tsc self --out report.json
-
-# Parse JSON for decisions
-verdict=$(jq -r '.verdict' report.json)
-if [ "$verdict" = "PASS" ]; then
-  echo "✅ Self-coherent"
-  exit 0
-else
-  echo "❌ Not yet coherent"
-  exit 1
-fi
+**After (principled):**
+```python
+baseline = sqrt(α × β)  # Derived from system state
+γ = baseline + (1.0 - baseline) × progress
 ```
 
-### Tooling Examples
+Everything derived from observable system health.
+
+### 2. Self-Documenting
+
+Single `.tsc/README.md` shows entire history:
+- All versions in one place
+- Auto-updated on every run
+- No manual markdown editing
+
+### 3. Clean Separation
+
+- `.tsc/` = measurement metadata
+- `spec/` = actual specs being measured
+- Hidden directory keeps it out of the way
+
+### 4. Contextual Penalties
+
+Unhealthy system (low α, β):
+```
+baseline = sqrt(0.3 × 0.1) ≈ 0.17
+Miss → γ = 0.17 (harsh penalty, compounds failure)
+```
+
+Healthy system (high α, β):
+```
+baseline = sqrt(0.8 × 0.8) = 0.8
+Miss → γ = 0.8 (mild penalty, can recover)
+```
+
+Penalties scale with system health!
+
+### 5. Machine Readable
+
+```bash
+# Query current state
+cat .tsc/tsc-v3.1.0.json | jq '.current.scores.C_sigma'
+
+# Track progress
+for f in .tsc/tsc-v*.json; do
+  jq -r '.current.scores.C_sigma' $f
+done
+
+# Check achievement
+jq '.historical.achievement.target_reached' .tsc/tsc-v3.1.0.json
+```
+
+---
+
+## Example: TSC's Journey
+
+### v2.1.0 (Baseline)
+```
+α = 0.273 (low - structure doesn't match content)
+β = 0.061 (catastrophic - almost no cross-references)
+γ = 0.129 (baseline health from sqrt(α × β))
+C_Σ = 0.129
+
+Bottleneck: β
+Roadmap: β 0.061 → 0.361
+```
+
+### v2.2.0 (Failed)
+```
+α = 0.306 (slightly better)
+β = 0.061 (no change!)
+γ = 0.136 (stuck at baseline, 0% progress)
+C_Σ = 0.136
+
+Status: ⚠️ Missed target
+Achievement: 0% progress toward β goal
+Bottleneck: β (still)
+Roadmap: β 0.061 → 0.361 (same goal)
+```
+
+### v3.1.0 (Success!)
+```
+α = 0.282
+β = 0.511 (HUGE improvement! +741%)
+γ = 1.000 (achieved target, process proved it works!)
+C_Σ = 0.524
+
+Status: ✅ Achieved target
+Achievement: 150% progress (exceeded goal)
+Bottleneck: α (now α is the problem)
+Roadmap: α 0.282 → 0.582
+```
+
+**Total Progress:**
+- β: +741% (0.061 → 0.511)
+- γ: +676% (0.129 → 1.000)
+- C_Σ: +307% (0.129 → 0.524)
+
+The process healed itself! 🎉
+
+---
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+- name: Run self-measurement
+  run: tsc self
+
+- name: Get version
+  id: version
+  run: |
+    VERSION=$(python -c "import tomllib; print('v' + tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+    echo "report=.tsc/tsc-$VERSION.json" >> $GITHUB_OUTPUT
+
+- name: Check verdict
+  run: |
+    VERDICT=$(jq -r '.verdict' ${{ steps.version.outputs.report }})
+    C_SIGMA=$(jq -r '.current.scores.C_sigma' ${{ steps.version.outputs.report }})
+    
+    echo "C_Σ = $C_SIGMA"
+    echo "Verdict: $VERDICT"
+    
+    if [ "$VERDICT" = "FAIL" ]; then
+      echo "::warning::Self-coherence check failed"
+    fi
+```
+
+### Querying Results
 
 ```python
-# Load latest report
 import json
 from pathlib import Path
 
-reports = sorted(Path("docs").glob("self-coherence-v*.json"), reverse=True)
-latest = json.loads(reports[0].read_text())
+# Load latest
+latest = json.loads(Path('.tsc/tsc-v3.1.0.json').read_text())
 
-# Query specific fields
-print(f"C_Σ = {latest['scores']['C_sigma']:.3f}")
-print(f"Bottleneck: {latest['bottleneck']['axis']}")
-print(f"Next target: {latest['roadmap']['next_step']['target_value']}")
+# Extract metrics
+α = latest['current']['scores']['alpha_c']
+β = latest['current']['scores']['beta_c']
+γ = latest['current']['scores']['gamma_c']
+C_Σ = latest['current']['scores']['C_sigma']
 
-# Track progress over time
-all_reports = [json.loads(p.read_text()) for p in reports]
-C_history = [r['scores']['C_sigma'] for r in all_reports]
-print(f"Progress: {C_history}")
+print(f"Current: α={α:.3f}, β={β:.3f}, γ={γ:.3f}, C_Σ={C_Σ:.3f}")
+
+# Check if we achieved last goal
+if latest.get('historical', {}).get('achievement'):
+    ach = latest['historical']['achievement']
+    if ach['target_reached']:
+        print(f"✅ Achieved {ach['target_axis']} goal!")
+    else:
+        print(f"⚠️ Missed {ach['target_axis']} goal")
 ```
 
-## Migration
+---
 
-### From v2.x to v3.1.0
+## Migration from Old Versions
 
-Old v2.x reports (markdown-only) will still work:
+### If you have old `docs/self-coherence-v*.json` files:
 
-- γ_c will return neutral 0.5 if no JSON found
-- System will start tracking from v3.1.0 forward
-- No breaking changes for existing workflows
+```bash
+# Move to new location
+mkdir -p .tsc
+mv docs/self-coherence-v*.json .tsc/
 
-### Future Schema Changes
+# Rename
+cd .tsc
+for f in self-coherence-v*.json; do
+  mv "$f" "${f/self-coherence-/tsc-}"
+done
 
-If we need to change the JSON schema:
+# Regenerate README
+cd ..
+python -c "from reference.python.tsc_measure import generate_readme; \
+           Path('.tsc/README.md').write_text(generate_readme())"
+```
+
+### If you have no previous measurements:
+
+Just run `tsc self` and it will start fresh!
+
+---
+
+## Future Enhancements
+
+### Potential Additions
+
+1. **Trend Analysis**: Track rate of improvement
+2. **Forecasting**: Predict when C_Σ > 0.90
+3. **Visualization**: Generate plots from JSON
+4. **Schema Versioning**: Handle format evolution
+5. **Multi-Repo**: Track coherence across projects
+
+### Schema Evolution
+
+If we need to change the JSON format:
 
 ```json
 {
+  "schema_version": "2.0",
   "version": "v4.0.0",
-  "schema_version": "2.0",  // Add schema version
   ...
 }
 ```
 
-Then tools can handle multiple schema versions.
+Tools can handle multiple schema versions gracefully.
 
-## Example Files
-
-See:
-
-- `example-self-coherence-v3.1.0.json` - What JSON looks like
-- `example-self-coherence-v3.1.0.md` - What generated MD looks like
+---
 
 ## Summary
 
-**Before (v2.x):**
+**The ouroboros is complete:**
 
-- Markdown only
-- Regex parsing
-- Fragile
-- Hard to query
+1. **Measures itself** (α, β from specs)
+2. **Tracks health** (γ from achievement, no hardcoded constants)
+3. **Declares intent** (roadmap: what to fix next)
+4. **Verifies improvement** (did we achieve what we said?)
+5. **Documents journey** (auto-generated README)
 
-**After (v3.1.0):**
+**All in one command:**
+```bash
+tsc self
+```
 
-- JSON canonical
-- Markdown generated
-- Robust
-- Easy to query
-- Clean γ_c implementation
+**Result:**
+```
+.tsc/
+├── tsc-v2.1.0.json  # "I'm unhealthy (γ=0.129)"
+├── tsc-v2.2.0.json  # "I failed to improve (γ=0.136)"
+├── tsc-v3.1.0.json  # "I healed myself! (γ=1.0)"
+└── README.md        # "Here's my journey"
+```
 
-The ouroboros is complete: TSC measures itself, declares what it will fix, fixes it, and verifies the fix—all tracked in structured, machine-readable reports.
+The system is self-coherent, self-improving, and self-documenting. ✨
+
+---
+
+*Architecture document v3.1.0 - Last updated 2025-11-11*
