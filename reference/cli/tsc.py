@@ -17,7 +17,7 @@ from reference.python.tsc_controller import compute_c_from_file
 
 @click.group()
 def main():
-    """TSC CLI (v3.1.0)"""
+    """TSC CLI (v2.3.0)"""
     pass
 
 
@@ -49,7 +49,6 @@ def compute(path: str, format: str, seed: int | None):
 @click.option("--lambda-beta", "lambda_beta", default=4.0, type=float)
 @click.option("--lambda-gamma", "lambda_gamma", default=4.0, type=float)
 @click.option("--n-boot", "n_boot", default=1000, type=int, help="Bootstrap samples")
-@click.option("--tau-braid", "tau_braid", default=1e-3, type=float, help="Braided threshold")
 @click.option("--Theta", "Theta_", default=0.90, type=float, help="CI_lo gate threshold")
 @click.option("--seed", default=42, type=int, help="Random seed")
 def self_measure(
@@ -59,7 +58,6 @@ def self_measure(
     lambda_beta: float,
     lambda_gamma: float,
     n_boot: int,
-    tau_braid: float,
     Theta_: float,
     seed: int,
 ):
@@ -73,7 +71,6 @@ def self_measure(
             lambda_beta=lambda_beta,
             lambda_gamma=lambda_gamma,
             n_boot=n_boot,
-            tau_braid=tau_braid,
             Theta=Theta_,
             seed=seed,
         )

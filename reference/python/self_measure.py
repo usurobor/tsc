@@ -41,13 +41,7 @@ except ImportError:
     np = None
     LA = None
 
-# Import shared braided equation parser
-from reference.python.braid_parser import (
-    extract_equations,
-    normalize,
-    parse_equation,
-    structural_equal,
-)
+# Braided witness removed in v3.1.0 (term algebra foundation)
 
 # ============================================================================
 # Configuration
@@ -63,7 +57,6 @@ class Params:
     lambda_beta: float = 4.0
     lambda_gamma: float = 4.0
     n_boot: int = 1000  # bootstrap resamples
-    tau_braid: float = 1e-3  # braided witness tolerance
     Theta: float = 0.90  # CI_lo gate
     seed: int = 42
 
@@ -458,54 +451,6 @@ def s3_witness_over_reps(
 
 
 # ==========================================
-def braided_witness(
-    params: Params, ceq_text: str, N: int = 50
-) -> tuple[float, tuple[float, float, float], int]:
-    """
-    Test braided interchange via AST normalization.
-
-    Returns: (mean_δ, (CI_lo, median, CI_hi), n_pairs)
-    """
-    # Use shared parser to extract equations
-    equations = extract_equations(ceq_text)
-
-    # Parse equations into AST pairs
-    pairs = []
-    for eq in equations:
-        result = parse_equation(eq)
-        if result:
-            pairs.append(result)
-
-    if not pairs:
-        raise ValueError("No parseable braided equations found in spec/c-equiv*.md")
-
-    # Normalize and check equality
-    BASELINE_RULES = {"mfi", "assoc", "braid_unwrap", "unit"}
-
-    vals = []
-    for i in range(min(N, len(pairs))):
-        lhs, rhs = pairs[i]
-        lhs_norm = normalize(lhs, BASELINE_RULES)
-        rhs_norm = normalize(rhs, BASELINE_RULES)
-        equal = structural_equal(lhs_norm, rhs_norm)
-        vals.append(0.0 if equal else 1.0)
-
-    m = statistics.mean(vals)
-
-    # Bootstrap CI
-    rng = random.Random(23)
-    means = []
-    for _ in range(400):
-        sample = [vals[rng.randrange(len(vals))] for _ in range(len(vals))]
-        means.append(statistics.mean(sample))
-    means.sort()
-
-    lo = means[int(0.025 * len(means))]
-    med = statistics.median(means)
-    hi = means[int(0.975 * len(means)) - 1]
-
-    return m, (lo, med, hi), len(pairs)
-
 
 # ============================================================================
 # Provenance
@@ -544,14 +489,11 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
     ci_lo, ci_hi = _bootstrap_ci_over_C(A.reps, B.reps, G.reps, params.n_boot, params.seed)
 
     # Witnesses
-    braid_mean, (b_lo, b_med, b_hi), n_eq = braided_witness(
-        params, C_EQ.read_text(encoding="utf-8", errors="ignore") if C_EQ.exists() else "", N=50
-    )
     s3_diag = s3_witness_over_reps(A, B, G, ci_lo, ci_hi)
 
     verdict = (
         "PASS"
-        if (ci_lo >= params.Theta and b_hi <= params.tau_braid and s3_diag["passed"])
+        if (ci_lo >= params.Theta and s3_diag["passed"])
         else "FAIL"
     )
 
@@ -565,15 +507,11 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
         git_commit, dirty = "unknown", False
 
     report = {
-        "version": "v2.3.0-rc1",
+        "version": "v3.1.0",
         "scores": {"alpha_c": A.mean, "beta_c": B.mean, "gamma_c": G.mean, "C_sigma": C},
         "ci": {"C_sigma_lo": ci_lo, "C_sigma_hi": ci_hi, "n_boot": params.n_boot},
         "witnesses": {
             "S3_permutation": s3_diag,
-            "braid_mean": braid_mean,
-            "braid_CI": [b_lo, b_hi],
-            "tau_braid": params.tau_braid,
-            "braid_pairs": n_eq,
         },
         "axes_diag": {"alpha": A.diag, "beta": B.diag, "gamma": G.diag},
         "params": asdict(params),

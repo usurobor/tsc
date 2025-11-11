@@ -1,69 +1,62 @@
 {
   "version": "v3.1.0",
   "scores": {
-    "alpha_c": 0.3059346788009392,
-    "beta_c": 0.06081006262521794,
-    "gamma_c": 0.720597923862251,
-    "C_sigma": 0.23755584573903052
+    "alpha_c": 0.28187931529942034,
+    "beta_c": 0.5111379525608669,
+    "gamma_c": 1.0,
+    "C_sigma": 0.5242443745977203
   },
   "ci": {
-    "C_sigma_lo": 0.09282845850145371,
-    "C_sigma_hi": 0.29660331226098335,
+    "C_sigma_lo": 0.1839658825858536,
+    "C_sigma_hi": 0.7750445842957315,
     "n_boot": 1000
   },
   "witnesses": {
     "S3_permutation": {
       "permutations": {
         "\u03b1-\u03b2-\u03b3": {
-          "C_sigma": 0.1946098310678454,
+          "C_sigma": 0.44482007572612314,
           "within_CI": true
         },
         "\u03b1-\u03b3-\u03b2": {
-          "C_sigma": 0.1946098310678454,
+          "C_sigma": 0.44482007572612314,
           "within_CI": true
         },
         "\u03b2-\u03b1-\u03b3": {
-          "C_sigma": 0.1946098310678454,
+          "C_sigma": 0.44482007572612314,
           "within_CI": true
         },
         "\u03b2-\u03b3-\u03b1": {
-          "C_sigma": 0.1946098310678454,
+          "C_sigma": 0.44482007572612314,
           "within_CI": true
         },
         "\u03b3-\u03b1-\u03b2": {
-          "C_sigma": 0.1946098310678454,
+          "C_sigma": 0.44482007572612314,
           "within_CI": true
         },
         "\u03b3-\u03b2-\u03b1": {
-          "C_sigma": 0.1946098310678454,
+          "C_sigma": 0.44482007572612314,
           "within_CI": true
         }
       },
       "baseline_CI": [
-        0.09282845850145371,
-        0.29660331226098335
+        0.1839658825858536,
+        0.7750445842957315
       ],
       "passed": true
-    },
-    "braid_mean": 0.0,
-    "braid_CI": [
-      0.0,
-      0.0
-    ],
-    "tau_braid": 0.001,
-    "braid_pairs": 4
+    }
   },
   "axes_diag": {
     "alpha": {
-      "A_keys": 1485,
-      "B_keys": 135
+      "A_keys": 2106,
+      "B_keys": 126
     },
     "beta": {
-      "terms": 57
+      "terms": 74
     },
     "gamma": {
       "has_git": true,
-      "dW": 0.08193219404630653
+      "dW": 0.0
     }
   },
   "params": {
@@ -72,17 +65,15 @@
     "lambda_beta": 4.0,
     "lambda_gamma": 4.0,
     "n_boot": 1000,
-    "tau_braid": 0.001,
     "Theta": 0.9,
     "seed": 42
   },
   "provenance": {
-    "git_commit": "92e27f4",
+    "git_commit": "f4d66d8",
     "dirty": true,
     "python": "3.11.14",
-    "p_ref_hash": "sha256:a9b1922bbe5b54cc27e320451c2363239f3a72a1a04e7543a6169d79cf60f3cf",
+    "p_ref_hash": "sha256:31cb30a3d1aa805c834c9200476dacee0a2acc2d43963b6fe181350adf458446",
     "spec_files": [
-      "c-equiv-kernel.md",
       "c-equiv.md",
       "tsc-core.md",
       "tsc-glossary.md",
