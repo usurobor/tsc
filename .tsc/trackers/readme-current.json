@@ -1,7 +1,7 @@
 {
   "version": "current",
-  "date": "2025-11-11T17:11:56.890857",
-  "commit_hash": "8f303da",
+  "date": "2025-11-11T17:19:32.425868",
+  "commit_hash": "b9ef55e",
   "verdict": "FAIL",
   "failed_witness": null,
   "witnesses": [
@@ -70,23 +70,23 @@
   ],
   "measurements": {
     "alpha": 0.026469117136227974,
-    "beta": 0.1317945194576812,
-    "gamma": 0.05906339453026926,
-    "c_sigma": 0.059063394530269264
+    "beta": 0.13179451945768114,
+    "gamma": 0.05906339453026925,
+    "c_sigma": 0.05906339453026926
   },
   "details": {
     "alpha": {
       "content_tokens": 518,
       "structure_elements": 50,
       "cos_sim": 0.0,
-      "js_div": 0.6931471805599476,
+      "js_div": 0.6931471805599477,
       "distance": 0.9079441541679842
     },
     "beta": {
       "terms": 73,
       "cross_refs": 1,
       "total_links": 13,
-      "cos_sim": 0.4880953245633804,
+      "cos_sim": 0.4880953245633802,
       "js_div": 0.4943151240159847
     }
   }

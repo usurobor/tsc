@@ -4,47 +4,53 @@
 
 This document defines how to apply TSC (Triadic Self-Coherence) measurement to README documents. A README is a specification document that orients multiple audiences to a system through structured text, links, and examples.
 
----
+______________________________________________________________________
 
 ## The Three Axes (Adapted for README)
 
 ### α (Alpha) - Pattern Coherence
+
 **Measures:** Consistency between document structure and content
 
-**Observation A (Content):** Tokenize full text → word frequency distribution  
+**Observation A (Content):** Tokenize full text → word frequency distribution\
 **Observation B (Structure):** Extract headers, bullets, bold terms → structural element distribution
 
 **Question:** Do section headers accurately describe their content?
 
 **Example:**
+
 - High α: Header "Installation" → section discusses `pip install`, setup steps
 - Low α: Header "For Engineers" → section discusses philosophical concepts
 
----
+______________________________________________________________________
 
 ### β (Beta) - Relational Coherence
+
 **Measures:** Quality of cross-references and links
 
-**Observation A (Degree Distribution):** Which terms/documents are most connected?  
+**Observation A (Degree Distribution):** Which terms/documents are most connected?\
 **Observation B (Cross-Reference Counts):** Which terms are explicitly referenced with "see X" or "cf. X" patterns?
 
 **Question:** Are key terms and documents properly cross-referenced?
 
 **Example:**
+
 - High β: "TSC uses C≡ axioms (see spec/c-equiv.md) to measure coherence (cf. Glossary)"
 - Low β: "TSC uses C≡ axioms to measure coherence" (no explicit links)
 
----
+______________________________________________________________________
 
 ### γ (Gamma) - Trajectory/Evolution
+
 **Measures:** Direction of document evolution over time
 
-**Observation A (Historical):** Previous README versions from git history  
+**Observation A (Historical):** Previous README versions from git history\
 **Observation B (Current):** Current README state
 
 **Question:** Is the document evolving toward or away from coherence?
 
 **Computation:**
+
 ```python
 if previous_version_measurable:
     baseline_health = sqrt(α_prev × β_prev)
@@ -54,7 +60,7 @@ else:
     γ = sqrt(α × β)  # Baseline only
 ```
 
----
+______________________________________________________________________
 
 ## Witnesses (Safety Checks)
 
@@ -63,9 +69,11 @@ Witnesses determine if measurement is **valid** (PASS), **coherent but flawed** 
 ### Critical Witnesses (Must Pass for Valid Measurement)
 
 #### 1. Accuracy Witness
+
 **Checks:** Are internal file links valid?
 
 **Method:**
+
 ```python
 for link in internal_links:
     if not file_exists(link):
@@ -73,39 +81,46 @@ for link in internal_links:
 ```
 
 **Excludes:**
+
 - External URLs (http://)
 - Anchor links (#section)
 
 **Why critical:** Broken links indicate document rot. Cannot measure coherence of a document that references non-existent files.
 
 **Example failures:**
+
 - `[Self-Coherence Report](docs/self-coherence-v3.1.0.md)` when file doesn't exist
 - `[C≡ Kernel](spec/c-equiv-kernel.md)` when kernel spec was removed
 
----
+______________________________________________________________________
 
 #### 2. Staleness Witness
+
 **Checks:** Does documentation match actual implementation?
 
 **Method:**
+
 ```python
 if readme_claims_feature_X() and not implementation_has_feature_X():
     return FAIL_DEGENERATE
 ```
 
 **Examples to check:**
+
 - Command syntax (e.g., `--out` flag that was removed)
 - Version numbers (claiming v4.0.0 when repo is v3.1.0)
 - File locations (claiming `docs/` when moved to `.tsc/`)
 
 **Why critical:** Stale documentation causes user confusion and indicates document hasn't been maintained alongside code.
 
----
+______________________________________________________________________
 
 #### 3. Completeness Witness
+
 **Checks:** Are required sections present?
 
 **Method:**
+
 ```python
 required_sections = ['Installation', 'Contributing', 'License']
 h2_headers = extract_h2_headers(readme)
@@ -117,14 +132,16 @@ for section in required_sections:
 
 **Why critical:** Missing critical sections means document is incomplete. Cannot measure coherence of a fragment.
 
----
+______________________________________________________________________
 
 ### Non-Critical Witness
 
 #### 4. Purpose Witness
+
 **Checks:** Does document serve its stated audiences?
 
 **Method:**
+
 ```python
 stated_audiences = ['Engineers', 'Philosophers', 'Researchers', 'AI Systems']
 h2_headers = extract_h2_headers(readme)
@@ -140,7 +157,7 @@ if audience_sections_found < 3:
 
 **Why non-critical:** Missing audience sections indicates low β (unfulfilled promises), but doesn't make measurement invalid. We can measure and will find low coherence.
 
----
+______________________________________________________________________
 
 ## Verdict Logic
 
@@ -164,15 +181,17 @@ def determine_verdict(witnesses, alpha, beta, gamma, c_sigma):
 ```
 
 **Result categories:**
+
 - **FAIL_DEGENERATE**: Measurement invalid, don't report C_Σ
 - **FAIL**: Measurement valid, but C_Σ < 0.80
 - **PASS**: Measurement valid, C_Σ ≥ 0.80
 
----
+______________________________________________________________________
 
 ## Measurement Protocol
 
 ### 1. Run Witnesses First
+
 ```python
 witnesses = {
     'accuracy': check_links(readme),
@@ -189,6 +208,7 @@ if verdict == 'FAIL_DEGENERATE':
 ```
 
 ### 2. Measure α and β Only If Valid
+
 ```python
 if verdict != 'FAIL_DEGENERATE':
     alpha = measure_alpha(readme)
@@ -200,6 +220,7 @@ if verdict != 'FAIL_DEGENERATE':
 ```
 
 ### 3. Report Results
+
 ```python
 if c_sigma >= 0.80:
     print("README is coherent")
@@ -208,7 +229,7 @@ else:
     print(f"Bottleneck: {'α' if alpha < beta else 'β'}")
 ```
 
----
+______________________________________________________________________
 
 ## Example: TSC README History
 
@@ -217,6 +238,7 @@ else:
 **Finding:** Every version failed Accuracy witness (8-14 broken links)
 
 **Sample failures:**
+
 - `docs/self-coherence-v3.1.0.md` (file doesn't exist)
 - `spec/c-equiv-kernel.md` (spec was removed)
 - `docs/v3-overview.md` (never created)
@@ -226,12 +248,14 @@ else:
 ### After Fixes (2025-11-11)
 
 **Witnesses:**
+
 - ✅ Accuracy: All links valid
 - ✅ Staleness: No stale claims
 - ✅ Completeness: All required sections present
 - ✅ Purpose: 4 audiences served
 
 **Measurements:**
+
 - α = 0.026 (catastrophic - headers don't match content)
 - β = 0.169 (very low - only 1 cross-reference)
 - γ = 0.067 (baseline health)
@@ -241,7 +265,7 @@ else:
 
 **Bottleneck:** α (pattern coherence)
 
----
+______________________________________________________________________
 
 ## Improvement Recommendations
 
@@ -263,7 +287,7 @@ Engineers can measure coherence...
 
 **Result:** Headers share tokens with content → higher cosine similarity → higher α.
 
----
+______________________________________________________________________
 
 ### To Improve β (Relational Coherence)
 
@@ -282,18 +306,19 @@ coherence (cf. Glossary).
 
 **Result:** More cross-references → better alignment between term usage and explicit links → higher β.
 
----
+______________________________________________________________________
 
 ## Summary
 
 **This methodology enables:**
+
 1. **Valid measurement** - Witnesses catch broken/stale documentation
-2. **Honest measurement** - Low scores indicate real problems (not measurement bugs)
-3. **Actionable feedback** - Bottleneck identification shows what to fix
-4. **Historical tracking** - γ shows trajectory over time
+1. **Honest measurement** - Low scores indicate real problems (not measurement bugs)
+1. **Actionable feedback** - Bottleneck identification shows what to fix
+1. **Historical tracking** - γ shows trajectory over time
 
 **Key insight:** README coherence is measurable using the same TSC framework as code, just with adapted articulations for documentation.
 
----
+______________________________________________________________________
 
 *README Measurement Methodology v1.0 - 2025-11-11*
