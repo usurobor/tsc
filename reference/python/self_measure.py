@@ -1,34 +1,24 @@
 """
-reference/python/self_measure.py — TSC Self-Measurement v3.1.0
+reference/python/self_measure.py — TSC Self-Measurement
 
-Computes C_Σ(TSC) by treating the repository as a phenomenon articulated
-along three independent observation channels (α, β, γ).
-
-COMPLIANCE:
-- Core §0.1: Bootstrap CI via resampling across axis replicates
-- Operational §4.2: S₃ permutation witness (all 6 permutations tested)
-- Operational §3: Explicit failure on insufficient temporal data
-- Operational §4.1: Braided witness via AST term rewriting
-- Operational §11.7: Provenance bundle with full reproducibility
-
-REQUIRES: Python 3.10+, standard library (numpy optional)
+Version from pyproject.toml (single source of truth)
+Generates JSON reports only in docs/
 """
 
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 import platform
 import random
 import re
-import shlex
 import statistics
 import subprocess
 import unicodedata
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from itertools import permutations
 from pathlib import Path
 from typing import Any
@@ -41,7 +31,24 @@ except ImportError:
     np = None
     LA = None
 
-# Braided witness removed in v3.1.0 (term algebra foundation)
+
+# ============================================================================
+# Version
+# ============================================================================
+
+
+def get_version() -> str:
+    """Get version from pyproject.toml."""
+    try:
+        import tomllib
+    except ImportError:
+        import tomli as tomllib
+    
+    pyproject = Path(__file__).parent.parent.parent / "pyproject.toml"
+    with open(pyproject, "rb") as f:
+        data = tomllib.load(f)
+        return f"v{data['project']['version']}"
+
 
 # ============================================================================
 # Configuration
@@ -52,12 +59,12 @@ except ImportError:
 class Params:
     """Measurement parameters per Operational §2."""
 
-    theta: float = 0.7  # struct vs dist weight
+    theta: float = 0.7
     lambda_alpha: float = 4.0
     lambda_beta: float = 4.0
     lambda_gamma: float = 4.0
-    n_boot: int = 1000  # bootstrap resamples
-    Theta: float = 0.90  # CI_lo gate
+    n_boot: int = 1000
+    Theta: float = 0.90
     seed: int = 42
 
 
@@ -116,19 +123,27 @@ def _vec(counter: Mapping[str, int | float]) -> dict[str, float]:
     return {k: float(v) / s for k, v in counter.items()}
 
 
+def parse_version(version_string: str) -> tuple[int, int, int]:
+    """Parse version string to tuple for comparison."""
+    match = re.search(r'v?(\d+)\.(\d+)\.(\d+)', version_string)
+    if match:
+        return (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+    return (0, 0, 0)
+
+
 # ============================================================================
 # Corpus
 # ============================================================================
 
 SPEC = Path("spec")
 GLOSSARY = SPEC / "tsc-glossary.md"
-C_EQ = SPEC / "c-equiv.md"
+DOCS = Path("docs")
 
 
 def load_specs() -> dict[str, str]:
     """Load all specification markdown files."""
     if not SPEC.exists():
-        raise FileNotFoundError(f"Spec directory not found: {SPEC}\nRun from repository root.")
+        raise FileNotFoundError(f"Spec directory not found: {SPEC}")
     files = [p for p in SPEC.glob("*.md") if p.is_file()]
     if not files:
         raise FileNotFoundError(f"No markdown files in {SPEC}")
@@ -136,7 +151,7 @@ def load_specs() -> dict[str, str]:
 
 
 # ============================================================================
-# Axis Score with Replicates (Patch B)
+# Axis Score
 # ============================================================================
 
 
@@ -150,7 +165,7 @@ class AxisScore:
 
 
 # ============================================================================
-# α-axis: Pattern Stability (Parallel Re-articulation at t)
+# α-axis: Pattern Stability
 # ============================================================================
 
 
@@ -175,26 +190,17 @@ def _structure_signature(md: str) -> Counter[str]:
 
 
 def alpha_axis(params: Params, specs: Mapping[str, str]) -> AxisScore:
-    """
-    Compute α_c: pattern stability via parallel re-articulation.
-
-    Two independent parsers at the same time t:
-    - View A: Lexical TF (code/math stripped)
-    - View B: Structural signature (heading hierarchy)
-    """
+    """Compute α_c: pattern stability."""
     full = "\n".join(specs.values())
     viewA = _strip_code_and_math(full)
     vA = _vec(Counter(tokenize_md(viewA)))
     vB = _vec(_structure_signature(full))
 
-    # Generate replicates via benign perturbations
     reps = []
     for k in range(64):
         if k % 2 == 0:
-            # Cosine distance between views
             reps.append(math.exp(-params.lambda_alpha * (1.0 - cosine(vA, vB))))
         else:
-            # JS divergence on TF with masked tokens
             masked = {t: v for t, v in vA.items() if len(t) > (2 + (k % 2))}
             js = jensen_shannon(vA, masked)
             reps.append(math.exp(-params.lambda_alpha * js))
@@ -204,7 +210,7 @@ def alpha_axis(params: Params, specs: Mapping[str, str]) -> AxisScore:
 
 
 # ============================================================================
-# β-axis: Relational Coherence (Term Graph)
+# β-axis: Relational Coherence
 # ============================================================================
 
 
@@ -239,16 +245,11 @@ def dependency_edges(spec_texts: Mapping[str, str], terms: set[str]) -> list[tup
 def beta_embeddings(
     specs: Mapping[str, str], terms: set[str]
 ) -> tuple[dict[str, float], dict[str, float]]:
-    """
-    Two relational views:
-    1. Degree histogram of spec→term graph
-    2. Cross-reference frequency
-    """
+    """Two relational views."""
     edges = dependency_edges(specs, terms)
     deg = Counter([a for (a, _) in edges]) + Counter([b for (_, b) in edges])
     hist = _vec(deg)
 
-    # Cross-ref frequency
     see = Counter()
     for t in terms:
         pat = re.compile(rf"(see|cf\.?)\s+{re.escape(t)}", re.IGNORECASE)
@@ -268,28 +269,14 @@ def pair_coh(params: Params, u: Mapping[str, float], v: Mapping[str, float]) -> 
 
 
 def beta_axis(params: Params, specs: Mapping[str, str], glossary_text: str) -> AxisScore:
-    """
-    Compute β_c: relational coherence via typed term graph.
-
-    Three relational probes:
-    - R1: Cosine on degree + cross-ref
-    - R2: Procrustes on degree spectrum (if numpy available)
-    - R3: Independent cosine view
-    """
-    terms = _extract_terms(glossary_text, specs) or {
-        "coherence",
-        "witness",
-        "braid",
-        "kernel",
-    }
+    """Compute β_c: relational coherence."""
+    terms = _extract_terms(glossary_text, specs) or {"coherence", "witness", "kernel"}
 
     h1, h2 = beta_embeddings(specs, terms)
     probes = []
 
-    # R1: Cosine
     probes.append(pair_coh(params, h1, h2))
 
-    # R2: Procrustes (if numpy)
     if np is not None and LA is not None:
         keys = sorted(set(h1) | set(h2))
         u = np.array([h1.get(k, 0.0) for k in keys])
@@ -300,105 +287,119 @@ def beta_axis(params: Params, specs: Mapping[str, str], glossary_text: str) -> A
             r2 = float(u @ v)
             probes.append(clamp01((1.0 + r2) / 2.0))
 
-    # R3: Independent view
     probes.append(pair_coh(params, h1, h2))
 
-    # Replicate each probe
     reps = [clamp01(p) for p in probes for _ in range(32)]
     mean = sum(reps) / len(reps)
     return AxisScore(mean=mean, reps=reps, diag={"terms": len(terms)})
 
 
 # ============================================================================
-# γ-axis: Process Stability (Temporal t → t+Δt)
+# γ-axis: Process Coherence
 # ============================================================================
 
 
-def _git_spec_snapshots() -> list[tuple[str, dict[str, str]]]:
-    """Return [(commit, {fname:text})] for last 2 commits touching spec/."""
+def gamma_axis(
+    params: Params,
+    specs_now: Mapping[str, str],
+    current_scores: dict[str, float] | None = None,
+    current_version: str | None = None
+) -> AxisScore:
+    """Compute γ_c: process coherence via self-improvement tracking."""
+    if not DOCS.exists():
+        DOCS.mkdir(exist_ok=True)
+        return AxisScore(mean=0.5, reps=[0.5]*64, diag={"note": "No previous report"})
+    
+    if not current_scores:
+        return AxisScore(mean=0.5, reps=[0.5]*64, diag={"note": "No current scores"})
+    
+    if not current_version:
+        current_version = get_version()
+    
+    current_ver_tuple = parse_version(current_version)
+    
+    # Find reports from BEFORE current version
+    prev_reports = []
+    for report_path in DOCS.glob("self-coherence-v*.json"):
+        match = re.search(r'self-coherence-(v\d+\.\d+\.\d+)', report_path.name)
+        if match:
+            report_version = match.group(1)
+            report_ver_tuple = parse_version(report_version)
+            
+            if report_ver_tuple < current_ver_tuple:
+                prev_reports.append((report_ver_tuple, report_path))
+    
+    if not prev_reports:
+        return AxisScore(mean=0.5, reps=[0.5]*64, diag={
+            "note": "No previous report found",
+            "current_version": current_version
+        })
+    
+    prev_reports.sort(reverse=True)
+    _, prev_report_path = prev_reports[0]
+    
     try:
-        revs = (
-            subprocess.check_output(shlex.split("git rev-list -n 2 HEAD -- spec"), text=True)
-            .strip()
-            .splitlines()
-        )
-        snaps = []
-        for rev in revs:
-            files = (
-                subprocess.check_output(
-                    shlex.split(f"git ls-tree -r --name-only {rev} spec"), text=True
-                )
-                .strip()
-                .splitlines()
-            )
-            content = {}
-            for f in files:
-                if f.endswith(".md"):
-                    try:
-                        txt = subprocess.check_output(
-                            shlex.split(f"git show {rev}:{f}"),
-                            text=True,
-                            stderr=subprocess.DEVNULL,
-                        )
-                        content[Path(f).name] = txt
-                    except Exception:
-                        continue
-            snaps.append((rev, content))
-        return snaps
-    except Exception:
-        return []
-
-
-def wasserstein_1(p: Mapping[str, float], q: Mapping[str, float]) -> float:
-    """1-Wasserstein surrogate using deterministic rank ordering."""
-    keys = sorted(set(p) | set(q))
-    cum = 0.0
-    flow = 0.0
-    for k in keys:
-        cum += p.get(k, 0.0) - q.get(k, 0.0)
-        flow += abs(cum)
-    return flow
-
-
-def gamma_axis(params: Params, specs_now: Mapping[str, str]) -> AxisScore:
-    """
-    Compute γ_c: process stability via temporal drift.
-
-    Requires git history. Fails explicitly if unavailable.
-    """
-    snaps = _git_spec_snapshots()
-    if len(snaps) < 2:
-        raise ValueError(
-            "γ_c requires two git snapshots of spec/. None/one found.\n"
-            "To fix: Commit changes to spec/ or run in a git repository."
-        )
-
-    # snaps are newest-first from git rev-list
-    (_, now), (_, past) = snaps[0], snaps[1]
-
-    def vec(specs):
-        toks = tokenize_md("\n".join(specs.values()))
-        c = Counter(toks)
-        return _vec(c)
-
-    v0, v1 = vec(past), vec(now)
-    dW = wasserstein_1(v0, v1)
-
-    # Generate replicates with small perturbations
-    reps = [math.exp(-params.lambda_gamma * (dW * (1.0 + 0.01 * (k % 3 - 1)))) for k in range(64)]
-    mean = sum(reps) / len(reps)
-    return AxisScore(mean=mean, reps=reps, diag={"has_git": True, "dW": dW})
+        prev = json.loads(prev_report_path.read_text(encoding="utf-8"))
+        
+        roadmap = prev.get('roadmap', {})
+        next_step = roadmap.get('next_step', {})
+        
+        bottleneck = next_step.get('axis')
+        target = next_step.get('target_value')
+        prev_value = next_step.get('current_value')
+        
+        if not bottleneck or target is None or prev_value is None:
+            return AxisScore(mean=0.5, reps=[0.5]*64, diag={
+                "note": "Previous report missing roadmap",
+                "prev_report": prev_report_path.name
+            })
+        
+        curr_value = current_scores.get(f'{bottleneck}_c', 0.0)
+        
+        if curr_value >= target:
+            γ_c = 1.0
+            achieved = True
+        else:
+            if target > prev_value:
+                progress = (curr_value - prev_value) / (target - prev_value)
+                γ_c = max(0.0, min(1.0, progress))
+            else:
+                γ_c = 0.5
+            achieved = False
+        
+        diag = {
+            "prev_report": prev_report_path.name,
+            "prev_version": prev.get('version', 'unknown'),
+            "current_version": current_version,
+            "bottleneck": bottleneck,
+            "prev_value": prev_value,
+            "curr_value": curr_value,
+            "target": target,
+            "achieved": achieved,
+            "improvement": curr_value - prev_value
+        }
+        
+        reps = [γ_c * (1.0 + 0.01 * ((k % 5) - 2)) for k in range(64)]
+        reps = [max(0.0, min(1.0, r)) for r in reps]
+        
+        return AxisScore(mean=γ_c, reps=reps, diag=diag)
+        
+    except Exception as e:
+        return AxisScore(mean=0.5, reps=[0.5]*64, diag={
+            "error": str(e),
+            "prev_report": prev_report_path.name
+        })
 
 
 # ============================================================================
-# CI via Bootstrap Over Axis Replicates (Patch A)
+# Bootstrap CI
 # ============================================================================
 
 
 def _bootstrap_ci_over_C(
     a_reps: list[float], b_reps: list[float], g_reps: list[float], n_boot: int, seed: int
 ) -> tuple[float, float]:
-    """Bootstrap 95% CI by resampling across axis replicates."""
+    """Bootstrap 95% CI."""
     rng = random.Random(seed)
     if not (a_reps and b_reps and g_reps):
         return (0.0, 0.0)
@@ -418,18 +419,14 @@ def _bootstrap_ci_over_C(
 
 
 # ============================================================================
-# S₃ Witness (Patch C)
+# S₃ Witness
 # ============================================================================
 
 
 def s3_witness_over_reps(
     a: AxisScore, b: AxisScore, g: AxisScore, ci_lo: float, ci_hi: float
 ) -> dict[str, Any]:
-    """
-    Test S₃ axis-permutation invariance.
-
-    Recomputes C_Σ for all 6 permutations and verifies within baseline CI.
-    """
+    """Test S₃ axis-permutation invariance."""
     axis_data = [("α", a.reps), ("β", b.reps), ("γ", g.reps)]
     perms = list(permutations(axis_data))
 
@@ -450,54 +447,37 @@ def s3_witness_over_reps(
     return diag
 
 
-# ==========================================
-
 # ============================================================================
-# Provenance
-# ============================================================================
-
-
-def p_ref_hash_from(path: Path) -> str:
-    """Compute SHA256 for provenance."""
-    if not path.exists():
-        return "sha256:0000000000000000000000000000000000000000000000000000000000000000"
-    return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
-
-
-# ============================================================================
-# Orchestrator (Patch E)
+# Report Generation
 # ============================================================================
 
 
 def measure_self(params: Params = Params()) -> dict[str, Any]:
-    """
-    Compute C_Σ(TSC) with full witness verification and provenance.
-
-    Returns complete measurement report per Operational §11.7.
-    """
+    """Compute C_Σ(TSC) with full witness verification."""
+    current_version = get_version()
+    
     specs = load_specs()
     glossary_text = (
         GLOSSARY.read_text(encoding="utf-8", errors="ignore") if GLOSSARY.exists() else ""
     )
 
-    # Compute axes
     A = alpha_axis(params, specs)
     B = beta_axis(params, specs, glossary_text)
-    G = gamma_axis(params, specs)
+    
+    current_scores = {'alpha_c': A.mean, 'beta_c': B.mean, 'gamma_c': 0.0}
+    G = gamma_axis(params, specs, current_scores, current_version)
 
     C = geo3(A.mean, B.mean, G.mean)
     ci_lo, ci_hi = _bootstrap_ci_over_C(A.reps, B.reps, G.reps, params.n_boot, params.seed)
 
-    # Witnesses
     s3_diag = s3_witness_over_reps(A, B, G, ci_lo, ci_hi)
 
-    verdict = (
-        "PASS"
-        if (ci_lo >= params.Theta and s3_diag["passed"])
-        else "FAIL"
-    )
+    verdict = "PASS" if (ci_lo >= params.Theta and s3_diag["passed"]) else "FAIL"
 
-    # Provenance
+    scores_only = {'alpha': A.mean, 'beta': B.mean, 'gamma': G.mean}
+    bottleneck_axis = min(scores_only, key=scores_only.get)
+    bottleneck_score = scores_only[bottleneck_axis]
+
     try:
         git_commit = subprocess.check_output(
             ["git", "rev-parse", "--short", "HEAD"], text=True
@@ -507,44 +487,77 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
         git_commit, dirty = "unknown", False
 
     report = {
-        "version": "v3.1.0",
-        "scores": {"alpha_c": A.mean, "beta_c": B.mean, "gamma_c": G.mean, "C_sigma": C},
-        "ci": {"C_sigma_lo": ci_lo, "C_sigma_hi": ci_hi, "n_boot": params.n_boot},
-        "witnesses": {
-            "S3_permutation": s3_diag,
+        "version": current_version,
+        "date": datetime.now(timezone.utc).isoformat(),
+        "verdict": verdict,
+        "scores": {
+            "alpha_c": A.mean,
+            "beta_c": B.mean,
+            "gamma_c": G.mean,
+            "C_sigma": C
         },
-        "axes_diag": {"alpha": A.diag, "beta": B.diag, "gamma": G.diag},
+        "ci": {
+            "C_sigma_lo": ci_lo,
+            "C_sigma_hi": ci_hi,
+            "n_boot": params.n_boot
+        },
+        "bottleneck": {
+            "axis": bottleneck_axis,
+            "score": bottleneck_score,
+            "identified_at": current_version
+        },
+        "roadmap": {
+            "next_step": {
+                "axis": bottleneck_axis,
+                "current_value": bottleneck_score,
+                "target_value": 0.85,
+                "rationale": f"Improve {bottleneck_axis} axis to raise C_Σ above threshold"
+            }
+        },
+        "witnesses": {
+            "S3_permutation": s3_diag
+        },
+        "axes_diag": {
+            "alpha": A.diag,
+            "beta": B.diag,
+            "gamma": G.diag
+        },
         "params": asdict(params),
         "provenance": {
             "git_commit": git_commit,
             "dirty": dirty,
             "python": platform.python_version(),
-            "p_ref_hash": p_ref_hash_from(Path("coherence_report.json")),
-            "spec_files": sorted(list(specs.keys())),
-        },
-        "verdict": verdict,
+            "spec_files": sorted(list(specs.keys()))
+        }
     }
+    
     return report
 
 
-def write_report(path: str = "coherence_report.json", params: Params = Params()) -> dict[str, Any]:
-    """Compute and write measurement report."""
-    rep = measure_self(params)
-    Path(path).write_text(json.dumps(rep, indent=2), encoding="utf-8")
-    return rep
+def write_report(params: Params = Params()) -> dict[str, Any]:
+    """Compute measurement and write JSON report."""
+    report = measure_self(params)
+    
+    DOCS.mkdir(exist_ok=True)
+    
+    version = report['version']
+    json_path = DOCS / f"self-coherence-{version}.json"
+    json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    
+    print(f"✅ Written: {json_path}")
+    
+    return report
 
-
-# ============================================================================
-# CLI Support
-# ============================================================================
 
 if __name__ == "__main__":
     print("Running TSC self-measurement...")
     try:
-        report = measure_self()
+        report = write_report()
         print(json.dumps(report, indent=2))
         if report["verdict"] != "PASS":
             raise SystemExit(1)
     except Exception as e:
         print(f"ERROR: {e}")
+        import traceback
+        traceback.print_exc()
         raise SystemExit(2)

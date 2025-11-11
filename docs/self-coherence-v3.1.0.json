@@ -1,47 +1,62 @@
 {
   "version": "v3.1.0",
+  "date": "2025-11-11T08:31:43.497519+00:00",
+  "verdict": "FAIL",
   "scores": {
-    "alpha_c": 0.28187931529942034,
+    "alpha_c": 0.2818793152994205,
     "beta_c": 0.5111379525608669,
-    "gamma_c": 1.0,
-    "C_sigma": 0.5242443745977203
+    "gamma_c": 0.5,
+    "C_sigma": 0.41609303586241614
   },
   "ci": {
-    "C_sigma_lo": 0.1839658825858536,
-    "C_sigma_hi": 0.7750445842957315,
+    "C_sigma_lo": 0.14601381777152114,
+    "C_sigma_hi": 0.6151532942166502,
     "n_boot": 1000
+  },
+  "bottleneck": {
+    "axis": "alpha",
+    "score": 0.2818793152994205,
+    "identified_at": "v3.1.0"
+  },
+  "roadmap": {
+    "next_step": {
+      "axis": "alpha",
+      "current_value": 0.2818793152994205,
+      "target_value": 0.85,
+      "rationale": "Improve alpha axis to raise C_\u03a3 above threshold"
+    }
   },
   "witnesses": {
     "S3_permutation": {
       "permutations": {
         "\u03b1-\u03b2-\u03b3": {
-          "C_sigma": 0.44482007572612314,
+          "C_sigma": 0.35305392807211133,
           "within_CI": true
         },
         "\u03b1-\u03b3-\u03b2": {
-          "C_sigma": 0.44482007572612314,
+          "C_sigma": 0.35305392807211133,
           "within_CI": true
         },
         "\u03b2-\u03b1-\u03b3": {
-          "C_sigma": 0.44482007572612314,
+          "C_sigma": 0.35305392807211133,
           "within_CI": true
         },
         "\u03b2-\u03b3-\u03b1": {
-          "C_sigma": 0.44482007572612314,
+          "C_sigma": 0.35305392807211133,
           "within_CI": true
         },
         "\u03b3-\u03b1-\u03b2": {
-          "C_sigma": 0.44482007572612314,
+          "C_sigma": 0.35305392807211133,
           "within_CI": true
         },
         "\u03b3-\u03b2-\u03b1": {
-          "C_sigma": 0.44482007572612314,
+          "C_sigma": 0.35305392807211133,
           "within_CI": true
         }
       },
       "baseline_CI": [
-        0.1839658825858536,
-        0.7750445842957315
+        0.14601381777152114,
+        0.6151532942166502
       ],
       "passed": true
     }
@@ -55,8 +70,8 @@
       "terms": 74
     },
     "gamma": {
-      "has_git": true,
-      "dW": 0.0
+      "note": "No previous report found",
+      "current_version": "v3.1.0"
     }
   },
   "params": {
@@ -69,16 +84,14 @@
     "seed": 42
   },
   "provenance": {
-    "git_commit": "f4d66d8",
+    "git_commit": "96e4403",
     "dirty": true,
     "python": "3.11.14",
-    "p_ref_hash": "sha256:31cb30a3d1aa805c834c9200476dacee0a2acc2d43963b6fe181350adf458446",
     "spec_files": [
       "c-equiv.md",
       "tsc-core.md",
       "tsc-glossary.md",
       "tsc-oper.md"
     ]
-  },
-  "verdict": "FAIL"
+  }
 }

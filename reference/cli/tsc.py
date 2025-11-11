@@ -1,10 +1,7 @@
-# reference/cli/tsc.py
 """
-reference/cli/tsc.py — TSC Command Line Interface
+reference/cli/tsc.py — TSC CLI
 
-Commands:
-  compute  Compute C_Σ from a TSC YAML file
-  self     Compute C_Σ for the TSC repository itself
+Command-line interface for TSC self-measurement.
 """
 
 import json
@@ -12,38 +9,14 @@ import sys
 
 import click
 
-from reference.python.tsc_controller import compute_c_from_file
-
 
 @click.group()
 def main():
-    """TSC CLI (v2.3.0)"""
+    """TSC: Triadic Self-Coherence Framework"""
     pass
 
 
-@main.command("compute")
-@click.argument("path", type=click.Path(exists=True))
-@click.option("--format", type=click.Choice(["text", "json"]), default="text")
-@click.option("--seed", type=int, default=None)
-def compute(path: str, format: str, seed: int | None):
-    """Compute C_Σ from a TSC YAML file."""
-    try:
-        c_sigma = compute_c_from_file(path, seed=seed)
-
-        if format == "json":
-            click.echo(json.dumps({"c_sigma": c_sigma, "path": path}, indent=2))
-        else:
-            click.echo(f"C_Σ = {c_sigma:.4f}")
-
-        sys.exit(0 if c_sigma >= 0.3 else 1)
-
-    except Exception as e:
-        click.echo(f"Error: {e}", err=True)
-        sys.exit(2)
-
-
 @main.command("self")
-@click.option("--out", default="coherence_report.json", help="Output report path")
 @click.option("--theta", default=0.7, type=float, help="Struct vs dist weight")
 @click.option("--lambda-alpha", "lambda_alpha", default=4.0, type=float)
 @click.option("--lambda-beta", "lambda_beta", default=4.0, type=float)
@@ -52,7 +25,6 @@ def compute(path: str, format: str, seed: int | None):
 @click.option("--Theta", "Theta_", default=0.90, type=float, help="CI_lo gate threshold")
 @click.option("--seed", default=42, type=int, help="Random seed")
 def self_measure(
-    out: str,
     theta: float,
     lambda_alpha: float,
     lambda_beta: float,
@@ -76,18 +48,16 @@ def self_measure(
         )
 
         click.echo("Computing C_Σ(TSC)...")
-        rep = write_report(out, params)
+        rep = write_report(params)
 
         click.echo(json.dumps(rep, indent=2))
-        click.echo(f"\nReport written to: {out}")
-        click.echo(f"Verdict: {rep['verdict']}")
+        click.echo(f"\nVerdict: {rep['verdict']}")
 
         sys.exit(0 if rep["verdict"] == "PASS" else 1)
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         import traceback
-
         traceback.print_exc()
         sys.exit(2)
 
