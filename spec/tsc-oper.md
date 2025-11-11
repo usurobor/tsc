@@ -2,7 +2,7 @@
 
 **Version:** 3.1.0\
 **Status:** Normative\
-**Foundation:** TSC Core v3.0.2
+**Foundation:** TSC Core v3.1.0
 
 ______________________________________________________________________
 

@@ -1,6 +1,6 @@
 # C≡ v3.1.0 — Self-Articulating Foundation
 
-## **Version:** 3.0.25<br /> **Date:** November 2025<br /> **Status:** Normative (with pedagogical scaffolding)
+## **Version:** 3.1.0<br /> **Date:** November 2025<br /> **Status:** Normative (with pedagogical scaffolding)
 
 ## 0. What Is C≡? (in one breath)
 

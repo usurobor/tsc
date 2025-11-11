@@ -1,4 +1,4 @@
-# QUICKSTART (v2.1)
+# QUICKSTART (v3.1.0)
 
 This guide assumes Python **3.10+**.
 

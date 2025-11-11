@@ -5,3 +5,4 @@ __pycache__/
 .swp
 braid_debug_report.json
 coherence_report.json
+merged.txt

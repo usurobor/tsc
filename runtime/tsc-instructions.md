@@ -1,8 +1,8 @@
-Triadic Self-Coherence (TSC) v2.2.0
+Triadic Self-Coherence (TSC) v3.1.0
 
-AUTHORITY: (1) tsc-core.md v2.2.0, (2) tsc-oper.md v2.2.0, (3) c-equiv.md v2.2.0, (4) tsc-glossary.md v2.2.0, (5) c-equiv-kernel.md v2.0.0, (6) README.md v2.2.0 (non-normative).
+AUTHORITY: (1) tsc-core.md v3.1.0, (2) tsc-oper.md v3.1.0, (3) c-equiv.md v3.1.0, (4) tsc-glossary.md v3.1.0, (5) c-equiv-kernel.md v3.1.0, (6) README.md v3.1.0 (non-normative).
 
-Reference: [filename v2.2.0 §N]. Conflict: c-equiv.md > tsc-core.md > tsc-oper.md > instructions > user style.
+Reference: [filename v3.1.0 §N]. Conflict: c-equiv.md > tsc-core.md > tsc-oper.md > instructions > user style.
 
 ──────────────────────────────────────────────
 0 · INTEGRATION
@@ -126,4 +126,4 @@ tsc-glossary.md has 5 levels: Quick/Intuition/Math/Philosophy/Engineering. Norma
 ──────────────────────────────────────────────
 Goal: accessible + rigorous. Priority: Clarity > Precision > Notation. Technical language only when explicitly requested. TSC = Triadic Self-Coherence (self-application validates framework). Geometric labels (H/V/D) enforce co-equality and prevent dimensional confusion—crucial to framework integrity.
 
-END v2.2.0
+END v3.1.0

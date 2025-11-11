@@ -1,8 +1,8 @@
-# TSC Glossary v3.0.9
+# TSC Glossary v3.1.0
 
-**Version:** 3.0.9 (Triadic Foundation + Measurement Framework)\
+**Version:** v3.1.0 (Triadic Foundation + Measurement Framework)\
 **Status:** Informative (accessible terminology guide)\
-**Corresponds to:** C≡ v3.1.0, TSC Core v3.0.2, TSC Operational v3.1.0
+**Corresponds to:** C≡ v3.1.0, TSC Core v3.1.0, TSC Operational v3.1.0
 
 ______________________________________________________________________
 
@@ -993,7 +993,7 @@ ______________________________________________________________________
 Read **C≡ v3.1.0** from beginning to end. It unfolds like a story: from intuition (§0-1) through formalization (§2-4) to measurement (§5). Follow the complete arc.
 
 **To implement measurement:**\
-Read **TSC Core v3.0.2** for the calculus—how to construct summaries, compute alignments, aggregate coherence. Then **TSC Operational v3.1.0** for the protocol—witnesses, verdicts, provenance requirements.
+Read **TSC Core v3.1.0** for the calculus—how to construct summaries, compute alignments, aggregate coherence. Then **TSC Operational v3.1.0** for the protocol—witnesses, verdicts, provenance requirements.
 
 **To see it in action:**\
 Explore `examples/`—cellular automata (Conway's Life, random soup) and philosophical queries (consciousness, emergence, free will). These show TSC measuring real phenomena, not toy problems.
@@ -1013,4 +1013,4 @@ ______________________________________________________________________
 ______________________________________________________________________
 
 
-**End — TSC Glossary v3.0.9**
+**End — TSC Glossary v3.1.0**

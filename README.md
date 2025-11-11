@@ -18,24 +18,24 @@ tsc measure ./my-project --axes=structure,calls,evolution
 
 ## Self-Measurement
 
-TSC v2.3.0 can measure its own coherence:
+TSC v3.1.0 can measure its own coherence:
 
 ```bash
 tsc self --out coherence_report.json
 ```
 
-**Current Status (v2.3.0 Baseline):**
+**Current Status (v3.1.0 Baseline):**
 
 - **C_Σ** = 0.238 (Verdict: FAIL)
 - **S₃ Witness:** PASS ✅
 - **Braided Witness:** FAIL ❌
 
-The FAIL verdict is expected and demonstrates honest measurement. The repository is not yet fully self-coherent. See [docs/self-coherence-v2.3.0.md](docs/self-coherence-v2.3.0.md) for details and roadmap.
+The FAIL verdict is expected and demonstrates honest measurement. The repository is not yet fully self-coherent. See [docs/self-coherence-v3.1.0.md](docs/self-coherence-v3.1.0.md) for details and roadmap.
 
-*Provenance note.* The reported C_Σ is computed by the **v2.3.x operational pipeline** against the v2.3.x repository state.\
-The **v3.0.x** specifications are normative but **not yet the measurement pipeline**; v3 self-measurement will be reported when the reference implementation lands.
+*Provenance note.* The reported C_Σ is computed by the **v3.1.0 operational pipeline** against the v3.1.0 repository state.\
+The **v3.1.0** specifications are normative but **not yet the measurement pipeline**; v3 self-measurement will be reported when the reference implementation lands.
 
-**Target:** Achieve C_Σ ≥ 0.90 by v2.4.0.
+**Target:** Achieve C_Σ ≥ 0.90 by v3.1.0.
 
 ______________________________________________________________________
 
@@ -55,9 +55,9 @@ ______________________________________________________________________
 
 **Hypothesis:** If a system has coherence C_Σ ≥ 0.90 by its own measurement standards, then applying those same standards to itself should also yield C_Σ ≥ 0.90.
 
-**TSC's self-application result (v2.3.0 baseline):** C_Σ(TSC) = 0.238 [FAIL]
+**TSC's self-application result (v3.1.0 baseline):** C_Σ(TSC) = 0.238 [FAIL]
 
-**Interpretation:** The FAIL demonstrates honest measurement. The implementation is correct (S₃ witness passes), but the repository specifications need improvement. This drives concrete work: fix the braided parser (v2.3.1), strengthen cross-references (v2.3.2), achieve C_Σ ≥ 0.90 (v2.4.0).
+**Interpretation:** The FAIL demonstrates honest measurement. The implementation is correct (S₃ witness passes), but the repository specifications need improvement. This drives concrete work: fix the braided parser (v3.1.0), strengthen cross-references (v3.1.0), achieve C_Σ ≥ 0.90 (v3.1.0).
 
 [Verify the measurement →](#for-researchers)
 
@@ -243,7 +243,7 @@ TSC follows Riccardo Manzotti's "spread mind" stance:
 
 **Metaphysical claim:** **None.** TSC doesn't say what systems "are." It only tests whether your three descriptions fit together.
 
-**Validation:** Self-application. TSC measures itself: C_Σ(TSC) = 0.238 (v2.3.0 baseline - FAIL). The FAIL verdict demonstrates the measurement is honest—it detects that the repository isn't yet coherent, rather than fabricating a passing score. The implementation is correct (S₃ witness passes), but the specifications need improvement.
+**Validation:** Self-application. TSC measures itself: C_Σ(TSC) = 0.238 (v3.1.0 baseline - FAIL). The FAIL verdict demonstrates the measurement is honest—it detects that the repository isn't yet coherent, rather than fabricating a passing score. The implementation is correct (S₃ witness passes), but the specifications need improvement.
 
 ### Why Three Axes?
 
@@ -267,30 +267,30 @@ ______________________________________________________________________
 
 ### Formal Specification Stack
 
-**Stable (v2.3.x)**
+**Stable (v3.1.0)**
 
-1. **[C≡ Kernel v2.0.0](spec/c-equiv-kernel.md)**
-1. **[C≡ v2.2.2](spec/c-equiv.md)**
-1. **[Core v2.2.2](spec/tsc-core.md)**
-1. **[Operational v2.2.2](spec/tsc-oper.md)**
-1. **[Glossary v2.2.2](spec/tsc-glossary.md)**
+1. **[C≡ Kernel v3.1.0](spec/c-equiv-kernel.md)**
+1. **[C≡ v3.1.0](spec/c-equiv.md)**
+1. **[Core v3.1.0](spec/tsc-core.md)**
+1. **[Operational v3.1.0](spec/tsc-oper.md)**
+1. **[Glossary v3.1.0](spec/tsc-glossary.md)**
 
-**Development (v3.0.x)**
+**Development (v3.1.0)**
 
 1. **C≡ v3.1.0** — algebraic term language and evaluators
 1. **Core v3.1.0** — measurement calculus (Δ, Coh, β_c symmetry, C_Σ)
 1. **Operational v3.1.0** — protocol, witnesses, provenance
-1. **Glossary v3.x** (in progress)
+1. **Glossary v3.1.0** (in progress)
 
 See **[What's new in v3 →](docs/v3-overview.md)** for a one-page summary. v3 docs will be linked here as they land.
 
-**Bootstrap:** Start with [C≡ Kernel v2.0.0](spec/c-equiv-kernel.md) for intuitive intro.
+**Bootstrap:** Start with [C≡ Kernel v3.1.0](spec/c-equiv-kernel.md) for intuitive intro.
 
 ### Self-Coherence Results
 
-**v2.3.0 Baseline (First Measurement):**
+**v3.1.0 Baseline (First Measurement):**
 
-As required by Operational §12, v2.3.0 delivers the first empirical self-application:
+As required by Operational §12, v3.1.0 delivers the first empirical self-application:
 
 | Metric           | Value          | Threshold | Status   |
 | ---------------- | -------------- | --------- | -------- |
@@ -315,15 +315,15 @@ The FAIL verdict is **expected** and demonstrates **honest measurement**:
 
 **Why this matters:** This is not a bug. TSC is measuring reality, not aspirations. The FAIL verdict drives concrete improvement work.
 
-**v2.2.x Status:** Self-measurement capability did not exist. Claims in earlier documentation were aspirational, not empirical.
+**v3.1.0 Status:** Self-measurement capability did not exist. Claims in earlier documentation were aspirational, not empirical.
 
 **Roadmap to Self-Coherence:**
 
-- **v2.3.1** (Engineering): Fix braided parser → reduce δ_MFI from 0.923 to \<0.01
-- **v2.3.2** (Content): Strengthen cross-references → raise β_c from 0.061 to 0.50+
-- **v2.4.0** (Integration): Achieve C_Σ ≥ 0.90 → PASS verdict, enable release gate
+- **v3.1.0** (Engineering): Fix braided parser → reduce δ_MFI from 0.923 to \<0.01
+- **v3.1.0** (Content): Strengthen cross-references → raise β_c from 0.061 to 0.50+
+- **v3.1.0** (Integration): Achieve C_Σ ≥ 0.90 → PASS verdict, enable release gate
 
-[Full baseline report →](docs/self-coherence-v2.3.0.md)
+[Full baseline report →](docs/self-coherence-v3.1.0.md)
 
 ### Key Mathematical Properties
 
@@ -376,7 +376,7 @@ Every measurement produces a **provenance bundle** (Operational §7):
 
 **Guarantee:** Given the provenance bundle, third parties can reproduce C_Σ to numerical precision.
 
-**v2.3.0 Provenance Example:**
+**v3.1.0 Provenance Example:**
 
 ```json
 {
@@ -483,16 +483,16 @@ tsc_result = measure_coherence(
     theta=0.90  # Higher threshold for self-application
 )
 
-# v2.3.0 baseline: C_Σ = 0.238 (FAIL - expected)
+# v3.1.0 baseline: C_Σ = 0.238 (FAIL - expected)
 # This demonstrates the measurement system is honest, not that TSC is broken
 ```
 
-**Expected (v2.3.0):** C_Σ(TSC) = 0.238 (FAIL) - Repository not yet self-coherent.
+**Expected (v3.1.0):** C_Σ(TSC) = 0.238 (FAIL) - Repository not yet self-coherent.
 
-**Target (v2.4.0):** C_Σ(TSC) ≥ 0.90 (PASS) - Achieve self-coherence through:
+**Target (v3.1.0):** C_Σ(TSC) ≥ 0.90 (PASS) - Achieve self-coherence through:
 
-- Fixing braided parser (v2.3.1)
-- Improving cross-references (v2.3.2)
+- Fixing braided parser (v3.1.0)
+- Improving cross-references (v3.1.0)
 
 **Note:** A FAIL verdict on self-application means the specifications need improvement, not that the measurement framework is invalid. The S₃ witness passes, confirming the implementation is correct.
 
@@ -502,15 +502,15 @@ ______________________________________________________________________
 
 ### Normative Documents (Must Read)
 
-1. **[C≡ Kernel v2.0.0](spec/c-equiv-kernel.md)** — Intuitive bootstrap (start here)
-1. **[C≡ v2.2.2](spec/c-equiv.md)** — Axiomatic foundation (6 axioms)
-1. **[Core v2.2.2](spec/tsc-core.md)** — Measurement calculus (formulas)
-1. **[Operational v2.2.2](spec/tsc-oper.md)** — Protocol and policy (procedures)
+1. **[C≡ Kernel v3.1.0](spec/c-equiv-kernel.md)** — Intuitive bootstrap (start here)
+1. **[C≡ v3.1.0](spec/c-equiv.md)** — Axiomatic foundation (6 axioms)
+1. **[Core v3.1.0](spec/tsc-core.md)** — Measurement calculus (formulas)
+1. **[Operational v3.1.0](spec/tsc-oper.md)** — Protocol and policy (procedures)
 
 ### Reference Documents (As Needed)
 
-1. **[Glossary v2.2.2](spec/tsc-glossary.md)** — Multi-audience terminology
-1. **[Self-Coherence Report v2.3.0](docs/self-coherence-v2.3.0.md)** — Baseline measurement
+1. **[Glossary v3.1.0](spec/tsc-glossary.md)** — Multi-audience terminology
+1. **[Self-Coherence Report v3.1.0](docs/self-coherence-v3.1.0.md)** — Baseline measurement
 
 ### Document Dependency Graph
 
@@ -578,7 +578,7 @@ ______________________________________________________________________
 
 ### Contribution Guidelines
 
-- All implementations **must** pass self-coherence tests (target: C_Σ(TSC) ≥ 0.90 by v2.4.0)
+- All implementations **must** pass self-coherence tests (target: C_Σ(TSC) ≥ 0.90 by v3.1.0)
 - Include provenance bundle with every measurement
 - Follow Operational §3 protocol exactly (no shortcuts)
 - Document any extensions clearly (what's normative vs. experimental)
@@ -593,7 +593,7 @@ TSC specifications are maintained by [governance model TBD].
 - Self-coherence validation (does TSC still cohere after the change?)
 - Community review period
 
-**Breaking changes:** Require major version bump (e.g., v3.0.0).
+**Breaking changes:** Require major version bump (e.g., v3.1.0).
 
 ______________________________________________________________________
 
@@ -612,7 +612,7 @@ If you use TSC in research, please cite:
   title = {TSC: Triadic Self-Coherence Framework},
   author = {Peter Lisovin},
   year = {2025},
-  version = {2.3.0},
+  version = {v3.1.0},
   url = {https://github.com/usurobor/tsc}
 }
 ```
@@ -627,4 +627,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**End — TSC v3.0.0 README**
+**End — TSC v3.1.0 README**
