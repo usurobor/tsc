@@ -1,27 +1,27 @@
 {
   "version": "v3.1.0",
-  "date": "2025-11-11T08:31:43.497519+00:00",
+  "date": "2025-11-11T08:53:51.920885+00:00",
   "verdict": "FAIL",
   "scores": {
-    "alpha_c": 0.2818793152994205,
+    "alpha_c": 0.2818793152994204,
     "beta_c": 0.5111379525608669,
     "gamma_c": 0.5,
-    "C_sigma": 0.41609303586241614
+    "C_sigma": 0.4160930358624161
   },
   "ci": {
     "C_sigma_lo": 0.14601381777152114,
-    "C_sigma_hi": 0.6151532942166502,
+    "C_sigma_hi": 0.6151532942166501,
     "n_boot": 1000
   },
   "bottleneck": {
     "axis": "alpha",
-    "score": 0.2818793152994205,
+    "score": 0.2818793152994204,
     "identified_at": "v3.1.0"
   },
   "roadmap": {
     "next_step": {
       "axis": "alpha",
-      "current_value": 0.2818793152994205,
+      "current_value": 0.2818793152994204,
       "target_value": 0.85,
       "rationale": "Improve alpha axis to raise C_\u03a3 above threshold"
     }
@@ -56,7 +56,7 @@
       },
       "baseline_CI": [
         0.14601381777152114,
-        0.6151532942166502
+        0.6151532942166501
       ],
       "passed": true
     }
@@ -84,7 +84,7 @@
     "seed": 42
   },
   "provenance": {
-    "git_commit": "96e4403",
+    "git_commit": "ca2509d",
     "dirty": true,
     "python": "3.11.14",
     "spec_files": [

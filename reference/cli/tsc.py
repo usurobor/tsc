@@ -1,7 +1,5 @@
 """
-reference/cli/tsc.py — TSC CLI
-
-Command-line interface for TSC self-measurement.
+reference/cli/tsc.py — TSC Command Line Interface
 """
 
 import json
@@ -9,11 +7,34 @@ import sys
 
 import click
 
+from reference.python.tsc_controller import compute_c_from_file
+
 
 @click.group()
 def main():
-    """TSC: Triadic Self-Coherence Framework"""
+    """TSC CLI (v3.1.0)"""
     pass
+
+
+@main.command("compute")
+@click.argument("path", type=click.Path(exists=True))
+@click.option("--format", type=click.Choice(["text", "json"]), default="text")
+@click.option("--seed", type=int, default=None)
+def compute(path: str, format: str, seed: int | None):
+    """Compute C_Σ from a TSC YAML file."""
+    try:
+        c_sigma = compute_c_from_file(path, seed=seed)
+
+        if format == "json":
+            click.echo(json.dumps({"c_sigma": c_sigma, "path": path}, indent=2))
+        else:
+            click.echo(f"C_Σ = {c_sigma:.4f}")
+
+        sys.exit(0 if c_sigma >= 0.3 else 1)
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(2)
 
 
 @main.command("self")
