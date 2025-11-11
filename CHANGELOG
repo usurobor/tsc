@@ -4,6 +4,38 @@ All notable changes to TSC will be documented in this file.
 
 ---
 
+## [3.1.0] - 2025-11-11
+
+### Changed - Documentation Unification
+
+**Version consistency:**
+
+- **Updated:** All version references unified to v3.1.0 across codebase
+- **Updated:** pyproject.toml, CLI, tests, and documentation
+- **Fixed:** Runtime instructions menu numbering (1-20, was all "1.")
+
+**Documentation improvements:**
+
+- **Rewrote:** README.md to remove v2.x braided category theory references
+- **Clarified:** Current self-measurement status (C_Σ = 0.238 [FAIL])
+- **Identified:** Bottleneck as β_c = 0.061 (relational alignment)
+- **Removed:** Obsolete "braided parser" and "braided witness" language from user docs
+- **Simplified:** Focus on term algebra foundation established in v3.0.0
+- **Added:** Concrete roadmap to self-coherence (target: C_Σ ≥ 0.90)
+
+**What stayed the same:**
+
+- Core specifications (C≡, Core, Operational) unchanged
+- Python implementation unchanged
+- Mathematical foundations unchanged
+- Self-measurement protocol unchanged
+
+### Why This Release?
+
+v3.0.0 completed the mathematical reformulation, but user-facing documentation still referenced v2.x concepts. v3.1.0 unifies version strings and brings documentation in line with the term algebra foundation.
+
+---
+
 ## [3.0.0] - 2025-11-09
 
 ### Changed - Complete Reformulation
