@@ -1,0 +1,93 @@
+{
+  "version": "current",
+  "date": "2025-11-11T17:11:56.890857",
+  "commit_hash": "8f303da",
+  "verdict": "FAIL",
+  "failed_witness": null,
+  "witnesses": [
+    {
+      "name": "accuracy",
+      "passed": true,
+      "details": {
+        "total_internal_links": 8,
+        "broken_links": []
+      }
+    },
+    {
+      "name": "staleness",
+      "passed": true,
+      "details": {
+        "issues": []
+      }
+    },
+    {
+      "name": "completeness",
+      "passed": true,
+      "details": {
+        "required": [
+          "installation",
+          "contributing",
+          "license"
+        ],
+        "missing": [],
+        "found_headers": [
+          "\u26a1 quick start (pick your path)",
+          "self-measurement",
+          "what problem does this solve?",
+          "how it works (one diagram)",
+          "foundation (v3.0.0 reformulation)",
+          "for engineers",
+          "for philosophers",
+          "for researchers",
+          "specification stack",
+          "installation",
+          "contributing",
+          "what's next",
+          "license",
+          "citation",
+          "contact"
+        ]
+      }
+    },
+    {
+      "name": "purpose",
+      "passed": true,
+      "details": {
+        "stated_audiences": [
+          "engineer",
+          "philosopher",
+          "researcher",
+          "ai"
+        ],
+        "found_audiences": [
+          "engineer",
+          "philosopher",
+          "researcher"
+        ],
+        "count": 3
+      }
+    }
+  ],
+  "measurements": {
+    "alpha": 0.026469117136227974,
+    "beta": 0.1317945194576812,
+    "gamma": 0.05906339453026926,
+    "c_sigma": 0.059063394530269264
+  },
+  "details": {
+    "alpha": {
+      "content_tokens": 518,
+      "structure_elements": 50,
+      "cos_sim": 0.0,
+      "js_div": 0.6931471805599476,
+      "distance": 0.9079441541679842
+    },
+    "beta": {
+      "terms": 73,
+      "cross_refs": 1,
+      "total_links": 13,
+      "cos_sim": 0.4880953245633804,
+      "js_div": 0.4943151240159847
+    }
+  }
+}

@@ -222,7 +222,7 @@ if result.verdict == "FAIL":
 
 **TSC measures internal consistency, not correctness.**
 
-[Full implementation guide →](docs/implementation.md)
+Full implementation guide (coming soon)
 
 ______________________________________________________________________
 
@@ -333,7 +333,7 @@ ______________________________________________________________________
 
 ### Normative Documents (Read These)
 
-1. **[C≡ Kernel](spec/c-equiv-kernel.md)** — Intuitive bootstrap (start here)
+1. **[C≡ Kernel](spec/c-equiv.md)** — Intuitive bootstrap (start here)
 1. **[C≡ v3.1.0](spec/c-equiv.md)** — Term algebra foundation
 1. **[Core v3.1.0](spec/tsc-core.md)** — Measurement calculus
 1. **[Operational v3.1.0](spec/tsc-oper.md)** — Protocol and procedures
@@ -341,7 +341,7 @@ ______________________________________________________________________
 ### Reference Documents (As Needed)
 
 - **[Glossary v3.1.0](spec/tsc-glossary.md)** — Multi-audience terminology
-- **[Self-Coherence Report v3.1.0](docs/self-coherence-v3.1.0.md)** — Current measurement
+- **[Self-Coherence Report v3.1.0](.tsc/measurements/README.md)** — Current measurement
 
 ### Reading Order
 
