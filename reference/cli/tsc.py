@@ -17,7 +17,7 @@ from reference.python.tsc_controller import compute_c_from_file
 
 @click.group()
 def main():
-    """TSC CLI (v2.3.0)"""
+    """TSC CLI (v3.1.0)"""
     pass
 
 
