@@ -1,8 +1,8 @@
-# TSC Operational v3.0.0
+# TSC Operational v3.0.1
 
-**Version:** 3.0.0\
+**Version:** 3.0.1\
 **Status:** Normative\
-**Foundation:** TSC Core v3.0.0
+**Foundation:** TSC Core v3.0.2
 
 ______________________________________________________________________
 
@@ -140,7 +140,7 @@ Verification proceeds through states:
 1. Articulate: Aₐ(T) → Oₐ for all a
 1. Summarize: Oₐ → Sₐ
 1. Align: Apply ensemble 𝒜ₐᵦ
-1. Score: Compute αc, βc, γc, C_Σ
+1. Score: Compute s_α, s_β, s_γ, C_Σ
 1. Bootstrap: Generate CI
 
 **Exit:** Scores computed → WITNESS
@@ -213,6 +213,14 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
+### Compatibility Note (Notation Migration)
+
+For one minor release cycle (through v3.1), implementations MAY emit both:
+- **Canonical keys:** `s_alpha`, `s_beta`, `s_gamma` (required)
+- **Legacy keys:** `alpha_c`, `beta_c`, `gamma_c` (optional, for backward compatibility)
+
+Consumers MUST read canonical keys; MAY fall back to legacy keys if canonical absent. All new implementations MUST use canonical notation.
+
 ## 6 · Provenance Bundle
 
 **Required metadata:**
@@ -220,7 +228,7 @@ ______________________________________________________________________
 **Parameters:**
 
 - θ (discrepancy weight)
-- λα, λβ, λγ (dimensional sensitivities)
+- λ_α, λ_β, λ_γ (dimensional sensitivities)
 - λₐᵦ (pairwise sensitivities)
 - ε (numerical floor)
 - Θ (acceptance threshold)
@@ -235,11 +243,11 @@ ______________________________________________________________________
 
 **Results:**
 
-- αc, βc, γc, C_Σ
+- s_α, s_β, s_γ, C_Σ
 - [CIₗₒ, CIₕᵢ]
 - Coh̄αβ, Coh̄βγ, Coh̄γα
 - Varαβ, Varβγ, Varγα
-- λα, λβ, λγ, λ_Σ
+- λ_α, λ_β, λ_γ, λ_Σ
 - All witness signals: w_S3, w_gauge, w_scale, w_var, w_lip
 - OOD: Zₜ, reference window
 
@@ -310,7 +318,7 @@ OOD stable
 
 **Current target:** Θ = 0.75
 
-**Reporting:** Self-coherence score published in docs/self-coherence-v3.0.0.md
+**Reporting:** Self-coherence score published in docs/self-coherence-v3.0.1.md
 
 ______________________________________________________________________
 
@@ -319,7 +327,7 @@ ______________________________________________________________________
 **Version release requires:**
 
 1. **Self-coherence:** C_Σ(TSC) ≥ Θ with all witnesses passing
-1. **Dimensional floors:** Each αc, βc, γc ≥ 0.60 (no degenerate dimensions)
+1. **Dimensional floors:** Each s_α, s_β, s_γ ≥ 0.60 (no degenerate dimensions)
 1. **CI precision:** CI width ≤ 0.20
 1. **OOD stability:** Zₜ < Zcᵣᵢₜ for last 5 measurements
 1. **Provenance complete:** All parameters, witnesses, calibrations recorded
@@ -328,7 +336,7 @@ ______________________________________________________________________
 **Release artifacts:**
 
 - Updated spec files
-- Self-coherence report (docs/self-coherence-v3.0.0.md)
+- Self-coherence report (docs/self-coherence-v3.0.1.md)
 - Provenance bundle (coherence_report.json)
 - Implementation reference (if updated)
 
@@ -382,4 +390,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**End — TSC Operational v3.0.0**
+**End — TSC Operational v3.0.1**

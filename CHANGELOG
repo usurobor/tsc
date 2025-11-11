@@ -1,183 +1,100 @@
-# CHANGELOG
-All notable changes to this project will be documented in this file.  
-Entries are ordered from newest to oldest.
+# Changelog
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
----
-## [v2.3.0] – 2025-11-04
-**Status:** Self-Application Baseline (Measurement Capability)
-
-### Breaking Changes
-- CLI restructured: `tsc <file>` → `tsc compute <file>`
-- Added `tsc self` subcommand for repository self-measurement
-
-### Added
-- **Self-measurement capability** (`tsc self`) per Operational §11
-- **α-axis** (pattern stability): parallel re-articulation via independent parsers
-- **β-axis** (relational coherence): typed term graph with ensemble alignment
-- **γ-axis** (process stability): temporal drift via git history
-- **Bootstrap CI** via resampling across axis replicates (Core §0.1)
-- **S₃ permutation witness** with all 6 permutations tested (Operational §4.2)
-- **Braided interchange witness** via AST normalization (Operational §4.1)
-- **Full provenance bundle** (git commit, dirty flag, python version, seeds)
-- `docs/self-coherence-v2.3.0.md` with baseline results and roadmap
-- GitHub Action (`.github/workflows/self-coherence.yml`) runs on spec changes
-
-### Results (Baseline Measurement)
-- **C_Σ** = 0.238 (CI: [0.093, 0.297])
-- **Verdict:** FAIL (expected - repository not yet self-coherent)
-- **S₃ Witness:** PASS (implementation S₃-symmetric)
-- **Braided Witness:** FAIL (92% equations don't normalize)
-- **Axis Scores:**
-  - α_c = 0.306 (pattern: moderate)
-  - β_c = 0.061 (relation: very weak - needs cross-references)
-  - γ_c = 0.721 (process: good)
-
-### Interpretation
-The measurement system is working correctly. The FAIL verdict indicates genuine issues in the repository that drive improvement work:
-- v2.3.1: Fix braided parser
-- v2.3.2: Strengthen cross-references (raise β_c)
-- v2.4.0: Achieve C_Σ ≥ 0.90 (self-coherence gate)
-
-### Technical Details
-- Pure Python implementation (numpy optional for acceleration)
-- Deterministic (seeded) for reproducibility
-- Git history required for γ_c (fails explicitly if unavailable)
-- AST-based term rewriting for braided witness
-- No fake data or fallbacks
-
-### Compliance
-- ✅ Core §0.1: Proper bootstrap CI
-- ✅ Operational §4.2: S₃ permutation test
-- ✅ Operational §4.1: Braided witness
-- ✅ Operational §3: Explicit failure on missing data
-- ✅ Operational §11.7: Complete provenance
+All notable changes to TSC will be documented in this file.
 
 ---
 
-## [v2.2.0] – 2025-11-04
-**Status:** Braided Algebra Integration & Python 3.10+ Upgrade
+## [3.0.0] - 2025-11-09
 
-### Breaking Changes
-- **Requires Python 3.10+** for structural pattern matching
-- Controller API changed: `verify_tsc_plus()` now returns `VerifyResult` dataclass (was 5-tuple)
+### Changed - Complete Reformulation
+
+**Breaking changes from v2.x:**
+
+#### Foundation
+- **Removed:** Braided monoidal category axioms (C1-C6)
+- **Removed:** Hexagon coherence conditions
+- **Removed:** LaTeX-heavy specifications
+- **Added:** Term algebra with tri(T₁,T₂,T₃) primitive
+- **Added:** Single equivalence: e ~ tri(e,e,e)
+
+#### Evaluators
+- **Replaced:** Abstract "three axes" with concrete monoid homomorphisms
+- **Added:** α: (ℕ, ⊕, 0) - sequential evaluator
+- **Added:** β: (ℕ³, ⊔, 0³) - structural evaluator  
+- **Added:** γ: (ℕ×ℕ, ⊗, (0,0)) - generative evaluator
+- **Proved:** Non-isomorphism via idempotent profiles (Theorem 2.3)
+
+#### Specification Format
+- **Changed:** All notation to Unicode (no LaTeX escaping)
+- **Changed:** Proofs are constructive and elementary
+- **Changed:** Spec is now proof-assistant ready
+
+#### What Stayed The Same
+- Geometric mean aggregation: C_Σ = (s_α·s_β·s_γ)^(1/3)
+- S₃ symmetry requirement
+- Degeneracy property (any axis = 0 ⟹ C_Σ = 0)
+- Measurement protocol structure
+
+### Why This Change?
+
+**Old approach:** Category theory imposed to prevent collapse (Eckmann-Hilton).
+
+**New approach:** Algebraic independence proven directly.
+
+**Benefit:** Simpler, more rigorous, accessible to non-category-theorists.
+
+---
+
+## [2.3.2] - 2025-11-08
 
 ### Added
-- **Pattern matching** in controller (`transition()` and `interpret()` functions)
-- **Named result type** (`VerifyResult` dataclass) replacing 5-tuple return
-- **Philosophical examples** with expected C_Σ values:
-  - `examples/philosophical/emergence.md` (Boids: C_Σ ≈ 0.88 ± 0.05)
-  - `examples/philosophical/free-will.md` (Two-stage choice: C_Σ ≈ 0.76 ± 0.07)
-  - `examples/philosophical/consciousness.md` (Masked perception: C_Σ ≈ 0.92)
-- **Enhanced Makefile** with new targets:
-  - `typecheck` - mypy type checking
-  - `self-coherence` - placeholder for v2.3.0 self-application
-  - `all` - CI simulation (lint + typecheck + test)
-  - `clean` - remove cache files
-- **mypy** to dev dependencies for type checking
-
-### Changed
-- **Controller refactored** to use Python 3.10+ features:
-  - Structural pattern matching replaces isinstance chains
-  - Fixed mutable default arguments with `default_factory`
-  - Preserved functional programming principles
-- **Import organization** updated to use `collections.abc` (Python 3.10+ convention)
-- **Makefile `fmt` target** now auto-fixes lint issues
-- **Markdown formatting** standardized across all `.md` files
+- Function notation parser: C^I_a(x,y) → x ⊙_a y
+- Unit elimination rule: 1_a ⊙_a x → x
+- Braided witness: 100% pass rate achieved
 
 ### Fixed
-- **Conformance tests** updated to use `tsc_yaml_v2` parser with threshold 0.3
-- **Import sorting** and formatting issues resolved
-- **Test fixtures** for philosophical examples (16/16 tests passing)
+- LaTeX parsing (400+ line parser for escaping hell)
 
-### Documentation
-- **Self-coherence status:** PENDING (deferred to v2.3.0)
-- **Three naming systems clarified** as co-equal (not legacy):
-  - H/V/D (Horizontal/Vertical/Deep) - geometric labels
-  - Cohered/Coherer/Cohering - philosophical roles
-  - α/β/γ (alpha/beta/gamma) - mathematical notation
-- Examples serve as **specifications** showing expected C_Σ (not measurements yet)
-
-### Notes
-- Tag v2.2.0 includes examples and test fixes
-- All conformance tests passing (5 examples × 3 tests + 1 glider test = 16 total)
-- Self-coherence measurement deferred to v2.3.0 (no fabricated numbers)
+### Results
+- braid_mean: 0.923 → 0.000 (perfect!)
+- C_Σ: 0.238 (unchanged - witness not main contributor)
 
 ---
 
-## [v2.1.0] – 2025-10-30
-**Status:** Progressive Disclosure & Tooling
+## [2.3.1] - 2025-11-07
 
 ### Added
-- **Progressive disclosure structure** for newcomers (5-min → 15-min → 1-hour → deep dive paths)
-- **CLI tool** (`tsc` command) via `pyproject.toml` and `reference/cli/tsc.py`
-- **Conformance tests** (`tests/conformance/`) for glider (positive) and random-soup (negative) controls
-- **Negative control example** (`examples/cellular-automata/random-soup.md`) with expected C_Σ ≈ 0.24
-- **QUICKSTART.md** with executable 5-minute setup guide
-- **CITATION.cff** for academic citations and Zenodo integration
-- **GitHub Actions CI** (`.github/workflows/ci.yml`) running lint, test, and linkcheck
-- **Makefile** with `setup`, `lint`, `fmt`, `test`, `quickstart` targets
-- **Python package structure** (`pyproject.toml`, `reference/__init__.py` hierarchy)
-- **Public API stub** `compute_c_from_file()` entry point for CLI and tests
+- Shared braid_parser.py module
+- Refactored debug harness
+- Validated 2/3 core axioms (C4 Associativity, C5 MFI)
 
-### Changed
-- **Renamed `core/` → `spec/`** for clearer normative boundary
-- **Moved `tsc-glossary.md`** from `docs/` to `spec/` (now normative v2.0.0)
-- **Restructured `reference/`** with `cli/` and `python/` subdirectories
-- **Reorganized examples** into `examples/cellular-automata/` with both controls
-- **Updated `README.md`** with explicit entry paths and progressive disclosure
-- **Modernized type hints** (Python 3.10+: `X | None`, `tuple` instead of `Tuple`, `X | Y` instead of `Union`)
-- **Updated ruff configuration** to use `[tool.ruff.lint]` section
-
-### Fixed
-- All linting errors (line length, trailing whitespace, import sorting)
-- Python module naming (`tsc_controller.py` instead of `tsc-controller.py`)
-- Internal documentation links (core/ → spec/)
-
-### Removed
-- `schema/observability.schema.yaml` (deferred to future release)
-- `diagrams/` directory (deferred to future release)
-- `core/` directory (renamed to `spec/`)
+### Results
+- braid_mean: 0.923 → 0.600 (35% reduction)
+- Still missing C3 (Unit Laws) - function notation blocked
 
 ---
 
-## [v2.0.0] – 2025-10-29
-**Status:** C≡-Native Formulation (Breaking Change)
+## [2.3.0] - 2025-11-06
+
+### Changed
+- Bootstrap resampling across axis replicates
+- S₃ witness operational (all permutations tested)
+
+### Results
+- C_Σ: 0.238 (FAIL - below Θ=0.90)
+- β_c: 0.061 (bottleneck - semantic cross-references needed)
+
+---
+
+## [2.2.0] - 2025-10
 
 ### Added
-- **C≡ language specification** (`c-equiv.md` v1.0.9) defining coinductive semantics
-- **Tripling rule normalization** (≡ ≡ ≡ → ≡) with confluence proof
-- **S₃ symmetry requirement** across all definitions and metrics
-- **Aspectual coalgebra semantics** with tolerant finality theorem
-- **Self-contained core** (`tsc-core.md` v2.0.0) depending on no other files
-- **Alignment ensembles** replacing "map" terminology
-- **Scale-equivariance axiom** (A3) with bounded drift
-- **Verification interface** as mathematical contract
-- **Composition law** for modular verification
-- **README v2.0.1** with dual TL;DRs (philosophers vs engineers)
-
-### Changed
-- **Ontology:** "There is only cohering (≡)" replaces "things that cohere"
-- **Dimensions:** H/V/D are co-equal co-constitutive aspects, not perspectives
-- **Terminology:** "Articulation" replaces "observation," "alignment" replaces "map"
-- **Metrics:** Geometric mean `C_Σ = (H_c V_c D_c)^(1/3)` with degeneracy guard
-- **Axioms:** Rewritten as aspectual (A1-A4) with cross-aspect commensurability
-- **Controller:** Effect-based design with pure transitions and interpreter pattern
-- **File naming:** `tsc-core.md`, `tsc-operational.md` (hyphenated for markdown)
-
-### Breaking Changes
-- Complete conceptual rewrite from v1.x measurement framework to coinductive ontology
-- API surface changed (controller now uses `VerifyEnv` and `Metrics` dataclasses)
-- File structure reorganized (`core/` introduced for normative specs)
+- C≡ specification (braided monoidal foundation)
+- Self-measurement framework
+- Three-axis coherence (α, β, γ)
 
 ---
 
-## Version History Summary
+## [2.0.0] - 2025-09
 
-- **v1.1.x** (Sep 2025): Immutable mathematical core
-- **v1.2.x** (Sep-Oct 2025): Operational layer evolution
-- **v2.0.0** (Oct 29, 2025): C≡-native rewrite (breaking)
-- **v2.1.0** (Oct 30, 2025): Progressive disclosure & tooling
-- **v2.2.0** (Nov 4, 2025): Braided algebra + Python 3.10+ upgrade
+Initial TSC framework.

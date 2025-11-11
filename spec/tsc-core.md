@@ -1,6 +1,6 @@
-# TSC Core v3.0.1
+# TSC Core v3.0.2
 
-**Version:** 3.0.1\
+**Version:** 3.0.2\
 **Status:** Normative\
 **Foundation:** C≡ v3.0.25 (Term Algebra)
 
@@ -22,7 +22,6 @@ TSC measures dimensional consistency across three evaluators: α (sequential), �
 
 **S₃ Invariance (Normative):** All constructions symmetric under permutations of {α, β, γ}. No axis privilege.
 
-**Notation bridge:** In C≡ the axis scores are s_α, s_β, s_γ. In Core/Operational we denote realized scores by αc, βc, γc for a given phenomenon; by intent, αc ≡ s_α, etc.
 
 ______________________________________________________________________
 
@@ -110,38 +109,38 @@ ______________________________________________________________________
 
 ## 4 · Dimensional Scores
 
-### 4.1 Pattern (αc)
+### 4.1 Pattern (s_α)
 
 Stability under perturbation:
 
 ```
-αc = exp(-λα · dα(Sα, S'α))
+s_α = exp(-λ_α · dα(Sα, S'α))
 ```
 
 where S'α is from perturbed/resampled Oα.
 
-### 4.2 Process (γc)
+### 4.2 Process (s_γ)
 
 Temporal stability:
 
 ```
-γc = exp(-λγ · W₁(pγ⁽ᵗ⁾, pγ⁽ᵗ⁺Δᵗ⁾))
+s_γ = exp(-λ_γ · W₁(pγ⁽ᵗ⁾, pγ⁽ᵗ⁺Δᵗ⁾))
 ```
 
 where W₁ is 1-Wasserstein distance.
 
-### 4.3 Relation (βc)
+### 4.3 Relation (s_β)
 
 Geometric mean of pairwise coherences:
 
 ```
-βc = (Coh̄αβ · Coh̄βγ · Coh̄γα)^(1/3)
+s_β = (Coh̄αβ · Coh̄βγ · Coh̄γα)^(1/3)
 ```
 
 **Symmetry requirement:** All three pairs use same:
 
 - Ensemble cardinality: |𝒜αβ| = |𝒜βγ| = |𝒜γα|
-- Sensitivity: λₐᵦ = λβ for all pairs
+- Sensitivity: λₐᵦ = λ_β for all pairs
 - Bootstrap depth (for CI estimation)
 
 ______________________________________________________________________
@@ -149,7 +148,7 @@ ______________________________________________________________________
 ## 5 · Aggregate Coherence
 
 ```
-C_Σ = (αc · βc · γc)^(1/3)
+C_Σ = (s_α · s_β · s_γ)^(1/3)
 ```
 
 **Properties:**
@@ -160,13 +159,13 @@ C_Σ = (αc · βc · γc)^(1/3)
 
 **Floor:** All scores bounded below by ε before aggregation.
 
-**Weighted form:** For weights wα, wβ, wγ > 0 with Σw = 3:
+**Weighted form:** For weights w_α, w_β, w_γ > 0 with Σw = 3:
 
 ```
-C_Σ = exp((1/3)(wα ln αc + wβ ln βc + wγ ln γc))
+C_Σ = exp((1/3)(w_α ln s_α + w_β ln s_β + w_γ ln s_γ))
 ```
 
-Default: wα = wβ = wγ = 1.
+Default: w_α = w_β = w_γ = 1.
 
 ______________________________________________________________________
 
@@ -226,16 +225,16 @@ ______________________________________________________________________
 - Contexts: Ωα, Ωβ, Ωγ (with declared structure)
 - Articulations: Aα, Aβ, Aγ
 - Alignment ensembles: 𝒜αβ, 𝒜βγ, 𝒜γα (each |𝒜ₐᵦ| ≥ 3)
-- Parameters: θ, λα, λβ, λγ, λₐᵦ, ε, Θ
+- Parameters: θ, λ_α, λ_β, λ_γ, λₐᵦ, ε, Θ
 
 **Output:**
 
-- Dimensional scores: αc, βc, γc ∈ [0,1]
+- Dimensional scores: s_α, s_β, s_γ ∈ [0,1]
 - Aggregate: C_Σ ∈ [0,1]
 - Confidence intervals: [CIₗₒ, CIₕᵢ]
 - Pairwise coherences: Coh̄αβ, Coh̄βγ, Coh̄γα
 - Variances: Varαβ, Varβγ, Varγα
-- Leverage: λα, λβ, λγ, λ_Σ
+- Leverage: λ_α, λ_β, λ_γ, λ_Σ
 - Stability: Lₛᵤₘ, Lₐₗᵢgₙ, κ
 - OOD statistic: Zₜ
 - Provenance: complete parameter record
@@ -281,7 +280,7 @@ ______________________________________________________________________
 **Dimensional leverage:**
 
 ```
-λₐ = -ln(max(ac, ε))  for a ∈ {α, β, γ}
+λₐ = -ln(max(s_a, ε))  for a ∈ {α, β, γ}
 ```
 
 **Aggregate leverage:**
@@ -293,7 +292,7 @@ ______________________________________________________________________
 **Coherence-Energy Duality:**
 
 ```
-E_Σ = -(1/3)(ln αc + ln βc + ln γc) = λ_Σ
+E_Σ = -(1/3)(ln s_α + ln s_β + ln s_γ) = λ_Σ
 ```
 
 Minimizing E_Σ ⟺ maximizing C_Σ.
@@ -323,4 +322,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**End — TSC Core v3.0.1**
+**End — TSC Core v3.0.2**
