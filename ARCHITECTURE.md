@@ -6,7 +6,7 @@ TSC measures its own coherence using three axes (α, β, γ) and tracks improvem
 
 **Key principle:** No hardcoded constants. The γ (gamma) axis reflects actual system health derived from observable state.
 
----
+______________________________________________________________________
 
 ## Directory Structure
 
@@ -29,17 +29,19 @@ repo/
 ```
 
 **Why `.tsc/`?**
+
 - Hidden directory (like `.git/`)
 - TSC CLI can be used by any repo
 - Self-contained measurement metadata
 - Clean separation from source files
 
 **Why `tsc-v*.json`?**
+
 - Clear, concise naming
 - "self-coherence" was redundant (TSC measuring TSC is implicit)
 - Matches directory name
 
----
+______________________________________________________________________
 
 ## Workflow
 
@@ -50,21 +52,23 @@ tsc self
 ```
 
 **Output:**
+
 ```
 ✅ Written: .tsc/tsc-v3.1.0.json
 ✅ Updated: .tsc/README.md
 ```
 
 **What happens:**
+
 1. Measures current α, β
-2. Loads previous measurement from `.tsc/tsc-v3.0.0.json`
-3. Computes γ based on achievement
-4. Writes new measurement to `.tsc/tsc-v3.1.0.json`
-5. Auto-generates `.tsc/README.md` from all JSON files
+1. Loads previous measurement from `.tsc/tsc-v3.0.0.json`
+1. Computes γ based on achievement
+1. Writes new measurement to `.tsc/tsc-v3.1.0.json`
+1. Auto-generates `.tsc/README.md` from all JSON files
 
 **One command. Everything done.** ✅
 
----
+______________________________________________________________________
 
 ## The Three Axes
 
@@ -73,45 +77,51 @@ tsc self
 **Measures:** Consistency between content and structure
 
 **How:**
+
 1. Extract content tokens (words)
-2. Extract structure elements (headers, bullets, definitions)
-3. Compare using cosine similarity + Jensen-Shannon divergence
-4. Score: `α = exp(-λ × distance)`
+1. Extract structure elements (headers, bullets, definitions)
+1. Compare using cosine similarity + Jensen-Shannon divergence
+1. Score: `α = exp(-λ × distance)`
 
 **Interpretation:**
+
 - **High (0.8+):** Headers match content, good organization
 - **Low (0.3):** Mismatch between structure and actual content
 
 **Improve by:**
+
 - Align headers with section content
 - Use consistent terminology
 - Add structure that mirrors content
 
----
+______________________________________________________________________
 
 ### β (Beta) - Relational Coherence
 
 **Measures:** Quality of cross-references between specs
 
 **How:**
+
 1. Extract terms from glossary (or bold terms)
-2. Find explicit cross-references: `"see X"`, `"cf. X"`
-3. Create two embeddings:
+1. Find explicit cross-references: `"see X"`, `"cf. X"`
+1. Create two embeddings:
    - Degree distribution (connection patterns)
    - Reference counts (how often terms are explicitly linked)
-4. Compare embeddings
-5. Score: `β = exp(-λ × distance)`
+1. Compare embeddings
+1. Score: `β = exp(-λ × distance)`
 
 **Interpretation:**
+
 - **High (0.8+):** Well-connected specs, good cross-referencing
 - **Low (0.06):** Isolated specs, missing links
 
 **Improve by:**
+
 - Add explicit cross-references: `"(see coherence in tsc-glossary)"`
 - Use `"cf. witness"` patterns
 - Link glossary terms throughout specs
 
----
+______________________________________________________________________
 
 ### γ (Gamma) - Generative Process Health
 
@@ -134,6 +144,7 @@ else:
 ```
 
 **Why this works:**
+
 - `sqrt(α × β)` = current capacity of the generative process
 - Healthy process (high α, β) → high baseline → misses hurt less
 - Unhealthy process (low α, β) → low baseline → misses compound
@@ -162,11 +173,12 @@ achieved = True
 ```
 
 **Interpretation:**
+
 - **γ = 1.0:** Process healthy, achieved improvement target
 - **γ = 0.4:** Process struggling, made some progress
 - **γ = baseline:** Process stuck, no improvement
 
----
+______________________________________________________________________
 
 ## JSON Structure
 
@@ -278,7 +290,7 @@ The system declares what it will work on next.
 
 Tracks what was promised, what was achieved, and how things changed.
 
----
+______________________________________________________________________
 
 ## Implementation Details
 
@@ -367,13 +379,14 @@ def generate_readme() -> str:
 
 **Called automatically** by `write_report()` after writing JSON.
 
----
+______________________________________________________________________
 
 ## Benefits
 
 ### 1. No Hardcoded Constants
 
 **Before (hypothetical):**
+
 ```python
 if progress >= 100%:
     γ = 1.0
@@ -382,6 +395,7 @@ else:
 ```
 
 **After (principled):**
+
 ```python
 baseline = sqrt(α × β)  # Derived from system state
 γ = baseline + (1.0 - baseline) × progress
@@ -392,6 +406,7 @@ Everything derived from observable system health.
 ### 2. Self-Documenting
 
 Single `.tsc/README.md` shows entire history:
+
 - All versions in one place
 - Auto-updated on every run
 - No manual markdown editing
@@ -405,12 +420,14 @@ Single `.tsc/README.md` shows entire history:
 ### 4. Contextual Penalties
 
 Unhealthy system (low α, β):
+
 ```
 baseline = sqrt(0.3 × 0.1) ≈ 0.17
 Miss → γ = 0.17 (harsh penalty, compounds failure)
 ```
 
 Healthy system (high α, β):
+
 ```
 baseline = sqrt(0.8 × 0.8) = 0.8
 Miss → γ = 0.8 (mild penalty, can recover)
@@ -433,11 +450,12 @@ done
 jq '.historical.achievement.target_reached' .tsc/tsc-v3.1.0.json
 ```
 
----
+______________________________________________________________________
 
 ## Example: TSC's Journey
 
 ### v2.1.0 (Baseline)
+
 ```
 α = 0.273 (low - structure doesn't match content)
 β = 0.061 (catastrophic - almost no cross-references)
@@ -449,6 +467,7 @@ Roadmap: β 0.061 → 0.361
 ```
 
 ### v2.2.0 (Failed)
+
 ```
 α = 0.306 (slightly better)
 β = 0.061 (no change!)
@@ -462,6 +481,7 @@ Roadmap: β 0.061 → 0.361 (same goal)
 ```
 
 ### v3.1.0 (Success!)
+
 ```
 α = 0.282
 β = 0.511 (HUGE improvement! +741%)
@@ -475,13 +495,14 @@ Roadmap: α 0.282 → 0.582
 ```
 
 **Total Progress:**
+
 - β: +741% (0.061 → 0.511)
 - γ: +676% (0.129 → 1.000)
 - C_Σ: +307% (0.129 → 0.524)
 
 The process healed itself! 🎉
 
----
+______________________________________________________________________
 
 ## CI/CD Integration
 
@@ -536,7 +557,7 @@ if latest.get('historical', {}).get('achievement'):
         print(f"⚠️ Missed {ach['target_axis']} goal")
 ```
 
----
+______________________________________________________________________
 
 ## Migration from Old Versions
 
@@ -563,17 +584,17 @@ python -c "from reference.python.tsc_measure import generate_readme; \
 
 Just run `tsc self` and it will start fresh!
 
----
+______________________________________________________________________
 
 ## Future Enhancements
 
 ### Potential Additions
 
 1. **Trend Analysis**: Track rate of improvement
-2. **Forecasting**: Predict when C_Σ > 0.90
-3. **Visualization**: Generate plots from JSON
-4. **Schema Versioning**: Handle format evolution
-5. **Multi-Repo**: Track coherence across projects
+1. **Forecasting**: Predict when C_Σ > 0.90
+1. **Visualization**: Generate plots from JSON
+1. **Schema Versioning**: Handle format evolution
+1. **Multi-Repo**: Track coherence across projects
 
 ### Schema Evolution
 
@@ -589,24 +610,26 @@ If we need to change the JSON format:
 
 Tools can handle multiple schema versions gracefully.
 
----
+______________________________________________________________________
 
 ## Summary
 
 **The ouroboros is complete:**
 
 1. **Measures itself** (α, β from specs)
-2. **Tracks health** (γ from achievement, no hardcoded constants)
-3. **Declares intent** (roadmap: what to fix next)
-4. **Verifies improvement** (did we achieve what we said?)
-5. **Documents journey** (auto-generated README)
+1. **Tracks health** (γ from achievement, no hardcoded constants)
+1. **Declares intent** (roadmap: what to fix next)
+1. **Verifies improvement** (did we achieve what we said?)
+1. **Documents journey** (auto-generated README)
 
 **All in one command:**
+
 ```bash
 tsc self
 ```
 
 **Result:**
+
 ```
 .tsc/
 ├── tsc-v2.1.0.json  # "I'm unhealthy (γ=0.129)"
@@ -617,6 +640,6 @@ tsc self
 
 The system is self-coherent, self-improving, and self-documenting. ✨
 
----
+______________________________________________________________________
 
 *Architecture document v3.1.0 - Last updated 2025-11-11*
