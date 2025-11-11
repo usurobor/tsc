@@ -1,10 +1,10 @@
 # TSC Glossary v3.0.9
 
-**Version:** 3.0.9 (Triadic Foundation + Measurement Framework)  
-**Status:** Informative (accessible terminology guide)  
+**Version:** 3.0.9 (Triadic Foundation + Measurement Framework)\
+**Status:** Informative (accessible terminology guide)\
 **Corresponds to:** C≡ v3.0.25, TSC Core v3.0.2, TSC Operational v3.0.1
 
----
+______________________________________________________________________
 
 ## How to Read This Glossary
 
@@ -18,7 +18,7 @@ This isn't a dictionary—it's a guide to understanding. Each entry unfolds from
 
 **If you're asking "why does this matter?":** The philosophical grounding shows how each piece connects to the whole.
 
----
+______________________________________________________________________
 
 ## Part I: The Foundation (What We're Measuring)
 
@@ -34,7 +34,7 @@ In the formal language, we write this as **e** (for "empty" or "undifferentiated
 
 **When you implement:** The normal form function `nf` returns `e` whenever it encounters `tri(e,e,e)`. You're recognizing: "No atom is present here; this is just wholeness." This isn't an optimization trick—it's the mathematics telling you something true about the structure.
 
----
+______________________________________________________________________
 
 ### Atom (The Act of Articulation)
 
@@ -52,7 +52,7 @@ Think about the word "cohering" itself. There's the one who coheres (agent) and 
 
 **When you implement:** In self-measurement, you parse spec documents to extract atoms. Each definition, each axiom, each theorem is an articulation—a place where wholeness has made itself explicit.
 
----
+______________________________________________________________________
 
 ### Triadic Term (Holding One-as-Two)
 
@@ -65,6 +65,7 @@ Think of it like this. With **one position**, you have only undifferentiated who
 With **two positions**, you can show the duality (left/right, inside/outside). But here's the problem: the unity is lost. It looks like two separate things. The indivisibility breaks. You have two, not one-as-two.
 
 But with **three positions**, something remarkable happens. You can hold:
+
 - **Left and Right** carrying the duality (the two aspects)
 - **Center** carrying the unity (the one-ness that both are)
 
@@ -78,7 +79,7 @@ Together, they preserve **one-as-two** without collapse or fragmentation. It's l
 
 **When you implement:** Every input gets normalized to tri-tree structure before evaluation. You're asking: "How has this phenomenon articulated itself into one-as-two patterns, held in three-position form?"
 
----
+______________________________________________________________________
 
 ### The Three Axes (Three Ways of Seeing)
 
@@ -104,7 +105,7 @@ These profiles are like fingerprints. No two can be isomorphic because their ide
 
 **When you measure:** You provide three independent articulation functions—three ways of seeing the same phenomenon. For the TSC specs themselves, α might count definitions, β might map cross-references, γ might track version history. Same phenomenon, three views.
 
----
+______________________________________________________________________
 
 ## Part II: The Operations (How We Work With Terms)
 
@@ -122,7 +123,7 @@ The rule is simple: whenever you encounter `tri(e,e,e)`—all three positions se
 
 **When you implement:** Run `nf` once at the start. Don't normalize repeatedly—the function is idempotent (`nf(nf(t)) = nf(t)`). Once normalized, it stays normalized.
 
----
+______________________________________________________________________
 
 ### Projections (Looking at One Position)
 
@@ -131,8 +132,9 @@ How do you examine what's in the **Left** position of a tri-term? You use a **pr
 But here's the key: projection isn't "taking apart." The atom is indivisible—you can't break it into pieces. Instead, projection is **focusing attention** on one aspect without destroying the unity. Like looking at one face of a coin—you're not separating the face from the coin, just focusing on it.
 
 **The three projections:**
+
 - π_L(tri(X,Y,Z)) = X (focus on Left)
-- π_C(tri(X,Y,Z)) = Y (focus on Center)  
+- π_C(tri(X,Y,Z)) = Y (focus on Center)
 - π_R(tri(X,Y,Z)) = Z (focus on Right)
 
 **For atoms and wholeness:** The projections return the term itself—π_L(a) = a, π_L(e) = e. Why? Because an atom occupies all positions simultaneously until placed in a tri structure. It hasn't been "positioned" yet—it's everywhere at once in its indivisibility.
@@ -141,7 +143,7 @@ But here's the key: projection isn't "taking apart." The atom is indivisible—y
 
 **When you implement:** Projections are how β "sees" the global structure. To check if Left is occupied, you project to Left and check for presence: `B(π_L(t))`. We'll see B next.
 
----
+______________________________________________________________________
 
 ### Presence (The Binary Question)
 
@@ -150,6 +152,7 @@ Sometimes you don't need details—you just need to know: **"Is there any atom h
 That's what **B** does. It's a binary detector: 0 for "pure wholeness," 1 for "at least one atom present somewhere in this term."
 
 **The definition:**
+
 - B(e) = 0 (wholeness has no atoms)
 - B(a) = 1 (atoms are presence itself)
 - B(tri(X,Y,Z)) = max(B(X), B(Y), B(Z)) (presence if *any* child has presence)
@@ -160,7 +163,7 @@ That's what **B** does. It's a binary detector: 0 for "pure wholeness," 1 for "a
 
 **When you implement:** Compute B once on the normalized term and cache it. You'll reuse this value for all three coordinates of β. One pass, three uses.
 
----
+______________________________________________________________________
 
 ### The Three Evaluators (Three Measurements)
 
@@ -171,6 +174,7 @@ Now we can define how to **measure** articulation. Each evaluator asks its axis'
 **Target:** The monoid (ℕ, ⊕, 0) where x ⊕ y = min(x+y, M) with **M ≥ 3**. Natural numbers with capped addition.
 
 **Definition:**
+
 - E_α(e) = 0 (wholeness has no count)
 - E_α(a) = 1 (each atom counts as one)
 - E_α(tri(T₁,T₂,T₃)) = E_α(T₁) ⊕ E_α(T₂) ⊕ E_α(T₃) (add up the children, capped at M)
@@ -182,6 +186,7 @@ Now we can define how to **measure** articulation. Each evaluator asks its axis'
 **Why it's homomorphic:** The operation ⊕ combines measurements the same way tri combines terms. This makes α compositional—the measurement of a whole equals the combination of measurements of parts. That's what "homomorphism" means: structure-preserving map.
 
 **Example:** For tri(κ,κ,e) where κ is an atom, you get:
+
 - E_α(κ) = 1
 - E_α(κ) = 1
 - E_α(e) = 0
@@ -189,7 +194,7 @@ Now we can define how to **measure** articulation. Each evaluator asks its axis'
 
 Two atoms are present.
 
----
+______________________________________________________________________
 
 #### β (Relation): Which Positions?
 
@@ -202,6 +207,7 @@ Two atoms are present.
 Read this carefully: "Take the normalized term. Project to Left, check for presence. Project to Center, check for presence. Project to Right, check for presence. Bundle the three answers into a triple."
 
 **Base cases:**
+
 - E_β(e) = (0,0,0) (wholeness occupies no positions—all three are empty)
 - E_β(a) = (1,1,1) (an atom occupies all positions simultaneously until placed in a tri)
 
@@ -213,36 +219,40 @@ Read this carefully: "Take the normalized term. Project to Left, check for prese
 
 **Example:** For tri(κ,e,κ):
 
-Step 1: Normalize (already normal in this case)  
+Step 1: Normalize (already normal in this case)\
 Step 2: Project to each position:
+
 - π_L(tri(κ,e,κ)) = κ
 - π_C(tri(κ,e,κ)) = e
 - π_R(tri(κ,e,κ)) = κ
 
 Step 3: Check presence in each projection:
+
 - B(κ) = 1 (Left has atom)
 - B(e) = 0 (Center has wholeness)
 - B(κ) = 1 (Right has atom)
 
-Step 4: Bundle into triple:  
+Step 4: Bundle into triple:\
 E_β(tri(κ,e,κ)) = (1, 0, 1)
 
 Result: (1,0,1) — Left and Right global positions are occupied, Center is not.
 
 **Why this is cleaner than it sounds:** We're just looking directly at what's in each position. No complicated recursion, no coordinate shuffling. Just: "Look left. Look center. Look right. What's there?"
 
----
+______________________________________________________________________
 
 #### γ (Process): How Deep?
 
 **Target:** The monoid (ℕ×ℕ, ⊗, (0,0)) where (x,u) ⊗ (y,v) = (x+y, u⊙v) and u⊙v = (u+1)(v+1) - 1. Pairs of natural numbers with a special combination operation.
 
 **Definition:**
+
 - E_γ(e) = (0,0) (no articulation)
 - E_γ(a) = (1,1) (one atom, depth 1)
 - E_γ(tri(T₁,T₂,T₃)) = E_γ(T₁) ⊗ E_γ(T₂) ⊗ E_γ(T₃)
 
 **What it measures:**
+
 - First component: count of atoms (like α, but uncapped—it keeps growing)
 - Second component: **depth of nested articulation**—how deeply the atom nests within itself
 
@@ -255,30 +265,33 @@ So u⊙v is really just multiplication in disguise. This makes it associative an
 **Example:** For tri(κ,κ,e):
 
 Step 1: Evaluate each child:
+
 - E_γ(κ) = (1,1)
 - E_γ(κ) = (1,1)
 - E_γ(e) = (0,0)
 
 Step 2: Combine first two with ⊗:
+
 - (1,1) ⊗ (1,1) = (1+1, 1⊙1)
 - = (2, 1+1+1·1)
 - = (2, 3)
 
 Step 3: Combine with third:
+
 - (2,3) ⊗ (0,0) = (2+0, 3⊙0)
 - = (2, 3+0+3·0)
 - = (2, 3)
 
 Result: (2, 3)
 
-First component: 2 atoms present.  
+First component: 2 atoms present.\
 Second component: 3—showing depth of process articulation. Not just "two atoms," but how they articulate in relation. The multiplication (via ⊙) captures the compounding depth.
 
----
+______________________________________________________________________
 
-**The normalization identity:** All three evaluators satisfy **E_●(nf(t)) = E_●(t)**—they commute with normalization. This means you don't need to normalize inside recursive calls; normalizing once at the start is sufficient. (See C≡ §4.1 for projection/normalization commutation and §5 for monotonicity and score axioms.)
+**The normalization identity:** All three evaluators satisfy **E\_●(nf(t)) = E\_●(t)**—they commute with normalization. This means you don't need to normalize inside recursive calls; normalizing once at the start is sufficient. (See C≡ §4.1 for projection/normalization commutation and §5 for monotonicity and score axioms.)
 
----
+______________________________________________________________________
 
 ### Gauge Symmetry (No Privileged Direction)
 
@@ -287,9 +300,10 @@ Here's a question: Does wholeness have a "preferred direction" when it articulat
 No. The labels "Left," "Center," "Right" are our convention, not intrinsic to the pattern. This is **gauge symmetry**—like choosing coordinates on a sphere. The sphere doesn't care which way is "north."
 
 **The S₃ action:** For any permutation σ of {1,2,3}, define:
+
 - σ·e = e (wholeness is unchanged)
 - σ·a = a (atoms are unchanged)
-- σ·tri(T₁,T₂,T₃) = tri(T_{σ(1)}, T_{σ(2)}, T_{σ(3)}) (permute the children)
+- σ·tri(T₁,T₂,T₃) = tri(T\_{σ(1)}, T\_{σ(2)}, T\_{σ(3)}) (permute the children)
 
 This swaps the position labels. And it commutes with normalization: nf(σ·t) = σ·nf(t). Swapping labels doesn't change the essential structure—it's just relabeling.
 
@@ -303,7 +317,7 @@ This swaps the position labels. And it commutes with normalization: nf(σ·t) = 
 
 **When you implement:** This becomes Witness W1—the axis-permutation test. Try all 6 permutations of the axes and verify you get the same aggregate coherence. If you don't, your implementation has hidden bias for one axis.
 
----
+______________________________________________________________________
 
 ### Disruption (Returning to Source)
 
@@ -316,15 +330,16 @@ That's **disruption**: replacing an atom with wholeness, written `a → e`. It's
 **The preorder:** Define t ⪰ u ("t is at least as articulated as u") as the reflexive-transitive closure. If you can get from t to u by a sequence of disruptions, then t is "more articulated" than u. It's further from wholeness.
 
 **The key theorem (Evaluator Monotonicity):** If t ⤳ u, then:
-- ⟦t⟧_α ≥ ⟦u⟧_α (counts go down)
-- ⟦t⟧_β ≥ ⟦u⟧_β (configuration simplifies, componentwise)
-- ⟦t⟧_γ ≥ ⟦u⟧_γ (depth and count go down, product order)
+
+- ⟦t⟧\_α ≥ ⟦u⟧\_α (counts go down)
+- ⟦t⟧\_β ≥ ⟦u⟧\_β (configuration simplifies, componentwise)
+- ⟦t⟧\_γ ≥ ⟦u⟧\_γ (depth and count go down, product order)
 
 Disruption **decreases** evaluation. Articulation goes down when you return atoms to wholeness. This is proven by examining what happens when you replace any subterm with (0,0,0) or 0—the result can only go down or stay the same. (Proven in C≡ §5.0)
 
 **Why this matters for coherence:** This justifies the score axiom (P4′): disruption-antitone means s_i(t) ≤ s_i(u) when t ⪰ u. As you remove articulation, scores **rise** toward the perfect score of 1.0 at pure wholeness e. Why? Because perfect wholeness (e) scores 1.0 (axiom P1), and every disruption moves you closer to e. Coherence increases as you approach the source.
 
----
+______________________________________________________________________
 
 ## Part III: Measurement (How We Use This to Measure Systems)
 
@@ -339,6 +354,7 @@ Now we connect the abstract algebra to real systems. How do you take something l
 **The unity principle:** The three articulations A_α(C), A_β(C), A_γ(C) are three views of the **same** process C. You're not measuring three different things; you're measuring one thing three ways. The phenomenon is one; the views are three.
 
 **In practice, for TSC self-measurement:**
+
 - A_α might extract all section headers, definitions, theorem statements (structural features)
 - A_β might extract all cross-references, citations, dependencies (relational graph)
 - A_γ might extract commit history, version diffs, temporal evolution (process traces)
@@ -349,7 +365,7 @@ Same corpus (the TSC specs), three articulation functions, three observation set
 
 Document your articulation schemas carefully—they go in the provenance bundle. Someone else should be able to reproduce your exact observation sets given your articulation functions.
 
----
+______________________________________________________________________
 
 ### Summary (Compressing for Comparison)
 
@@ -373,7 +389,7 @@ So we **compress** observations into summaries—finite descriptions that captur
 
 **When you implement:** Make summary construction deterministic wherever possible. Randomness in summarization (like random seeds in dimension reduction) inflates your confidence intervals unnecessarily. If you must use randomness, include the seed in provenance so results are reproducible. (See TSC Core §1, §12)
 
----
+______________________________________________________________________
 
 ### Alignment (Comparing Different Views)
 
@@ -384,12 +400,14 @@ They're in different spaces. Different dimensions. Different representations. Ho
 **Answer: Alignment.** An alignment σ is a correspondence method—a way to map between the two representations. Think of it like translation between languages. The alignment establishes which parts of one summary "match" which parts of the other.
 
 **Methods include:**
+
 - Optimal Transport (move probability mass from one distribution to another at minimum cost)
 - Gromov-Wasserstein (compare metric spaces even when point sets differ)
 - Graph matching (align structural patterns)
 - And more—the key is having multiple heterogeneous methods
 
 **The discrepancy function:**
+
 ```
 Δ(S_a, S_b; σ) = θ · Δ_struct + (1-θ) · Δ_dist
 ```
@@ -399,6 +417,7 @@ Part structural (comparing dimensions d_a vs d_b and invariants ℐ_a vs ℐ_b),
 Both components are normalized to [0,1]. A discrepancy of 0 means perfect match (the two summaries are identical under alignment σ). A discrepancy of 1 means complete mismatch (they share nothing).
 
 **From discrepancy to coherence:**
+
 ```
 Coh(S_a, S_b; σ) = exp(-λ_ab · Δ)
 ```
@@ -407,16 +426,16 @@ This maps discrepancy Δ ∈ [0,1] to coherence ∈ [0,1]. When Δ = 0 (perfect 
 
 **The ensemble approach:** Don't trust one alignment method. Different methods make different assumptions. Build an ensemble 𝒜_ab with at least 3 heterogeneous methods. For each method σ in the ensemble, compute Coh(S_a, S_b; σ). Then:
 
-**Mean coherence:** ⟨Coh⟩_{ab} = average across the ensemble. This is your best estimate.
+**Mean coherence:** ⟨Coh⟩\_{ab} = average across the ensemble. This is your best estimate.
 
-**Variance:** Var_{ab} = variance across the ensemble. This is a witness—if variance is too high, the methods disagree too much. The comparison is unstable. You can't trust the mean.
+**Variance:** Var\_{ab} = variance across the ensemble. This is a witness—if variance is too high, the methods disagree too much. The comparison is unstable. You can't trust the mean.
 
-Low variance = ensemble agreement = stable comparison = trustworthy coherence.  
+Low variance = ensemble agreement = stable comparison = trustworthy coherence.\
 High variance = ensemble disagreement = unstable comparison = don't trust the number.
 
 (See TSC Core §3)
 
----
+______________________________________________________________________
 
 ### Coherence Scores (From Evaluators to Measurements)
 
@@ -433,6 +452,7 @@ Now we connect evaluators (mathematical objects operating on terms) to scores (m
 **(P4′) Disruption-antitone:** If t ⪰ u (t can disrupt to u), then s_i(t) ≤ s_i(u). Removing articulation raises scores toward the perfect 1.0 at wholeness e. More articulation = lower score (further from wholeness). Less articulation = higher score (closer to wholeness).
 
 **The witness family (one simple construction that works):**
+
 ```
 s_α(t) = 1/(1 + ⟦t⟧_α)
 s_β(t) = 1/(1 + b_L + b_C + b_R)  where ⟦t⟧_β = (b_L, b_C, b_R)
@@ -440,6 +460,7 @@ s_γ(t) = 1/(1 + g_1 + g_2)  where ⟦t⟧_γ = (g_1, g_2)
 ```
 
 **Why this works:** As evaluators increase (more articulation), denominators grow, scores decrease. As evaluators approach 0 (approaching wholeness), scores approach 1. The axiom checks:
+
 - (P1): ⟦e⟧ = 0 for all evaluators, so s_i(e) = 1/(1+0) = 1 ✓
 - (P2): Always positive, always ≤ 1 ✓
 - (P3): β sums all coordinates (symmetric), α and γ are S₃-invariant ✓
@@ -448,21 +469,23 @@ s_γ(t) = 1/(1 + g_1 + g_2)  where ⟦t⟧_γ = (g_1, g_2)
 (See C≡ §5.2–5.3)
 
 **Operational defaults vs. witness family.** In **TSC Core §4**, the operational score definitions are the defaults used in practice:
+
 - **s_α** via perturbation stability (exponential of a distance),
-- **s_β** via the **geometric mean of pairwise coherences** (built from **⟨Coh⟩_{αβ}**, **⟨Coh⟩_{βγ}**, **⟨Coh⟩_{γα}**),
+- **s_β** via the **geometric mean of pairwise coherences** (built from **⟨Coh⟩\_{αβ}**, **⟨Coh⟩\_{βγ}**, **⟨Coh⟩\_{γα}**),
 - **s_γ** via 1-Wasserstein temporal stability.
 
 The **witness family** above exists to prove the axioms are satisfiable and to offer a simple sanity check; it is not the operational default **unless explicitly chosen and recorded in provenance**.
 
 **When you implement:** You can use other transforms (exponential decay, power law, logistic) as long as they're monotone decreasing and respect S₃ symmetry. The witness family is just one option—simple and provably correct. Record your choice in provenance.
 
----
+______________________________________________________________________
 
 ### Aggregate Coherence (The Final Verdict Input)
 
 Three scores, one number: **C_Σ**.
 
 **The formula:**
+
 ```
 C_Σ = (s_α · s_β · s_γ)^(1/3)
 ```
@@ -472,25 +495,29 @@ This is the **geometric mean**—the cube root of the product. Not the arithmeti
 **Why geometric mean?** Because of the **Degeneracy Guard**: If any score is 0, the aggregate is 0. The product of anything with 0 is 0. The cube root of 0 is 0. You cannot compensate failure in one dimension with success in others.
 
 Think about it with numbers:
+
 - Arithmetic mean: (0.9 + 0.9 + 0.0) / 3 = 0.6 — this says "one dimension failed completely, but we're 60% coherent"
 - Geometric mean: (0.9 × 0.9 × 0.0)^(1/3) = 0 — this says "one dimension failed, so overall coherence is zero"
 
 The geometric mean is honest. The three-legged stool must have all three legs. Coherence requires all three dimensions. Lose any one and you lose coherence entirely.
 
 **The weighted form:** If you need to emphasize one axis more than others, use:
+
 ```
 C_Σ = exp((1/3)(w_α ln s_α + w_β ln s_β + w_γ ln s_γ))
 ```
+
 with weights w_α, w_β, w_γ > 0 summing to 3. This is the weighted geometric mean in log space. Default: all weights = 1 (equal emphasis).
 
 **Properties:**
+
 - **S₃-invariant:** Multiplication commutes, so permuting axes doesn't change the product
 - **Disruption-antitone:** Follows from axiom (P4′) for each score and monotonicity of products and cube roots
 - **Degeneracy guard:** Any factor = 0 ⟹ product = 0
 
 **When you implement:** Floor all inputs at ε (typically 10⁻⁵) before taking logs to prevent log(0) = -∞. Use max(s_i, ε) in the formula. (See TSC Core §5)
 
----
+______________________________________________________________________
 
 ### Leverage (Diagnosing Incoherence)
 
@@ -499,16 +526,19 @@ Coherence is multiplicative (via geometric mean), which makes it hard to see con
 **Leverage** transforms coherence into an additive diagnostic. It's the "incoherence energy"—how much each dimension contributes to lowering coherence.
 
 **The transformation:**
+
 ```
 λ_a = -ln(max(s_a, ε))
 ```
 
 This is the negative log of the score. Higher leverage = lower coherence. And it's additive:
+
 ```
 λ_Σ = (1/3)(λ_α + λ_β + λ_γ)
 ```
 
 **The Coherence-Energy Duality:**
+
 ```
 E_Σ = -(1/3)(ln s_α + ln s_β + ln s_γ) = λ_Σ
 ```
@@ -516,6 +546,7 @@ E_Σ = -(1/3)(ln s_α + ln s_β + ln s_γ) = λ_Σ
 Minimizing leverage ⟺ maximizing coherence. It's like potential energy in physics—high leverage is high "incoherence potential" waiting to be resolved.
 
 **The diagnostic use:** Look at which dimension has the highest leverage:
+
 ```
 argmax{λ_α, λ_β, λ_γ}
 ```
@@ -523,15 +554,16 @@ argmax{λ_α, λ_β, λ_γ}
 That's your bottleneck. That's where the incoherence is concentrated. Route your improvement effort there.
 
 **Example:** Suppose:
+
 - s_α = 0.82 → λ_α = -ln(0.82) ≈ 0.20
-- s_β = 0.22 → λ_β = -ln(0.22) ≈ 1.51  
+- s_β = 0.22 → λ_β = -ln(0.22) ≈ 1.51
 - s_γ = 0.74 → λ_γ = -ln(0.74) ≈ 0.30
 
 The β dimension (relation) has leverage 1.51—seven times higher than α. That's the problem. The relations don't cohere. Fix cross-references, strengthen dependencies, clarify connections. That's where to push.
 
 (See TSC Core §11)
 
----
+______________________________________________________________________
 
 ### Confidence Intervals (Uncertainty Quantification)
 
@@ -541,11 +573,11 @@ Every measurement has uncertainty. Every score is an estimate. We quantify this 
 
 1. **Resample your observations:** Draw N_boot samples (typically 1000) with replacement from your observation indices. If observations are temporally correlated, use block bootstrap (resample blocks of size ≥10 instead of individual points).
 
-2. **Resample your alignment ensemble:** For each bootstrap sample, randomly select which alignment methods to use (sampling with replacement from your ensemble).
+1. **Resample your alignment ensemble:** For each bootstrap sample, randomly select which alignment methods to use (sampling with replacement from your ensemble).
 
-3. **Recompute C_Σ:** For each bootstrap sample, recompute summaries, alignments, scores, and aggregate. You now have 1000 C_Σ values.
+1. **Recompute C_Σ:** For each bootstrap sample, recompute summaries, alignments, scores, and aggregate. You now have 1000 C_Σ values.
 
-4. **Report percentiles:** The 2.5th and 97.5th percentiles give you [CI_lo, CI_hi] at 95% confidence level. The middle 95% of your bootstrap distribution.
+1. **Report percentiles:** The 2.5th and 97.5th percentiles give you [CI_lo, CI_hi] at 95% confidence level. The middle 95% of your bootstrap distribution.
 
 **Why bootstrap?** Because alignment and summary construction are complex, nonlinear operations. Analytical confidence intervals (based on formulas) would require distributional assumptions we can't justify. Bootstrap is non-parametric—it makes minimal assumptions—and it's robust to weird distributions.
 
@@ -557,7 +589,7 @@ Every measurement has uncertainty. Every score is an estimate. We quantify this 
 
 **When you implement:** Always report confidence intervals. A point estimate without uncertainty is just a guess. And include the bootstrap seed in provenance so results are exactly reproducible. (See TSC Core §6)
 
----
+______________________________________________________________________
 
 ### Out-of-Distribution Detection (Context Stability)
 
@@ -566,6 +598,7 @@ Measurements have context. You're measuring in some regime—some set of conditi
 **OOD (out-of-distribution) detection** tracks whether your current measurement looks like past measurements. If it doesn't, something changed—maybe the system evolved, maybe the measurement process drifted, maybe you recalibrated without realizing.
 
 **The statistic:** Compute a robust z-score against a rolling reference distribution (e.g., last 20 verifications):
+
 ```
 Z_t = |C_Σ^(t) - median(ref)| / (1.4826 · MAD(ref))
 ```
@@ -583,12 +616,13 @@ where MAD is median absolute deviation: the median of |x - median(ref)| across a
 **But a PASS condition:** If OOD is flagged, the verdict is FAIL (not PASS). You don't have stable context (Operational §5).
 
 **An investigation trigger:** Find out what changed. Did the system genuinely evolve? Did you recalibrate parameters? Did the measurement procedure drift? Decide whether to:
+
 - **Recalibrate:** If context legitimately shifted, acknowledge it and start a new measurement epoch with new reference distribution.
 - **Fix the problem:** If it's a bug or unintended drift, fix it and remeasure.
 
 **When you implement:** Maintain the rolling reference distribution. When OOD fires, don't ignore it and don't panic. Investigate, understand the cause, make an informed decision. (See TSC Core §6, Operational §5)
 
----
+______________________________________________________________________
 
 ## Part IV: Protocol (How We Ensure Measurement Validity)
 
@@ -598,13 +632,14 @@ Before trusting C_Σ, we test whether the **measurement itself is valid**. These
 
 Think of witnesses like checking your thermometer before trusting the temperature reading. If the thermometer is broken, the reading is meaningless no matter what number it shows.
 
----
+______________________________________________________________________
 
 #### W1: S₃ Permutation (Mathematical Symmetry)
 
 **What it tests:** Do you get the same C_Σ when you permute axis assignments?
 
 **The procedure:** Compute C_Σ(O_α, O_β, O_γ) for all 6 permutations of {α,β,γ}. That means:
+
 - Original: (α,β,γ)
 - Swap α↔β: (β,α,γ)
 - Swap α↔γ: (γ,β,α)
@@ -618,7 +653,7 @@ Measure the maximum absolute difference across all 6 results.
 
 **If it fails:** Your implementation has privilege for one axis. Maybe you're using axis labels in the computation instead of treating them symmetrically. This is a bug—fix it before trusting results. The mathematics guarantees S₃ invariance; if your code doesn't show it, your code is wrong. (See TSC Operational §2)
 
----
+______________________________________________________________________
 
 #### W2: Gauge Independence (Computational Symmetry)
 
@@ -632,7 +667,7 @@ Measure the maximum absolute difference across all 6 results.
 
 **Note:** W1 tests mathematical invariance (permute and recompute). W2 tests computational invariance (can you rediscover the structure from scratch). Both are required. (See TSC Operational §2)
 
----
+______________________________________________________________________
 
 #### W3: Scale Equivariance (Dimensional Consistency)
 
@@ -643,32 +678,36 @@ Measure the maximum absolute difference across all 6 results.
 **The threshold:** τ_scale ≈ 0.10.
 
 **If it fails:** Your measurement has dimensional inconsistency. Maybe you're comparing apples (meters) to oranges (seconds) without proper normalization. Either:
+
 - **Normalize properly:** Scale to unit variance or standard ranges
 - **Apply calibration maps:** Transform to dimensionless quantities
 
 Then retry. If it still fails, your discrepancy function Δ isn't scale-equivariant. Review Core §3. (See TSC Operational §2)
 
----
+______________________________________________________________________
 
 #### W4: Stability (Ensemble Agreement + Contraction)
 
 **What it tests:** Two things:
-1. Does your alignment ensemble agree?
-2. Do summary updates converge to a fixed point?
 
-**The variance test:** For each pair (a,b), compute Var_{ab} across the alignment ensemble. If max{Var_{αβ}, Var_{βγ}, Var_{γα}} > τ_var (≈0.15), variance is too high.
+1. Does your alignment ensemble agree?
+1. Do summary updates converge to a fixed point?
+
+**The variance test:** For each pair (a,b), compute Var\_{ab} across the alignment ensemble. If max{Var\_{αβ}, Var\_{βγ}, Var\_{γα}} > τ_var (≈0.15), variance is too high.
 
 **What high variance means:** Your alignment methods disagree too much. They're producing wildly different coherence estimates. The comparison is unstable—you can't trust the mean. Either:
+
 - Use more similar methods (reduce diversity)
 - Or collect more data (sometimes variance drops with larger sample)
 
-**The Lipschitz test:** Compute κ = L_sum · L_align · max{λ_{αβ}, λ_{βγ}, λ_{γα}}.
+**The Lipschitz test:** Compute κ = L_sum · L_align · max{λ\_{αβ}, λ\_{βγ}, λ\_{γα}}.
 
 **Pass rule:** κ ≤ τ_lip with default τ_lip = 0.95 (a safety margin strictly below 1).
 
 **Interpretation:** κ ≪ τ_lip ⇒ strong contraction; κ ≲ τ_lip ⇒ fragile stability; κ > τ_lip ⇒ risk of divergence.
 
 **What this means:** The iterative refinement T: (S_α, S_β, S_γ) → (T_α(S_β,S_γ), ...) requires κ ≤ τ_lip for guaranteed convergence to a unique fixed point. If κ > τ_lip, your measurements won't converge to stable mutual coherence. Either:
+
 - Lower sensitivity parameters λ (reduce reaction strength)
 - Or tighten Lipschitz bounds (make operations smoother)
 
@@ -676,13 +715,13 @@ Then retry. If it still fails, your discrepancy function Δ isn't scale-equivari
 
 **If it fails:** This is a calibration issue, not a fundamental problem. Tune your parameters and retry. (See TSC Operational §2, Core §7)
 
----
+______________________________________________________________________
 
 **Why witnesses exist:** Because coherence scores can be high even when the measurement process is broken. You could have C_Σ = 0.85 but W1 fails (not actually symmetric), and the 0.85 is meaningless. Witnesses detect the breakage.
 
 **The verdict rule:** Any witness failure → FAIL_DEGENERATE, meaning "don't interpret the C_Σ value at all; something's wrong with the measurement itself."
 
----
+______________________________________________________________________
 
 ### Verdict (The Final Decision)
 
@@ -692,15 +731,16 @@ Three possible outcomes: **PASS**, **FAIL**, or **FAIL_DEGENERATE**.
 
 1. **CI_lo(C_Σ) ≥ Θ** where Θ is the threshold (default **0.75**). The lower bound of your confidence interval must exceed the bar. This means even with pessimistic uncertainty estimates, you're above threshold.
 
-2. **All witnesses (W1–W4) pass** their thresholds. The measurement process is valid.
+1. **All witnesses (W1–W4) pass** their thresholds. The measurement process is valid.
 
-3. **CI_hi - CI_lo ≤ δ_CI** where δ_CI is the precision requirement (default 0.20). Your confidence interval must be tight enough. Too much uncertainty and you can't make a reliable verdict.
+1. **CI_hi - CI_lo ≤ δ_CI** where δ_CI is the precision requirement (default 0.20). Your confidence interval must be tight enough. Too much uncertainty and you can't make a reliable verdict.
 
-4. **OOD stable:** Z_t < Z_crit. The measurement context hasn't shifted dramatically from historical patterns.
+1. **OOD stable:** Z_t < Z_crit. The measurement context hasn't shifted dramatically from historical patterns.
 
 If all four conditions hold, the verdict is **PASS**. The system coheres by TSC's standards.
 
 **FAIL means:** One of conditions 1, 3, or 4 failed. Three scenarios:
+
 - **Low coherence:** CI_lo < Θ (condition 1) — the system doesn't cohere enough
 - **Poor precision:** CI width > δ_CI (condition 3) — collect more data or tighten measurement
 - **Context shift:** OOD flagged (condition 4) — investigate what changed
@@ -715,7 +755,7 @@ Don't try to "fix the system" when you get FAIL_DEGENERATE. Fix the **measuremen
 
 **Fail-fast principle:** Check conditions in order (1, 2, 3, 4). Log the first failure as the verdict cause. Don't compute everything just to say "multiple failures"—save time and give clear diagnosis. (See TSC Operational §5)
 
----
+______________________________________________________________________
 
 ### Provenance Bundle (Reproducibility Record)
 
@@ -726,37 +766,42 @@ Without provenance, TSC measurements are just mysticism with equations. With com
 **What must be included:**
 
 **Parameters:** Every tunable knob:
+
 - θ (structural vs distributional weight)
 - λ_a for each axis (dimensional sensitivities)
 - λ_ab for each pair (pairwise sensitivities)
 - ε (numerical floor)
 - Θ (decision threshold—and note if overridden from default)
-- All τ_* (witness thresholds)
+- All τ\_\* (witness thresholds)
 - δ_CI (CI width tolerance)
 - Z_crit (OOD cutoff)
 
 **Computation specifications:**
+
 - Alignment methods: which algorithms, which parameters, which implementations
 - Summary schemas: exact construction procedure for (d,p,ℋ,ℐ)
 - Bootstrap configuration: random seed, N_boot (sample count), block size (if block bootstrap)
 - CI level (e.g., 95%)
 
 **Results (the numbers):**
+
 - All dimensional scores: s_α, s_β, s_γ
 - Aggregate: C_Σ
 - Confidence intervals: [CI_lo, CI_hi]
-- All pairwise coherences: ⟨Coh⟩_{αβ}, ⟨Coh⟩_{βγ}, ⟨Coh⟩_{γα}
-- All variances: Var_{αβ}, Var_{βγ}, Var_{γα}
+- All pairwise coherences: ⟨Coh⟩_{αβ}, ⟨Coh⟩_{βγ}, ⟨Coh⟩\_{γα}
+- All variances: Var\_{αβ}, Var\_{βγ}, Var\_{γα}
 - All leverages: λ_α, λ_β, λ_γ, λ_Σ
 - All witness signals: actual values for W1-W4 tests
 
 **Calibration data:**
+
 - Lipschitz constants: L_sum, L_align
 - Contraction scalar: κ
 - Scale calibration maps (if applied)
 - Ground metrics for Wasserstein distances
 
 **Verdict information:**
+
 - Controller state sequence (HANDSHAKE → MEASURE → WITNESS → VERDICT)
 - Pass/fail per witness (which ones passed, which failed)
 - Final verdict: PASS, FAIL, or FAIL_DEGENERATE
@@ -767,6 +812,7 @@ Without provenance, TSC measurements are just mysticism with equations. With com
 - Artifact checksums (for observation files)
 
 **Format requirements:**
+
 - JSON or YAML (machine-readable, structured)
 - Schema validation (verify completeness)
 - Human-readable is bonus but not required
@@ -774,6 +820,7 @@ Without provenance, TSC measurements are just mysticism with equations. With com
 **Wire format note:** In JSON/YAML, use ASCII keys: `s_alpha`, `s_beta`, `s_gamma` (not Unicode subscripts). For ensemble mean coherences, use `coh_ens_ab` or similar. This avoids encoding issues. Typeset documents can use the prettier s_α and ⟨Coh⟩ notation.
 
 **Why this matters:** This isn't bureaucracy. This is what separates science from storytelling. Anyone with your provenance bundle can:
+
 - Reproduce your exact C_Σ value
 - Verify your parameter choices were reasonable
 - Challenge your decisions if they disagree
@@ -781,7 +828,7 @@ Without provenance, TSC measurements are just mysticism with equations. With com
 
 Transparency is non-negotiable in TSC. (See TSC Operational §6)
 
----
+______________________________________________________________________
 
 ## Part V: Understanding the Choices
 
@@ -794,6 +841,7 @@ That's the **degeneracy guard**. Any dimension scoring 0 makes the entire aggreg
 **Compare:**
 
 **Arithmetic mean (averaging):**
+
 ```
 (0.0 + 0.9 + 0.9) / 3 = 0.6
 ```
@@ -801,6 +849,7 @@ That's the **degeneracy guard**. Any dimension scoring 0 makes the entire aggreg
 This says "one dimension is totally broken (0.0), but we're still 60% coherent overall." That's dishonest. If one dimension has collapsed, how can the system be 60% coherent?
 
 **Geometric mean (multiplicative):**
+
 ```
 (0.0 × 0.9 × 0.9)^(1/3) = 0
 ```
@@ -809,7 +858,7 @@ This says "one dimension is broken, so overall coherence is zero." That's honest
 
 Coherence requires **all three dimensions**. Pattern, relation, and process must all cohere. Lose any one and you've lost coherence entirely. The geometric mean enforces this truth. (See C≡ §5.4)
 
----
+______________________________________________________________________
 
 ### Why Three Positions (Not Two)?
 
@@ -820,6 +869,7 @@ This is about what's mathematically possible, not what's convenient.
 **Two positions:** Duality appears (left vs right, inside vs outside). But the unity is lost. It looks like two separate things. You have "two," not "one-as-two." The indivisibility breaks.
 
 **Three positions:** Now you can hold both:
+
 - **Left and Right:** the duality (two distinguishable aspects)
 - **Center:** the unity (the one-ness that both aspects are)
 
@@ -831,7 +881,7 @@ Try to express F using only binary operations. You can't. Binary operations can 
 
 The question "is the center occupied?" is inexpressible in dyadic grammar. Three positions is the minimum needed to hold one-as-two. (See C≡ §6)
 
----
+______________________________________________________________________
 
 ### Why Is β Different from α and γ?
 
@@ -845,13 +895,14 @@ That's why β uses **presence-by-projection**: normalize the term, project to ea
 
 **Different questions require different constructions.** α and γ are homomorphisms because counting is compositional. β is not a homomorphism because configuration is global. (See C≡ §3.2)
 
----
+______________________________________________________________________
 
 ### Why Three Axes (Not Two or Four)?
 
 **Two axes:** There's a theorem (Eckmann-Hilton collapse) that says if you have two commutative monoid operations on the same carrier, they must be identical. You can't have genuine independence with just two—they collapse into one.
 
 **Three axes:** Avoids collapse. Our three target monoids have **distinct idempotent profiles** (proven in C≡ §3.4):
+
 - α: {0, M} (just the boundaries)
 - β: all elements (fully idempotent)
 - γ: {(0,0)} (unique identity)
@@ -860,7 +911,7 @@ These are like fingerprints—they prove the three are genuinely different. No t
 
 **Four or more:** Redundant. Three captures the minimal orthogonal structure. Adding more axes doesn't give you new independent information—just redundant measurements. Three is the sweet spot.
 
----
+______________________________________________________________________
 
 ### What's the Difference Between PASS, FAIL, and FAIL_DEGENERATE?
 
@@ -882,7 +933,7 @@ In TSC:
 
 Very different problems. Very different responses. (See TSC Operational §5)
 
----
+______________________________________________________________________
 
 ### Is TSC Deterministic?
 
@@ -896,7 +947,7 @@ Bootstrap resampling uses random number generation, but if you log the random se
 
 This is what makes TSC falsifiable. (See TSC Core §6, Operational §6)
 
----
+______________________________________________________________________
 
 ### Can Parameters Change Between Runs?
 
@@ -912,58 +963,58 @@ Think of it like changing the ruler while measuring. If you measure something as
 
 Same with TSC parameters. Change them if needed, but **declare** the change. (See TSC Core §2.1, Operational §6)
 
----
+______________________________________________________________________
 
 ## Quick Reference: Key Parameters at a Glance
 
-| Parameter | Meaning | Default | Where |
-|-----------|---------|---------|-------|
-| θ | Structural vs distributional weight | 0.7 | Core §3 |
-| λ_a | Axis sensitivity (a∈{α,β,γ}) | tuned | Core §4 |
-| λ_ab | Pairwise sensitivity | tuned | Core §3 |
-| ε | Numerical floor | 10⁻⁵ | Core §5 |
-| M | α evaluator cap (≥ 3) | 10 (example) | C≡ §3.1 |
-| **Θ** | **Decision threshold** | **0.75** | **Operational §5** |
-| δ_CI | CI width tolerance | 0.20 | Operational §5 |
-| Z_crit | OOD threshold | 2.5 | Operational §5 |
-| τ_S3 | S₃ witness | 0.05 | Operational §2 |
-| τ_gauge | Gauge witness | 0.05 | Operational §2 |
-| τ_scale | Scale witness | 0.10 | Operational §2 |
-| τ_var | Variance witness | 0.15 | Operational §2 |
-| τ_lip | Lipschitz witness (κ ≤ τ_lip) | 0.95 | Operational §2 |
+| Parameter | Meaning                             | Default      | Where              |
+| --------- | ----------------------------------- | ------------ | ------------------ |
+| θ         | Structural vs distributional weight | 0.7          | Core §3            |
+| λ_a       | Axis sensitivity (a∈{α,β,γ})        | tuned        | Core §4            |
+| λ_ab      | Pairwise sensitivity                | tuned        | Core §3            |
+| ε         | Numerical floor                     | 10⁻⁵         | Core §5            |
+| M         | α evaluator cap (≥ 3)               | 10 (example) | C≡ §3.1            |
+| **Θ**     | **Decision threshold**              | **0.75**     | **Operational §5** |
+| δ_CI      | CI width tolerance                  | 0.20         | Operational §5     |
+| Z_crit    | OOD threshold                       | 2.5          | Operational §5     |
+| τ_S3      | S₃ witness                          | 0.05         | Operational §2     |
+| τ_gauge   | Gauge witness                       | 0.05         | Operational §2     |
+| τ_scale   | Scale witness                       | 0.10         | Operational §2     |
+| τ_var     | Variance witness                    | 0.15         | Operational §2     |
+| τ_lip     | Lipschitz witness (κ ≤ τ_lip)       | 0.95         | Operational §2     |
 
 **Note on Θ:** The normative default is **0.75**. For self-application (TSC measuring itself) or safety-critical deployments, teams may choose a stricter threshold (e.g., 0.90) as a **policy choice**. This is not a change to the baseline—it's an override for specific contexts. Document any override clearly in provenance.
 
----
+______________________________________________________________________
 
 ## Where to Go Next
 
-**To understand the foundation deeply:**  
+**To understand the foundation deeply:**\
 Read **C≡ v3.0.25** from beginning to end. It unfolds like a story: from intuition (§0-1) through formalization (§2-4) to measurement (§5). Follow the complete arc.
 
-**To implement measurement:**  
+**To implement measurement:**\
 Read **TSC Core v3.0.2** for the calculus—how to construct summaries, compute alignments, aggregate coherence. Then **TSC Operational v3.0.1** for the protocol—witnesses, verdicts, provenance requirements.
 
-**To see it in action:**  
+**To see it in action:**\
 Explore `examples/`—cellular automata (Conway's Life, random soup) and philosophical queries (consciousness, emergence, free will). These show TSC measuring real phenomena, not toy problems.
 
-**To verify proofs:**  
+**To verify proofs:**\
 Follow the cross-references in this glossary. Every "See §X" points to the normative specification where the formal statement and proof live. The math is rigorous; this glossary is the interpretation layer.
 
-**To contribute:**  
+**To contribute:**\
 Read CONTRIBUTING.md. Then start conversations in GitHub Discussions. The framework is open—bring your perspectives, your use cases, your critiques.
 
----
+______________________________________________________________________
 
 ## Legacy Notation Note
 
 **For implementers migrating from earlier versions:** Dimensional scores were previously notated as α_c, β_c, γ_c in some documents. These are now unified as **s_α, s_β, s_γ** across all specifications for consistency with the C≡ foundation. In wire formats (JSON/YAML), use ASCII keys: `s_alpha`, `s_beta`, `s_gamma`. One-cycle compatibility support (reading both notations) is documented in Operational v3.0.1.
 
----
+______________________________________________________________________
 
 ## Changelog
 
-**v3.0.9 (from v3.0.8):** Adopted angle bracket notation ⟨Coh⟩ for ensemble mean coherences (standard physics notation for ensemble averages). Standardized all pair indices with braces: Coh̄_{ab}, Var_{ab}. Clarified W4 Lipschitz pass rule as "κ ≤ τ_lip = 0.95" with interpretation guidance. Corrected OOD quantile description (Z_crit=2.5 ≈ two-sided 99%, not ~95%). Tightened presence codomain to ({0,1}, max, 0). Updated normalization identity cross-references to C≡ §4.1 and §5. Added "with M ≥ 3" bound in α section. Expanded s_β operational definition to explicitly link to ⟨Coh⟩_{αβ}, ⟨Coh⟩_{βγ}, ⟨Coh⟩_{γα}. No mathematical changes.
+**v3.0.9 (from v3.0.8):** Adopted angle bracket notation ⟨Coh⟩ for ensemble mean coherences (standard physics notation for ensemble averages). Standardized all pair indices with braces: Coh̄\_{ab}, Var\_{ab}. Clarified W4 Lipschitz pass rule as "κ ≤ τ_lip = 0.95" with interpretation guidance. Corrected OOD quantile description (Z_crit=2.5 ≈ two-sided 99%, not ~95%). Tightened presence codomain to ({0,1}, max, 0). Updated normalization identity cross-references to C≡ §4.1 and §5. Added "with M ≥ 3" bound in α section. Expanded s_β operational definition to explicitly link to ⟨Coh⟩_{αβ}, ⟨Coh⟩_{βγ}, ⟨Coh⟩\_{γα}. No mathematical changes.
 
 **v3.0.8 (from v3.0.7):** Fixed W2 to reference "axis labels" (not "role labels"). Standardized mean coherence notation. Added M parameter to quick reference. Clarified operational vs witness-family score definitions. Added ⊙ algebraic equivalence note. Added "why the cap" explanation for α. No mathematical changes.
 
@@ -971,6 +1022,6 @@ Read CONTRIBUTING.md. Then start conversations in GitHub Discussions. The framew
 
 **v3.0.6 (from v3.0.5):** Complete restoration of human-friendly narrative style from v3.0.4. Full flowing prose, concrete examples, natural paragraph structure, engaging explanations. Kept substance improvements from v3.0.5. Mathematics unchanged; presentation fully accessible.
 
----
+______________________________________________________________________
 
 **End — TSC Glossary v3.0.9**

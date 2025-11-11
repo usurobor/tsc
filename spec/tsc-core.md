@@ -22,7 +22,6 @@ TSC measures dimensional consistency across three evaluators: α (sequential), �
 
 **S₃ Invariance (Normative):** All constructions symmetric under permutations of {α, β, γ}. No axis privilege.
 
-
 ______________________________________________________________________
 
 ## 1 · Objects

@@ -216,6 +216,7 @@ ______________________________________________________________________
 ### Compatibility Note (Notation Migration)
 
 For one minor release cycle (through v3.1), implementations MAY emit both:
+
 - **Canonical keys:** `s_alpha`, `s_beta`, `s_gamma` (required)
 - **Legacy keys:** `alpha_c`, `beta_c`, `gamma_c` (optional, for backward compatibility)
 
