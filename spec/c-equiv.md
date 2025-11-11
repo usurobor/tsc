@@ -1,4 +1,4 @@
-# C≡ v3.0.25 — Self-Articulating Foundation
+# C≡ v3.1.0 — Self-Articulating Foundation
 
 ## **Version:** 3.0.25<br /> **Date:** November 2025<br /> **Status:** Normative (with pedagogical scaffolding)
 
@@ -978,7 +978,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**C≡ v3.0.25 complete.**
+**C≡ v3.1.0 complete.**
 
 **The atom is one-as-two.**\
 **Unity-as-duality held in three positions.**\

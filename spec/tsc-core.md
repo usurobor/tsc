@@ -2,7 +2,7 @@
 
 **Version:** 3.0.2\
 **Status:** Normative\
-**Foundation:** C≡ v3.0.25 (Term Algebra)
+**Foundation:** C≡ v3.1.0 (Term Algebra)
 
 ______________________________________________________________________
 
@@ -207,7 +207,7 @@ If κ < 1, then T is contraction on 𝒮³ with unique fixed point (S*α, S*β, 
 
 ### 7.2 Independence
 
-C≡ v3.0.25 §3.4 proves three evaluators are pairwise non-isomorphic via distinct idempotent profiles:
+C≡ v3.1.0 §3.4 proves three evaluators are pairwise non-isomorphic via distinct idempotent profiles:
 
 - α: idempotents exactly {0, M}
 - β: fully idempotent (all elements)

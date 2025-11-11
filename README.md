@@ -277,9 +277,9 @@ ______________________________________________________________________
 
 **Development (v3.0.x)**
 
-1. **C≡ v3.0.25** — algebraic term language and evaluators
-1. **Core v3.0.1** — measurement calculus (Δ, Coh, β_c symmetry, C_Σ)
-1. **Operational v3.0.1** — protocol, witnesses, provenance
+1. **C≡ v3.1.0** — algebraic term language and evaluators
+1. **Core v3.1.0** — measurement calculus (Δ, Coh, β_c symmetry, C_Σ)
+1. **Operational v3.1.0** — protocol, witnesses, provenance
 1. **Glossary v3.x** (in progress)
 
 See **[What's new in v3 →](docs/v3-overview.md)** for a one-page summary. v3 docs will be linked here as they land.

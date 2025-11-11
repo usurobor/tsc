@@ -2,7 +2,7 @@
 
 **Version:** 3.0.9 (Triadic Foundation + Measurement Framework)\
 **Status:** Informative (accessible terminology guide)\
-**Corresponds to:** C≡ v3.0.25, TSC Core v3.0.2, TSC Operational v3.0.1
+**Corresponds to:** C≡ v3.1.0, TSC Core v3.0.2, TSC Operational v3.1.0
 
 ______________________________________________________________________
 
@@ -990,10 +990,10 @@ ______________________________________________________________________
 ## Where to Go Next
 
 **To understand the foundation deeply:**\
-Read **C≡ v3.0.25** from beginning to end. It unfolds like a story: from intuition (§0-1) through formalization (§2-4) to measurement (§5). Follow the complete arc.
+Read **C≡ v3.1.0** from beginning to end. It unfolds like a story: from intuition (§0-1) through formalization (§2-4) to measurement (§5). Follow the complete arc.
 
 **To implement measurement:**\
-Read **TSC Core v3.0.2** for the calculus—how to construct summaries, compute alignments, aggregate coherence. Then **TSC Operational v3.0.1** for the protocol—witnesses, verdicts, provenance requirements.
+Read **TSC Core v3.0.2** for the calculus—how to construct summaries, compute alignments, aggregate coherence. Then **TSC Operational v3.1.0** for the protocol—witnesses, verdicts, provenance requirements.
 
 **To see it in action:**\
 Explore `examples/`—cellular automata (Conway's Life, random soup) and philosophical queries (consciousness, emergence, free will). These show TSC measuring real phenomena, not toy problems.
@@ -1008,20 +1008,9 @@ ______________________________________________________________________
 
 ## Legacy Notation Note
 
-**For implementers migrating from earlier versions:** Dimensional scores were previously notated as α_c, β_c, γ_c in some documents. These are now unified as **s_α, s_β, s_γ** across all specifications for consistency with the C≡ foundation. In wire formats (JSON/YAML), use ASCII keys: `s_alpha`, `s_beta`, `s_gamma`. One-cycle compatibility support (reading both notations) is documented in Operational v3.0.1.
+**For implementers migrating from earlier versions:** Dimensional scores were previously notated as α_c, β_c, γ_c in some documents. These are now unified as **s_α, s_β, s_γ** across all specifications for consistency with the C≡ foundation. In wire formats (JSON/YAML), use ASCII keys: `s_alpha`, `s_beta`, `s_gamma`. One-cycle compatibility support (reading both notations) is documented in Operational v3.1.0.
 
 ______________________________________________________________________
 
-## Changelog
-
-**v3.0.9 (from v3.0.8):** Adopted angle bracket notation ⟨Coh⟩ for ensemble mean coherences (standard physics notation for ensemble averages). Standardized all pair indices with braces: Coh̄\_{ab}, Var\_{ab}. Clarified W4 Lipschitz pass rule as "κ ≤ τ_lip = 0.95" with interpretation guidance. Corrected OOD quantile description (Z_crit=2.5 ≈ two-sided 99%, not ~95%). Tightened presence codomain to ({0,1}, max, 0). Updated normalization identity cross-references to C≡ §4.1 and §5. Added "with M ≥ 3" bound in α section. Expanded s_β operational definition to explicitly link to ⟨Coh⟩_{αβ}, ⟨Coh⟩_{βγ}, ⟨Coh⟩\_{γα}. No mathematical changes.
-
-**v3.0.8 (from v3.0.7):** Fixed W2 to reference "axis labels" (not "role labels"). Standardized mean coherence notation. Added M parameter to quick reference. Clarified operational vs witness-family score definitions. Added ⊙ algebraic equivalence note. Added "why the cap" explanation for α. No mathematical changes.
-
-**v3.0.7 (from v3.0.6):** Unified dimensional score notation to s_α, s_β, s_γ throughout (previously used α_c, β_c, γ_c in some contexts). Removed notation bridge section (no longer needed). Added legacy notation note for migrating implementers. Updated spec correspondence to Core v3.0.2, Operational v3.0.1. No mathematical changes.
-
-**v3.0.6 (from v3.0.5):** Complete restoration of human-friendly narrative style from v3.0.4. Full flowing prose, concrete examples, natural paragraph structure, engaging explanations. Kept substance improvements from v3.0.5. Mathematics unchanged; presentation fully accessible.
-
-______________________________________________________________________
 
 **End — TSC Glossary v3.0.9**

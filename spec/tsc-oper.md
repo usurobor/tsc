@@ -1,6 +1,6 @@
-# TSC Operational v3.0.1
+# TSC Operational v3.1.0
 
-**Version:** 3.0.1\
+**Version:** 3.1.0\
 **Status:** Normative\
 **Foundation:** TSC Core v3.0.2
 
@@ -391,4 +391,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**End — TSC Operational v3.0.1**
+**End — TSC Operational v3.1.0**
