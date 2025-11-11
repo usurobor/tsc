@@ -1,5 +1,5 @@
 """
-reference/python/self_measure.py — TSC Self-Measurement v2.3.0
+reference/python/self_measure.py — TSC Self-Measurement v3.1.0
 
 Computes C_Σ(TSC) by treating the repository as a phenomenon articulated
 along three independent observation channels (α, β, γ).

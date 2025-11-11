@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsc-framework"
-version = "2.2.0"
+version = "3.1.0"
 description = "Triadic Self-Coherence (TSC) reference CLI and conformance tests"
 readme = "README.md"
 requires-python = ">=3.10"
