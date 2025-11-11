@@ -61,9 +61,11 @@ class Params:
 
 _TOKEN_PATTERN = re.compile(r"[A-Za-z0-9_≡αβγλΣΔ∧∨⊙⊗→←↔≈≃≤≥]+")
 
+
 def tokenize_md(text: str) -> list[str]:
     text = unicodedata.normalize("NFKC", text)
     return [t.lower() for t in _TOKEN_PATTERN.findall(text)]
+
 
 def cosine(u: Mapping[str, float], v: Mapping[str, float]) -> float:
     keys = set(u) | set(v)
@@ -72,8 +74,10 @@ def cosine(u: Mapping[str, float], v: Mapping[str, float]) -> float:
     dv = math.sqrt(sum((v.get(k, 0.0) ** 2) for k in keys))
     return 0.0 if du == 0.0 or dv == 0.0 else num / (du * dv)
 
+
 def jensen_shannon(p: Mapping[str, float], q: Mapping[str, float]) -> float:
     keys = set(p) | set(q)
+
     def kl(a, b):
         s = 0.0
         for k in keys:
@@ -81,29 +85,36 @@ def jensen_shannon(p: Mapping[str, float], q: Mapping[str, float]) -> float:
             if ak > 0 and bk > 0:
                 s += ak * math.log(ak / bk)
         return s
+
     m = {k: 0.5 * (p.get(k, 0.0) + q.get(k, 0.0)) for k in keys}
     return 0.5 * (kl(p, m) + kl(q, m))
+
 
 def geo3(a: float, b: float, c: float) -> float:
     a, b, c = max(a, 1e-12), max(b, 1e-12), max(c, 1e-12)
     return (a * b * c) ** (1.0 / 3.0)
 
+
 def clamp01(x: float) -> float:
     return max(0.0, min(1.0, x))
+
 
 def _vec(counter: Mapping[str, int | float]) -> dict[str, float]:
     s = float(sum(counter.values())) or 1.0
     return {k: float(v) / s for k, v in counter.items()}
 
+
 def parse_version(version_string: str) -> tuple[int, int, int]:
-    match = re.search(r'v?(\d+)\.(\d+)\.(\d+)', version_string)
+    match = re.search(r"v?(\d+)\.(\d+)\.(\d+)", version_string)
     if match:
         return (int(match.group(1)), int(match.group(2)), int(match.group(3)))
     return (0, 0, 0)
 
+
 SPEC = Path("spec")
 GLOSSARY = SPEC / "tsc-glossary.md"
 TSC = Path(".tsc")  # TSC measurement blocks (hidden dir)
+
 
 def load_specs() -> dict[str, str]:
     if not SPEC.exists():
@@ -113,17 +124,20 @@ def load_specs() -> dict[str, str]:
         raise FileNotFoundError(f"No markdown files in {SPEC}")
     return {p.name: p.read_text(encoding="utf-8", errors="ignore") for p in files}
 
+
 @dataclass(frozen=True)
 class AxisScore:
     mean: float
     reps: list[float]
     diag: dict[str, Any]
 
+
 def _strip_code_and_math(md: str) -> str:
     md = re.sub(r"(?s)```.*?```", " ", md)
     md = re.sub(r"`[^`]*`", " ", md)
     md = re.sub(r"\$[^$]*\$", " ", md)
     return md
+
 
 def _structure_signature(md: str) -> Counter[str]:
     sig = Counter()
@@ -134,6 +148,7 @@ def _structure_signature(md: str) -> Counter[str]:
     sig["bullets"] += len(re.findall(r"(?m)^\s*[-*+]\s+", md))
     sig["defs"] += len(re.findall(r"(?mi)^\s*definition[:\s]", md))
     return sig
+
 
 def alpha_axis(params: Params, specs: Mapping[str, str]) -> AxisScore:
     full = "\n".join(specs.values())
@@ -153,10 +168,12 @@ def alpha_axis(params: Params, specs: Mapping[str, str]) -> AxisScore:
     mean = sum(reps) / len(reps)
     return AxisScore(mean=mean, reps=reps, diag={"A_keys": len(vA), "B_keys": len(vB)})
 
+
 def extract_terms(glossary_text: str) -> set[str]:
     terms = set(t.lower() for t in re.findall(r"(?m)^##?\s+([A-Za-z0-9_ -]+)$", glossary_text))
     terms |= set(re.findall(r"\*\*([A-Za-z0-9_ -]+)\*\*", glossary_text))
     return {t.strip().lower() for t in terms if t.strip()}
+
 
 def _extract_terms(glossary_text: str, specs: Mapping[str, str]) -> set[str]:
     terms = extract_terms(glossary_text)
@@ -164,6 +181,7 @@ def _extract_terms(glossary_text: str, specs: Mapping[str, str]) -> set[str]:
         for txt in specs.values():
             terms |= set(t.lower() for t in re.findall(r"\*\*([A-Za-z0-9_ -]{3,})\*\*", txt))
     return {t.strip() for t in terms if t.strip()}
+
 
 def dependency_edges(spec_texts: Mapping[str, str], terms: set[str]) -> list[tuple[str, str]]:
     edges = []
@@ -174,6 +192,7 @@ def dependency_edges(spec_texts: Mapping[str, str], terms: set[str]) -> list[tup
                 for _ in re.finditer(rf"(see|cf\.?)\s+{re.escape(t)}", lower):
                     edges.append((fname, t))
     return edges
+
 
 def beta_embeddings(
     specs: Mapping[str, str], terms: set[str]
@@ -188,12 +207,14 @@ def beta_embeddings(
     cross = _vec(see)
     return hist, cross
 
+
 def pair_coh(params: Params, u: Mapping[str, float], v: Mapping[str, float]) -> float:
     c = cosine(u, v)
     d_struct = 1.0 - c
     d_dist = jensen_shannon(u, v)
     delta = params.theta * d_struct + (1.0 - params.theta) * d_dist
     return math.exp(-params.lambda_beta * delta)
+
 
 def beta_axis(params: Params, specs: Mapping[str, str], glossary_text: str) -> AxisScore:
     terms = _extract_terms(glossary_text, specs) or {"coherence", "witness", "kernel"}
@@ -214,12 +235,9 @@ def beta_axis(params: Params, specs: Mapping[str, str], glossary_text: str) -> A
     mean = sum(reps) / len(reps)
     return AxisScore(mean=mean, reps=reps, diag={"terms": len(terms)})
 
+
 def _bootstrap_ci_over_C(
-    a_reps: list[float],
-    b_reps: list[float],
-    g_reps: list[float],
-    n_boot: int,
-    seed: int
+    a_reps: list[float], b_reps: list[float], g_reps: list[float], n_boot: int, seed: int
 ) -> tuple[float, float]:
     rng = random.Random(seed)
     if not (a_reps and b_reps and g_reps):
@@ -236,12 +254,9 @@ def _bootstrap_ci_over_C(
     hi = means[int(0.975 * n_boot) - 1]
     return (lo, hi)
 
+
 def s3_witness_over_reps(
-    a: AxisScore,
-    b: AxisScore,
-    g: AxisScore,
-    ci_lo: float,
-    ci_hi: float
+    a: AxisScore, b: AxisScore, g: AxisScore, ci_lo: float, ci_hi: float
 ) -> dict[str, Any]:
     axis_data = [("α", a.reps), ("β", b.reps), ("γ", g.reps)]
     perms = list(permutations(axis_data))
@@ -258,6 +273,7 @@ def s3_witness_over_reps(
     diag["passed"] = all_ok
     return diag
 
+
 def load_previous_report(current_version: str) -> dict | None:
     """Load the most recent report before current_version."""
     if not TSC.exists():
@@ -267,7 +283,7 @@ def load_previous_report(current_version: str) -> dict | None:
     prev_reports = []
 
     for report_path in TSC.glob("tsc-v*.json"):
-        match = re.search(r'tsc-(v\d+\.\d+\.\d+)', report_path.name)
+        match = re.search(r"tsc-(v\d+\.\d+\.\d+)", report_path.name)
         if match:
             report_version = match.group(1)
             report_ver_tuple = parse_version(report_version)
@@ -284,6 +300,7 @@ def load_previous_report(current_version: str) -> dict | None:
         return json.loads(prev_report_path.read_text(encoding="utf-8"))
     except Exception:
         return None
+
 
 def measure_self(params: Params = Params()) -> dict[str, Any]:
     """Compute C_Σ(TSC) with past/present/future structure."""
@@ -311,15 +328,15 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
     γ_c = baseline_health  # Default: current process health
     achievement = None
 
-    if prev_report and 'roadmap' in prev_report and 'next_target' in prev_report['roadmap']:
-        prev_roadmap = prev_report['roadmap']['next_target']
-        target_axis = prev_roadmap['axis']
-        start_value = prev_roadmap['current_value']
-        target_value = prev_roadmap['target_value']
+    if prev_report and "roadmap" in prev_report and "next_target" in prev_report["roadmap"]:
+        prev_roadmap = prev_report["roadmap"]["next_target"]
+        target_axis = prev_roadmap["axis"]
+        start_value = prev_roadmap["current_value"]
+        target_value = prev_roadmap["target_value"]
 
         # Get current value for that axis
-        current_scores = {'alpha_c': A.mean, 'beta_c': B.mean}
-        actual_value = current_scores.get(f'{target_axis}_c', 0.0)
+        current_scores = {"alpha_c": A.mean, "beta_c": B.mean}
+        actual_value = current_scores.get(f"{target_axis}_c", 0.0)
         improvement = actual_value - start_value
 
         # Calculate γ_c (no hardcoded constants)
@@ -344,7 +361,7 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
             "actual_value": actual_value,
             "improvement": improvement,
             "gamma_c": γ_c,
-            "baseline_health": baseline_health
+            "baseline_health": baseline_health,
         }
 
     # γ for C_Σ calculation (reps for bootstrap)
@@ -359,7 +376,7 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
     verdict = "PASS" if (ci_lo >= params.Theta and s3_diag["passed"]) else "FAIL"
 
     # Identify current bottleneck (only α and β, γ is meta-metric)
-    scores_only = {'alpha': A.mean, 'beta': B.mean}
+    scores_only = {"alpha": A.mean, "beta": B.mean}
     bottleneck_axis = min(scores_only, key=scores_only.get)
     bottleneck_score = scores_only[bottleneck_axis]
 
@@ -367,11 +384,7 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
     try:
         cmd = ["git", "rev-parse", "--short", "HEAD"]
         git_commit = subprocess.check_output(cmd, text=True).strip()
-        dirty = bool(
-            subprocess.check_output(
-                ["git", "status", "--porcelain"], text=True
-            ).strip()
-        )
+        dirty = bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip())
     except Exception:
         git_commit, dirty = "unknown", False
 
@@ -380,71 +393,54 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
         "date": datetime.now(timezone.utc).isoformat(),
         "verdict": verdict,
         "current": {
-            "scores": {
-                "alpha_c": A.mean,
-                "beta_c": B.mean,
-                "gamma_c": γ_c,
-                "C_sigma": C
-            },
-            "ci": {
-                "C_sigma_lo": ci_lo,
-                "C_sigma_hi": ci_hi,
-                "n_boot": params.n_boot
-            },
-            "bottleneck": {
-                "axis": bottleneck_axis,
-                "score": bottleneck_score
-            }
+            "scores": {"alpha_c": A.mean, "beta_c": B.mean, "gamma_c": γ_c, "C_sigma": C},
+            "ci": {"C_sigma_lo": ci_lo, "C_sigma_hi": ci_hi, "n_boot": params.n_boot},
+            "bottleneck": {"axis": bottleneck_axis, "score": bottleneck_score},
         },
         "roadmap": {
             "next_target": {
                 "axis": bottleneck_axis,
                 "current_value": bottleneck_score,
                 "target_value": min(0.85, bottleneck_score + 0.30),
-                "rationale": f"Improve {bottleneck_axis} axis to raise C_Σ above threshold"
+                "rationale": f"Improve {bottleneck_axis} axis to raise C_Σ above threshold",
             }
         },
-        "witnesses": {
-            "S3_permutation": s3_diag
-        },
-        "axes_diag": {
-            "alpha": A.diag,
-            "beta": B.diag,
-            "gamma": γ_score.diag
-        },
+        "witnesses": {"S3_permutation": s3_diag},
+        "axes_diag": {"alpha": A.diag, "beta": B.diag, "gamma": γ_score.diag},
         "params": asdict(params),
         "provenance": {
             "git_commit": git_commit,
             "dirty": dirty,
             "python": platform.python_version(),
-            "spec_files": sorted(list(specs.keys()))
-        }
+            "spec_files": sorted(list(specs.keys())),
+        },
     }
 
     # Add historical if we have previous data
     if prev_report:
-        prev_scores = prev_report.get('current', {}).get('scores') or prev_report.get('scores', {})
-        prev_roadmap = prev_report.get('roadmap', {}).get('next_target')
+        prev_scores = prev_report.get("current", {}).get("scores") or prev_report.get("scores", {})
+        prev_roadmap = prev_report.get("roadmap", {}).get("next_target")
 
         report["historical"] = {
-            "previous_version": prev_report.get('version', 'unknown'),
+            "previous_version": prev_report.get("version", "unknown"),
             "previous_scores": {
-                "alpha_c": prev_scores.get('alpha_c', 0.0),
-                "beta_c": prev_scores.get('beta_c', 0.0),
-                "gamma_c": prev_scores.get('gamma_c', 0.0),
-                "C_sigma": prev_scores.get('C_sigma', 0.0)
+                "alpha_c": prev_scores.get("alpha_c", 0.0),
+                "beta_c": prev_scores.get("beta_c", 0.0),
+                "gamma_c": prev_scores.get("gamma_c", 0.0),
+                "C_sigma": prev_scores.get("C_sigma", 0.0),
             },
             "previous_roadmap": prev_roadmap,
             "achievement": achievement,
             "changes": {
-                "alpha_c": A.mean - prev_scores.get('alpha_c', 0.0),
-                "beta_c": B.mean - prev_scores.get('beta_c', 0.0),
-                "gamma_c": γ_c - prev_scores.get('gamma_c', 0.0),
-                "C_sigma": C - prev_scores.get('C_sigma', 0.0)
-            }
+                "alpha_c": A.mean - prev_scores.get("alpha_c", 0.0),
+                "beta_c": B.mean - prev_scores.get("beta_c", 0.0),
+                "gamma_c": γ_c - prev_scores.get("gamma_c", 0.0),
+                "C_sigma": C - prev_scores.get("C_sigma", 0.0),
+            },
         }
 
     return report
+
 
 def generate_readme() -> str:
     """Generate README.md content from all tsc-v*.json files."""
@@ -469,7 +465,7 @@ def generate_readme() -> str:
 
     # Sort by version
     def version_key(report):
-        version = report.get('version', 'v0.0.0')
+        version = report.get("version", "v0.0.0")
         return parse_version(version)
 
     reports.sort(key=version_key)
@@ -502,20 +498,20 @@ def generate_readme() -> str:
     md += "|---------|------|---|---|---|-----|---------|------------|\n"
 
     for report in reports:
-        version = report.get('version', 'unknown')
-        date = report.get('date', '')[:10]
-        scores = report.get('current', {}).get('scores', {})
-        verdict = report.get('verdict', 'UNKNOWN')
-        bottleneck = report.get('current', {}).get('bottleneck', {})
+        version = report.get("version", "unknown")
+        date = report.get("date", "")[:10]
+        scores = report.get("current", {}).get("scores", {})
+        verdict = report.get("verdict", "UNKNOWN")
+        bottleneck = report.get("current", {}).get("bottleneck", {})
 
-        alpha = scores.get('alpha_c', 0.0)
-        beta = scores.get('beta_c', 0.0)
-        gamma = scores.get('gamma_c', 0.0)
-        c_sigma = scores.get('C_sigma', 0.0)
+        alpha = scores.get("alpha_c", 0.0)
+        beta = scores.get("beta_c", 0.0)
+        gamma = scores.get("gamma_c", 0.0)
+        c_sigma = scores.get("C_sigma", 0.0)
 
         verdict_icon = "✅" if verdict == "PASS" else "❌"
-        bottleneck_axis = bottleneck.get('axis', '?')
-        bottleneck_score = bottleneck.get('score', 0.0)
+        bottleneck_axis = bottleneck.get("axis", "?")
+        bottleneck_score = bottleneck.get("score", 0.0)
 
         row = f"| {version} | {date} | {alpha:.3f} | {beta:.3f} | {gamma:.3f} "
         row += f"| {c_sigma:.3f} | {verdict_icon} | {bottleneck_axis} "
@@ -531,20 +527,20 @@ def generate_readme() -> str:
     md += "|---------|-------------|-------|--------|--------|---|-----|--------|\n"
 
     for report in reports:
-        version = report.get('version', 'unknown')
-        hist = report.get('historical', {})
+        version = report.get("version", "unknown")
+        hist = report.get("historical", {})
 
-        if not hist or not hist.get('achievement'):
+        if not hist or not hist.get("achievement"):
             md += f"| {version} | — | — | — | — | — | — | (baseline) |\n"
         else:
-            ach = hist['achievement']
-            target_axis = ach.get('target_axis', '?')
-            start = ach.get('start_value', 0.0)
-            target = ach.get('target_value', 0.0)
-            actual = ach.get('actual_value', 0.0)
-            improvement = ach.get('improvement', 0.0)
-            gamma_c = ach.get('gamma_c', 0.0)
-            reached = ach.get('target_reached', False)
+            ach = hist["achievement"]
+            target_axis = ach.get("target_axis", "?")
+            start = ach.get("start_value", 0.0)
+            target = ach.get("target_value", 0.0)
+            actual = ach.get("actual_value", 0.0)
+            improvement = ach.get("improvement", 0.0)
+            gamma_c = ach.get("gamma_c", 0.0)
+            reached = ach.get("target_reached", False)
 
             status = "✅ Achieved" if reached else "⚠️ Missed"
 
@@ -562,13 +558,13 @@ def generate_readme() -> str:
     md += "|---------|----------|---------|--------|------------|\n"
 
     for report in reports:
-        version = report.get('version', 'unknown')
-        roadmap = report.get('roadmap', {}).get('next_target', {})
+        version = report.get("version", "unknown")
+        roadmap = report.get("roadmap", {}).get("next_target", {})
 
         if roadmap:
-            axis = roadmap.get('axis', '?')
-            current = roadmap.get('current_value', 0.0)
-            target = roadmap.get('target_value', 0.0)
+            axis = roadmap.get("axis", "?")
+            current = roadmap.get("current_value", 0.0)
+            target = roadmap.get("target_value", 0.0)
             delta = target - current
 
             md += f"| {version} | {axis} | {current:.3f} | {target:.3f} | +{delta:.3f} |\n"
@@ -581,19 +577,19 @@ def generate_readme() -> str:
     md += "|-----------|----|----|----|----|--|\n"
 
     for i in range(1, len(reports)):
-        prev = reports[i-1]
+        prev = reports[i - 1]
         curr = reports[i]
 
-        prev_version = prev.get('version', '?')
-        curr_version = curr.get('version', '?')
+        prev_version = prev.get("version", "?")
+        curr_version = curr.get("version", "?")
 
-        changes = curr.get('historical', {}).get('changes', {})
+        changes = curr.get("historical", {}).get("changes", {})
 
         if changes:
-            d_alpha = changes.get('alpha_c', 0.0)
-            d_beta = changes.get('beta_c', 0.0)
-            d_gamma = changes.get('gamma_c', 0.0)
-            d_c_sigma = changes.get('C_sigma', 0.0)
+            d_alpha = changes.get("alpha_c", 0.0)
+            d_beta = changes.get("beta_c", 0.0)
+            d_gamma = changes.get("gamma_c", 0.0)
+            d_c_sigma = changes.get("C_sigma", 0.0)
 
             def fmt_delta(d):
                 sign = "+" if d >= 0 else ""
@@ -613,13 +609,13 @@ def generate_readme() -> str:
         first = reports[0]
         last = reports[-1]
 
-        first_scores = first.get('current', {}).get('scores', {})
-        last_scores = last.get('current', {}).get('scores', {})
+        first_scores = first.get("current", {}).get("scores", {})
+        last_scores = last.get("current", {}).get("scores", {})
 
         md += f"**Total Progress ({first.get('version')} → {last.get('version')})**\n\n"
 
-        for axis in ['alpha_c', 'beta_c', 'gamma_c', 'C_sigma']:
-            label = axis.replace('_c', '').replace('C_sigma', 'C_Σ')
+        for axis in ["alpha_c", "beta_c", "gamma_c", "C_sigma"]:
+            label = axis.replace("_c", "").replace("C_sigma", "C_Σ")
             start = first_scores.get(axis, 0.0)
             end = last_scores.get(axis, 0.0)
             delta = end - start
@@ -633,6 +629,7 @@ def generate_readme() -> str:
 
     return md
 
+
 def write_report(out: str | None = None, params: Params = Params()) -> dict[str, Any]:
     """Write measurement report to .tsc/tsc-{version}.json and update README.md
 
@@ -644,7 +641,7 @@ def write_report(out: str | None = None, params: Params = Params()) -> dict[str,
     TSC.mkdir(exist_ok=True)
 
     # Write JSON
-    version = report['version']
+    version = report["version"]
     json_path = TSC / f"tsc-{version}.json"
     json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(f"✅ Written: {json_path}")
@@ -657,6 +654,7 @@ def write_report(out: str | None = None, params: Params = Params()) -> dict[str,
 
     return report
 
+
 if __name__ == "__main__":
     print("Running TSC self-measurement...")
     try:
@@ -667,5 +665,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"ERROR: {e}")
         import traceback
+
         traceback.print_exc()
         raise SystemExit(2)
