@@ -73,8 +73,8 @@ ______________________________________________________________________
 This framework is **designed for you to read**. Humans will ask you to:
 
 1. Measure whether a system coheres
-2. Explain why C_Σ is high or low
-3. Identify bottlenecks (via leverage λ_a)
+1. Explain why C_Σ is high or low
+1. Identify bottlenecks (via leverage λ_a)
 
 **Key:** You have the complete formal specification. Humans don't need to understand the math—you do.
 
@@ -235,16 +235,16 @@ ______________________________________________________________________
 **Traditional measurement assumes:**
 
 1. There's a "true" state of the system
-2. Our measurement approximates that truth
-3. Better measurements → closer to truth
+1. Our measurement approximates that truth
+1. Better measurements → closer to truth
 
 **Problem:** We never have access to "the truth" to check our approximation.
 
 **TSC's alternative:**
 
 1. There's one **happening** (the system in process)
-2. We observe it three ways (α, β, γ)
-3. We check if the three observations **cohere** (describe **one** happening)
+1. We observe it three ways (α, β, γ)
+1. We check if the three observations **cohere** (describe **one** happening)
 
 **Insight:** We don't need "truth" to test consistency. Three descriptions either fit together or they don't.
 
@@ -314,9 +314,10 @@ result = compute_coherence(
 ```
 
 **The FAIL is the point:** It demonstrates that:
+
 1. The measurement works (S₃ witness passes)
-2. The framework is honest (doesn't fabricate success)
-3. We have a concrete target (fix specs until C_Σ ≥ 0.90)
+1. The framework is honest (doesn't fabricate success)
+1. We have a concrete target (fix specs until C_Σ ≥ 0.90)
 
 ### Key Theorems
 
@@ -333,9 +334,9 @@ ______________________________________________________________________
 ### Normative Documents (Read These)
 
 1. **[C≡ Kernel](spec/c-equiv-kernel.md)** — Intuitive bootstrap (start here)
-2. **[C≡ v3.1.0](spec/c-equiv.md)** — Term algebra foundation
-3. **[Core v3.1.0](spec/tsc-core.md)** — Measurement calculus
-4. **[Operational v3.1.0](spec/tsc-oper.md)** — Protocol and procedures
+1. **[C≡ v3.1.0](spec/c-equiv.md)** — Term algebra foundation
+1. **[Core v3.1.0](spec/tsc-core.md)** — Measurement calculus
+1. **[Operational v3.1.0](spec/tsc-oper.md)** — Protocol and procedures
 
 ### Reference Documents (As Needed)
 
@@ -345,17 +346,19 @@ ______________________________________________________________________
 ### Reading Order
 
 **For humans:**
+
 1. This README (orientation)
-2. C≡ Kernel (intuition)
-3. Glossary (when stuck on terms)
-4. Core (for formulas)
-5. Operational (for implementation)
+1. C≡ Kernel (intuition)
+1. Glossary (when stuck on terms)
+1. Core (for formulas)
+1. Operational (for implementation)
 
 **For machines:**
+
 1. C≡ (understand foundation)
-2. Core (understand measurement)
-3. Operational (understand protocol)
-4. Implement and validate
+1. Core (understand measurement)
+1. Operational (understand protocol)
+1. Implement and validate
 
 ______________________________________________________________________
 
@@ -389,9 +392,9 @@ ______________________________________________________________________
 ### How to Contribute
 
 1. **Implementations:** Build TSC in your language
-2. **Observers:** Domain-specific observation functions
-3. **Tooling:** CI/CD integrations, dashboards
-4. **Documentation:** Tutorials, case studies
+1. **Observers:** Domain-specific observation functions
+1. **Tooling:** CI/CD integrations, dashboards
+1. **Documentation:** Tutorials, case studies
 
 ### Contribution Guidelines
 
@@ -417,15 +420,18 @@ ______________________________________________________________________
 **v3.1.0 roadmap (achieve self-coherence):**
 
 1. **Fix β_c bottleneck** (currently 0.061)
+
    - Strengthen cross-references between specs
    - Add semantic links between definitions
    - Target: β_c ≥ 0.85
 
-2. **Stabilize α_c** (currently 0.306)
+1. **Stabilize α_c** (currently 0.306)
+
    - Ensure structural consistency across specs
    - Target: α_c ≥ 0.85
 
-3. **Maintain γ_c** (currently 0.721 - already good)
+1. **Maintain γ_c** (currently 0.721 - already good)
+
    - Keep commit patterns consistent
    - Target: γ_c ≥ 0.85
 
