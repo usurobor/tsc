@@ -1,5 +1,10 @@
+# reference/cli/tsc.py
 """
 reference/cli/tsc.py — TSC Command Line Interface
+
+Commands:
+  compute  Compute C_Σ from a TSC YAML file
+  self     Compute C_Σ for the TSC repository itself
 """
 
 import json
@@ -12,7 +17,7 @@ from reference.python.tsc_controller import compute_c_from_file
 
 @click.group()
 def main():
-    """TSC CLI (v3.1.0)"""
+    """TSC CLI (v2.3.0)"""
     pass
 
 
@@ -38,6 +43,7 @@ def compute(path: str, format: str, seed: int | None):
 
 
 @main.command("self")
+@click.option("--out", default="coherence_report.json", help="Output report path")
 @click.option("--theta", default=0.7, type=float, help="Struct vs dist weight")
 @click.option("--lambda-alpha", "lambda_alpha", default=4.0, type=float)
 @click.option("--lambda-beta", "lambda_beta", default=4.0, type=float)
@@ -46,6 +52,7 @@ def compute(path: str, format: str, seed: int | None):
 @click.option("--Theta", "Theta_", default=0.90, type=float, help="CI_lo gate threshold")
 @click.option("--seed", default=42, type=int, help="Random seed")
 def self_measure(
+    out: str,
     theta: float,
     lambda_alpha: float,
     lambda_beta: float,
@@ -56,7 +63,7 @@ def self_measure(
 ):
     """Compute C_Σ for the TSC repository and emit provenance bundle."""
     try:
-        from reference.python.self_measure import Params, write_report
+        from reference.python.tsc_measure import Params, write_report
 
         params = Params(
             theta=theta,
@@ -69,10 +76,11 @@ def self_measure(
         )
 
         click.echo("Computing C_Σ(TSC)...")
-        rep = write_report(params)
+        rep = write_report(out, params)
 
         click.echo(json.dumps(rep, indent=2))
-        click.echo(f"\nVerdict: {rep['verdict']}")
+        click.echo(f"\nReport written to: {out}")
+        click.echo(f"Verdict: {rep['verdict']}")
 
         sys.exit(0 if rep["verdict"] == "PASS" else 1)
 

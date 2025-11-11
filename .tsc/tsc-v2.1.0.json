@@ -1,0 +1,97 @@
+{
+  "version": "v2.1.0",
+  "date": "2025-11-11T10:26:03.497702+00:00",
+  "verdict": "FAIL",
+  "current": {
+    "scores": {
+      "alpha_c": 0.2728955159138753,
+      "beta_c": 0.06081006262521797,
+      "gamma_c": 0.12882078020592766,
+      "C_sigma": 0.1288207802059277
+    },
+    "ci": {
+      "C_sigma_lo": 0.05199997976440943,
+      "C_sigma_hi": 0.1615305173257448,
+      "n_boot": 1000
+    },
+    "bottleneck": {
+      "axis": "beta",
+      "score": 0.06081006262521797
+    }
+  },
+  "roadmap": {
+    "next_target": {
+      "axis": "beta",
+      "current_value": 0.06081006262521797,
+      "target_value": 0.360810062625218,
+      "rationale": "Improve beta axis to raise C_\u03a3 above threshold"
+    }
+  },
+  "witnesses": {
+    "S3_permutation": {
+      "permutations": {
+        "\u03b1-\u03b2-\u03b3": {
+          "C_sigma": 0.10640180081757272,
+          "within_CI": true
+        },
+        "\u03b1-\u03b3-\u03b2": {
+          "C_sigma": 0.10640180081757272,
+          "within_CI": true
+        },
+        "\u03b2-\u03b1-\u03b3": {
+          "C_sigma": 0.10640180081757272,
+          "within_CI": true
+        },
+        "\u03b2-\u03b3-\u03b1": {
+          "C_sigma": 0.10640180081757272,
+          "within_CI": true
+        },
+        "\u03b3-\u03b1-\u03b2": {
+          "C_sigma": 0.10640180081757272,
+          "within_CI": true
+        },
+        "\u03b3-\u03b2-\u03b1": {
+          "C_sigma": 0.10640180081757272,
+          "within_CI": true
+        }
+      },
+      "baseline_CI": [
+        0.05199997976440943,
+        0.1615305173257448
+      ],
+      "passed": true
+    }
+  },
+  "axes_diag": {
+    "alpha": {
+      "A_keys": 558,
+      "B_keys": 30
+    },
+    "beta": {
+      "terms": 2
+    },
+    "gamma": {
+      "achievement": null
+    }
+  },
+  "params": {
+    "theta": 0.7,
+    "lambda_alpha": 4.0,
+    "lambda_beta": 4.0,
+    "lambda_gamma": 4.0,
+    "n_boot": 1000,
+    "Theta": 0.9,
+    "seed": 42
+  },
+  "provenance": {
+    "git_commit": "unknown",
+    "dirty": false,
+    "python": "3.12.3",
+    "spec_files": [
+      "c-equiv.md",
+      "tsc-core.md",
+      "tsc-glossary.md"
+    ],
+    "note": "Retroactive measurement of v2.1.0"
+  }
+}
