@@ -1,6 +1,6 @@
 {
   "version": "v3.1.0",
-  "date": "2025-11-11T11:10:21.442194+00:00",
+  "date": "2025-11-11T11:19:09.195940+00:00",
   "verdict": "FAIL",
   "current": {
     "scores": {
@@ -11,7 +11,7 @@
     },
     "ci": {
       "C_sigma_lo": 0.18273117503047231,
-      "C_sigma_hi": 0.7750445842957314,
+      "C_sigma_hi": 0.7750445842957315,
       "n_boot": 1000
     },
     "bottleneck": {
@@ -57,7 +57,7 @@
       },
       "baseline_CI": [
         0.18273117503047231,
-        0.7750445842957314
+        0.7750445842957315
       ],
       "passed": true
     }
@@ -93,7 +93,7 @@
     "seed": 42
   },
   "provenance": {
-    "git_commit": "6b8bb40",
+    "git_commit": "4a9ded1",
     "dirty": true,
     "python": "3.11.14",
     "spec_files": [

@@ -36,13 +36,13 @@ def get_version() -> str:
     except ImportError:
         try:
             import tomli as tomllib
-        except:
+        except ImportError:
             return "v3.1.0"
-    
+
     pyproject = Path(__file__).parent.parent.parent / "pyproject.toml"
     if not pyproject.exists():
         return "v3.1.0"
-    
+
     with open(pyproject, "rb") as f:
         data = tomllib.load(f)
         return f"v{data['project']['version']}"
@@ -175,7 +175,9 @@ def dependency_edges(spec_texts: Mapping[str, str], terms: set[str]) -> list[tup
                     edges.append((fname, t))
     return edges
 
-def beta_embeddings(specs: Mapping[str, str], terms: set[str]) -> tuple[dict[str, float], dict[str, float]]:
+def beta_embeddings(
+    specs: Mapping[str, str], terms: set[str]
+) -> tuple[dict[str, float], dict[str, float]]:
     edges = dependency_edges(specs, terms)
     deg = Counter([a for (a, _) in edges]) + Counter([b for (_, b) in edges])
     hist = _vec(deg)
@@ -212,7 +214,13 @@ def beta_axis(params: Params, specs: Mapping[str, str], glossary_text: str) -> A
     mean = sum(reps) / len(reps)
     return AxisScore(mean=mean, reps=reps, diag={"terms": len(terms)})
 
-def _bootstrap_ci_over_C(a_reps: list[float], b_reps: list[float], g_reps: list[float], n_boot: int, seed: int) -> tuple[float, float]:
+def _bootstrap_ci_over_C(
+    a_reps: list[float],
+    b_reps: list[float],
+    g_reps: list[float],
+    n_boot: int,
+    seed: int
+) -> tuple[float, float]:
     rng = random.Random(seed)
     if not (a_reps and b_reps and g_reps):
         return (0.0, 0.0)
@@ -228,7 +236,13 @@ def _bootstrap_ci_over_C(a_reps: list[float], b_reps: list[float], g_reps: list[
     hi = means[int(0.975 * n_boot) - 1]
     return (lo, hi)
 
-def s3_witness_over_reps(a: AxisScore, b: AxisScore, g: AxisScore, ci_lo: float, ci_hi: float) -> dict[str, Any]:
+def s3_witness_over_reps(
+    a: AxisScore,
+    b: AxisScore,
+    g: AxisScore,
+    ci_lo: float,
+    ci_hi: float
+) -> dict[str, Any]:
     axis_data = [("α", a.reps), ("β", b.reps), ("γ", g.reps)]
     perms = list(permutations(axis_data))
     diag = {"permutations": {}, "baseline_CI": [ci_lo, ci_hi]}
@@ -248,10 +262,10 @@ def load_previous_report(current_version: str) -> dict | None:
     """Load the most recent report before current_version."""
     if not TSC.exists():
         return None
-    
+
     current_ver_tuple = parse_version(current_version)
     prev_reports = []
-    
+
     for report_path in TSC.glob("tsc-v*.json"):
         match = re.search(r'tsc-(v\d+\.\d+\.\d+)', report_path.name)
         if match:
@@ -259,13 +273,13 @@ def load_previous_report(current_version: str) -> dict | None:
             report_ver_tuple = parse_version(report_version)
             if report_ver_tuple < current_ver_tuple:
                 prev_reports.append((report_ver_tuple, report_path))
-    
+
     if not prev_reports:
         return None
-    
+
     prev_reports.sort(reverse=True)
     _, prev_report_path = prev_reports[0]
-    
+
     try:
         return json.loads(prev_report_path.read_text(encoding="utf-8"))
     except Exception:
@@ -274,37 +288,40 @@ def load_previous_report(current_version: str) -> dict | None:
 def measure_self(params: Params = Params()) -> dict[str, Any]:
     """Compute C_Σ(TSC) with past/present/future structure."""
     current_version = get_version()
-    
+
     specs = load_specs()
-    glossary_text = GLOSSARY.read_text(encoding="utf-8", errors="ignore") if GLOSSARY.exists() else ""
+    if GLOSSARY.exists():
+        glossary_text = GLOSSARY.read_text(encoding="utf-8", errors="ignore")
+    else:
+        glossary_text = ""
 
     # Compute α and β
     A = alpha_axis(params, specs)
     B = beta_axis(params, specs, glossary_text)
-    
+
     # Load previous report
     prev_report = load_previous_report(current_version)
-    
+
     # Compute γ_c based on achievement of previous roadmap
     # γ measures health of the generative process that creates specs
-    
+
     # Baseline: Current health = geometric mean of outputs (α, β)
     baseline_health = math.sqrt(A.mean * B.mean)
-    
+
     γ_c = baseline_health  # Default: current process health
     achievement = None
-    
+
     if prev_report and 'roadmap' in prev_report and 'next_target' in prev_report['roadmap']:
         prev_roadmap = prev_report['roadmap']['next_target']
         target_axis = prev_roadmap['axis']
         start_value = prev_roadmap['current_value']
         target_value = prev_roadmap['target_value']
-        
+
         # Get current value for that axis
         current_scores = {'alpha_c': A.mean, 'beta_c': B.mean}
         actual_value = current_scores.get(f'{target_axis}_c', 0.0)
         improvement = actual_value - start_value
-        
+
         # Calculate γ_c (no hardcoded constants)
         if actual_value >= target_value:
             γ_c = 1.0  # Process proved it can self-improve!
@@ -318,7 +335,7 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
                 γ_c = baseline_health + (1.0 - baseline_health) * progress
             else:
                 γ_c = baseline_health
-        
+
         achievement = {
             "target_reached": target_reached,
             "target_axis": target_axis,
@@ -329,14 +346,14 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
             "gamma_c": γ_c,
             "baseline_health": baseline_health
         }
-    
+
     # γ for C_Σ calculation (reps for bootstrap)
     γ_reps = [γ_c * (1.0 + 0.01 * ((k % 5) - 2)) for k in range(64)]
     γ_reps = [max(0.0, min(1.0, r)) for r in γ_reps]
 
     C = geo3(A.mean, B.mean, γ_c)
     ci_lo, ci_hi = _bootstrap_ci_over_C(A.reps, B.reps, γ_reps, params.n_boot, params.seed)
-    
+
     γ_score = AxisScore(mean=γ_c, reps=γ_reps, diag={"achievement": achievement})
     s3_diag = s3_witness_over_reps(A, B, γ_score, ci_lo, ci_hi)
     verdict = "PASS" if (ci_lo >= params.Theta and s3_diag["passed"]) else "FAIL"
@@ -348,8 +365,13 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
 
     # Provenance
     try:
-        git_commit = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], text=True).strip()
-        dirty = bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip())
+        cmd = ["git", "rev-parse", "--short", "HEAD"]
+        git_commit = subprocess.check_output(cmd, text=True).strip()
+        dirty = bool(
+            subprocess.check_output(
+                ["git", "status", "--porcelain"], text=True
+            ).strip()
+        )
     except Exception:
         git_commit, dirty = "unknown", False
 
@@ -398,12 +420,12 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
             "spec_files": sorted(list(specs.keys()))
         }
     }
-    
+
     # Add historical if we have previous data
     if prev_report:
         prev_scores = prev_report.get('current', {}).get('scores') or prev_report.get('scores', {})
         prev_roadmap = prev_report.get('roadmap', {}).get('next_target')
-        
+
         report["historical"] = {
             "previous_version": prev_report.get('version', 'unknown'),
             "previous_scores": {
@@ -421,18 +443,18 @@ def measure_self(params: Params = Params()) -> dict[str, Any]:
                 "C_sigma": C - prev_scores.get('C_sigma', 0.0)
             }
         }
-    
+
     return report
 
 def generate_readme() -> str:
     """Generate README.md content from all tsc-v*.json files."""
     if not TSC.exists():
         return "# TSC Coherence Tracker\n\nNo measurements found.\n"
-    
+
     json_files = sorted(TSC.glob("tsc-v*.json"))
     if not json_files:
         return "# TSC Coherence Tracker\n\nNo measurements found.\n"
-    
+
     # Parse all reports
     reports = []
     for json_path in json_files:
@@ -441,56 +463,79 @@ def generate_readme() -> str:
             reports.append(data)
         except Exception:
             continue
-    
+
     if not reports:
         return "# TSC Coherence Tracker\n\nNo measurements found.\n"
-    
+
     # Sort by version
     def version_key(report):
         version = report.get('version', 'v0.0.0')
         return parse_version(version)
-    
+
     reports.sort(key=version_key)
-    
+
     # Generate markdown
-    md = "# TSC Coherence Tracker\n\n"
-    md += "> Auto-generated from `.tsc/tsc-v*.json`\n\n"
-    md += "## Coherence Scores Over Time\n\n"
-    
+    md = "# TSC Self-Measurement History\n\n"
+    md += "> Auto-generated by `tsc self` from `.tsc/tsc-v*.json`\n\n"
+
+    # Introduction
+    md += "## Overview\n\n"
+    md += "This repository measures its own coherence using three axes:\n\n"
+    md += "- **α (alpha)**: Pattern coherence — consistency between content and structure\n"
+    md += "- **β (beta)**: Relational coherence — quality of cross-references between specs\n"
+    md += "- **γ (gamma)**: Generative process health — ability to self-improve\n\n"
+    md += "**C_Σ** (overall coherence) = geometric mean of (α, β, γ)\n\n"
+    md += "### Principled γ Formula\n\n"
+    md += "```\n"
+    md += "baseline_health = sqrt(α × β)\n"
+    md += "if achieved_target:\n"
+    md += "    γ = 1.0\n"
+    md += "else:\n"
+    md += "    γ = baseline_health + (1.0 - baseline_health) × progress\n"
+    md += "```\n\n"
+    md += "No hardcoded constants — γ reflects actual system health and improvement.\n\n"
+    md += "---\n\n"
+
     # Main scores table
+    md += "## Coherence Scores Over Time\n\n"
     md += "| Version | Date | α | β | γ | C_Σ | Verdict | Bottleneck |\n"
     md += "|---------|------|---|---|---|-----|---------|------------|\n"
-    
+
     for report in reports:
         version = report.get('version', 'unknown')
         date = report.get('date', '')[:10]
         scores = report.get('current', {}).get('scores', {})
         verdict = report.get('verdict', 'UNKNOWN')
         bottleneck = report.get('current', {}).get('bottleneck', {})
-        
+
         alpha = scores.get('alpha_c', 0.0)
         beta = scores.get('beta_c', 0.0)
         gamma = scores.get('gamma_c', 0.0)
         c_sigma = scores.get('C_sigma', 0.0)
-        
+
         verdict_icon = "✅" if verdict == "PASS" else "❌"
         bottleneck_axis = bottleneck.get('axis', '?')
         bottleneck_score = bottleneck.get('score', 0.0)
-        
-        md += f"| {version} | {date} | {alpha:.3f} | {beta:.3f} | {gamma:.3f} | {c_sigma:.3f} | {verdict_icon} | {bottleneck_axis} ({bottleneck_score:.3f}) |\n"
-    
+
+        row = f"| {version} | {date} | {alpha:.3f} | {beta:.3f} | {gamma:.3f} "
+        row += f"| {c_sigma:.3f} | {verdict_icon} | {bottleneck_axis} "
+        row += f"({bottleneck_score:.3f}) |\n"
+        md += row
+
+    md += "\n"
+
     # Achievement tracking
-    md += "\n## Achievement Tracking\n\n"
+    md += "## Achievement Tracking\n\n"
     md += "Shows whether each version delivered on its previous roadmap promise.\n\n"
     md += "| Version | Target Axis | Start | Target | Actual | Δ | γ_c | Status |\n"
     md += "|---------|-------------|-------|--------|--------|---|-----|--------|\n"
-    
+
     for report in reports:
         version = report.get('version', 'unknown')
         hist = report.get('historical', {})
-        
+
         if not hist or not hist.get('achievement'):
-            md += f"| {version} | — | — | — | — | — | 0.500 | (baseline) |\n"
+            md += f"| {version} | — | — | — | — | — | — | (baseline) |\n"
         else:
             ach = hist['achievement']
             target_axis = ach.get('target_axis', '?')
@@ -500,104 +545,116 @@ def generate_readme() -> str:
             improvement = ach.get('improvement', 0.0)
             gamma_c = ach.get('gamma_c', 0.0)
             reached = ach.get('target_reached', False)
-            
+
             status = "✅ Achieved" if reached else "⚠️ Missed"
-            
-            md += f"| {version} | {target_axis} | {start:.3f} | {target:.3f} | {actual:.3f} | {improvement:+.3f} | {gamma_c:.3f} | {status} |\n"
-    
+
+            row = f"| {version} | {target_axis} | {start:.3f} | {target:.3f} "
+            row += f"| {actual:.3f} | {improvement:+.3f} | {gamma_c:.3f} | "
+            row += f"{status} |\n"
+            md += row
+
+    md += "\n"
+
     # Roadmap tracking
-    md += "\n## Roadmap Declarations\n\n"
+    md += "## Roadmap Declarations\n\n"
     md += "What each version promised to improve next.\n\n"
     md += "| Version | Declares | Current | Target | Required Δ |\n"
     md += "|---------|----------|---------|--------|------------|\n"
-    
+
     for report in reports:
         version = report.get('version', 'unknown')
         roadmap = report.get('roadmap', {}).get('next_target', {})
-        
+
         if roadmap:
             axis = roadmap.get('axis', '?')
             current = roadmap.get('current_value', 0.0)
             target = roadmap.get('target_value', 0.0)
             delta = target - current
-            
+
             md += f"| {version} | {axis} | {current:.3f} | {target:.3f} | +{delta:.3f} |\n"
-    
+
+    md += "\n"
+
     # Changes over time
-    md += "\n## Changes Between Versions\n\n"
+    md += "## Changes Between Versions\n\n"
     md += "| From → To | Δα | Δβ | Δγ | ΔC_Σ |\n"
     md += "|-----------|----|----|----|----|--|\n"
-    
+
     for i in range(1, len(reports)):
         prev = reports[i-1]
         curr = reports[i]
-        
+
         prev_version = prev.get('version', '?')
         curr_version = curr.get('version', '?')
-        
+
         changes = curr.get('historical', {}).get('changes', {})
-        
+
         if changes:
             d_alpha = changes.get('alpha_c', 0.0)
             d_beta = changes.get('beta_c', 0.0)
             d_gamma = changes.get('gamma_c', 0.0)
             d_c_sigma = changes.get('C_sigma', 0.0)
-            
+
             def fmt_delta(d):
                 sign = "+" if d >= 0 else ""
                 return f"{sign}{d:.3f}"
-            
-            md += f"| {prev_version} → {curr_version} | {fmt_delta(d_alpha)} | {fmt_delta(d_beta)} | {fmt_delta(d_gamma)} | {fmt_delta(d_c_sigma)} |\n"
-    
+
+            row = f"| {prev_version} → {curr_version} | {fmt_delta(d_alpha)} "
+            row += f"| {fmt_delta(d_beta)} | {fmt_delta(d_gamma)} | "
+            row += f"{fmt_delta(d_c_sigma)} |\n"
+            md += row
+
+    md += "\n"
+
     # Summary stats
-    md += "\n## Summary Statistics\n\n"
-    
+    md += "## Summary Statistics\n\n"
+
     if reports:
         first = reports[0]
         last = reports[-1]
-        
+
         first_scores = first.get('current', {}).get('scores', {})
         last_scores = last.get('current', {}).get('scores', {})
-        
+
         md += f"**Total Progress ({first.get('version')} → {last.get('version')})**\n\n"
-        
+
         for axis in ['alpha_c', 'beta_c', 'gamma_c', 'C_sigma']:
             label = axis.replace('_c', '').replace('C_sigma', 'C_Σ')
             start = first_scores.get(axis, 0.0)
             end = last_scores.get(axis, 0.0)
             delta = end - start
             pct = (delta / start * 100) if start > 0 else 0
-            
+
             md += f"- **{label}**: {start:.3f} → {end:.3f} ({delta:+.3f}, {pct:+.1f}%)\n"
-    
+
     md += "\n---\n\n"
     md += f"*Last updated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC*\n"
-    md += f"*Generated from {len(reports)} measurement(s)*\n"
-    
+    md += f"*Measured from {len(reports)} version(s)*\n"
+
     return md
 
 def write_report(out: str | None = None, params: Params = Params()) -> dict[str, Any]:
     """Write measurement report to .tsc/tsc-{version}.json and update README.md
-    
+
     Args:
         out: Ignored (kept for CLI backward compatibility)
         params: Measurement parameters
     """
     report = measure_self(params)
     TSC.mkdir(exist_ok=True)
-    
+
     # Write JSON
     version = report['version']
     json_path = TSC / f"tsc-{version}.json"
     json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(f"✅ Written: {json_path}")
-    
+
     # Auto-generate README
     readme_content = generate_readme()
     readme_path = TSC / "README.md"
     readme_path.write_text(readme_content, encoding="utf-8")
     print(f"✅ Updated: {readme_path}")
-    
+
     return report
 
 if __name__ == "__main__":
