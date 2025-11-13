@@ -12,7 +12,7 @@ pytestmark = pytest.mark.skip(reason="Self-measurement needs rewrite for v3.0.0 
 
 def test_self_coherence_runs_and_emits_report():
     """Test that self-measurement runs and emits a valid report."""
-    from reference.python.self_measure import write_report
+    from reference.python.tsc_measure import write_report
 
     rep = write_report("coherence_report.json")
 
@@ -41,7 +41,7 @@ def test_self_coherence_runs_and_emits_report():
 
 def test_gamma_requires_git():
     """Test that γ_c fails explicitly without git history."""
-    from reference.python.self_measure import Params, gamma_axis, load_specs
+    from reference.python.tsc_measure import Params, gamma_axis, load_specs
 
     # This test will pass if run in a git repo with spec/ history
     # or fail with clear error message if not
@@ -59,7 +59,7 @@ def test_gamma_requires_git():
 
 def test_s3_witness_structure():
     """Test that S₃ witness has correct structure."""
-    from reference.python.self_measure import Params, measure_self
+    from reference.python.tsc_measure import Params, measure_self
 
     rep = measure_self(Params())
 
@@ -74,7 +74,7 @@ def test_s3_witness_structure():
 
 def test_braided_witness_detects_equations():
     """Test that braided witness parses equations from spec."""
-    from reference.python.self_measure import Params, measure_self
+    from reference.python.tsc_measure import Params, measure_self
 
     rep = measure_self(Params())
 

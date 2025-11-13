@@ -1,0 +1,15 @@
+{
+  "version": "3.1.0",
+  "date": "2025-11-13T02:27:16.560464",
+  "components": {
+    "README.md": "components/README.json",
+    "spec/c-equiv.md": "components/spec/c-equiv.json"
+  },
+  "aggregate": {
+    "alpha": 0.5,
+    "beta": 0.3,
+    "gamma": 0.3872983346207417,
+    "c_sigma": 0.3872983346207417
+  },
+  "verdict": "FAIL"
+}

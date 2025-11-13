@@ -1,0 +1,11 @@
+# TSC Project Measurement Configuration
+
+[markdown]
+file = "README.md"
+alpha = "pattern_coherence"
+beta = "relational_coherence"
+
+[markdown]
+file = "spec/c-equiv.md"
+alpha = "pattern_coherence"
+beta = "relational_coherence"

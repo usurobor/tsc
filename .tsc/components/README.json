@@ -1,0 +1,30 @@
+{
+  "file": "README.md",
+  "witnesses": {
+    "passed": true,
+    "details": {
+      "note": "witness module not implemented yet"
+    }
+  },
+  "measurements": {
+    "alpha": 0.5,
+    "beta": 0.3,
+    "gamma": 0.3872983346207417,
+    "c_sigma": 0.3872983346207417
+  },
+  "details": {
+    "alpha": {
+      "content_tokens": 100,
+      "structure_elements": 20,
+      "cosine_similarity": 0.5,
+      "js_divergence": 0.3
+    },
+    "beta": {
+      "terms": 50,
+      "cross_refs": 10,
+      "links": 25,
+      "cosine_similarity": 0.4,
+      "js_divergence": 0.5
+    }
+  }
+}
