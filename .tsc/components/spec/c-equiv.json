@@ -7,25 +7,25 @@
     }
   },
   "measurements": {
-    "alpha": 0.026469117136227915,
-    "beta": 0.4183720551934439,
-    "gamma": 0.10523278450862962,
-    "c_sigma": 0.10523278450862963
+    "alpha": 0.026469117136227925,
+    "beta": 0.4183720551934437,
+    "gamma": 0.999999999999997,
+    "c_sigma": 0.22289519588409104
   },
   "details": {
     "alpha": {
       "content_tokens": 833,
       "structure_elements": 34,
       "cosine_similarity": 0.0,
-      "js_divergence": 0.6931471805599494,
-      "distance": 0.9079441541679848
+      "js_divergence": 0.6931471805599492,
+      "distance": 0.9079441541679847
     },
     "beta": {
       "terms": 169,
       "cross_refs": 7,
       "links": 0,
-      "cosine_similarity": 0.8125424770366114,
-      "js_divergence": 0.28875257821257355
+      "cosine_similarity": 0.8125424770366113,
+      "js_divergence": 0.2887525782125736
     }
   }
 }
