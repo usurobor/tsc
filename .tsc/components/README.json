@@ -7,24 +7,25 @@
     }
   },
   "measurements": {
-    "alpha": 0.5,
-    "beta": 0.3,
-    "gamma": 0.3872983346207417,
-    "c_sigma": 0.3872983346207417
+    "alpha": 0.026469117136227974,
+    "beta": 0.131794519457681,
+    "gamma": 0.059063394530269216,
+    "c_sigma": 0.05906339453026922
   },
   "details": {
     "alpha": {
-      "content_tokens": 100,
-      "structure_elements": 20,
-      "cosine_similarity": 0.5,
-      "js_divergence": 0.3
+      "content_tokens": 518,
+      "structure_elements": 50,
+      "cosine_similarity": 0.0,
+      "js_divergence": 0.6931471805599475,
+      "distance": 0.9079441541679842
     },
     "beta": {
-      "terms": 50,
-      "cross_refs": 10,
-      "links": 25,
-      "cosine_similarity": 0.4,
-      "js_divergence": 0.5
+      "terms": 73,
+      "cross_refs": 1,
+      "links": 13,
+      "cosine_similarity": 0.48809532456337995,
+      "js_divergence": 0.4943151240159848
     }
   }
 }
