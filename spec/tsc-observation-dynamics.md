@@ -1,8 +1,8 @@
-# TSC Observation Dynamics v1.0.4
+# TSC Observation Dynamics v1.0.5
 
-Formal Specification of Observer Construction, Verification, and Epistemic Refinement
+Formal Specification of Observer Construction, Verification, Epistemic Refinement, and Replay-Pure Evaluation
 
-    Version:    v1.0.4
+    Version:    v1.0.5
     Status:     Proposed Extension Specification
     Artifact:   Specification
     Normative dependencies:
@@ -14,8 +14,7 @@ Formal Specification of Observer Construction, Verification, and Epistemic Refin
 
 ## 0. Identity
 
-This document is not a scientific article.
-It is the observation-layer specification of TSC.
+This document is the observation-layer specification of TSC.
 
 It defines:
 
@@ -24,21 +23,16 @@ It defines:
     how a run is classified,
     how refinement is ordered,
     how self-application is normalized,
-    and what implementation-facing contract must be exposed.
+    how aggregation behaves under permutation,
+    and how verification remains replayable under historical OOD policies.
 
-Intended audience:
+It is:
 
-    1. formalists and spec authors
-    2. runtime / SDK implementers
-    3. AI systems that read TSC specs directly
-    4. researchers operationalizing TSC in experiments
+    not the foundation,
+    not the core measurement calculus,
+    not the operational witness protocol,
 
-Purpose:
-
-    bridge TSC mathematics and executable verification,
-    make observer construction auditable,
-    freeze canonical run semantics,
-    and define the interface boundary between specification and implementation.
+but the layer that makes observer semantics executable.
 
 Place in stack:
 
@@ -48,12 +42,6 @@ Place in stack:
       → TSC Observation Dynamics   ← this document
       → Runtime / API / SDK
       → Application-specific observers
-
-This document is therefore:
-
-    a specification first,
-    a whitepaper source second,
-    and only a future paper substrate.
 
 ## 1. Status Discipline
 
@@ -67,47 +55,58 @@ Normative reading rule:
 
 ## 2. Change Log
 
+### From v1.0.4
+
+    SYM-02  Permutation discipline is corrected.
+            The spec now distinguishes:
+                − absolute S₃-invariance
+                − permutation-covariance of axis-indexed objects
+            This resolves the tension between non-uniform aggregation weights
+            and the global claim of axis-permutation invariance.
+
+    AGR-03  Aggregation profile W is now explicitly axis-indexed and
+            permutation-aware. Uniform weighting yields absolute invariance;
+            non-uniform weighting yields covariance under simultaneous
+            permutation of scores and weights.
+
+    REP-01  Replay purity is introduced.
+            verify(o, D, …) is defined as evaluation against a frozen
+            reference snapshot. It MUST NOT mutate hidden OOD state.
+
+    REP-02  EffectiveProfile is formalized as the frozen merge of
+            BaseProfile and OverrideSet. Response artifacts now expose
+            effective-profile digest for replay.
+
+    OOD-01  Reference-state evolution is separated from verification.
+            Verification may emit a ReferenceUpdateProposal,
+            but reference mutation is not part of verify itself.
+
+    RNG-01  ReplayClass and RandomnessRecord are introduced so bootstrap,
+            stochastic alignment, and approximate backends can be audited.
+
+    CMP-01  Observer/batch compatibility is made first-class.
+            Admissibility now requires declared compatibility between observer
+            manifest and batch record.
+
 ### From v1.0.3
 
-    AGR-01  Aggregate coherence now admits an explicit aggregation profile.
-            Default remains uniform, but weighted aggregation is now first-class.
-
-    AGR-02  Invariants V1 and V2 are generalized so they are correct for both
-            uniform and weighted aggregation.
-
-    EXE-01  Execution outcome is separated from controller outcome.
-            Runtime failure is no longer modeled as a controller terminal state.
-
-    EXE-02  Classification statuses are lifted from booleans to a three-valued
-            lattice: PASS / FAIL / UNDECIDED.
-
-    PRO-01  ParameterProfile is made explicit and replayable.
-            Thresholds, sensitivities, weights, CI settings, and OOD settings
-            are frozen as a single canonical object.
-
-    SEL-02  Self-application is normalized through a bundle-batch lift so that
-            meta-observation still uses verify(o, D) rather than a new signature.
+    AGR-01  Aggregation profile W introduced as first-class object.
+    AGR-02  V1/V2 generalized to weighted form.
+    EXE-01  Execution outcome separated from controller outcome.
+    EXE-02  Classification lifted to Status3 = {PASS, FAIL, UNDECIDED}.
+    PRO-01  ParameterProfile made explicit canonical object.
+    SEL-02  Self-application normalized through Bundle-domain lift.
 
 ### From v1.0.2
 
-    SYM-01  κ_o renamed to ρ_o to resolve collision with C≡ cohering seed κ.
-    NOT-01  Explicit notation bridge table maps this spec's symbols to parent specs.
-    REF-01  Postulate A_weak refined: monotonicity holds along convergent
-            subsequences, not necessarily at every refinement step.
-    EPI-01  Triadic episode connection to observer pipeline is made explicit.
-    DEP-01  Deployment threshold τ_lip_pol given recommended default range.
-    SEL-01  Self-application note added: how an observer-of-observers is typed.
+    SYM-01  κ_o renamed to ρ_o.
+    NOT-01  Explicit notation bridge table added.
+    REF-01  Monotonicity weakened to convergent-subsequence form.
+    EPI-01  Triadic episode grounded to observer pipeline.
+    DEP-01  Deployment threshold τ_lip_pol given recommended range.
+    SEL-01  Self-application section added.
 
-### From v1.0.1
-
-    ID-01   Document identity is now explicit.
-    ID-02   Audience, purpose, and stack position are front matter.
-    API-01  Canonical observer manifest introduced.
-    API-02  Canonical verify contract frozen at schema level.
-    API-03  Conformance profiles introduced.
-    DOC-01  Repository placement and derived artifact policy defined.
-
-## 3. Notation & Dependency Discipline [N/E]
+## 3. Symmetry, Notation, and Aggregation Discipline [N/E]
 
 ### Definition 3.1 (Axis Set) [N/E]
 
@@ -115,21 +114,60 @@ Let
 
     A := {α, β, γ}.
 
-All constructions in this document are invariant under permutations of A.
+### Definition 3.2 (Axis-Indexed Objects) [E]
 
-Any semantic labels attached to α, β, γ are metadata only.
-They MUST be stored in provenance and MUST NOT alter verdict logic.
+Any object of the form
 
-### Definition 3.2 (Inherited Carrier & Summaries) [N]
+    q = (q_alpha, q_beta, q_gamma)
 
-The framework inherits the carrier T of C≡ terms and the summary objects:
+is axis-indexed.
 
-    S_a = (d_a, p_a, H_a, I_a),   for a ∈ A.
+Examples:
 
-### Definition 3.3 (Notation Separation) [E]
+    dimensional scores
+    dimensional leverages
+    axis aliases
+    aggregation weights
 
-To avoid symbol collision between this document and its parent specifications,
-the following local symbols are used:
+### Definition 3.3 (Permutation Action) [E]
+
+For any permutation π ∈ S₃ and axis-indexed object q, define
+
+    (π · q)_a := q_{π⁻¹(a)}.
+
+This is the canonical induced action of axis relabeling.
+
+### Definition 3.4 (Absolute Invariance vs Permutation-Covariance) [E]
+
+A scalar-valued construction F is absolutely S₃-invariant iff
+
+    F(q) = F(π · q)
+
+for all π ∈ S₃.
+
+A scalar-valued construction G on multiple axis-indexed objects is
+permutation-covariant iff
+
+    G(q, r, …) = G(π · q, π · r, …)
+
+for all π ∈ S₃.
+
+Normative reading:
+
+    When non-uniform axis weights are present,
+    aggregate coherence is permutation-covariant in (scores, weights),
+    and absolutely invariant only in the uniform-weight case.
+
+### Definition 3.5 (Inherited Carrier & Summaries) [N]
+
+The framework inherits:
+
+    carrier T of C≡ terms
+    summaries S_a = (d_a, p_a, H_a, I_a), for a ∈ A
+
+### Definition 3.6 (Notation Separation) [E]
+
+Local symbols:
 
     μ_a      > 0        dimensional sensitivity hyperparameters
     μ_ab     > 0        pairwise coherence sensitivity hyperparameters
@@ -143,30 +181,22 @@ Inherited score names remain:
 
     s_alpha, s_beta, s_gamma ∈ [0,1]
 
-### Definition 3.4 (Notation Bridge) [E]
+### Definition 3.7 (Notation Bridge) [E]
 
-The following table maps local symbols to parent specifications.
-The mapping is semantic equivalence, not redefinition.
+    This spec        Parent spec symbol
+    ─────────        ──────────────────
+    μ_a              λ_α, λ_β, λ_γ
+    μ_ab             λ_ab
+    ε                ε
+    Θ                Θ
+    ℓ_a              λ_a
+    ℓ_Σ              λ_Σ
+    ρ_o              κ  (contraction scalar role)
+    κ                reserved in this spec for C≡ seed only
 
-    This spec        Parent spec symbol      Parent location
-    ─────────        ──────────────────      ───────────────
-    μ_a              λ_α, λ_β, λ_γ          TSC Core §4
-    μ_ab             λ_ab                    TSC Core §3.2
-    ε                ε                       TSC Core §4
-    Θ                Θ                       TSC Operational §5
-    ℓ_a              λ_a                     TSC Core §11
-    ℓ_Σ              λ_Σ                     TSC Core §11
-    ρ_o              (new)                   this spec §7.2
-    κ (not used)     κ                       C≡ §1.4 (cohering seed)
+### Definition 3.8 (Aggregation Profile) [N/E]
 
-The renaming of leverage from λ to ℓ avoids collision with the sensitivity
-hyperparameters λ_α, λ_β, λ_γ of TSC Core §4 within the same document.
-
-The symbol κ is reserved for the C≡ cohering seed and is not reused here.
-
-### Definition 3.5 (Aggregation Profile) [N/E]
-
-An aggregation profile is a weight triple
+An aggregation profile is an axis-indexed weight triple
 
     W := (w_alpha, w_beta, w_gamma)
 
@@ -177,15 +207,16 @@ such that:
     w_gamma > 0
     w_alpha + w_beta + w_gamma = 3
 
-Default aggregation profile:
+Default profile:
 
-    W_default := (1, 1, 1)
+    W_uniform := (1, 1, 1)
 
-### Definition 3.6 (Aggregate Coherence) [N/E]
+### Definition 3.9 (Aggregate Coherence) [N/E]
 
-Given dimensional scores and an aggregation profile W, define
+Given dimensional scores s = (s_alpha, s_beta, s_gamma)
+and aggregation profile W, define
 
-    C_Σ(W)
+    C_Σ(s; W)
       :=
     exp((1/3) · (
         w_alpha · ln(max(s_alpha, ε)) +
@@ -193,11 +224,27 @@ Given dimensional scores and an aggregation profile W, define
         w_gamma · ln(max(s_gamma, ε))
     ))
 
-If W = W_default, this reduces to
+Uniform corollary:
 
-    C_Σ = (s_alpha · s_beta · s_gamma)^(1/3)
+    If W = W_uniform, then
 
-### Definition 3.7 (Diagnostic Leverage) [E]
+        C_Σ(s; W_uniform) = (s_alpha · s_beta · s_gamma)^(1/3)
+
+### Proposition 3.10 (Permutation Law for Aggregate Coherence) [E/N]
+
+For all π ∈ S₃:
+
+    C_Σ(s; W) = C_Σ(π · s; π · W)
+
+Hence:
+
+    Aggregate coherence is permutation-covariant in (s, W).
+
+Corollary:
+
+    If W = W_uniform, then C_Σ is absolutely S₃-invariant in s alone.
+
+### Definition 3.11 (Diagnostic Leverage) [E]
 
 For each axis a ∈ A:
 
@@ -205,23 +252,23 @@ For each axis a ∈ A:
 
 Aggregate leverage under W:
 
-    ℓ_Σ(W)
+    ℓ_Σ(s; W)
       :=
-    −(1/3) · (
-        w_alpha · ln(max(s_alpha, ε)) +
-        w_beta  · ln(max(s_beta,  ε)) +
-        w_gamma · ln(max(s_gamma, ε))
+    (1/3) · (
+        w_alpha · ℓ_alpha +
+        w_beta  · ℓ_beta  +
+        w_gamma · ℓ_gamma
     )
 
-Hence:
+Equivalently:
 
-    ℓ_Σ(W) = −ln(C_Σ(W))
+    ℓ_Σ(s; W) = −ln(C_Σ(s; W))
 
 Interpretation:
 
     lower ℓ_Σ  ⟺  higher C_Σ
 
-## 4. Observation Objects [E]
+## 4. Observation Objects and Freezing Discipline [E]
 
 ### Definition 4.1 (Observation Domain) [E]
 
@@ -237,11 +284,11 @@ with
 
     N = |D|.
 
-### Definition 4.3 (ParameterProfile) [E]
+### Definition 4.3 (BaseProfile) [E]
 
-Every observer MUST carry a frozen parameter profile
+Every observer design carries a base parameter profile
 
-    P_o := {
+    P_base := {
         theta,
         μ_axis,
         μ_pair,
@@ -262,49 +309,30 @@ Every observer MUST carry a frozen parameter profile
         calibration_refs?
     }
 
-Semantics:
+### Definition 4.4 (OverrideSet) [E]
 
-    theta                discrepancy-weight / reconciliation parameter
-    μ_axis               axis sensitivities
-    μ_pair               pairwise sensitivities
-    ε                    numerical floor
-    aggregation_profile  W
-    Θ                    acceptance threshold
-    τ_*                  witness floors
-    δ_CI                 CI-width tolerance
-    ci_level             CI confidence level
-    Z_crit               OOD threshold
-    N_boot               bootstrap count
-    OOD_reference_policy rolling / fixed OOD regime
-    calibration_refs     optional calibration artifacts
+An override set is a partial object
+
+    ΔP := {
+        any subset of P_base fields
+    }
+
+Override rule:
+
+    Overrides are permitted only if declared legal by the observer manifest.
+
+### Definition 4.5 (EffectiveProfile) [E]
+
+The effective profile is the frozen merge
+
+    P_eff := freeze(merge(P_base, ΔP))
 
 Normative rule:
 
-    P_o MUST be frozen before final scoring.
+    All scoring, witness evaluation, CI evaluation, OOD evaluation,
+    and verdict logic MUST use P_eff, not P_base.
 
-### Definition 4.4 (Observer Pipeline) [E]
-
-An observer is a typed pipeline
-
-    o = (
-        η_o,
-        {A_a^o}_{a∈A},
-        {Σ_a^o}_{a∈A},
-        {E_ab^o}_{a≠b},
-        P_o,
-        M_o
-    )
-
-where:
-
-    η_o       : X* → T                encoder (domain → carrier)
-    A_a^o     : T → P(Ω_a^o)          articulator per axis
-    Σ_a^o     : P(Ω_a^o) → S_a^o      summarizer per axis
-    E_ab^o    = {σ_ab^1, …, σ_ab^m}   alignment ensemble, m ≥ 3
-    P_o       = frozen parameter profile
-    M_o       = observer manifest
-
-### Definition 4.5 (Observer Manifest) [E]
+### Definition 4.6 (Observer Manifest) [E]
 
 Every observer MUST admit a serializable manifest
 
@@ -315,48 +343,12 @@ Every observer MUST admit a serializable manifest
         domain_tag,
         schema_ref?,
         component_refs,
-        parameter_profile_ref,
+        base_profile_ref,
+        allowed_override_keys,
         provenance_policy,
         declared_totality,
         dependency_hashes
     }
-
-where:
-
-    observer_id            stable identifier
-    observer_version       semantic version of observer design
-    axis_aliases           optional semantic names for α, β, γ
-    domain_tag             declared application domain
-    schema_ref             optional schema for batch objects
-    component_refs         encoder / articulator / summarizer / aligner / scorer / witness suite refs
-    parameter_profile_ref  pointer or embedded digest for P_o
-    provenance_policy      what must be recorded
-    declared_totality      stated domain on which the observer is intended to run
-    dependency_hashes      immutable references if available
-
-### Definition 4.6 (Measurement Bundle) [E]
-
-Running observer o on batch D yields
-
-    B_o(D) := {
-        header,
-        observer,
-        batch_record,
-        execution,
-        controller,
-        classification,
-        summaries?,
-        pairwise?,
-        scores?,
-        diagnostics?,
-        witnesses?,
-        ci?,
-        ood?,
-        provenance?,
-        reason_codes
-    }
-
-Fields marked ? MAY be absent if execution terminates before they are computed.
 
 ### Definition 4.7 (Batch Record) [E]
 
@@ -371,46 +363,188 @@ The batch record is
         batch_hash?
     }
 
-## 5. Run Classes, Outcomes, and Truth Values [E/N]
+### Definition 4.8 (Compatibility Predicate) [E]
 
-### Definition 5.1 (Three-Valued Classification Status) [E]
+Compat(M_o, batch_record) holds iff:
 
-Let
+    (i)   domain tags are equal or explicitly declared compatible
+    (ii)  schema_ref constraints, if present, are satisfied
+    (iii) declared_totality of the observer covers the batch domain
+    (iv)  any manifest-level preconditions on N or sampling are satisfied
 
-    Status3 := {PASS, FAIL, UNDECIDED}
+### Definition 4.9 (Observer Pipeline) [E]
+
+An observer is a typed pipeline
+
+    o = (
+        η_o,
+        {A_a^o}_{a∈A},
+        {Σ_a^o}_{a∈A},
+        {E_ab^o}_{a≠b},
+        P_base,
+        M_o
+    )
+
+where:
+
+    η_o       : X* → T                encoder (domain → carrier)
+    A_a^o     : T → P(Ω_a^o)          articulator per axis
+    Σ_a^o     : P(Ω_a^o) → S_a^o      summarizer per axis
+    E_ab^o    = {σ_ab^1, …, σ_ab^m}   alignment ensemble, m ≥ 3
+    P_base    = base profile
+    M_o       = observer manifest
+
+### Definition 4.10 (Measurement Bundle) [E]
+
+Running observer o on batch D against a frozen reference snapshot R_ref
+yields a canonical bundle
+
+    B_o(D; P_eff, R_ref) := {
+        header,
+        observer,
+        batch_record,
+        effective_profile,
+        replay,
+        execution,
+        controller,
+        classification,
+        summaries?,
+        pairwise?,
+        scores?,
+        diagnostics?,
+        witnesses?,
+        ci?,
+        ood?,
+        reference_update_proposal?,
+        provenance?,
+        reason_codes
+    }
+
+## 5. Replay, Randomness, and Reference State [E/N]
+
+### Definition 5.1 (Reference Snapshot) [E]
+
+A reference snapshot is a frozen OOD reference artifact
+
+    R_ref := {
+        reference_id?,
+        policy,
+        snapshot_digest,
+        support_window_desc,
+        created_at?,
+        payload_or_pointer
+    }
+
+Normative rule:
+
+    verify reads R_ref but MUST NOT mutate it.
+
+### Definition 5.2 (Reference Update Proposal) [E]
+
+A reference update proposal is an explicit artifact
+
+    U_ref := {
+        base_snapshot_digest,
+        proposed_snapshot_digest?,
+        update_policy,
+        delta_summary?,
+        eligibility_condition
+    }
 
 Interpretation:
 
-    PASS       predicate established
-    FAIL       predicate refuted
-    UNDECIDED  predicate not yet evaluable from realized execution trace
+    Verification may propose reference evolution,
+    but proposal generation is not reference mutation.
 
-### Definition 5.2 (Declared Observer) [E]
+### Definition 5.3 (ReplayClass) [E]
+
+Let
+
+    ReplayClass := {
+        BIT_EXACT,
+        NUMERIC_EQUIVALENT,
+        STOCHASTIC_AUDITABLE
+    }
+
+Semantics:
+
+    BIT_EXACT            repeated evaluation reproduces identical artifacts
+    NUMERIC_EQUIVALENT   repeated evaluation reproduces within declared tolerances
+    STOCHASTIC_AUDITABLE repeated evaluation may vary, but all randomness and
+                         approximation sources are fully recorded
+
+### Definition 5.4 (RandomnessRecord) [E]
+
+A randomness record is
+
+    RNG := {
+        replay_class,
+        bootstrap_seed?,
+        alignment_seed_set?,
+        backend_id?,
+        numeric_profile?,
+        nondeterminism_notes?
+    }
+
+### Invariant 5.5 (Replay Purity) [E/N]
+
+For fixed:
+
+    observer o
+    batch D
+    effective profile P_eff
+    reference snapshot R_ref
+    randomness record RNG
+
+the operation verify(o, D, P_eff, R_ref, RNG) is observationally pure:
+
+    it returns a bundle,
+    but does not mutate hidden reference state.
+
+### Invariant 5.6 (Explicit State Evolution) [E]
+
+Any change to OOD reference state MUST occur outside verify
+and MUST be represented by an explicit commit or equivalent state-transition artifact.
+
+## 6. Run Classes, Outcomes, and Truth Values [E/N]
+
+### Definition 6.1 (Three-Valued Classification Status) [E]
+
+    Status3 := {PASS, FAIL, UNDECIDED}
+
+### Definition 6.2 (Declared Observer) [E]
 
 Decl(o) holds iff:
 
-    observer o has a valid manifest M_o and frozen parameter profile P_o.
+    observer o has a valid manifest M_o and base profile P_base.
 
-### Definition 5.3 (Admissible Run) [E]
+### Definition 6.3 (Compatible Run) [E]
 
-Adm(o, D) holds iff:
+Cmp(o, D) holds iff:
 
-    (i)   Decl(o)
-    (ii)  η_o, A_a^o, Σ_a^o are well-typed on D or η_o(D)
-    (iii) |D| ≥ N_min
-    (iv)  |E_ab^o| ≥ 3 for every required pair
-    (v)   required artifacts for summaries, coherences, witnesses,
-          CI, OOD, and provenance are computable in principle
-    (vi)  P_o is frozen before final scoring
-    (vii) axis aliases, if present, are declared in provenance policy
+    Decl(o) and Compat(M_o, batch_record(D)).
+
+### Definition 6.4 (Admissible Run) [E]
+
+Adm(o, D, P_eff, R_ref) holds iff:
+
+    (i)    Cmp(o, D)
+    (ii)   η_o, A_a^o, Σ_a^o are well-typed on D or η_o(D)
+    (iii)  |D| ≥ N_min
+    (iv)   |E_ab^o| ≥ 3 for every required pair
+    (v)    required artifacts for summaries, coherences, witnesses,
+           CI, OOD, and provenance are computable in principle
+    (vi)   P_eff is frozen before final scoring
+    (vii)  R_ref is frozen before OOD evaluation
+    (viii) axis aliases, if present, are recorded as metadata only
 
 Admissible means:
 
     runnable and auditable.
 
-### Definition 5.4 (Verified Run) [E/N]
+### Definition 6.5 (Verified Run) [E/N]
 
-Ver(o, D) holds iff Adm(o, D) and all hard witness conditions pass:
+Ver(o, D, P_eff, R_ref) holds iff Adm(o, D, P_eff, R_ref) and all hard witnesses pass:
 
     w_S3    ≤ τ_S3
     w_gauge ≤ τ_gauge
@@ -418,25 +552,21 @@ Ver(o, D) holds iff Adm(o, D) and all hard witness conditions pass:
     w_var   ≤ τ_var
     w_lip   < 1
 
-Verified means:
+### Definition 6.6 (Accepted Run) [E/N]
 
-    operationally and mathematically valid.
+Acc(o, D, P_eff, R_ref) holds iff Ver(o, D, P_eff, R_ref) and:
 
-### Definition 5.5 (Accepted Run) [E/N]
+    C_Σ(s; W_eff)   ≥ Θ
+    CI_hi − CI_lo   ≤ δ_CI
+    Z_t             < Z_crit
 
-Acc(o, D) holds iff Ver(o, D) and:
+where:
 
-    C_Σ(W)         ≥ Θ
-    CI_hi − CI_lo  ≤ δ_CI
-    Z_t            < Z_crit
+    W_eff = P_eff.aggregation_profile
 
-Accepted means:
+### Definition 6.7 (Deployment-Ready Run) [E]
 
-    valid + coherent enough + precise enough + distributionally stable enough.
-
-### Definition 5.6 (Deployment-Ready Run) [E]
-
-Dep(o, D) holds iff Acc(o, D) and additionally:
+Dep(o, D, P_eff, R_ref) holds iff Acc(o, D, P_eff, R_ref) and additionally:
 
     w_lip ≤ τ_lip_pol
     with τ_lip_pol < 1
@@ -445,21 +575,13 @@ Recommended default range:
 
     τ_lip_pol ∈ [0.80, 0.95]
 
-Recommended starting point for new domains:
+Recommended starting point:
 
     τ_lip_pol = 0.90
 
-DeploymentReady means:
-
-    accepted with an extra engineering safety margin on contraction.
-
-### Definition 5.7 (Execution Outcome) [E]
-
-Execution outcome is distinct from verdict classification.
+### Definition 6.8 (Execution Outcome) [E]
 
     ExecStatus := {OK, ERROR}
-
-with canonical object
 
     execution := {
         status,
@@ -468,34 +590,20 @@ with canonical object
         error_message?
     }
 
-Interpretation:
-
-    status = OK      runtime completed normally
-    status = ERROR   runtime or transport failed before normal completion
-
-### Definition 5.8 (Controller Outcome) [N/E]
-
-Controller outcome records realized operational-state progression only.
+### Definition 6.9 (Controller Outcome) [N/E]
 
     CtrlTerminal := {ACCEPT, REJECT, TERMINAL}
-
-with canonical object
 
     controller := {
         state_sequence,
         terminal_state?
     }
 
-Normative rule:
-
-    terminal_state belongs to controller semantics, not runtime semantics.
-
-### Definition 5.9 (Classification Object) [E]
-
-The classification object is
+### Definition 6.10 (Classification Object) [E]
 
     classification := {
         decl,
+        cmp,
         adm,
         ver,
         acc,
@@ -504,13 +612,11 @@ The classification object is
 
 where each field takes values in Status3.
 
-### Invariant 5.10 (Implication Chain) [E]
+### Invariant 6.11 (Implication Chain) [E]
 
-For all observers o and batches D:
+    dep = PASS ⟹ acc = PASS ⟹ ver = PASS ⟹ adm = PASS ⟹ cmp = PASS ⟹ decl = PASS
 
-    dep = PASS ⟹ acc = PASS ⟹ ver = PASS ⟹ adm = PASS ⟹ decl = PASS
-
-### Invariant 5.11 (Witness Failure Rule) [N/E]
+### Invariant 6.12 (Witness Failure Rule) [N/E]
 
 If any hard witness fails, then:
 
@@ -518,19 +624,19 @@ If any hard witness fails, then:
     acc = FAIL
     dep = FAIL
 
-### Invariant 5.12 (Execution / Classification Separation) [E]
+### Invariant 6.13 (Execution / Classification Separation) [E]
 
 If execution.status = ERROR, then:
 
     controller.state_sequence MUST be a realized prefix of a legal controller trace,
     terminal_state MAY be absent,
-    and at least one classification field MAY be UNDECIDED.
+    and one or more classification fields MAY be UNDECIDED.
 
 Runtime failure MUST NOT be encoded as a controller terminal state.
 
-## 6. Triadic Closure & Dynamics [E]
+## 7. Triadic Closure & Episode Dynamics [E]
 
-### Definition 6.1 (Triadic Episode) [E]
+### Definition 7.1 (Triadic Episode) [E]
 
 A triadic episode is
 
@@ -546,7 +652,7 @@ with deterministic update:
 
     F : M × U × Y → M × U × Y
 
-### Definition 6.2 (Essential Dependence) [E]
+### Definition 7.2 (Essential Dependence) [E]
 
 F depends essentially on omitted coordinate k relative to projection π_ij iff
 there exist z, z' such that
@@ -555,7 +661,7 @@ there exist z, z' such that
 but
     π_ij(F(z)) ≠ π_ij(F(z'))
 
-### Lemma 6.3 (Binary Non-Closure) [E]
+### Lemma 7.3 (Binary Non-Closure) [E]
 
 If F depends essentially on omitted coordinate k relative to π_ij,
 then there does not exist deterministic F_ij such that
@@ -567,18 +673,14 @@ Proof:
     Identical projected inputs would have divergent projected futures,
     so F_ij could not be single-valued.  ∎
 
-### Corollary 6.4 (Auxiliary-State Requirement) [E]
+### Corollary 7.4 (Auxiliary-State Requirement) [E]
 
 A genuinely triadic episode cannot in general be reduced to a closed binary
 dynamics without adding hidden state or memory.
 
-Interpretation:
+### Note 7.5 (Episode vs Evaluation Layer) [E]
 
-    Binary dichotomies are generally lossy projections of a triadically closed process.
-
-### Note 6.5 (Episode vs Evaluation Layer) [E]
-
-The episode layer and the evaluator layer are distinct.
+The episode layer and evaluator layer are distinct:
 
     episode layer:
         orders model / action / yield through time
@@ -586,12 +688,9 @@ The episode layer and the evaluator layer are distinct.
     evaluator layer:
         applies α / β / γ measurements to articulated material within or across episodes
 
-The evaluator triad operates within observation episodes.
-The episode dynamics govern the temporal sequence of evaluations.
+## 8. Internal Coherence Attractor [N/E]
 
-## 7. Internal Coherence Attractor [N/E]
-
-### Definition 7.1 (Observer-Induced Update Operator) [E/N]
+### Definition 8.1 (Observer-Induced Update Operator) [E/N]
 
 For a fixed observer o, define
 
@@ -607,13 +706,13 @@ by
       T_gamma^o(S_alpha, S_beta)
     )
 
-### Definition 7.2 (Contraction Scalar) [N/E]
+### Definition 8.2 (Contraction Scalar) [N/E]
 
 Let
 
     ρ_o := L_sum^o · L_align^o · max{μ_ab}
 
-### Theorem 7.3 (Internal Attractor) [N/E]
+### Theorem 8.3 (Internal Attractor) [N/E]
 
 If
 
@@ -627,19 +726,15 @@ converges to a unique fixed point
 
     S_o^*.
 
-Interpretation:
+### Definition 8.4 (Fixed-Point Profile) [E]
 
-    Coherence acts as an internal attractor in summary-space.
+The fixed-point profile of observer o under effective aggregation profile W_eff is
 
-### Definition 7.4 (Fixed-Point Profile) [E]
+    FP(o; W_eff) := (S_o^*, C_Σ(s*; W_eff), ℓ_Σ(s*; W_eff))
 
-The fixed-point profile of observer o is
+## 9. Refinement & Epistemic Time [E]
 
-    FP(o) := (S_o^*, C_Σ(W)^*, ℓ_Σ(W)^*)
-
-## 8. Refinement & Epistemic Time [E]
-
-### Definition 8.1 (Refinement Run) [E]
+### Definition 9.1 (Refinement Run) [E]
 
 A refinement run is a sequence
 
@@ -647,91 +742,74 @@ A refinement run is a sequence
 
 with
 
-    r_τ = (o_τ, D_τ, B_τ)
-and
-    B_τ = B_{o_τ}(D_τ)
+    r_τ = (o_τ, D_τ, P_eff,τ, R_ref,τ, B_τ)
 
-### Definition 8.2 (Admissibility-Preserving Refinement) [E]
+and
+
+    B_τ = B_{o_τ}(D_τ; P_eff,τ, R_ref,τ)
+
+### Definition 9.2 (Admissibility-Preserving Refinement) [E]
 
 A refinement run is admissibility-preserving iff
 
-    Adm(o_τ, D_τ)
+    Adm(o_τ, D_τ, P_eff,τ, R_ref,τ)
 
 for every τ ∈ I.
 
 ### Postulate A_weak (Monotone Convergent Subsequence) [E]
 
 Along an admissibility-preserving refinement run, coherence improves in the
-following sense:
+sense that there exists a convergent subsequence {r_{τ_k}} such that,
+under fixed aggregation profile,
 
-    There exists a convergent subsequence { r_{τ_k} } such that
+    ℓ_Σ(B_{τ_{k+1}}) ≤ ℓ_Σ(B_{τ_k})
 
-        ℓ_Σ(B_{τ_{k+1}}) ≤ ℓ_Σ(B_{τ_k})
+equivalently,
 
-    equivalently,
-
-        C_Σ(B_{τ_{k+1}}) ≥ C_Σ(B_{τ_k})
-
-    under a fixed aggregation profile and numerical floor.
+    C_Σ(B_{τ_{k+1}}) ≥ C_Σ(B_{τ_k})
 
 Non-normative note:
 
     Individual refinement steps may temporarily worsen coherence.
-    The postulate does not require every step to improve.
 
-### Definition 8.3 (Epistemic Time) [E]
+### Definition 9.3 (Epistemic Time) [E]
 
 Epistemic time is the refinement-order parameter τ.
 It orders observer-runs.
 It is not a physical clock variable.
 
-### Definition 8.4 (Epistemic Preorder) [E]
-
-For states r_i, r_j in a refinement run:
-
-    r_i ≤_E r_j   iff   i ≤ j
-
-## 9. Canonical Abstract Operations [E]
+## 10. Canonical Abstract Operations [E]
 
 This section freezes implementation-facing semantics,
 but not transport protocol.
 
-A conforming implementation MAY use:
-
-    Python objects,
-    JSON,
-    protobuf,
-    typed structs,
-    database records,
-
-or any other representation,
-provided canonical information content is preserved.
-
-### 9.1 Mandatory Operations
+### 10.1 Mandatory Operations
 
 **Operation OD-1:**
 
     describe_observer(o) → M_o
 
-Semantics:
-
-    Returns the canonical observer manifest.
-
 **Operation OD-2:**
 
-    verify(o, D, profile?) → B_o(D)
+    verify(o, D, P_base_or_ref?, ΔP?, R_ref?, RNG?) → B_o(D; P_eff, R_ref)
 
 Semantics:
 
-    Executes the observer on batch D,
-    computes all reachable artifacts,
-    returns controller trace,
-    returns execution outcome,
-    and returns classification plus diagnostics.
+    verify is replay-pure.
+    It computes all reachable artifacts against frozen inputs.
+    It MUST NOT mutate reference state.
 
-### 9.2 Optional Operations
+### 10.2 Optional Operations
 
 **Operation OD-3:**
+
+    commit_reference(U_ref) → R_ref_next
+
+Semantics:
+
+    Explicitly advances OOD reference state from a proposal.
+
+**Operation OD-4:**
 
     refine(R, budget?, objective?) → ProposalSet
 
@@ -739,18 +817,17 @@ Default objective:
 
     minimize ℓ_Σ subject to admissibility preservation.
 
-**Operation OD-4:**
+**Operation OD-5:**
 
-    compare(o_1, o_2, D) → ComparativeBundle
+    compare(o_1, o_2, D, R_ref?) → ComparativeBundle
 
 Purpose:
 
-    Compare observers on the same batch D
-    without conflating observer identity with phenomenon identity.
+    Compare observers on the same batch and same reference snapshot.
 
-## 10. Canonical Schema: Verify Contract [E]
+## 11. Canonical Schema: Verify Contract [E]
 
-### Definition 10.1 (Verification Request) [E]
+### Definition 11.1 (Verification Request) [E]
 
 A canonical verify request contains:
 
@@ -758,28 +835,32 @@ A canonical verify request contains:
         spec_name,
         spec_version,
         observer_manifest,
-        parameter_profile,
+        base_profile?,
+        override_set?,
         batch,
-        parameter_overrides?,
-        witness_floor_overrides?,
-        profile?,
+        reference_snapshot?,
+        randomness_record?,
         provenance_policy_override?
     }
 
-Required semantics:
+Semantics:
 
-    spec_name         = "TSC Observation Dynamics"
-    spec_version      = version string of this spec
-    observer_manifest = M_o
-    parameter_profile = P_o
-    batch             = observation batch D
+    observer_manifest   = M_o
+    base_profile        = explicit P_base or reference thereto
+    override_set        = ΔP
+    batch               = D
+    reference_snapshot  = R_ref
+    randomness_record   = RNG
 
 Constraint:
 
-    Any override MUST be frozen before final scoring.
-    Any override that changes aggregation weights MUST be recorded.
+    The implementation MUST compute and freeze
 
-### Definition 10.2 (Verification Response) [E]
+        P_eff = freeze(merge(P_base, ΔP))
+
+    before final scoring.
+
+### Definition 11.2 (Verification Response) [E]
 
 A canonical verify response is
 
@@ -787,6 +868,8 @@ A canonical verify response is
         header,
         observer,
         batch_record,
+        effective_profile,
+        replay,
         execution,
         controller,
         classification,
@@ -797,46 +880,43 @@ A canonical verify response is
         witnesses?,
         ci?,
         ood?,
+        reference_update_proposal?,
         provenance?,
         reason_codes
     }
 
-Required header fields:
+### Definition 11.3 (Effective Profile Object) [E]
 
-    header := {
-        spec_name,
-        spec_version,
-        run_id,
-        timestamp
+    effective_profile := {
+        profile_digest,
+        aggregation_profile,
+        frozen_fields,
+        base_profile_digest?,
+        override_digest?
     }
 
-Required controller fields:
+### Definition 11.4 (Replay Object) [E]
 
-    controller := {
-        state_sequence,
-        terminal_state?
+    replay := {
+        replay_class,
+        randomness_record,
+        reference_snapshot_digest?,
+        implementation_fingerprint?
     }
 
-Required execution fields:
+### Definition 11.5 (OOD Object) [E]
 
-    execution := {
-        status,
-        error_code?,
-        error_stage?,
-        error_message?
+If present:
+
+    ood := {
+        Z_t,
+        Z_crit,
+        pass,
+        reference_snapshot_digest,
+        policy
     }
 
-Required classification fields:
-
-    classification := {
-        decl,
-        adm,
-        ver,
-        acc,
-        dep
-    }
-
-### Definition 10.3 (Controller Trace Rule) [E/N]
+### Definition 11.6 (Controller Trace Rule) [E/N]
 
 If execution.status = OK,
 then controller.state_sequence MUST be a legal trace over
@@ -847,49 +927,13 @@ then controller.state_sequence MUST be a legal trace over
 If execution.status = ERROR,
 then controller.state_sequence MUST be a realized prefix of a legal trace.
 
-### Definition 10.4 (Canonical Score Object) [E]
+## 12. Verify Invariants [E/N]
 
-If scores are present, they MUST have the form
+**Invariant V0:**
 
-    scores := {
-        s_alpha,
-        s_beta,
-        s_gamma,
-        aggregation_profile,
-        C_Σ
-    }
+    If π ∈ S₃ and scores are present, then
 
-### Definition 10.5 (Canonical Diagnostics Object) [E]
-
-If diagnostics are present, they MUST have the form
-
-    diagnostics := {
-        ℓ_alpha,
-        ℓ_beta,
-        ℓ_gamma,
-        ℓ_Σ,
-        ρ
-    }
-
-### Definition 10.6 (Reason Codes) [E]
-
-Reason codes SHOULD be drawn from:
-
-    INPUT_NOT_WELL_FORMED
-    BATCH_TOO_SMALL
-    ENSEMBLE_TOO_SMALL
-    WITNESS_S3_FAIL
-    WITNESS_GAUGE_FAIL
-    WITNESS_SCALE_FAIL
-    WITNESS_VAR_FAIL
-    WITNESS_LIP_FAIL
-    THRESHOLD_FAIL
-    CI_TOO_WIDE
-    OOD_FAIL
-    RUNTIME_ERROR
-    INTERNAL_ERROR
-
-### 10.7 Verify Invariants [E/N]
+        C_Σ(s; W) = C_Σ(π · s; π · W)
 
 **Invariant V1:**
 
@@ -917,6 +961,7 @@ Reason codes SHOULD be drawn from:
         ⟹ classification.acc = PASS
         ⟹ classification.ver = PASS
         ⟹ classification.adm = PASS
+        ⟹ classification.cmp = PASS
         ⟹ classification.decl = PASS
 
 **Invariant V4:**
@@ -929,21 +974,31 @@ Reason codes SHOULD be drawn from:
 
 **Invariant V5:**
 
-    Provenance, if present, MUST contain enough information
-    to replay the realized verdict logic on the recorded summaries,
-    witnesses, profile, and thresholds.
-
-**Invariant V6:**
-
     execution.status = ERROR MUST NOT be represented by
     controller.terminal_state = TERMINAL_ERROR.
 
-### Definition 10.8 (Legacy Boolean Compatibility) [E]
+**Invariant V6:**
 
-For compatibility with v1.0.3-style consumers,
-implementations MAY emit
+    verify MUST NOT mutate reference state.
+
+**Invariant V7:**
+
+    effective_profile.profile_digest MUST uniquely identify the frozen
+    parameterization used for scoring, witness logic, CI, and OOD evaluation.
+
+**Invariant V8:**
+
+    Provenance, if present, MUST contain enough information to replay
+    the realized verdict logic on the recorded summaries, witnesses,
+    effective profile, randomness record, and reference snapshot.
+
+### Definition 12.1 (Legacy Boolean Compatibility) [E]
+
+Implementations MAY emit
 
     legacy_verdict := {
+        decl,
+        cmp,
         adm,
         ver,
         acc,
@@ -952,110 +1007,78 @@ implementations MAY emit
 
 only if no classification field is UNDECIDED.
 
-## 11. Conformance Profiles [E]
-
-**Profile OD-Minimal:**
-
-    MUST implement describe_observer
-    MUST implement verify
-    MUST emit canonical request/response fields
-
-**Profile OD-Refinement:**
-
-    satisfies OD-Minimal
-    MUST implement refine
-
-**Profile OD-Comparative:**
-
-    satisfies OD-Minimal
-    MUST implement compare
-
-**Profile OD-Full:**
-
-    satisfies OD-Minimal
-    satisfies OD-Refinement
-    satisfies OD-Comparative
-
-Conformance statement format:
-
-    "Implements TSC Observation Dynamics v1.0.4 / Profile <name>"
-
-## 12. Provenance Minimum [E/N]
+## 13. Provenance & Replay Minimum [E/N]
 
 Every successful or partially successful verify response MUST record at least:
 
     observer_id
     observer_version
-    parameter_profile digest or full embedded profile
-    dependency hashes or immutable references if available
     batch size N
     domain tag
+    effective profile digest
     aggregation profile
-    sampling policy
     witness floors
-    bootstrap method and N_boot
     CI level
-    OOD reference policy / description
-    calibration refs if any
+    N_boot
+    OOD policy
+    reference snapshot digest if OOD is used
+    randomness record
+    dependency hashes or immutable references if available
     controller state sequence
     timestamp
 
+If any override is used, it MUST be recorded.
 If any calibration map is used, it MUST be recorded.
 If any axis alias is used, it MUST be recorded.
-If any override is used, it MUST be recorded.
+If replay_class ≠ BIT_EXACT, the source of nondeterminism MUST be recorded.
 
-## 13. Self-Application [E]
+## 14. Self-Application [E]
 
-### Definition 13.1 (Bundle Domain Lift) [E]
+### Definition 14.1 (Bundle Domain Lift) [E]
 
-Let Bundle be the set of canonical verify responses conforming to §10.2.
-Define the meta-domain
+Let Bundle be the set of canonical verify responses conforming to §11.2.
+Define
 
     X_meta := Bundle
 
-A meta-batch is then an ordinary batch over the lifted domain:
+A meta-batch is an ordinary batch over the lifted domain:
 
     D_meta = (B_1, …, B_k) ∈ X_meta*
 
-### Definition 13.2 (Meta-Observer) [E]
+### Definition 14.2 (Meta-Observer) [E]
 
 A meta-observer o_meta is an observer over X_meta such that:
 
     η_meta       encodes bundles into T
-    A_a^meta     extracts axis-a structures across bundles
-    Σ_a^meta     summarizes cross-bundle axis-a information
+    A_a^meta     articulates bundle-structures per axis
+    Σ_a^meta     summarizes cross-bundle structures
     E_ab^meta    aligns summaries across bundles
-    P_meta       is a frozen parameter profile
+    P_base,meta  is a base profile
     M_meta       is a manifest
 
-### Definition 13.3 (Self-Application Contract) [E]
+### Definition 14.3 (Self-Application Contract) [E]
 
-Given base observers o_1, …, o_k applied to a shared phenomenon-batch D,
-construct their bundles
+Given base observers o_1, …, o_k applied to a shared batch D and reference snapshot R_ref,
+construct
 
-    B_i := verify(o_i, D)
+    B_i := verify(o_i, D, …, R_ref, …)
 
-and form
+Then define
 
     D_meta := (B_1, …, B_k)
 
-Then self-application is simply
+and self-apply via
 
-    verify(o_meta, D_meta)
+    verify(o_meta, D_meta, …, R_ref_meta, …)
 
 No new top-level API is introduced.
 
-### Proposition 13.4 (Finite Termination of Self-Application) [E]
+### Proposition 14.4 (Finite Termination of Self-Application) [E]
 
 If D_meta is finite and o_meta is an admissible finite pipeline,
 then self-application terminates after finite execution steps.
 
-Reason:
-
-    The meta-observer processes a finite batch of finite artifacts;
-    no infinite regress is required by the contract.
-
-## 14. External Hypotheses Boundary [C]
+## 15. External Hypotheses Boundary [C]
 
 The following are outside the normative scope of this specification:
 
@@ -1064,10 +1087,7 @@ The following are outside the normative scope of this specification:
     gravitational geometrization
     metaphysical necessity of triadicity
 
-These may be discussed elsewhere,
-but they are not licensed by this specification alone.
-
-## 15. Repository Placement & Derived Artifacts [E]
+## 16. Repository Placement & Derived Artifacts [E]
 
 Canonical file:
 
@@ -1075,42 +1095,30 @@ Canonical file:
 
 Derived non-normative artifacts MAY include:
 
-    1. a whitepaper explaining motivation and interpretation
-    2. implementation guides for specific languages
+    1. whitepaper explaining motivation and interpretation
+    2. language-specific implementation guides
     3. benchmark suites
-    4. a scientific paper with proofs, experiments, or case studies
-    5. concrete JSON Schema / protobuf definitions derived from §10
+    4. scientific paper with proofs, experiments, or case studies
+    5. JSON Schema / protobuf / IDL definitions derived from §11–§13
 
 Normative rule:
 
     If any derived artifact contradicts this file,
     this file governs the observation layer.
 
-## 16. Final Position
+## 17. Final Position
 
-TSC Observation Dynamics v1.0.4 is the observation-layer specification of TSC.
+TSC Observation Dynamics v1.0.5 is the replay-pure observation-layer specification of TSC.
 
-It is:
+Its decisive moves are:
 
-    not the foundation,
-    not the core measurement calculus,
-    not the operational witness protocol,
+    weighted aggregation without false symmetry claims,
+    frozen effective profiles,
+    explicit observer/batch compatibility,
+    pure verification against frozen reference snapshots,
+    explicit reference evolution,
+    and auditable randomness classes.
 
-but the layer that defines:
-
-    what an observer is,
-    how an observer-run is classified,
-    how refinement is ordered,
-    how self-application is normalized,
-    and how those semantics cross into implementation.
-
-The decisive move in v1.0.4 is this:
-
-    controller logic remains operational,
-    runtime failure remains runtime,
-    aggregation is explicit,
-    and replayability is first-class.
-
-That is cleaner mathematics.
-That is safer software.
-That is the right next layer in the stack.
+That is stricter mathematics.
+That is safer runtime behavior.
+That is the right shape for the next layer.
