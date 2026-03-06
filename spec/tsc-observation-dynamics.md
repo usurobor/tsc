@@ -1,8 +1,8 @@
-# TSC Observation Dynamics v1.0.6
+# TSC Observation Dynamics v1.0.7
 
-Formal Specification of Observer Construction, Verification, Epistemic Refinement, and Evidence-Closed Evaluation
+Formal Specification of Observer Construction, Verification, Epistemic Refinement, and Proof-Carrying Check Ledgers
 
-    Version:    v1.0.6
+    Version:    v1.0.7
     Status:     Proposed Extension Specification
     Artifact:   Specification
     Normative dependencies:
@@ -24,7 +24,8 @@ It defines:
     how refinement is ordered,
     how self-application is normalized,
     how symmetry is tested under weighted aggregation,
-    and how verification becomes trace-complete and evidence-closed.
+    how verification remains replay-pure,
+    and how every terminal outcome carries explicit check-level evidence.
 
 Place in stack:
 
@@ -41,7 +42,8 @@ It is:
     not the core measurement calculus,
     not the operational witness protocol,
 
-but the layer that makes observer semantics executable, replayable, and auditable.
+but the layer that makes observer semantics executable, replayable, auditable,
+and proof-carrying.
 
 ## 1. Status Discipline
 
@@ -55,36 +57,48 @@ Normative reading rule:
 
 ## 2. Change Log
 
+### From v1.0.6
+
+    POL-01  Evaluation policies are now first-class:
+                FAIL_FAST | EXHAUSTIVE
+            separately for witness-stage and verdict-stage checks.
+
+    LED-01  WitnessLedger introduced.
+            Witness outcomes are no longer just a flat signal bundle;
+            they are fixed-slot check records with status, observed value,
+            threshold relation, and skip reason if not evaluated.
+
+    LED-02  VerdictLedger introduced.
+            Threshold / CI / OOD checks are now proof-carrying check records.
+
+    CLS-04  ver / acc / dep become ledger-derived.
+            Classification is no longer a free-floating flag set.
+
+    MAT-02  Trace-complete materialization is refined:
+            once a stage is reached, the corresponding ledger MUST exist.
+
+    EVD-02  Acceptance is now proof-carrying.
+            ACCEPT requires explicit PASS evidence for every required witness
+            and verdict check.
+
+    EVD-03  Fail-fast is reconciled with provenance.
+            Non-evaluated checks are represented explicitly as NOT_EVALUATED
+            with a skip reason, rather than being silently absent.
+
+    ORD-01  Canonical witness and verdict orders are frozen.
+            This removes ambiguity across SDK implementations.
+
 ### From v1.0.5
 
-    SYM-03  SymmetryMode introduced:
-                ABSOLUTE | COVARIANT
-
-    SYM-04  W1 semantics generalized.
-            Under non-uniform aggregation, permutation testing acts on the
-            axis-indexed effective profile, not on observations alone.
-
-    ADM-02  Non-uniform aggregation profiles require symmetry_mode = COVARIANT.
-
-    TRC-03  Legal controller traces are now branch-exact:
-                ACCEPT path,
-                VERDICT-stage REJECT path,
-                DIAGNOSE-stage TERMINAL path,
-                and runtime-error prefixes.
-
-    MAT-01  Trace-complete materialization added.
-            Realized controller prefixes determine which bundle fields MUST exist.
-
-    EVD-01  Evidence-closure added.
-            Every reason code now implies a minimum evidence payload.
-
-    CLS-03  Status3 gets an information preorder.
-            Classification fields may move from UNDECIDED to PASS/FAIL,
-            but never flip between PASS and FAIL within one realized run.
-
-    DEC-01  Witness failure is explicitly separated from verdict-stage rejection.
-            Witness failure ends in DIAGNOSE → TERMINAL.
-            Threshold / CI / OOD failure ends in VERDICT → REJECT.
+    SYM-03  SymmetryMode introduced as first-class profile field.
+    SYM-04  W1 generalized under covariant symmetry mode.
+    ADM-02  Non-uniform aggregation forces COVARIANT symmetry mode.
+    TRC-03  Legal controller traces made exact.
+    DEC-01  Witness failure routed to DIAGNOSE → TERMINAL;
+            verdict failure routed to VERDICT → REJECT.
+    MAT-01  Trace-complete materialization introduced.
+    EVD-01  Evidence closure introduced.
+    CLS-03  Information preorder on Status3 introduced.
 
 ### From v1.0.4
 
@@ -132,15 +146,15 @@ is axis-indexed.
 
 Examples:
 
-    scores
-    leverages
+    dimensional scores
+    dimensional leverages
     axis sensitivities
     aggregation weights
     axis-specific calibration maps
 
 ### Definition 3.3 (Permutation Action) [E]
 
-For any π ∈ S₃ and any axis-indexed object q, define
+For any permutation π ∈ S₃ and any axis-indexed object q, define
 
     (π · q)_a := q_{π⁻¹(a)}.
 
@@ -154,12 +168,12 @@ For any compound object P with axis-indexed computational subfields,
 Interpretation:
 
     ABSOLUTE:
-        Permuting axes in the observed material leaves the coherence value unchanged
-        under a fixed effective profile.
+        Permuting axis assignments in the observed material leaves
+        coherence unchanged under a fixed effective profile.
 
     COVARIANT:
-        Permuting axes in the observed material must be accompanied by the same
-        permutation of all axis-indexed computational profile fields.
+        Permuting axis assignments in the observed material must be accompanied
+        by the same permutation of all axis-indexed computational profile fields.
 
 ### Definition 3.5 (Aggregation Profile) [N/E]
 
@@ -191,7 +205,7 @@ numerical floor ε, and aggregation profile W, define
         w_gamma · ln(max(s_gamma, ε))
     ))
 
-Uniform case:
+Uniform corollary:
 
     If W = W_uniform, then
 
@@ -223,9 +237,7 @@ For all π ∈ S₃:
 
     C_Σ(s; W) = C_Σ(π · s; π · W)
 
-Hence:
-
-    Aggregate coherence is permutation-covariant in (s, W).
+Hence aggregate coherence is permutation-covariant in (s, W).
 
 Corollary:
 
@@ -263,19 +275,14 @@ If symmetry_mode = COVARIANT, define
       :=
     max_{π ∈ S₃} | C_Σ(O; P_eff) − C_Σ(π · O; π · P_eff^axis) |
 
-Interpretation:
-
-    ABSOLUTE tests invariance under observation permutation alone.
-    COVARIANT tests equivariance under joint permutation of observations and
-    axis-indexed computational profile fields.
-
 ### Admissibility Rule 3.11 (Symmetry/Profile Compatibility) [E]
 
 If aggregation_profile ≠ W_uniform,
 then symmetry_mode MUST equal COVARIANT.
 
 If aggregation_profile = W_uniform,
-then either symmetry mode is allowed, but ABSOLUTE is the canonical default.
+then either symmetry mode is allowed,
+but ABSOLUTE is the canonical default.
 
 ### Proposition 3.12 (Mode Collapse in Uniform Case) [E]
 
@@ -283,7 +290,7 @@ If aggregation_profile = W_uniform
 and all other computationally relevant axis-indexed fields of P_eff are uniform,
 then ABSOLUTE and COVARIANT W1 evaluations coincide.
 
-## 4. Observation Objects and Freezing Discipline [E]
+## 4. Observation Objects, Profiles, and Freezing Discipline [E]
 
 ### Definition 4.1 (Observation Domain) [E]
 
@@ -299,7 +306,36 @@ with
 
     N = |D|.
 
-### Definition 4.3 (BaseProfile) [E]
+### Definition 4.3 (EvaluationPolicy) [E]
+
+    EvaluationPolicy := {FAIL_FAST, EXHAUSTIVE}
+
+Interpretation:
+
+    FAIL_FAST:
+        Stop evaluating later checks in the same stage after the first failure.
+
+    EXHAUSTIVE:
+        Evaluate every check in the stage regardless of earlier failures.
+
+### Definition 4.4 (WitnessOrder) [E]
+
+The canonical atomic witness order is
+
+    WitnessOrder_default := [S3, GAUGE, SCALE, VAR, LIP]
+
+Non-normative note:
+
+    VAR and LIP are often computed from the same W4 ensemble artifact,
+    but they remain distinct atomic acceptance conditions.
+
+### Definition 4.5 (VerdictOrder) [E]
+
+The canonical verdict order is
+
+    VerdictOrder_default := [THRESHOLD, CI, OOD]
+
+### Definition 4.6 (BaseProfile) [E]
 
 Every observer design carries a base profile
 
@@ -310,6 +346,10 @@ Every observer design carries a base profile
         ε,
         aggregation_profile,
         symmetry_mode,
+        witness_eval_policy,
+        verdict_eval_policy,
+        witness_order,
+        verdict_order,
         Θ,
         τ_S3,
         τ_gauge,
@@ -325,7 +365,14 @@ Every observer design carries a base profile
         calibration_refs?
     }
 
-### Definition 4.4 (OverrideSet) [E]
+Canonical defaults:
+
+    witness_eval_policy = FAIL_FAST
+    verdict_eval_policy = FAIL_FAST
+    witness_order       = WitnessOrder_default
+    verdict_order       = VerdictOrder_default
+
+### Definition 4.7 (OverrideSet) [E]
 
 An override set is a partial object
 
@@ -335,7 +382,7 @@ Override rule:
 
     Overrides are permitted only if declared legal by the observer manifest.
 
-### Definition 4.5 (EffectiveProfile) [E]
+### Definition 4.8 (EffectiveProfile) [E]
 
 The effective profile is
 
@@ -343,10 +390,11 @@ The effective profile is
 
 Normative rule:
 
-    All scoring, witness evaluation, CI evaluation, OOD evaluation,
-    and verdict logic MUST use P_eff.
+    All scoring, witness evaluation, verdict evaluation,
+    CI evaluation, OOD evaluation, and classification derivation
+    MUST use P_eff.
 
-### Definition 4.6 (Observer Manifest) [E]
+### Definition 4.9 (Observer Manifest) [E]
 
 Every observer MUST admit a serializable manifest
 
@@ -364,7 +412,7 @@ Every observer MUST admit a serializable manifest
         dependency_hashes
     }
 
-### Definition 4.7 (Batch Record) [E]
+### Definition 4.10 (Batch Record) [E]
 
     batch_record := {
         batch_id?,
@@ -375,7 +423,7 @@ Every observer MUST admit a serializable manifest
         batch_hash?
     }
 
-### Definition 4.8 (Compatibility Predicate) [E]
+### Definition 4.11 (Compatibility Predicate) [E]
 
 Compat(M_o, batch_record) holds iff:
 
@@ -384,7 +432,7 @@ Compat(M_o, batch_record) holds iff:
     (iii) declared_totality covers the batch domain
     (iv)  manifest-level preconditions on N or sampling are satisfied
 
-### Definition 4.9 (Reference Snapshot) [E]
+### Definition 4.12 (Reference Snapshot) [E]
 
     R_ref := {
         reference_id?,
@@ -399,7 +447,7 @@ Normative rule:
 
     verify may read R_ref but MUST NOT mutate it.
 
-### Definition 4.10 (Randomness Record) [E]
+### Definition 4.13 (Randomness Record) [E]
 
     RNG := {
         replay_class,
@@ -418,7 +466,7 @@ where
         STOCHASTIC_AUDITABLE
     }
 
-### Definition 4.11 (Observer Pipeline) [E]
+### Definition 4.14 (Observer Pipeline) [E]
 
 An observer is a typed pipeline
 
@@ -438,13 +486,174 @@ where:
     Σ_a^o     : P(Ω_a^o) → S_a^o      summarizer per axis
     E_ab^o    = {σ_ab^1, …, σ_ab^m}   alignment ensemble, m ≥ 3
 
-## 5. Run Classes, Truth Values, and Outcomes [E/N]
+## 5. Check Ledgers and Evaluation Policy [E/N]
 
-### Definition 5.1 (Status3) [E]
+### Definition 5.1 (CheckStatus) [E]
+
+    CheckStatus := {PASS, FAIL, NOT_EVALUATED}
+
+### Definition 5.2 (SkipReason) [E]
+
+    SkipReason := {
+        FAIL_FAST_SHORT_CIRCUIT,
+        STAGE_NOT_REACHED,
+        RUNTIME_ABORT
+    }
+
+### Definition 5.3 (WitnessAtoms) [E]
+
+    WitnessAtoms := {S3, GAUGE, SCALE, VAR, LIP}
+
+These correspond to the atomic witness acceptance conditions:
+
+    S3     : w_S3    ≤ τ_S3
+    GAUGE  : w_gauge ≤ τ_gauge
+    SCALE  : w_scale ≤ τ_scale
+    VAR    : w_var   ≤ τ_var
+    LIP    : w_lip   < 1
+
+### Definition 5.4 (VerdictAtoms) [E]
+
+    VerdictAtoms := {THRESHOLD, CI, OOD}
+
+These correspond to the atomic verdict acceptance conditions:
+
+    THRESHOLD : C_Σ           ≥ Θ
+    CI        : CI_hi − CI_lo ≤ δ_CI
+    OOD       : Z_t           < Z_crit
+
+### Definition 5.5 (Witness Entry) [E]
+
+For each c ∈ WitnessAtoms, a witness entry is
+
+    WitnessEntry(c) := {
+        status,
+        observed_value?,
+        relation,
+        floor_or_target?,
+        evidence_ref?,
+        skip_reason?
+    }
+
+Canonical relations:
+
+    S3       relation = ≤
+    GAUGE    relation = ≤
+    SCALE    relation = ≤
+    VAR      relation = ≤
+    LIP      relation = <
+
+Normative rule:
+
+    If status ∈ {PASS, FAIL}, then observed_value MUST be present.
+    If status = NOT_EVALUATED, then skip_reason MUST be present.
+
+### Definition 5.6 (Verdict Entry) [E]
+
+For each c ∈ VerdictAtoms, a verdict entry is
+
+    VerdictEntry(c) := {
+        status,
+        observed_value?,
+        relation,
+        floor_or_target?,
+        evidence_ref?,
+        reference_snapshot_digest?,
+        skip_reason?
+    }
+
+Canonical relations:
+
+    THRESHOLD relation = ≥
+    CI        relation = ≤
+    OOD       relation = <
+
+Normative rule:
+
+    If status ∈ {PASS, FAIL}, then observed_value MUST be present.
+    If status = NOT_EVALUATED, then skip_reason MUST be present.
+
+### Definition 5.7 (WitnessLedger) [E]
+
+A witness ledger is
+
+    witness_ledger := {
+        policy,
+        order,
+        first_failure?,
+        S3,
+        GAUGE,
+        SCALE,
+        VAR,
+        LIP
+    }
+
+where:
+
+    policy = P_eff.witness_eval_policy
+    order  = P_eff.witness_order
+    each slot is a WitnessEntry
+
+### Definition 5.8 (VerdictLedger) [E]
+
+A verdict ledger is
+
+    verdict_ledger := {
+        policy,
+        order,
+        first_failure?,
+        THRESHOLD,
+        CI,
+        OOD
+    }
+
+where:
+
+    policy = P_eff.verdict_eval_policy
+    order  = P_eff.verdict_order
+    each slot is a VerdictEntry
+
+### Definition 5.9 (Fail-Fast Witness Ledger Law) [E/N]
+
+If witness_ledger.policy = FAIL_FAST
+and first_failure = c,
+then:
+
+    (i)   every witness atom strictly before c in order has status = PASS
+    (ii)  the slot for c has status = FAIL
+    (iii) every witness atom strictly after c has status = NOT_EVALUATED
+          and skip_reason = FAIL_FAST_SHORT_CIRCUIT
+
+### Definition 5.10 (Exhaustive Witness Ledger Law) [E]
+
+If witness_ledger.policy = EXHAUSTIVE
+and stage W has been reached,
+then every witness atom has status ∈ {PASS, FAIL}.
+
+### Definition 5.11 (Fail-Fast Verdict Ledger Law) [E/N]
+
+If verdict_ledger.policy = FAIL_FAST
+and first_failure = c,
+then:
+
+    (i)   every verdict atom strictly before c in order has status = PASS
+    (ii)  the slot for c has status = FAIL
+    (iii) every verdict atom strictly after c has status = NOT_EVALUATED
+          and skip_reason = FAIL_FAST_SHORT_CIRCUIT
+
+### Definition 5.12 (Exhaustive Verdict Ledger Law) [E]
+
+If verdict_ledger.policy = EXHAUSTIVE
+and stage V has been reached,
+then every verdict atom has status ∈ {PASS, FAIL}.
+
+## 6. Run Classes, Truth Values, and Outcomes [E/N]
+
+### Definition 6.1 (Status3) [E]
 
     Status3 := {PASS, FAIL, UNDECIDED}
 
-### Definition 5.2 (Information Preorder on Status3) [E]
+### Definition 6.2 (Information Preorder on Status3) [E]
 
 Define
 
@@ -453,24 +662,19 @@ Define
 
 and PASS, FAIL are incomparable.
 
-Interpretation:
-
-    A realized run may refine an unevaluated predicate to PASS or FAIL,
-    but does not revise PASS into FAIL or FAIL into PASS.
-
-### Definition 5.3 (Declared Observer) [E]
+### Definition 6.3 (Declared Observer) [E]
 
 Decl(o) holds iff:
 
     observer o has a valid manifest M_o and base profile P_base.
 
-### Definition 5.4 (Compatible Run) [E]
+### Definition 6.4 (Compatible Run) [E]
 
 Cmp(o, D) holds iff:
 
     Decl(o) and Compat(M_o, batch_record(D)).
 
-### Definition 5.5 (Admissible Run) [E]
+### Definition 6.5 (Admissible Run) [E]
 
 Adm(o, D, P_eff, R_ref) holds iff:
 
@@ -484,34 +688,70 @@ Adm(o, D, P_eff, R_ref) holds iff:
     (viii) symmetry/profile compatibility rule 3.11 holds
     (ix)   axis aliases, if present, are metadata only
 
-### Definition 5.6 (Verified Run) [E/N]
+### Definition 6.6 (Derived Verification Status) [E/N]
 
-Ver(o, D, P_eff, R_ref) holds iff Adm(o, D, P_eff, R_ref) and all hard witnesses pass:
+If witness_ledger is present, define:
 
-    w_S3    ≤ τ_S3
-    w_gauge ≤ τ_gauge
-    w_scale ≤ τ_scale
-    w_var   ≤ τ_var
-    w_lip   < 1
+    ver = PASS
+        iff every witness atom has status = PASS
 
-### Definition 5.7 (Accepted Run) [E/N]
+    ver = FAIL
+        iff at least one witness atom has status = FAIL
 
-Acc(o, D, P_eff, R_ref) holds iff Ver(o, D, P_eff, R_ref) and:
+    ver = UNDECIDED
+        iff no witness atom has status = FAIL
+        and at least one witness atom has status = NOT_EVALUATED
 
-    C_Σ(s; W_eff)   ≥ Θ
-    CI_hi − CI_lo   ≤ δ_CI
-    Z_t             < Z_crit
+If witness_ledger is absent:
 
-where:
+    ver = UNDECIDED unless admissibility has already failed.
 
-    W_eff = P_eff.aggregation_profile
+### Definition 6.7 (Derived Acceptance Status) [E/N]
 
-### Definition 5.8 (Deployment-Ready Run) [E]
+If ver = FAIL:
 
-Dep(o, D, P_eff, R_ref) holds iff Acc(o, D, P_eff, R_ref) and additionally:
+    acc = FAIL
 
-    w_lip ≤ τ_lip_pol
-    with τ_lip_pol < 1
+Else if verdict_ledger is present, define:
+
+    acc = PASS
+        iff ver = PASS
+        and every verdict atom has status = PASS
+
+    acc = FAIL
+        iff ver = PASS
+        and at least one verdict atom has status = FAIL
+
+    acc = UNDECIDED
+        iff ver = PASS
+        and no verdict atom has status = FAIL
+        and at least one verdict atom has status = NOT_EVALUATED
+
+If verdict_ledger is absent and ver ≠ FAIL:
+
+    acc = UNDECIDED
+
+### Definition 6.8 (Derived Deployment Status) [E]
+
+Let lip_entry := witness_ledger.LIP if witness_ledger is present.
+
+Define:
+
+    dep = PASS
+        iff acc = PASS
+        and lip_entry.status = PASS
+        and lip_entry.observed_value ≤ τ_lip_pol
+
+    dep = FAIL
+        iff acc = FAIL
+        or (acc = PASS and lip_entry.status = PASS and lip_entry.observed_value > τ_lip_pol)
+
+    dep = UNDECIDED
+        otherwise
+
+Normative constraint:
+
+    τ_lip_pol < 1
 
 Recommended default range:
 
@@ -521,7 +761,7 @@ Recommended starting point:
 
     τ_lip_pol = 0.90
 
-### Definition 5.9 (Execution Outcome) [E]
+### Definition 6.9 (Execution Outcome) [E]
 
     ExecStatus := {OK, ERROR}
 
@@ -532,7 +772,7 @@ Recommended starting point:
         error_message?
     }
 
-### Definition 5.10 (Controller Outcome) [N/E]
+### Definition 6.10 (Controller Outcome) [N/E]
 
     CtrlTerminal := {ACCEPT, REJECT, TERMINAL}
 
@@ -541,7 +781,7 @@ Recommended starting point:
         terminal_state?
     }
 
-### Definition 5.11 (Classification Object) [E]
+### Definition 6.11 (Classification Object) [E]
 
     classification := {
         decl,
@@ -554,31 +794,21 @@ Recommended starting point:
 
 where each field takes values in Status3.
 
-### Invariant 5.12 (Implication Chain) [E]
+### Invariant 6.12 (Implication Chain) [E]
 
     dep = PASS ⟹ acc = PASS ⟹ ver = PASS ⟹ adm = PASS ⟹ cmp = PASS ⟹ decl = PASS
 
-### Invariant 5.13 (Witness Failure Rule) [N/E]
-
-If any hard witness fails, then:
-
-    ver = FAIL
-    acc = FAIL
-    dep = FAIL
-
-### Invariant 5.14 (Information Monotonicity) [E]
+### Invariant 6.13 (Information Monotonicity) [E]
 
 Along a single realized verify run, each classification field is monotone under ≤_I.
 
-### Invariant 5.15 (Execution / Controller Separation) [E]
+### Invariant 6.14 (Execution / Controller Separation) [E]
 
 Runtime failure MUST NOT be encoded as a controller terminal state.
 
-## 6. Controller Trace Language and Trace-Complete Materialization [E/N]
+## 7. Controller Trace Language and Trace-Complete Materialization [E/N]
 
-### Definition 6.1 (Canonical Trace Alphabet) [E/N]
-
-Let the controller-state alphabet be
+### Definition 7.1 (Canonical Trace Alphabet) [E/N]
 
     H = HANDSHAKE
     M = MEASURE
@@ -589,7 +819,7 @@ Let the controller-state alphabet be
     R = REJECT
     T = TERMINAL
 
-### Definition 6.2 (Legal Completed Traces) [E/N]
+### Definition 7.2 (Legal Completed Traces) [E/N]
 
 The legal completed traces are exactly:
 
@@ -597,41 +827,35 @@ The legal completed traces are exactly:
     τ_reject   = H → M → W → V → R
     τ_terminal = H → M → W → D → T
 
-### Definition 6.3 (Legal Prefixes Under Runtime Error) [E]
+### Definition 7.3 (Legal Prefixes Under Runtime Error) [E]
 
 If execution.status = ERROR,
 then controller.state_sequence MUST be a proper prefix of one of the legal completed traces.
 
-### Branch Law 6.4 (Witness-Failure Branch) [E/N]
+### Branch Law 7.4 (Witness-Failure Branch) [E/N]
 
-If execution.status = OK and any hard witness fails, then:
+If execution.status = OK and ver = FAIL, then:
 
     controller.state_sequence = τ_terminal
     controller.terminal_state = TERMINAL
 
 Witness failure MUST NOT terminate in REJECT.
 
-### Branch Law 6.5 (Verdict-Failure Branch) [E/N]
+### Branch Law 7.5 (Verdict-Failure Branch) [E/N]
 
-If execution.status = OK, Ver = PASS, and one or more of
-
-    C_Σ < Θ
-    CI width > δ_CI
-    Z_t ≥ Z_crit
-
-holds, then:
+If execution.status = OK and ver = PASS and acc = FAIL, then:
 
     controller.state_sequence = τ_reject
     controller.terminal_state = REJECT
 
-### Branch Law 6.6 (Acceptance Branch) [E/N]
+### Branch Law 7.6 (Acceptance Branch) [E/N]
 
-If execution.status = OK and Acc = PASS, then:
+If execution.status = OK and acc = PASS, then:
 
     controller.state_sequence = τ_accept
     controller.terminal_state = ACCEPT
 
-### Definition 6.7 (Trace-Complete Materialization) [E]
+### Definition 7.7 (Trace-Complete Materialization) [E]
 
 A verify response is trace-complete iff the fields required by the realized
 controller prefix are present.
@@ -657,7 +881,7 @@ Minimum obligations by last reached state:
 
     after W:
         all M fields
-        witnesses
+        witness_ledger
 
     after D:
         all W fields
@@ -666,7 +890,8 @@ Minimum obligations by last reached state:
 
     after V:
         all W fields
-        ood
+        verdict_ledger
+        ood?
         reason_codes
 
     after A or R or T:
@@ -675,11 +900,12 @@ Minimum obligations by last reached state:
 
 Interpretation:
 
-    The response bundle must be complete up to the realized trace prefix.
+    Once a stage is reached, its ledger must exist;
+    silent absence is not allowed.
 
-## 7. Evidence Closure and Proof-Carrying Outcomes [E/N]
+## 8. Evidence Closure and Proof-Carrying Outcomes [E/N]
 
-### Definition 7.1 (Reason Code Families) [E]
+### Definition 8.1 (Reason Code Families) [E]
 
 Reason codes SHOULD be drawn from:
 
@@ -700,9 +926,9 @@ Reason codes SHOULD be drawn from:
     RUNTIME_ERROR
     INTERNAL_ERROR
 
-### Definition 7.2 (Evidence Closure) [E]
+### Definition 8.2 (Evidence Closure) [E]
 
-A reason code is evidence-closed iff its supporting fields are present.
+A reason code is evidence-closed iff its supporting artifacts are present.
 
 Required support:
 
@@ -723,46 +949,45 @@ Required support:
           and classification.adm = FAIL
 
     ENSEMBLE_TOO_SMALL
-        → observer manifest or provenance records ensemble insufficiency
+        → manifest or provenance records ensemble insufficiency
           and classification.adm = FAIL
 
     WITNESS_S3_FAIL
-        → witnesses.w_S3 present
+        → witness_ledger.S3.status = FAIL
           and controller.terminal_state = TERMINAL
 
     WITNESS_GAUGE_FAIL
-        → witnesses.w_gauge present
+        → witness_ledger.GAUGE.status = FAIL
           and controller.terminal_state = TERMINAL
 
     WITNESS_SCALE_FAIL
-        → witnesses.w_scale present
+        → witness_ledger.SCALE.status = FAIL
           and controller.terminal_state = TERMINAL
 
     WITNESS_VAR_FAIL
-        → witnesses.w_var present
+        → witness_ledger.VAR.status = FAIL
           and controller.terminal_state = TERMINAL
 
     WITNESS_LIP_FAIL
-        → witnesses.w_lip present
+        → witness_ledger.LIP.status = FAIL
           and controller.terminal_state = TERMINAL
 
     THRESHOLD_FAIL
-        → scores.C_Σ present
-          and effective_profile present
+        → verdict_ledger.THRESHOLD.status = FAIL
           and controller.terminal_state = REJECT
 
     CI_TOO_WIDE
-        → ci present
+        → verdict_ledger.CI.status = FAIL
           and controller.terminal_state = REJECT
 
     OOD_FAIL
-        → ood present
+        → verdict_ledger.OOD.status = FAIL
           and controller.terminal_state = REJECT
 
     RUNTIME_ERROR or INTERNAL_ERROR
         → execution.status = ERROR
 
-### Invariant 7.3 (Proof-Carrying Terminal Outcome) [E]
+### Invariant 8.3 (Proof-Carrying Terminal Outcome) [E]
 
 If execution.status = OK and controller.terminal_state ∈ {REJECT, TERMINAL},
 then:
@@ -770,16 +995,20 @@ then:
     reason_codes MUST be non-empty
     and every asserted reason code MUST be evidence-closed.
 
-### Invariant 7.4 (Acceptance Closure) [E/N]
+### Invariant 8.4 (Proof-Carrying Acceptance) [E/N]
 
 If controller.terminal_state = ACCEPT, then:
 
-    classification.acc = PASS
-    and no failure reason code may be asserted.
+    (i)   every witness atom has status = PASS
+    (ii)  every verdict atom has status = PASS
+    (iii) no failure reason code may be asserted
 
-## 8. Replay Purity and Reference Evolution [E/N]
+Acceptance MUST be explicit proof of all required passes,
+not merely absence of a recorded failure.
 
-### Invariant 8.1 (Replay Purity) [E/N]
+## 9. Replay Purity and Reference Evolution [E/N]
+
+### Invariant 9.1 (Replay Purity) [E/N]
 
 For fixed
 
@@ -794,7 +1023,7 @@ is observationally pure:
     it returns a bundle,
     but does not mutate hidden reference state.
 
-### Definition 8.2 (Reference Update Proposal) [E]
+### Definition 9.2 (Reference Update Proposal) [E]
 
     U_ref := {
         base_snapshot_digest,
@@ -807,7 +1036,7 @@ is observationally pure:
 Verification MAY emit U_ref,
 but proposal emission is not state mutation.
 
-### Operation 8.3 (Explicit Reference Commit) [E]
+### Operation 9.3 (Explicit Reference Commit) [E]
 
     commit_reference(U_ref) → R_ref_next
 
@@ -815,9 +1044,9 @@ Interpretation:
 
     Reference evolution is explicit and external to verify.
 
-## 9. Triadic Closure and Episode Dynamics [E]
+## 10. Triadic Closure and Episode Dynamics [E]
 
-### Definition 9.1 (Triadic Episode) [E]
+### Definition 10.1 (Triadic Episode) [E]
 
 A triadic episode is
 
@@ -833,7 +1062,7 @@ with deterministic update:
 
     F : M × U × Y → M × U × Y
 
-### Definition 9.2 (Essential Dependence) [E]
+### Definition 10.2 (Essential Dependence) [E]
 
 F depends essentially on omitted coordinate k relative to projection π_ij iff
 there exist z, z' such that
@@ -842,21 +1071,21 @@ there exist z, z' such that
 but
     π_ij(F(z)) ≠ π_ij(F(z'))
 
-### Lemma 9.3 (Binary Non-Closure) [E]
+### Lemma 10.3 (Binary Non-Closure) [E]
 
 If F depends essentially on omitted coordinate k relative to π_ij,
 then there does not exist deterministic F_ij such that
 
     π_ij ∘ F = F_ij ∘ π_ij
 
-### Corollary 9.4 (Auxiliary-State Requirement) [E]
+### Corollary 10.4 (Auxiliary-State Requirement) [E]
 
 A genuinely triadic episode cannot in general be reduced to a closed binary
 dynamics without adding hidden state or memory.
 
-## 10. Internal Coherence Attractor [N/E]
+## 11. Internal Coherence Attractor [N/E]
 
-### Definition 10.1 (Observer-Induced Update Operator) [E/N]
+### Definition 11.1 (Observer-Induced Update Operator) [E/N]
 
 For a fixed observer o, define
 
@@ -872,13 +1101,13 @@ by
       T_gamma^o(S_alpha, S_beta)
     )
 
-### Definition 10.2 (Contraction Scalar) [N/E]
+### Definition 11.2 (Contraction Scalar) [N/E]
 
 Let
 
     ρ_o := L_sum^o · L_align^o · max{μ_ab}
 
-### Theorem 10.3 (Internal Attractor) [N/E]
+### Theorem 11.3 (Internal Attractor) [N/E]
 
 If
 
@@ -892,9 +1121,9 @@ converges to a unique fixed point
 
     S_o^*.
 
-## 11. Refinement and Epistemic Time [E]
+## 12. Refinement and Epistemic Time [E]
 
-### Definition 11.1 (Refinement Run) [E]
+### Definition 12.1 (Refinement Run) [E]
 
 A refinement run is a sequence
 
@@ -908,7 +1137,7 @@ and
 
     B_τ = B_{o_τ}(D_τ; P_eff,τ, R_ref,τ)
 
-### Definition 11.2 (Admissibility-Preserving Refinement) [E]
+### Definition 12.2 (Admissibility-Preserving Refinement) [E]
 
 A refinement run is admissibility-preserving iff
 
@@ -928,13 +1157,13 @@ equivalently,
 
     C_Σ(B_{τ_{k+1}}) ≥ C_Σ(B_{τ_k})
 
-### Definition 11.3 (Epistemic Time) [E]
+### Definition 12.3 (Epistemic Time) [E]
 
 Epistemic time is the refinement-order parameter τ.
 It orders observer-runs.
 It is not a physical clock variable.
 
-## 12. Canonical Abstract Operations [E]
+## 13. Canonical Abstract Operations [E]
 
 ### Operation OD-1
 
@@ -948,7 +1177,7 @@ Semantics:
 
     verify is replay-pure,
     computes all reachable artifacts against frozen inputs,
-    and MUST return a trace-complete, evidence-closed response.
+    and MUST return a trace-complete, proof-carrying response.
 
 ### Operation OD-3
 
@@ -970,9 +1199,9 @@ If comparison claims parity,
 then the same effective profile and reference regime MUST be used
 or the normalization rule MUST be explicit.
 
-## 13. Canonical Verify Contract [E]
+## 14. Canonical Verify Contract [E]
 
-### Definition 13.1 (VerifyRequest) [E]
+### Definition 14.1 (VerifyRequest) [E]
 
     VerifyRequest := {
         spec_name,
@@ -994,7 +1223,7 @@ Constraint:
 
     before final scoring.
 
-### Definition 13.2 (VerifyResponse) [E]
+### Definition 14.2 (VerifyResponse) [E]
 
     VerifyResponse := {
         header,
@@ -1009,7 +1238,8 @@ Constraint:
         pairwise?,
         scores?,
         diagnostics?,
-        witnesses?,
+        witness_ledger?,
+        verdict_ledger?,
         ci?,
         ood?,
         reference_update_proposal?,
@@ -1017,18 +1247,22 @@ Constraint:
         reason_codes
     }
 
-### Definition 13.3 (Effective Profile Object) [E]
+### Definition 14.3 (Effective Profile Object) [E]
 
     effective_profile := {
         profile_digest,
         aggregation_profile,
         symmetry_mode,
+        witness_eval_policy,
+        verdict_eval_policy,
+        witness_order,
+        verdict_order,
         frozen_fields,
         base_profile_digest?,
         override_digest?
     }
 
-### Definition 13.4 (Replay Object) [E]
+### Definition 14.4 (Replay Object) [E]
 
     replay := {
         replay_class,
@@ -1037,7 +1271,34 @@ Constraint:
         implementation_fingerprint?
     }
 
-## 14. Verify Invariants [E/N]
+### Definition 14.5 (Legacy Compatibility) [E]
+
+Implementations MAY additionally emit:
+
+    legacy_witnesses := {
+        w_S3,
+        w_gauge,
+        w_scale,
+        w_var,
+        w_lip
+    }
+
+only if every witness atom has status ∈ {PASS, FAIL}.
+
+Implementations MAY additionally emit:
+
+    legacy_verdict := {
+        decl,
+        cmp,
+        adm,
+        ver,
+        acc,
+        dep
+    }
+
+only if no classification field is UNDECIDED.
+
+## 15. Verify Invariants [E/N]
 
 **Invariant V0:**
 
@@ -1070,40 +1331,66 @@ Constraint:
 
 **Invariant V4:**
 
-    classification.dep = PASS
-        ⟹ classification.acc = PASS
-        ⟹ classification.ver = PASS
-        ⟹ classification.adm = PASS
-        ⟹ classification.cmp = PASS
-        ⟹ classification.decl = PASS
+    If witness_ledger is present, then classification.ver is derived exactly
+    by Definition 6.6.
 
 **Invariant V5:**
 
-    Any hard witness failure implies
-
-        classification.ver = FAIL
-        classification.acc = FAIL
-        classification.dep = FAIL
-        controller.terminal_state = TERMINAL
+    If verdict_ledger is present, then classification.acc is derived exactly
+    by Definition 6.7.
 
 **Invariant V6:**
 
-    verify MUST NOT mutate reference state.
+    classification.dep is derived exactly by Definition 6.8 whenever the
+    required lip evidence is present.
 
 **Invariant V7:**
 
-    The response MUST be trace-complete with respect to the realized controller prefix.
+    If witness_ledger.policy = FAIL_FAST,
+    then witness_ledger obeys Definition 5.9;
+    if witness_ledger.policy = EXHAUSTIVE,
+    then it obeys Definition 5.10.
 
 **Invariant V8:**
 
-    Any asserted reason code MUST be evidence-closed.
+    If verdict_ledger.policy = FAIL_FAST,
+    then verdict_ledger obeys Definition 5.11;
+    if verdict_ledger.policy = EXHAUSTIVE,
+    then it obeys Definition 5.12.
 
 **Invariant V9:**
+
+    If execution.status = OK and ver = FAIL,
+    then controller.terminal_state = TERMINAL.
+
+**Invariant V10:**
+
+    If execution.status = OK and ver = PASS and acc = FAIL,
+    then controller.terminal_state = REJECT.
+
+**Invariant V11:**
+
+    If execution.status = OK and acc = PASS,
+    then controller.terminal_state = ACCEPT.
+
+**Invariant V12:**
+
+    verify MUST NOT mutate reference state.
+
+**Invariant V13:**
+
+    The response MUST be trace-complete with respect to the realized controller prefix.
+
+**Invariant V14:**
+
+    Every asserted reason code MUST be evidence-closed.
+
+**Invariant V15:**
 
     If replay_class ≠ BIT_EXACT,
     the source of nondeterminism MUST be recorded.
 
-## 15. Provenance Minimum [E/N]
+## 16. Provenance Minimum [E/N]
 
 Every successful or partially successful verify response MUST record at least:
 
@@ -1114,6 +1401,10 @@ Every successful or partially successful verify response MUST record at least:
     effective profile digest
     aggregation profile
     symmetry mode
+    witness evaluation policy
+    verdict evaluation policy
+    witness order
+    verdict order
     witness floors
     CI level
     N_boot
@@ -1128,12 +1419,13 @@ If any override is used, it MUST be recorded.
 If any calibration map is used, it MUST be recorded.
 If any axis alias is used, it MUST be recorded.
 If replay_class ≠ BIT_EXACT, the nondeterminism source MUST be recorded.
+If any check is NOT_EVALUATED, its skip_reason MUST be recorded.
 
-## 16. Self-Application [E]
+## 17. Self-Application [E]
 
-### Definition 16.1 (Bundle Domain Lift) [E]
+### Definition 17.1 (Bundle Domain Lift) [E]
 
-Let Bundle be the set of canonical verify responses conforming to §13.2.
+Let Bundle be the set of canonical verify responses conforming to §14.2.
 Define
 
     X_meta := Bundle
@@ -1142,21 +1434,23 @@ A meta-batch is an ordinary batch over the lifted domain:
 
     D_meta = (B_1, …, B_k) ∈ X_meta*
 
-### Definition 16.2 (Meta-Observer) [E]
+### Definition 17.2 (Meta-Observer) [E]
 
 A meta-observer is an observer over X_meta subject to the same rules:
 
     same effective-profile freezing,
     same symmetry discipline,
-    same trace-complete responses,
-    same evidence-closure.
+    same replay purity,
+    same trace completeness,
+    same witness and verdict ledgers,
+    same proof-carrying terminal outcomes.
 
-### Proposition 16.3 (Finite Termination of Self-Application) [E]
+### Proposition 17.3 (Finite Termination of Self-Application) [E]
 
 If D_meta is finite and the meta-observer is an admissible finite pipeline,
 then self-application terminates after finite execution steps.
 
-## 17. External Hypotheses Boundary [C]
+## 18. External Hypotheses Boundary [C]
 
 The following remain outside the normative scope of this specification:
 
@@ -1165,18 +1459,20 @@ The following remain outside the normative scope of this specification:
     gravitational geometrization
     metaphysical necessity of triadicity
 
-## 18. Final Position
+## 19. Final Position
 
-TSC Observation Dynamics v1.0.6 is the evidence-closed observation-layer specification of TSC.
+TSC Observation Dynamics v1.0.7 is the proof-carrying observation-layer specification of TSC.
 
 Its decisive moves are:
 
-    symmetry mode made explicit,
-    weighted aggregation aligned with witness semantics,
-    controller branches made exact,
-    bundle materialization tied to realized trace prefixes,
-    and every terminal outcome required to carry its own evidence.
+    explicit evaluation policy,
+    fixed witness and verdict orders,
+    ledgers instead of silent omission,
+    classification derived from recorded checks,
+    fail-fast reconciled with provenance,
+    and acceptance made as evidentially explicit as rejection.
 
-That is stricter than 1.0.5.
-That is safer for SDKs and AI readers.
-That is the next clean step in the stack.
+That is cleaner than 1.0.6.
+That is safer for SDKs.
+That is kinder to AI readers.
+That is the next step.
