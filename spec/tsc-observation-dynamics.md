@@ -1,8 +1,8 @@
-# TSC Observation Dynamics v1.0.9
+# TSC Observation Dynamics v1.0.10
 
-Formal Specification of Observer Construction, Verification, Epistemic Refinement, and Uncertainty-Aware Comparison
+Formal Specification of Observer Construction, Verification, Epistemic Refinement, and Dependence-Aware Delta-Certified Comparison
 
-    Version:    v1.0.9
+    Version:    v1.0.10
     Status:     Proposed Extension Specification
     Artifact:   Specification
     Normative dependencies:
@@ -12,19 +12,26 @@ Formal Specification of Observer Construction, Verification, Epistemic Refinemen
     Recommended repository path:
         spec/tsc-observation-dynamics.md
 
+    Patch discipline:
+        This version inherits v1.0.9 in full,
+        except where sections below explicitly replace or extend it.
+
 ## 0. Identity
 
-This document is the observation-layer specification of TSC.
+TSC Observation Dynamics v1.0.10 is the dependence-aware,
+delta-certified observation-layer specification of TSC.
 
-It defines:
+It preserves:
+    replay-pure verification,
+    proof-carrying ledgers,
+    uncertainty-aware comparison,
+    and comparison-safe normalization.
 
-    what an observer is,
-    how an observer-run is typed,
-    how a run is classified,
-    how refinement is ordered,
-    how self-application is normalized,
-    how verification remains replay-pure and proof-carrying,
-    and how cross-observer comparison becomes uncertainty-aware.
+It adds:
+    explicit dependence regimes for comparison,
+    interval-regime compatibility,
+    delta-interval certification,
+    and anti-symmetric swap laws for comparative claims.
 
 Place in stack:
 
@@ -42,7 +49,7 @@ It is:
     not the operational witness protocol,
 
 but the layer that makes observer semantics executable, replayable, auditable,
-proof-carrying, comparison-safe, and interval-aware.
+proof-carrying, comparison-safe, interval-aware, and dependence-aware.
 
 ## 1. Status Discipline
 
@@ -55,6 +62,54 @@ Normative reading rule:
     Nothing marked [E] or [C] may be cited as if it were already proven by [N].
 
 ## 2. Change Log
+
+### From v1.0.9
+
+    DEP-02  DependenceMode introduced:
+                UNKNOWN
+                INDEPENDENT
+                PAIRED
+                COUPLED_NORMALIZED
+
+    INT-01  IntervalRegime formalized for comparison:
+                confidence level,
+                interval method,
+                interval basis,
+                dependence mode.
+
+    CMP-05  ComparisonAtoms extended with:
+                INTERVAL_REGIME_COMPAT
+                DELTA_REGIME_VALID
+
+    DER-04  Delta interval construction split by dependence regime:
+                UNKNOWN / INDEPENDENT
+                    -> conservative marginal-difference envelope
+                PAIRED
+                    -> direct paired delta interval
+                COUPLED_NORMALIZED
+                    -> direct normalized delta interval
+
+    DER-05  DeltaIntervalBasis introduced:
+                CONSERVATIVE_MARGINAL_DIFF
+                DIRECT_PAIRED_DELTA
+                DIRECT_NORMALIZED_DELTA
+
+    EVD-06  Ordering claims now require a certified delta regime.
+            A runtime may not silently use paired or coupled delta tightening.
+
+    EXP-03  ComparisonExplanation extended with dependence_driver.
+
+    PRV-04  Comparison provenance minimum extended with:
+                dependence mode,
+                interval regime,
+                delta interval basis,
+                coupling evidence digest if used.
+
+    C15-C18  Compare invariants extended:
+                interval-regime compatibility,
+                delta-regime validity,
+                swap anti-symmetry,
+                no hidden dependence assumptions.
 
 ### From v1.0.8
 
@@ -775,7 +830,7 @@ equivalently non-decreasing C_Σ, under fixed aggregation profile.
 Epistemic time is the refinement-order parameter τ.
 It is not a physical clock variable.
 
-## 13. Uncertainty-Aware Comparison Safety [E/N]
+## 13. Dependence-Aware Comparison Safety [E/N]
 
 ### Definition 13.1 (ComparisonMode) [E]
 
@@ -796,56 +851,104 @@ It is not a physical clock variable.
         INCOMPARABLE
     }
 
-Interpretation:
-
-    LEFT_HIGHER / RIGHT_HIGHER
-        Ordering certified under declared mode.
-
-    EQUAL_WITHIN_TOL
-        Equality certified within tolerance band.
-
-    UNRESOLVED_WITHIN_UNCERTAINTY
-        Pair is comparable, but current uncertainty envelope does not certify
-        order or equality.
-
-    INCOMPARABLE
-        Comparison contract itself failed.
-
 ### Definition 13.3 (CompareTolerance) [E]
 
     T_cmp := {
         delta_eq,
         numeric_tol?,
-        target_confidence_level?
+        target_confidence_level?,
+        max_normalizer_error?
     }
 
 with:
-
     delta_eq > 0
+
+### Definition 13.4 (DependenceMode) [E]
+
+    DependenceMode := {
+        UNKNOWN,
+        INDEPENDENT,
+        PAIRED,
+        COUPLED_NORMALIZED
+    }
 
 Interpretation:
 
-    delta_eq defines the equivalence band around zero.
+    UNKNOWN
+        dependence between left and right score uncertainty is not declared
 
-### Definition 13.4 (ComparisonAtoms) [E]
+    INDEPENDENT
+        left and right uncertainty sources are declared independent
+
+    PAIRED
+        left and right scores are generated on the same batch
+        under a declared paired resampling or matched-index regime
+
+    COUPLED_NORMALIZED
+        comparison occurs in a normalized target space with a declared
+        coupling map or shared resampling construction
+
+### Definition 13.5 (IntervalBasis) [E]
+
+    IntervalBasis := {
+        RAW_CI,
+        NORMALIZED_INTERVAL
+    }
+
+### Definition 13.6 (DeltaIntervalBasis) [E]
+
+    DeltaIntervalBasis := {
+        CONSERVATIVE_MARGINAL_DIFF,
+        DIRECT_PAIRED_DELTA,
+        DIRECT_NORMALIZED_DELTA
+    }
+
+### Definition 13.7 (IntervalRegime) [E]
+
+An interval regime is
+
+    R_I := {
+        confidence_level,
+        interval_method,
+        basis,
+        dependence_mode,
+        resampling_spec_digest?,
+        coupling_spec_digest?
+    }
+
+where:
+
+    confidence_level ∈ (0, 1)
+    interval_method  names the interval construction
+    basis            ∈ IntervalBasis
+    dependence_mode  ∈ DependenceMode
+
+Interpretation:
+    interval regime states how the interval was produced,
+    at what confidence level,
+    and under what dependence assumption.
+
+### Definition 13.8 (ComparisonAtoms) [E]
 
     ComparisonAtoms := {
         SAME_BATCH,
         SCORES_AVAILABLE,
         INTERVALS_AVAILABLE,
+        INTERVAL_REGIME_COMPAT,
         EVIDENCE_CLOSED,
         PROFILE_EQ,
         REFERENCE_EQ,
         POLICY_EQ,
         RNG_COMPAT,
-        NORMALIZER_VALID
+        NORMALIZER_VALID,
+        DELTA_REGIME_VALID
     }
 
-### Definition 13.5 (CompareCheckStatus) [E]
+### Definition 13.9 (CompareCheckStatus) [E]
 
     CompareCheckStatus := {PASS, FAIL, NOT_APPLICABLE}
 
-### Definition 13.6 (CompareEntry) [E]
+### Definition 13.10 (CompareEntry) [E]
 
     CompareEntry(a) := {
         status,
@@ -855,7 +958,7 @@ Interpretation:
         note?
     }
 
-### Definition 13.7 (Comparison Normalizer) [E]
+### Definition 13.11 (Comparison Normalizer) [E]
 
 A comparison normalizer is
 
@@ -868,6 +971,7 @@ A comparison normalizer is
         target_confidence_level?,
         map_spec,
         interval_map_spec,
+        coupling_spec?,
         monotonicity_claim?,
         error_bound,
         proof_ref?
@@ -875,14 +979,24 @@ A comparison normalizer is
 
 where:
 
-    covers ⊆ {PROFILE_EQ, REFERENCE_EQ, POLICY_EQ, RNG_COMPAT}
+    covers ⊆ {
+        PROFILE_EQ,
+        REFERENCE_EQ,
+        POLICY_EQ,
+        RNG_COMPAT
+    }
 
 Normative rule:
+    if mode != RAW,
+    then N_cmp MUST declare:
+        target_confidence_level,
+        interval_map_spec,
+        error_bound
 
-    If mode ≠ RAW, the normalizer MUST induce comparison intervals
-    in the target comparison space.
+If N_cmp claims coupled normalization,
+it MUST declare coupling_spec.
 
-### Definition 13.8 (Comparability Ledger) [E]
+### Definition 13.12 (Comparability Ledger) [E]
 
     comparability_ledger := {
         mode,
@@ -890,91 +1004,162 @@ Normative rule:
         SAME_BATCH,
         SCORES_AVAILABLE,
         INTERVALS_AVAILABLE,
+        INTERVAL_REGIME_COMPAT,
         EVIDENCE_CLOSED,
         PROFILE_EQ,
         REFERENCE_EQ,
         POLICY_EQ,
         RNG_COMPAT,
         NORMALIZER_VALID,
+        DELTA_REGIME_VALID,
         failing_atoms?
     }
 
-### Definition 13.9 (Atomic Comparison Checks) [E]
+### Definition 13.13 (Atomic Comparison Checks) [E]
 
 SAME_BATCH = PASS iff:
 
-    either batch hashes match,
-    or both sides lack batch hashes but agree on batch_id/domain/schema/N.
+    (i)   left.batch_record.batch_hash = right.batch_record.batch_hash
+    or
+    (ii)  batch hashes are absent on both sides, but
+          batch_id, domain_tag, schema_ref, and N agree
+
+Otherwise:
+    SAME_BATCH = FAIL
 
 SCORES_AVAILABLE = PASS iff:
-
-    both bundles contain scores.C_Σ and axis scores.
+    both bundles contain scores.C_Σ and axis scores
 
 INTERVALS_AVAILABLE = PASS iff:
+    both bundles contain interval-valued score artifacts usable
+    in the declared comparison space
 
-    both bundles contain score intervals usable in comparison space.
+INTERVAL_REGIME_COMPAT = PASS iff:
+
+    in RAW mode:
+        left and right comparison intervals have
+            identical confidence levels
+            and compatible interval methods
+            and basis = RAW_CI on both sides
+
+    in normalized modes:
+        N_cmp.target_confidence_level is declared
+        and both effective comparison intervals are mapped into that target regime
 
 EVIDENCE_CLOSED = PASS iff:
-
-    both bundles are trace-complete and proof-carrying up to the compared stage.
+    both bundles are trace-complete and proof-carrying
+    up to the stage being compared
 
 PROFILE_EQ = PASS iff:
-
-    effective profile digests match.
+    left.effective_profile.profile_digest =
+    right.effective_profile.profile_digest
 
 REFERENCE_EQ = PASS iff:
-
-    if OOD is used on either side, reference snapshot digests match;
-    else NOT_APPLICABLE.
+    if OOD is used on either side,
+    reference snapshot digests are equal;
+    else NOT_APPLICABLE
 
 POLICY_EQ = PASS iff:
-
-    symmetry mode, witness/verdict policies, and witness/verdict orders match.
+    symmetry_mode,
+    witness_eval_policy,
+    verdict_eval_policy,
+    witness_order,
+    verdict_order
+    are equal across both effective profiles
 
 RNG_COMPAT = PASS iff:
-
-    replay classes match and numeric profiles are compatible.
+    replay classes are compatible
+    and numeric profiles are compatible
 
 NORMALIZER_VALID = PASS iff:
-
-    mode ≠ RAW,
-    N_cmp is present,
-    every mismatch the comparison intends to normalize lies in N_cmp.covers,
-    interval_map_spec exists,
-    error_bound is declared,
-    and proof_ref or equivalent validation evidence is present.
+    mode != RAW
+    and N_cmp is present
+    and every mismatch to be normalized lies in N_cmp.covers
+    and interval_map_spec exists
+    and error_bound is declared
+    and proof_ref or equivalent validation evidence is present
 
 In RAW mode:
+    NORMALIZER_VALID = NOT_APPLICABLE
 
-    NORMALIZER_VALID = NOT_APPLICABLE.
+DELTA_REGIME_VALID = PASS iff:
 
-### Definition 13.10 (Required Pass Set by Mode) [E]
+    if dependence_mode ∈ {UNKNOWN, INDEPENDENT}:
+        both marginal intervals are present and interval_regime_compat = PASS
+
+    if dependence_mode = PAIRED:
+        SAME_BATCH = PASS
+        and paired resampling or matched-index evidence is present
+        and a direct paired delta interval is recorded or reproducible
+
+    if dependence_mode = COUPLED_NORMALIZED:
+        mode != RAW
+        and NORMALIZER_VALID = PASS
+        and coupling_spec is declared
+        and a direct normalized delta interval is recorded or reproducible
+
+### Definition 13.14 (Required Pass Set by Mode) [E]
 
 Req(RAW)
     =
-    {SAME_BATCH, SCORES_AVAILABLE, INTERVALS_AVAILABLE, EVIDENCE_CLOSED,
-     PROFILE_EQ, POLICY_EQ, RNG_COMPAT}
-    ∪ {REFERENCE_EQ if REFERENCE_EQ ≠ NOT_APPLICABLE}
+    {
+      SAME_BATCH,
+      SCORES_AVAILABLE,
+      INTERVALS_AVAILABLE,
+      INTERVAL_REGIME_COMPAT,
+      EVIDENCE_CLOSED,
+      PROFILE_EQ,
+      POLICY_EQ,
+      RNG_COMPAT,
+      DELTA_REGIME_VALID
+    }
+    union {REFERENCE_EQ if REFERENCE_EQ != NOT_APPLICABLE}
 
 Req(PROFILE_NORMALIZED)
     =
-    {SAME_BATCH, SCORES_AVAILABLE, INTERVALS_AVAILABLE, EVIDENCE_CLOSED,
-     POLICY_EQ, RNG_COMPAT, NORMALIZER_VALID}
-    ∪ {REFERENCE_EQ if REFERENCE_EQ ≠ NOT_APPLICABLE}
+    {
+      SAME_BATCH,
+      SCORES_AVAILABLE,
+      INTERVALS_AVAILABLE,
+      INTERVAL_REGIME_COMPAT,
+      EVIDENCE_CLOSED,
+      POLICY_EQ,
+      RNG_COMPAT,
+      NORMALIZER_VALID,
+      DELTA_REGIME_VALID
+    }
+    union {REFERENCE_EQ if REFERENCE_EQ != NOT_APPLICABLE}
 
 Req(REFERENCE_NORMALIZED)
     =
-    {SAME_BATCH, SCORES_AVAILABLE, INTERVALS_AVAILABLE, EVIDENCE_CLOSED,
-     PROFILE_EQ, POLICY_EQ, RNG_COMPAT, NORMALIZER_VALID}
+    {
+      SAME_BATCH,
+      SCORES_AVAILABLE,
+      INTERVALS_AVAILABLE,
+      INTERVAL_REGIME_COMPAT,
+      EVIDENCE_CLOSED,
+      PROFILE_EQ,
+      POLICY_EQ,
+      RNG_COMPAT,
+      NORMALIZER_VALID,
+      DELTA_REGIME_VALID
+    }
 
 Req(FULLY_NORMALIZED)
     =
-    {SAME_BATCH, SCORES_AVAILABLE, INTERVALS_AVAILABLE, EVIDENCE_CLOSED,
-     NORMALIZER_VALID}
+    {
+      SAME_BATCH,
+      SCORES_AVAILABLE,
+      INTERVALS_AVAILABLE,
+      INTERVAL_REGIME_COMPAT,
+      EVIDENCE_CLOSED,
+      NORMALIZER_VALID,
+      DELTA_REGIME_VALID
+    }
 
 Any failed atom outside N_cmp.covers blocks comparability.
 
-### Definition 13.11 (Comparable Pair) [E]
+### Definition 13.15 (Comparable Pair) [E]
 
 (B_L, B_R) is comparable under mode iff:
 
@@ -984,69 +1169,90 @@ and
 
     no failed atom outside N_cmp.covers is ignored.
 
-### Definition 13.12 (Comparison Interval Object) [E]
-
-A comparison interval is
+### Definition 13.16 (Comparison Interval Object) [E]
 
     I_cmp := {
         lo,
         hi,
-        level?,
+        level,
         basis,
+        regime,
         error_budget?
     }
 
 where:
 
-    basis ∈ {
-        RAW_CI,
-        NORMALIZED_INTERVAL
-    }
+    lo <= hi
+    basis ∈ IntervalBasis
+    regime is an IntervalRegime
 
-Normative rule:
-
-    lo ≤ hi
-
-### Definition 13.13 (Effective Comparison Intervals) [E]
+### Definition 13.17 (Effective Comparison Intervals) [E]
 
 If mode = RAW:
 
     I_L := {
-        lo    = left.ci.CI_lo,
-        hi    = left.ci.CI_hi,
-        level = left.ci.method_level?,
-        basis = RAW_CI
+        lo     = left.ci.CI_lo,
+        hi     = left.ci.CI_hi,
+        level  = left.ci.level,
+        basis  = RAW_CI,
+        regime = left.interval_regime
     }
 
     I_R := {
-        lo    = right.ci.CI_lo,
-        hi    = right.ci.CI_hi,
-        level = right.ci.method_level?,
-        basis = RAW_CI
+        lo     = right.ci.CI_lo,
+        hi     = right.ci.CI_hi,
+        level  = right.ci.level,
+        basis  = RAW_CI,
+        regime = right.interval_regime
     }
 
-If mode ≠ RAW:
-
-    N_cmp MUST induce
+If mode != RAW:
+    N_cmp MUST induce target-space intervals
 
         I_L^N, I_R^N
 
-    in the target comparison space, each with declared basis and error_budget.
+each with:
+    level  = N_cmp.target_confidence_level
+    basis  = NORMALIZED_INTERVAL
+    regime recorded in normalized comparison provenance
 
-### Definition 13.14 (Delta Interval) [E]
+### Definition 13.18 (Certified Delta Interval) [E]
 
-Given effective comparison intervals I_L and I_R, define
+Let dependence_mode be the declared dependence mode.
+
+If dependence_mode ∈ {UNKNOWN, INDEPENDENT},
+define
 
     Δ_cmp := {
-        lo = I_L.lo − I_R.hi,
-        hi = I_L.hi − I_R.lo
+        lo    = I_L.lo - I_R.hi,
+        hi    = I_L.hi - I_R.lo,
+        basis = CONSERVATIVE_MARGINAL_DIFF
     }
 
-Interpretation:
+If dependence_mode = PAIRED,
+define
 
-    Δ_cmp is the conservative uncertainty envelope for left-minus-right.
+    Δ_cmp := {
+        lo    = direct paired-delta interval lower bound,
+        hi    = direct paired-delta interval upper bound,
+        basis = DIRECT_PAIRED_DELTA
+    }
 
-### Definition 13.15 (Comparison Metrics) [E]
+If dependence_mode = COUPLED_NORMALIZED,
+define
+
+    Δ_cmp := {
+        lo    = direct normalized-delta interval lower bound,
+        hi    = direct normalized-delta interval upper bound,
+        basis = DIRECT_NORMALIZED_DELTA
+    }
+
+Normative rule:
+    no tighter-than-conservative delta interval may be used
+    unless DELTA_REGIME_VALID = PASS
+    and the corresponding dependence evidence is recorded.
+
+### Definition 13.19 (Comparison Metrics) [E]
 
     comparison_metrics := {
         left_point,
@@ -1055,39 +1261,42 @@ Interpretation:
         right_interval,
         delta_point,
         delta_interval,
+        delta_interval_basis,
+        dependence_mode,
         delta_axis_scores?,
         delta_axis_leverage?,
         tolerance
     }
 
 where:
-
-    delta_point = left_point − right_point
+    delta_point = left_point - right_point
     delta_interval = Δ_cmp
 
-### Definition 13.16 (Derived Score Relation) [E]
+### Definition 13.20 (Derived Score Relation) [E]
 
 If the pair is not comparable:
-
     score_relation = INCOMPARABLE
 
-Else if Δ_cmp.lo > delta_eq:
-
+Else if
+    delta_interval.lo > delta_eq,
+then
     score_relation = LEFT_HIGHER
 
-Else if Δ_cmp.hi < −delta_eq:
-
+Else if
+    delta_interval.hi < -delta_eq,
+then
     score_relation = RIGHT_HIGHER
 
-Else if −delta_eq ≤ Δ_cmp.lo and Δ_cmp.hi ≤ delta_eq:
-
+Else if
+    -delta_eq <= delta_interval.lo
+and delta_interval.hi <= delta_eq,
+then
     score_relation = EQUAL_WITHIN_TOL
 
-Else:
-
+Else
     score_relation = UNRESOLVED_WITHIN_UNCERTAINTY
 
-### Definition 13.17 (Comparison Explanation) [E]
+### Definition 13.21 (Comparison Explanation) [E]
 
     comparison_explanation := {
         basis,
@@ -1095,6 +1304,7 @@ Else:
         dominant_constraint?,
         terminal_pattern,
         uncertainty_driver?,
+        dependence_driver?,
         note?
     }
 
@@ -1122,10 +1332,17 @@ where:
         NONE
     }
 
-Interpretation:
+    dependence_driver ∈ {
+        CONSERVATIVE_UNKNOWN_DEPENDENCE,
+        DECLARED_INDEPENDENT,
+        PAIRED_DELTA,
+        COUPLED_NORMALIZER,
+        NONE
+    }
 
-    Explanation is descriptive.
-    It never overrides score_relation.
+Interpretation:
+    explanation remains descriptive.
+    It does not override score_relation.
 
 ## 14. Canonical Abstract Operations [E]
 
@@ -1151,18 +1368,22 @@ Semantics:
 
 ### Operation OD-5
 
-    compare(B_left, B_right, mode, N_cmp?, T_cmp?) → CompareResponse
+    compare(B_left, B_right, mode, N_cmp?, T_cmp?) -> CompareResponse
 
 Semantics:
+    compare is comparison-safe, uncertainty-aware, and dependence-aware.
 
-    compare is comparison-safe and uncertainty-aware.
-    It MUST return:
-        comparability_ledger
-        comparison_metrics if relation ≠ INCOMPARABLE
-        score_relation
-        reason_codes
-    It MUST NOT emit LEFT_HIGHER, RIGHT_HIGHER, or EQUAL_WITHIN_TOL
-    unless the relation is certified by Definition 13.16.
+It MUST:
+
+    1. compute comparability_ledger
+    2. derive effective comparison intervals
+    3. derive a certified delta interval under the declared dependence mode
+    4. emit score_relation
+    5. emit reason_codes whenever relation is INCOMPARABLE
+       or UNRESOLVED_WITHIN_UNCERTAINTY
+
+It MUST NOT:
+    use paired or coupled delta tightening unless DELTA_REGIME_VALID = PASS.
 
 ## 15. Canonical Verify Contract [E]
 
@@ -1216,8 +1437,17 @@ Semantics:
         mode,
         normalizer?,
         tolerance?,
+        dependence_mode?,
         provenance_policy_override?
     }
+
+where:
+
+    dependence_mode ∈ DependenceMode
+
+Normative rule:
+    if dependence_mode is omitted,
+    it defaults to UNKNOWN.
 
 ### Definition 16.2 (CompareResponse) [E]
 
@@ -1226,6 +1456,7 @@ Semantics:
         left_ref,
         right_ref,
         mode,
+        dependence_mode,
         normalizer?,
         comparability_ledger,
         comparison_metrics?,
@@ -1242,6 +1473,7 @@ Reason codes SHOULD be drawn from:
     BATCH_MISMATCH
     SCORES_MISSING
     INTERVALS_MISSING
+    INTERVAL_REGIME_MISMATCH
     EVIDENCE_NOT_CLOSED
     PROFILE_MISMATCH
     REFERENCE_MISMATCH
@@ -1251,43 +1483,37 @@ Reason codes SHOULD be drawn from:
     NORMALIZER_SCOPE_INVALID
     NORMALIZER_PROOF_MISSING
     NORMALIZER_INTERVAL_INVALID
+    DELTA_REGIME_INVALID
+    DEPENDENCE_UNDECLARED
+    PAIRED_DELTA_MISSING
+    COUPLED_DELTA_MISSING
     COMPARE_UNCERTAINTY_OVERLAP
     COMPARE_INSUFFICIENT_EVIDENCE
 
 ### Definition 16.4 (Comparison Evidence Closure) [E]
 
-A comparison reason code is evidence-closed iff the corresponding failed atom
-or unresolved interval condition is present and replayable.
+A comparison reason code is evidence-closed iff its triggering failed atom
+or unresolved certified-delta condition is present and replayable.
 
 Examples:
 
-    BATCH_MISMATCH
-        → SAME_BATCH.status = FAIL
+    INTERVAL_REGIME_MISMATCH
+        -> INTERVAL_REGIME_COMPAT.status = FAIL
 
-    SCORES_MISSING
-        → SCORES_AVAILABLE.status = FAIL
+    DELTA_REGIME_INVALID
+        -> DELTA_REGIME_VALID.status = FAIL
 
-    INTERVALS_MISSING
-        → INTERVALS_AVAILABLE.status = FAIL
+    PAIRED_DELTA_MISSING
+        -> dependence_mode = PAIRED
+           and DELTA_REGIME_VALID.status = FAIL
 
-    PROFILE_MISMATCH
-        → PROFILE_EQ.status = FAIL
-
-    REFERENCE_MISMATCH
-        → REFERENCE_EQ.status = FAIL
-
-    POLICY_MISMATCH
-        → POLICY_EQ.status = FAIL
-
-    RNG_MISMATCH
-        → RNG_COMPAT.status = FAIL
-
-    NORMALIZER_SCOPE_INVALID or NORMALIZER_PROOF_MISSING or NORMALIZER_INTERVAL_INVALID
-        → NORMALIZER_VALID.status = FAIL
+    COUPLED_DELTA_MISSING
+        -> dependence_mode = COUPLED_NORMALIZED
+           and DELTA_REGIME_VALID.status = FAIL
 
     COMPARE_UNCERTAINTY_OVERLAP
-        → score_relation = UNRESOLVED_WITHIN_UNCERTAINTY
-          and comparison_metrics.delta_interval present
+        -> score_relation = UNRESOLVED_WITHIN_UNCERTAINTY
+           and comparison_metrics.delta_interval present
 
 ## 17. Verify Invariants [E/N]
 
@@ -1348,93 +1574,115 @@ Examples:
 
 ## 18. Compare Invariants [E/N]
 
-**Invariant C0:**
+Invariant C0:
+    if mode = RAW,
+    then comparability_ledger.NORMALIZER_VALID.status = NOT_APPLICABLE
 
-    If mode = RAW,
-    then NORMALIZER_VALID.status = NOT_APPLICABLE.
+Invariant C1:
+    if score_relation != INCOMPARABLE,
+    then every atom in Req(mode) has status = PASS
 
-**Invariant C1:**
-
-    If score_relation ≠ INCOMPARABLE,
-    then every atom in Req(mode) has status = PASS.
-
-**Invariant C2:**
-
-    If score_relation ∈ {
+Invariant C2:
+    if score_relation ∈ {
         LEFT_HIGHER,
         RIGHT_HIGHER,
         EQUAL_WITHIN_TOL,
         UNRESOLVED_WITHIN_UNCERTAINTY
     },
     then comparison_metrics MUST be present
-    and left_interval, right_interval, delta_interval MUST be present.
+    and left_interval, right_interval, delta_interval MUST be present
 
-**Invariant C3:**
-
-    If mode ≠ RAW and score_relation ≠ INCOMPARABLE,
+Invariant C3:
+    if mode != RAW and score_relation != INCOMPARABLE,
     then normalizer MUST be present
-    and NORMALIZER_VALID.status = PASS.
+    and comparability_ledger.NORMALIZER_VALID.status = PASS
 
-**Invariant C4:**
+Invariant C4:
+    if any failed comparison atom lies outside N_cmp.covers,
+    then score_relation = INCOMPARABLE
 
-    If any failed comparison atom lies outside N_cmp.covers,
-    then score_relation = INCOMPARABLE.
+Invariant C5:
+    if comparability_ledger.INTERVAL_REGIME_COMPAT.status = FAIL,
+    then score_relation = INCOMPARABLE
 
-**Invariant C5:**
+Invariant C6:
+    if comparability_ledger.DELTA_REGIME_VALID.status = FAIL,
+    then score_relation = INCOMPARABLE
 
-    If score_relation = LEFT_HIGHER,
-    then delta_interval.lo > delta_eq.
+Invariant C7:
+    if comparison_metrics.delta_interval_basis = CONSERVATIVE_MARGINAL_DIFF,
+    then dependence_mode ∈ {UNKNOWN, INDEPENDENT}
 
-**Invariant C6:**
+Invariant C8:
+    if comparison_metrics.delta_interval_basis = DIRECT_PAIRED_DELTA,
+    then:
+        dependence_mode = PAIRED
+        and SAME_BATCH = PASS
+        and DELTA_REGIME_VALID = PASS
 
-    If score_relation = RIGHT_HIGHER,
-    then delta_interval.hi < −delta_eq.
+Invariant C9:
+    if comparison_metrics.delta_interval_basis = DIRECT_NORMALIZED_DELTA,
+    then:
+        dependence_mode = COUPLED_NORMALIZED
+        and mode != RAW
+        and NORMALIZER_VALID = PASS
+        and DELTA_REGIME_VALID = PASS
 
-**Invariant C7:**
+Invariant C10:
+    if score_relation = LEFT_HIGHER,
+    then delta_interval.lo > delta_eq
 
-    If score_relation = EQUAL_WITHIN_TOL,
-    then −delta_eq ≤ delta_interval.lo
-         and delta_interval.hi ≤ delta_eq.
+Invariant C11:
+    if score_relation = RIGHT_HIGHER,
+    then delta_interval.hi < -delta_eq
 
-**Invariant C8:**
+Invariant C12:
+    if score_relation = EQUAL_WITHIN_TOL,
+    then -delta_eq <= delta_interval.lo
+         and delta_interval.hi <= delta_eq
 
-    If score_relation = UNRESOLVED_WITHIN_UNCERTAINTY,
+Invariant C13:
+    if score_relation = UNRESOLVED_WITHIN_UNCERTAINTY,
     then:
         pair is comparable
-        and not(C5)
-        and not(C6)
-        and not(C7).
+        and not(C10)
+        and not(C11)
+        and not(C12)
 
-**Invariant C9:**
-
-    If score_relation = INCOMPARABLE,
-    then reason_codes MUST be non-empty.
-
-**Invariant C10:**
-
-    If score_relation = UNRESOLVED_WITHIN_UNCERTAINTY,
+Invariant C14:
+    if score_relation = INCOMPARABLE,
     then reason_codes MUST be non-empty
-    and SHOULD include COMPARE_UNCERTAINTY_OVERLAP.
 
-**Invariant C11:**
+Invariant C15:
+    if score_relation = UNRESOLVED_WITHIN_UNCERTAINTY,
+    then reason_codes MUST be non-empty
+    and SHOULD include COMPARE_UNCERTAINTY_OVERLAP
 
-    Every asserted comparison reason code MUST be evidence-closed.
+Invariant C16:
+    swapping left and right negates the certified delta interval:
 
-**Invariant C12:**
+        Δ_cmp(right,left).lo = -Δ_cmp(left,right).hi
+        Δ_cmp(right,left).hi = -Δ_cmp(left,right).lo
 
-    No implementation may emit LEFT_HIGHER, RIGHT_HIGHER,
-    or EQUAL_WITHIN_TOL in RAW mode when SAME_BATCH = FAIL
-    or PROFILE_EQ = FAIL
-    or POLICY_EQ = FAIL.
+    and swaps:
+        LEFT_HIGHER <-> RIGHT_HIGHER
 
-**Invariant C13:**
+    while preserving:
+        EQUAL_WITHIN_TOL
+        UNRESOLVED_WITHIN_UNCERTAINTY
+        INCOMPARABLE
 
-    If delta_axis_leverage is present,
-    then dominant_axis MUST equal argmax_a |delta_axis_leverage[a]|.
+Invariant C17:
+    no implementation may emit LEFT_HIGHER, RIGHT_HIGHER,
+    or EQUAL_WITHIN_TOL in RAW mode when:
+        SAME_BATCH = FAIL
+        or PROFILE_EQ = FAIL
+        or POLICY_EQ = FAIL
+        or INTERVAL_REGIME_COMPAT = FAIL
 
-**Invariant C14:**
-
-    compare MUST NOT mutate either input bundle or any referenced snapshot.
+Invariant C18:
+    compare MUST NOT mutate either input bundle
+    or any referenced snapshot.
 
 ## 19. Provenance Minimum [E/N]
 
@@ -1465,19 +1713,29 @@ Every CompareResponse MUST record at least:
     left bundle identifier or digest
     right bundle identifier or digest
     mode
+    dependence mode
     required pass set
     comparability ledger
     tolerance
     score_relation
-    comparison intervals
-    interval basis
+    left interval
+    right interval
+    delta interval
+    delta interval basis
+    interval regimes
     target confidence level if normalized
     normalizer identifier/version/covers if used
     normalizer error bound if used
     timestamp
 
+If dependence_mode = PAIRED,
+the paired resampling or matched-index evidence digest MUST be recorded.
+
+If dependence_mode = COUPLED_NORMALIZED,
+the coupling specification digest MUST be recorded.
+
 If score_relation = UNRESOLVED_WITHIN_UNCERTAINTY,
-the uncertainty driver SHOULD be recorded.
+the uncertainty_driver SHOULD be recorded.
 
 ## 20. Self-Application [E]
 
@@ -1514,18 +1772,18 @@ Outside scope:
 
 ## 22. Final Position
 
-TSC Observation Dynamics v1.0.9 is the uncertainty-aware, comparison-safe observation-layer specification of TSC.
+TSC Observation Dynamics v1.0.10 is the dependence-aware,
+delta-certified observation-layer specification of TSC.
 
 Its decisive moves are:
 
-    comparison now consumes intervals, not just point scores,
-    comparability is separated from resolvability,
-    unresolved overlap is no longer confused with mismatch,
-    normalized order claims require interval-producing normalizers,
-    and every comparison claim is certified against a conservative delta envelope.
+    structural comparability remains separate from epistemic resolution,
+    interval compatibility is now explicit,
+    conservative and paired delta intervals are no longer conflated,
+    direct delta tightening requires declared dependence evidence,
+    and left/right swap laws are part of the contract.
 
-That is stricter than v1.0.8.
-That is more honest about uncertainty.
-That is better for SDKs.
-That is kinder to AI readers.
+That is stricter than v1.0.9.
+That is more honest about uncertainty structure.
+That is safer for comparison engines and SDKs.
 That is the next clean step.
