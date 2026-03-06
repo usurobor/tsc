@@ -1,8 +1,8 @@
-# TSC Observation Dynamics v1.0.10
+# TSC Observation Dynamics v1.0.11
 
-Formal Specification of Observer Construction, Verification, Epistemic Refinement, and Dependence-Aware Delta-Certified Comparison
+Formal Specification of Observer Construction, Verification, Epistemic Refinement, and Lineage-Certified, Coverage-Closed Comparison
 
-    Version:    v1.0.10
+    Version:    v1.0.11
     Status:     Proposed Extension Specification
     Artifact:   Specification
     Normative dependencies:
@@ -13,25 +13,25 @@ Formal Specification of Observer Construction, Verification, Epistemic Refinemen
         spec/tsc-observation-dynamics.md
 
     Patch discipline:
-        This version inherits v1.0.9 in full,
-        except where sections below explicitly replace or extend it.
+        This version inherits v1.0.10 in full,
+        except where the sections below explicitly replace or extend it.
 
 ## 0. Identity
 
-TSC Observation Dynamics v1.0.10 is the dependence-aware,
-delta-certified observation-layer specification of TSC.
+TSC Observation Dynamics v1.0.11 is the lineage-certified,
+coverage-closed observation-layer specification of TSC.
 
 It preserves:
     replay-pure verification,
     proof-carrying ledgers,
     uncertainty-aware comparison,
-    and comparison-safe normalization.
+    dependence-aware delta certification.
 
 It adds:
-    explicit dependence regimes for comparison,
-    interval-regime compatibility,
-    delta-interval certification,
-    and anti-symmetric swap laws for comparative claims.
+    explicit interval lineage objects,
+    resample-family and coupling-trace certificates,
+    coverage-closed effective intervals,
+    and a ban on uncertified delta tightening.
 
 Place in stack:
 
@@ -49,7 +49,8 @@ It is:
     not the operational witness protocol,
 
 but the layer that makes observer semantics executable, replayable, auditable,
-proof-carrying, comparison-safe, interval-aware, and dependence-aware.
+proof-carrying, comparison-safe, interval-aware, dependence-aware,
+lineage-certified, and coverage-closed.
 
 ## 1. Status Discipline
 
@@ -62,6 +63,48 @@ Normative reading rule:
     Nothing marked [E] or [C] may be cited as if it were already proven by [N].
 
 ## 2. Change Log
+
+### From v1.0.10
+
+    LIN-01  IntervalLineage introduced as a first-class comparison artifact.
+
+    LIN-02  ResampleFamily formalized.
+            Same-batch paired claims now require more than a digest:
+            they require replayable resample-family lineage.
+
+    LIN-03  AlignmentCertificate formalized.
+            Direct paired delta intervals must be backed by either
+            identical replicate keys or an explicit matched-index map.
+
+    LIN-04  CouplingTrace formalized for normalized direct-delta comparison.
+
+    COV-01  CoverageClosedInterval introduced.
+            Effective comparison intervals MUST absorb all declared error budgets
+            before relation derivation.
+
+    CMP-06  ComparisonAtoms extended with:
+                INTERVAL_LINEAGE_AVAILABLE
+                DELTA_LINEAGE_VALID
+
+    DER-06  Certified delta interval now depends on both
+            dependence regime and lineage validity.
+
+    EVD-07  No hidden tightening.
+            Direct paired or coupled delta intervals are forbidden unless
+            lineage is recorded and replayable.
+
+    PRV-05  Comparison provenance minimum extended with:
+                interval lineage digests,
+                resample-family digests,
+                alignment certificate digest if paired,
+                coupling trace digest if normalized,
+                absorbed error budgets.
+
+    C19-C24  Compare invariants extended to enforce:
+                lineage availability,
+                coverage closure,
+                direct-delta justification,
+                and swap-stable lineage semantics.
 
 ### From v1.0.9
 
@@ -830,7 +873,7 @@ equivalently non-decreasing C_Σ, under fixed aggregation profile.
 Epistemic time is the refinement-order parameter τ.
 It is not a physical clock variable.
 
-## 13. Dependence-Aware Comparison Safety [E/N]
+## 13. Lineage-Certified Comparison Safety [E/N]
 
 ### Definition 13.1 (ComparisonMode) [E]
 
@@ -905,8 +948,6 @@ Interpretation:
 
 ### Definition 13.7 (IntervalRegime) [E]
 
-An interval regime is
-
     R_I := {
         confidence_level,
         interval_method,
@@ -916,39 +957,161 @@ An interval regime is
         coupling_spec_digest?
     }
 
-where:
+### Definition 13.8 (ResampleFamily) [E]
 
-    confidence_level ∈ (0, 1)
-    interval_method  names the interval construction
-    basis            ∈ IntervalBasis
-    dependence_mode  ∈ DependenceMode
+A resample family is
+
+    F_rs := {
+        family_id,
+        family_method,
+        N_boot,
+        seed?,
+        block_size?,
+        observation_index_digest?,
+        ensemble_index_digest?,
+        replicate_key_digest
+    }
 
 Interpretation:
-    interval regime states how the interval was produced,
-    at what confidence level,
-    and under what dependence assumption.
+    a resample family identifies the realized bootstrap / block-bootstrap
+    replicate structure used to produce an interval artifact.
 
-### Definition 13.8 (ComparisonAtoms) [E]
+### Definition 13.9 (AlignmentCertificate) [E]
+
+An alignment certificate is
+
+    A_pair := {
+        left_family_id,
+        right_family_id,
+        alignment_kind,
+        replicate_key_digest,
+        map_digest?
+    }
+
+where:
+
+    alignment_kind ∈ {
+        IDENTICAL_REPLICATE_KEYS,
+        MATCHED_INDEX_MAP
+    }
+
+Interpretation:
+    A_pair certifies that direct paired-delta construction used
+    replayable left/right replicate correspondence.
+
+### Definition 13.10 (CouplingTrace) [E]
+
+A coupling trace is
+
+    T_cpl := {
+        source_interval_ids,
+        normalizer_id,
+        interval_map_spec_digest,
+        coupling_spec_digest,
+        propagated_error_bound,
+        trace_digest
+    }
+
+Interpretation:
+    T_cpl certifies how source intervals were carried into
+    a normalized comparison space and what extra uncertainty
+    was introduced by that mapping.
+
+### Definition 13.11 (IntervalLineage) [E]
+
+An interval lineage object is
+
+    L_I := {
+        interval_id,
+        interval_basis,
+        interval_regime,
+        parent_interval_ids?,
+        resample_family_id?,
+        alignment_certificate_digest?,
+        coupling_trace_digest?,
+        absorbed_error_budget,
+        lineage_digest
+    }
+
+where:
+
+    interval_basis ∈ {
+        RAW_CI,
+        NORMALIZED_INTERVAL,
+        CONSERVATIVE_MARGINAL_DIFF,
+        DIRECT_PAIRED_DELTA,
+        DIRECT_NORMALIZED_DELTA
+    }
+
+Normative rule:
+    every effective comparison interval and every certified delta interval
+    MUST carry an IntervalLineage object.
+
+### Definition 13.12 (CoverageClosedInterval) [E]
+
+A coverage-closed interval is
+
+    J := {
+        lo,
+        hi,
+        level,
+        basis,
+        regime,
+        absorbed_error_budget,
+        lineage
+    }
+
+with:
+    lo <= hi
+    absorbed_error_budget >= 0
+
+Interpretation:
+    J is the interval actually used for comparison.
+    It MUST already include every declared error budget
+    relevant to the comparison layer.
+
+### Definition 13.13 (Coverage Closure Rule) [E/N]
+
+Let I_raw be an input interval and let e_abs be the total declared error budget
+that must be absorbed before order certification.
+
+Then the effective coverage-closed interval is
+
+    J := inflate(I_raw, e_abs)
+
+such that:
+
+    J.lo <= I_raw.lo
+    J.hi >= I_raw.hi
+    J.absorbed_error_budget = e_abs
+
+Normative rule:
+    if any declared error source is not absorbed into J,
+    then J MUST NOT be used for score_relation derivation.
+
+### Definition 13.14 (ComparisonAtoms) [E]
 
     ComparisonAtoms := {
         SAME_BATCH,
         SCORES_AVAILABLE,
         INTERVALS_AVAILABLE,
         INTERVAL_REGIME_COMPAT,
+        INTERVAL_LINEAGE_AVAILABLE,
         EVIDENCE_CLOSED,
         PROFILE_EQ,
         REFERENCE_EQ,
         POLICY_EQ,
         RNG_COMPAT,
         NORMALIZER_VALID,
-        DELTA_REGIME_VALID
+        DELTA_REGIME_VALID,
+        DELTA_LINEAGE_VALID
     }
 
-### Definition 13.9 (CompareCheckStatus) [E]
+### Definition 13.15 (CompareCheckStatus) [E]
 
     CompareCheckStatus := {PASS, FAIL, NOT_APPLICABLE}
 
-### Definition 13.10 (CompareEntry) [E]
+### Definition 13.16 (CompareEntry) [E]
 
     CompareEntry(a) := {
         status,
@@ -958,9 +1121,7 @@ Interpretation:
         note?
     }
 
-### Definition 13.11 (Comparison Normalizer) [E]
-
-A comparison normalizer is
+### Definition 13.17 (Comparison Normalizer) [E]
 
     N_cmp := {
         normalizer_id,
@@ -996,26 +1157,7 @@ Normative rule:
 If N_cmp claims coupled normalization,
 it MUST declare coupling_spec.
 
-### Definition 13.12 (Comparability Ledger) [E]
-
-    comparability_ledger := {
-        mode,
-        required_passes,
-        SAME_BATCH,
-        SCORES_AVAILABLE,
-        INTERVALS_AVAILABLE,
-        INTERVAL_REGIME_COMPAT,
-        EVIDENCE_CLOSED,
-        PROFILE_EQ,
-        REFERENCE_EQ,
-        POLICY_EQ,
-        RNG_COMPAT,
-        NORMALIZER_VALID,
-        DELTA_REGIME_VALID,
-        failing_atoms?
-    }
-
-### Definition 13.13 (Atomic Comparison Checks) [E]
+### Definition 13.18 (Atomic Comparison Checks) [E]
 
 SAME_BATCH = PASS iff:
 
@@ -1045,6 +1187,10 @@ INTERVAL_REGIME_COMPAT = PASS iff:
     in normalized modes:
         N_cmp.target_confidence_level is declared
         and both effective comparison intervals are mapped into that target regime
+
+INTERVAL_LINEAGE_AVAILABLE = PASS iff:
+    each effective interval used by comparison carries a lineage object L_I
+    with non-empty lineage_digest and declared absorbed_error_budget.
 
 EVIDENCE_CLOSED = PASS iff:
     both bundles are trace-complete and proof-carrying
@@ -1098,7 +1244,51 @@ DELTA_REGIME_VALID = PASS iff:
         and coupling_spec is declared
         and a direct normalized delta interval is recorded or reproducible
 
-### Definition 13.14 (Required Pass Set by Mode) [E]
+DELTA_LINEAGE_VALID = PASS iff:
+
+    if dependence_mode ∈ {UNKNOWN, INDEPENDENT}:
+        delta interval basis = CONSERVATIVE_MARGINAL_DIFF
+        and parent interval lineages are present
+        and no hidden paired/coupled tightening is used
+
+    if dependence_mode = PAIRED:
+        SAME_BATCH = PASS
+        and either:
+            (i) left/right effective intervals reference the same resample family
+        or
+            (ii) an AlignmentCertificate is present and replayable
+        and the direct paired delta interval carries lineage with:
+            interval_basis = DIRECT_PAIRED_DELTA
+
+    if dependence_mode = COUPLED_NORMALIZED:
+        mode != RAW
+        and NORMALIZER_VALID = PASS
+        and a CouplingTrace is present and replayable
+        and the direct normalized delta interval carries lineage with:
+            interval_basis = DIRECT_NORMALIZED_DELTA
+
+### Definition 13.19 (Comparability Ledger) [E]
+
+    comparability_ledger := {
+        mode,
+        required_passes,
+        SAME_BATCH,
+        SCORES_AVAILABLE,
+        INTERVALS_AVAILABLE,
+        INTERVAL_REGIME_COMPAT,
+        INTERVAL_LINEAGE_AVAILABLE,
+        EVIDENCE_CLOSED,
+        PROFILE_EQ,
+        REFERENCE_EQ,
+        POLICY_EQ,
+        RNG_COMPAT,
+        NORMALIZER_VALID,
+        DELTA_REGIME_VALID,
+        DELTA_LINEAGE_VALID,
+        failing_atoms?
+    }
+
+### Definition 13.20 (Required Pass Set by Mode) [E]
 
 Req(RAW)
     =
@@ -1107,11 +1297,13 @@ Req(RAW)
       SCORES_AVAILABLE,
       INTERVALS_AVAILABLE,
       INTERVAL_REGIME_COMPAT,
+      INTERVAL_LINEAGE_AVAILABLE,
       EVIDENCE_CLOSED,
       PROFILE_EQ,
       POLICY_EQ,
       RNG_COMPAT,
-      DELTA_REGIME_VALID
+      DELTA_REGIME_VALID,
+      DELTA_LINEAGE_VALID
     }
     union {REFERENCE_EQ if REFERENCE_EQ != NOT_APPLICABLE}
 
@@ -1122,11 +1314,13 @@ Req(PROFILE_NORMALIZED)
       SCORES_AVAILABLE,
       INTERVALS_AVAILABLE,
       INTERVAL_REGIME_COMPAT,
+      INTERVAL_LINEAGE_AVAILABLE,
       EVIDENCE_CLOSED,
       POLICY_EQ,
       RNG_COMPAT,
       NORMALIZER_VALID,
-      DELTA_REGIME_VALID
+      DELTA_REGIME_VALID,
+      DELTA_LINEAGE_VALID
     }
     union {REFERENCE_EQ if REFERENCE_EQ != NOT_APPLICABLE}
 
@@ -1137,12 +1331,14 @@ Req(REFERENCE_NORMALIZED)
       SCORES_AVAILABLE,
       INTERVALS_AVAILABLE,
       INTERVAL_REGIME_COMPAT,
+      INTERVAL_LINEAGE_AVAILABLE,
       EVIDENCE_CLOSED,
       PROFILE_EQ,
       POLICY_EQ,
       RNG_COMPAT,
       NORMALIZER_VALID,
-      DELTA_REGIME_VALID
+      DELTA_REGIME_VALID,
+      DELTA_LINEAGE_VALID
     }
 
 Req(FULLY_NORMALIZED)
@@ -1152,14 +1348,14 @@ Req(FULLY_NORMALIZED)
       SCORES_AVAILABLE,
       INTERVALS_AVAILABLE,
       INTERVAL_REGIME_COMPAT,
+      INTERVAL_LINEAGE_AVAILABLE,
       EVIDENCE_CLOSED,
       NORMALIZER_VALID,
-      DELTA_REGIME_VALID
+      DELTA_REGIME_VALID,
+      DELTA_LINEAGE_VALID
     }
 
-Any failed atom outside N_cmp.covers blocks comparability.
-
-### Definition 13.15 (Comparable Pair) [E]
+### Definition 13.21 (Comparable Pair) [E]
 
 (B_L, B_R) is comparable under mode iff:
 
@@ -1169,90 +1365,57 @@ and
 
     no failed atom outside N_cmp.covers is ignored.
 
-### Definition 13.16 (Comparison Interval Object) [E]
+### Definition 13.22 (Effective Comparison Intervals) [E]
 
-    I_cmp := {
-        lo,
-        hi,
-        level,
-        basis,
-        regime,
-        error_budget?
-    }
-
-where:
-
-    lo <= hi
-    basis ∈ IntervalBasis
-    regime is an IntervalRegime
-
-### Definition 13.17 (Effective Comparison Intervals) [E]
+Let J_L and J_R denote the coverage-closed effective intervals used for comparison.
 
 If mode = RAW:
-
-    I_L := {
-        lo     = left.ci.CI_lo,
-        hi     = left.ci.CI_hi,
-        level  = left.ci.level,
-        basis  = RAW_CI,
-        regime = left.interval_regime
-    }
-
-    I_R := {
-        lo     = right.ci.CI_lo,
-        hi     = right.ci.CI_hi,
-        level  = right.ci.level,
-        basis  = RAW_CI,
-        regime = right.interval_regime
-    }
+    J_L is the coverage-closed inflation of the left raw CI
+    J_R is the coverage-closed inflation of the right raw CI
 
 If mode != RAW:
-    N_cmp MUST induce target-space intervals
+    J_L and J_R are the coverage-closed normalized intervals induced by N_cmp
 
-        I_L^N, I_R^N
+Normative rule:
+    every effective interval used in comparison MUST be coverage-closed.
 
-each with:
-    level  = N_cmp.target_confidence_level
-    basis  = NORMALIZED_INTERVAL
-    regime recorded in normalized comparison provenance
-
-### Definition 13.18 (Certified Delta Interval) [E]
-
-Let dependence_mode be the declared dependence mode.
+### Definition 13.23 (Certified Delta Interval) [E]
 
 If dependence_mode ∈ {UNKNOWN, INDEPENDENT},
 define
 
     Δ_cmp := {
-        lo    = I_L.lo - I_R.hi,
-        hi    = I_L.hi - I_R.lo,
-        basis = CONSERVATIVE_MARGINAL_DIFF
+        lo    = J_L.lo - J_R.hi,
+        hi    = J_L.hi - J_R.lo,
+        basis = CONSERVATIVE_MARGINAL_DIFF,
+        lineage = L_Δ
     }
 
 If dependence_mode = PAIRED,
 define
 
     Δ_cmp := {
-        lo    = direct paired-delta interval lower bound,
-        hi    = direct paired-delta interval upper bound,
-        basis = DIRECT_PAIRED_DELTA
+        lo    = direct paired-delta lower bound,
+        hi    = direct paired-delta upper bound,
+        basis = DIRECT_PAIRED_DELTA,
+        lineage = L_Δ
     }
 
 If dependence_mode = COUPLED_NORMALIZED,
 define
 
     Δ_cmp := {
-        lo    = direct normalized-delta interval lower bound,
-        hi    = direct normalized-delta interval upper bound,
-        basis = DIRECT_NORMALIZED_DELTA
+        lo    = direct normalized-delta lower bound,
+        hi    = direct normalized-delta upper bound,
+        basis = DIRECT_NORMALIZED_DELTA,
+        lineage = L_Δ
     }
 
 Normative rule:
-    no tighter-than-conservative delta interval may be used
-    unless DELTA_REGIME_VALID = PASS
-    and the corresponding dependence evidence is recorded.
+    no delta interval tighter than CONSERVATIVE_MARGINAL_DIFF may be used
+    unless DELTA_LINEAGE_VALID = PASS and the corresponding lineage is recorded.
 
-### Definition 13.19 (Comparison Metrics) [E]
+### Definition 13.24 (Comparison Metrics) [E]
 
     comparison_metrics := {
         left_point,
@@ -1272,7 +1435,7 @@ where:
     delta_point = left_point - right_point
     delta_interval = Δ_cmp
 
-### Definition 13.20 (Derived Score Relation) [E]
+### Definition 13.25 (Derived Score Relation) [E]
 
 If the pair is not comparable:
     score_relation = INCOMPARABLE
@@ -1296,7 +1459,7 @@ then
 Else
     score_relation = UNRESOLVED_WITHIN_UNCERTAINTY
 
-### Definition 13.21 (Comparison Explanation) [E]
+### Definition 13.26 (Comparison Explanation) [E]
 
     comparison_explanation := {
         basis,
@@ -1368,22 +1531,26 @@ Semantics:
 
 ### Operation OD-5
 
-    compare(B_left, B_right, mode, N_cmp?, T_cmp?) -> CompareResponse
+    compare(B_left, B_right, mode, N_cmp?, T_cmp?, dependence_mode?) -> CompareResponse
 
 Semantics:
-    compare is comparison-safe, uncertainty-aware, and dependence-aware.
+    compare is comparison-safe, uncertainty-aware, dependence-aware,
+    and lineage-certified.
 
 It MUST:
 
     1. compute comparability_ledger
-    2. derive effective comparison intervals
-    3. derive a certified delta interval under the declared dependence mode
+    2. construct coverage-closed effective intervals
+    3. construct a certified delta interval with recorded lineage
     4. emit score_relation
     5. emit reason_codes whenever relation is INCOMPARABLE
        or UNRESOLVED_WITHIN_UNCERTAINTY
 
 It MUST NOT:
-    use paired or coupled delta tightening unless DELTA_REGIME_VALID = PASS.
+
+    1. use paired tightening without replayable resample alignment
+    2. use coupled normalized tightening without replayable coupling trace
+    3. certify order from intervals that are not coverage-closed
 
 ## 15. Canonical Verify Contract [E]
 
@@ -1441,10 +1608,6 @@ It MUST NOT:
         provenance_policy_override?
     }
 
-where:
-
-    dependence_mode ∈ DependenceMode
-
 Normative rule:
     if dependence_mode is omitted,
     it defaults to UNKNOWN.
@@ -1460,13 +1623,26 @@ Normative rule:
         normalizer?,
         comparability_ledger,
         comparison_metrics?,
+        interval_lineages?,
         score_relation,
         comparison_explanation?,
         reason_codes,
         provenance?
     }
 
-### Definition 16.3 (Comparison Reason Codes) [E]
+### Definition 16.3 (Interval Lineage Bundle) [E]
+
+    interval_lineages := {
+        left_interval_lineage,
+        right_interval_lineage,
+        delta_interval_lineage
+    }
+
+Normative rule:
+    if score_relation != INCOMPARABLE,
+    then interval_lineages MUST be present.
+
+### Definition 16.4 (Comparison Reason Codes) [E]
 
 Reason codes SHOULD be drawn from:
 
@@ -1474,6 +1650,7 @@ Reason codes SHOULD be drawn from:
     SCORES_MISSING
     INTERVALS_MISSING
     INTERVAL_REGIME_MISMATCH
+    INTERVAL_LINEAGE_MISSING
     EVIDENCE_NOT_CLOSED
     PROFILE_MISMATCH
     REFERENCE_MISMATCH
@@ -1482,38 +1659,39 @@ Reason codes SHOULD be drawn from:
     NORMALIZER_MISSING
     NORMALIZER_SCOPE_INVALID
     NORMALIZER_PROOF_MISSING
-    NORMALIZER_INTERVAL_INVALID
+    NORMALIZER_ERROR_UNABSORBED
     DELTA_REGIME_INVALID
+    DELTA_LINEAGE_INVALID
     DEPENDENCE_UNDECLARED
-    PAIRED_DELTA_MISSING
-    COUPLED_DELTA_MISSING
+    PAIRED_ALIGNMENT_MISSING
+    COUPLING_TRACE_MISSING
     COMPARE_UNCERTAINTY_OVERLAP
     COMPARE_INSUFFICIENT_EVIDENCE
 
-### Definition 16.4 (Comparison Evidence Closure) [E]
+### Definition 16.5 (Comparison Evidence Closure) [E]
 
-A comparison reason code is evidence-closed iff its triggering failed atom
+A comparison reason code is evidence-closed iff the corresponding failed atom
 or unresolved certified-delta condition is present and replayable.
 
 Examples:
 
-    INTERVAL_REGIME_MISMATCH
-        -> INTERVAL_REGIME_COMPAT.status = FAIL
+    INTERVAL_LINEAGE_MISSING
+        -> INTERVAL_LINEAGE_AVAILABLE.status = FAIL
 
-    DELTA_REGIME_INVALID
-        -> DELTA_REGIME_VALID.status = FAIL
+    DELTA_LINEAGE_INVALID
+        -> DELTA_LINEAGE_VALID.status = FAIL
 
-    PAIRED_DELTA_MISSING
+    PAIRED_ALIGNMENT_MISSING
         -> dependence_mode = PAIRED
-           and DELTA_REGIME_VALID.status = FAIL
+           and DELTA_LINEAGE_VALID.status = FAIL
 
-    COUPLED_DELTA_MISSING
+    COUPLING_TRACE_MISSING
         -> dependence_mode = COUPLED_NORMALIZED
-           and DELTA_REGIME_VALID.status = FAIL
+           and DELTA_LINEAGE_VALID.status = FAIL
 
-    COMPARE_UNCERTAINTY_OVERLAP
-        -> score_relation = UNRESOLVED_WITHIN_UNCERTAINTY
-           and comparison_metrics.delta_interval present
+    NORMALIZER_ERROR_UNABSORBED
+        -> coverage-closure rule violated
+           and effective interval lineage shows missing absorption
 
 ## 17. Verify Invariants [E/N]
 
@@ -1618,7 +1796,7 @@ Invariant C8:
     then:
         dependence_mode = PAIRED
         and SAME_BATCH = PASS
-        and DELTA_REGIME_VALID = PASS
+        and DELTA_LINEAGE_VALID = PASS
 
 Invariant C9:
     if comparison_metrics.delta_interval_basis = DIRECT_NORMALIZED_DELTA,
@@ -1626,7 +1804,7 @@ Invariant C9:
         dependence_mode = COUPLED_NORMALIZED
         and mode != RAW
         and NORMALIZER_VALID = PASS
-        and DELTA_REGIME_VALID = PASS
+        and DELTA_LINEAGE_VALID = PASS
 
 Invariant C10:
     if score_relation = LEFT_HIGHER,
@@ -1682,7 +1860,33 @@ Invariant C17:
 
 Invariant C18:
     compare MUST NOT mutate either input bundle
-    or any referenced snapshot.
+    or any referenced snapshot
+
+Invariant C19:
+    if INTERVAL_LINEAGE_AVAILABLE.status = FAIL,
+    then score_relation = INCOMPARABLE
+
+Invariant C20:
+    if DELTA_LINEAGE_VALID.status = FAIL,
+    then score_relation = INCOMPARABLE
+
+Invariant C21:
+    every interval used in score_relation derivation MUST be coverage-closed
+
+Invariant C22:
+    if mode != RAW and normalizer.error_bound is declared,
+    then that error bound MUST be absorbed into the relevant
+    effective interval or delta interval before relation derivation
+
+Invariant C23:
+    if comparison_metrics.delta_interval_basis = DIRECT_PAIRED_DELTA,
+    then interval_lineages.delta_interval_lineage.alignment_certificate_digest
+    MUST be present
+
+Invariant C24:
+    if comparison_metrics.delta_interval_basis = DIRECT_NORMALIZED_DELTA,
+    then interval_lineages.delta_interval_lineage.coupling_trace_digest
+    MUST be present
 
 ## 19. Provenance Minimum [E/N]
 
@@ -1723,16 +1927,20 @@ Every CompareResponse MUST record at least:
     delta interval
     delta interval basis
     interval regimes
+    interval lineage bundle
     target confidence level if normalized
     normalizer identifier/version/covers if used
     normalizer error bound if used
     timestamp
 
 If dependence_mode = PAIRED,
-the paired resampling or matched-index evidence digest MUST be recorded.
+the resample family digest and alignment certificate digest MUST be recorded.
 
 If dependence_mode = COUPLED_NORMALIZED,
-the coupling specification digest MUST be recorded.
+the coupling trace digest MUST be recorded.
+
+If any effective interval is coverage-closed by inflation,
+the absorbed error budget MUST be recorded.
 
 If score_relation = UNRESOLVED_WITHIN_UNCERTAINTY,
 the uncertainty_driver SHOULD be recorded.
@@ -1772,18 +1980,18 @@ Outside scope:
 
 ## 22. Final Position
 
-TSC Observation Dynamics v1.0.10 is the dependence-aware,
-delta-certified observation-layer specification of TSC.
+TSC Observation Dynamics v1.0.11 is the lineage-certified,
+coverage-closed observation-layer specification of TSC.
 
 Its decisive moves are:
 
-    structural comparability remains separate from epistemic resolution,
-    interval compatibility is now explicit,
-    conservative and paired delta intervals are no longer conflated,
-    direct delta tightening requires declared dependence evidence,
-    and left/right swap laws are part of the contract.
+    declared dependence is no longer enough,
+    direct delta tightening now requires replayable lineage,
+    effective intervals must absorb declared error budgets before ordering,
+    paired and coupled claims become traceable rather than merely asserted,
+    and comparison provenance now carries the ancestry of the certified delta.
 
-That is stricter than v1.0.9.
-That is more honest about uncertainty structure.
-That is safer for comparison engines and SDKs.
+That is stricter than v1.0.10.
+That is more honest about how comparison evidence is actually produced.
+That is safer for runtimes, SDKs, and AI readers.
 That is the next clean step.
