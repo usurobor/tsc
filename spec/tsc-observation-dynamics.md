@@ -1,8 +1,8 @@
-# TSC Observation Dynamics v1.0.3
+# TSC Observation Dynamics v1.0.4
 
 Formal Specification of Observer Construction, Verification, and Epistemic Refinement
 
-    Version:    v1.0.3
+    Version:    v1.0.4
     Status:     Proposed Extension Specification
     Artifact:   Specification
     Normative dependencies:
@@ -23,6 +23,7 @@ It defines:
     how an observer-run is typed,
     how a run is classified,
     how refinement is ordered,
+    how self-application is normalized,
     and what implementation-facing contract must be exposed.
 
 Intended audience:
@@ -66,6 +67,27 @@ Normative reading rule:
 
 ## 2. Change Log
 
+### From v1.0.3
+
+    AGR-01  Aggregate coherence now admits an explicit aggregation profile.
+            Default remains uniform, but weighted aggregation is now first-class.
+
+    AGR-02  Invariants V1 and V2 are generalized so they are correct for both
+            uniform and weighted aggregation.
+
+    EXE-01  Execution outcome is separated from controller outcome.
+            Runtime failure is no longer modeled as a controller terminal state.
+
+    EXE-02  Classification statuses are lifted from booleans to a three-valued
+            lattice: PASS / FAIL / UNDECIDED.
+
+    PRO-01  ParameterProfile is made explicit and replayable.
+            Thresholds, sensitivities, weights, CI settings, and OOD settings
+            are frozen as a single canonical object.
+
+    SEL-02  Self-application is normalized through a bundle-batch lift so that
+            meta-observation still uses verify(o, D) rather than a new signature.
+
 ### From v1.0.2
 
     SYM-01  κ_o renamed to ρ_o to resolve collision with C≡ cohering seed κ.
@@ -79,11 +101,11 @@ Normative reading rule:
 ### From v1.0.1
 
     ID-01   Document identity is now explicit.
-    ID-02   Audience, purpose, and stack position are now normative front matter.
-    API-01  Canonical observer manifest is introduced.
-    API-02  Canonical verify contract is frozen at the schema level.
-    API-03  Conformance profiles are introduced.
-    DOC-01  Repository placement and derived artifact policy are defined.
+    ID-02   Audience, purpose, and stack position are front matter.
+    API-01  Canonical observer manifest introduced.
+    API-02  Canonical verify contract frozen at schema level.
+    API-03  Conformance profiles introduced.
+    DOC-01  Repository placement and derived artifact policy defined.
 
 ## 3. Notation & Dependency Discipline [N/E]
 
@@ -96,7 +118,7 @@ Let
 All constructions in this document are invariant under permutations of A.
 
 Any semantic labels attached to α, β, γ are metadata only.
-They MUST be stored in provenance and MUST NOT alter formal verdict logic.
+They MUST be stored in provenance and MUST NOT alter verdict logic.
 
 ### Definition 3.2 (Inherited Carrier & Summaries) [N]
 
@@ -107,55 +129,93 @@ The framework inherits the carrier T of C≡ terms and the summary objects:
 ### Definition 3.3 (Notation Separation) [E]
 
 To avoid symbol collision between this document and its parent specifications,
-the following local symbols are introduced:
+the following local symbols are used:
 
-    μ_a      > 0   dimensional sensitivity hyperparameters
-    μ_ab     > 0   pairwise coherence sensitivity hyperparameters
-    ε        > 0   numerical floor
-    Θ        ∈ (0,1]   acceptance threshold
-    ℓ_a            diagnostic leverage per axis
-    ℓ_Σ            aggregate diagnostic leverage
-    ρ_o            contraction scalar of observer o
+    μ_a      > 0        dimensional sensitivity hyperparameters
+    μ_ab     > 0        pairwise coherence sensitivity hyperparameters
+    ε        > 0        numerical floor
+    Θ        ∈ (0,1]    acceptance threshold
+    ℓ_a                 diagnostic leverage per axis
+    ℓ_Σ                 aggregate diagnostic leverage
+    ρ_o                 contraction scalar of observer o
 
 Inherited score names remain:
 
     s_alpha, s_beta, s_gamma ∈ [0,1]
-    C_Σ = (s_alpha · s_beta · s_gamma)^(1/3)
 
 ### Definition 3.4 (Notation Bridge) [E]
 
-The following table maps symbols in this document to their parent specifications.
-This mapping is semantic equivalence, not redefinition.
+The following table maps local symbols to parent specifications.
+The mapping is semantic equivalence, not redefinition.
 
-    This spec        Parent spec          Parent location
-    ─────────        ───────────          ───────────────
-    μ_a              λ_α, λ_β, λ_γ       TSC Core §4
-    μ_ab             λ_ab                 TSC Core §3.2
-    ε                ε                    TSC Core §4 (same symbol)
-    Θ                Θ                    TSC Oper §5 (same symbol)
-    ℓ_a              λ_a                  TSC Core §11
-    ℓ_Σ              λ_Σ                  TSC Core §11
-    ρ_o              (new)                this spec §7.2
-    κ (not used)     κ                    C≡ §1.4 (cohering seed)
+    This spec        Parent spec symbol      Parent location
+    ─────────        ──────────────────      ───────────────
+    μ_a              λ_α, λ_β, λ_γ          TSC Core §4
+    μ_ab             λ_ab                    TSC Core §3.2
+    ε                ε                       TSC Core §4
+    Θ                Θ                       TSC Operational §5
+    ℓ_a              λ_a                     TSC Core §11
+    ℓ_Σ              λ_Σ                     TSC Core §11
+    ρ_o              (new)                   this spec §7.2
+    κ (not used)     κ                       C≡ §1.4 (cohering seed)
 
 The renaming of leverage from λ to ℓ avoids collision with the sensitivity
 hyperparameters λ_α, λ_β, λ_γ of TSC Core §4 within the same document.
 
 The symbol κ is reserved for the C≡ cohering seed and is not reused here.
 
-### Definition 3.5 (Diagnostic Leverage) [E]
+### Definition 3.5 (Aggregation Profile) [N/E]
+
+An aggregation profile is a weight triple
+
+    W := (w_alpha, w_beta, w_gamma)
+
+such that:
+
+    w_alpha > 0
+    w_beta  > 0
+    w_gamma > 0
+    w_alpha + w_beta + w_gamma = 3
+
+Default aggregation profile:
+
+    W_default := (1, 1, 1)
+
+### Definition 3.6 (Aggregate Coherence) [N/E]
+
+Given dimensional scores and an aggregation profile W, define
+
+    C_Σ(W)
+      :=
+    exp((1/3) · (
+        w_alpha · ln(max(s_alpha, ε)) +
+        w_beta  · ln(max(s_beta,  ε)) +
+        w_gamma · ln(max(s_gamma, ε))
+    ))
+
+If W = W_default, this reduces to
+
+    C_Σ = (s_alpha · s_beta · s_gamma)^(1/3)
+
+### Definition 3.7 (Diagnostic Leverage) [E]
 
 For each axis a ∈ A:
 
-    ℓ_a = −ln(max(s_a, ε))
+    ℓ_a := −ln(max(s_a, ε))
 
-Aggregate:
+Aggregate leverage under W:
 
-    ℓ_Σ = (1/3) · (ℓ_alpha + ℓ_beta + ℓ_gamma)
+    ℓ_Σ(W)
+      :=
+    −(1/3) · (
+        w_alpha · ln(max(s_alpha, ε)) +
+        w_beta  · ln(max(s_beta,  ε)) +
+        w_gamma · ln(max(s_gamma, ε))
+    )
 
-If all dimensional scores are ≥ ε, then:
+Hence:
 
-    ℓ_Σ = −ln(C_Σ)
+    ℓ_Σ(W) = −ln(C_Σ(W))
 
 Interpretation:
 
@@ -165,7 +225,7 @@ Interpretation:
 
 ### Definition 4.1 (Observation Domain) [E]
 
-Let X be the base state space of the phenomenon.
+Let X be the declared domain of the phenomenon under observation.
 
 ### Definition 4.2 (Observation Batch) [E]
 
@@ -177,7 +237,52 @@ with
 
     N = |D|.
 
-### Definition 4.3 (Observer Pipeline) [E]
+### Definition 4.3 (ParameterProfile) [E]
+
+Every observer MUST carry a frozen parameter profile
+
+    P_o := {
+        theta,
+        μ_axis,
+        μ_pair,
+        ε,
+        aggregation_profile,
+        Θ,
+        τ_S3,
+        τ_gauge,
+        τ_scale,
+        τ_var,
+        τ_lip,
+        τ_lip_pol?,
+        δ_CI,
+        ci_level,
+        Z_crit,
+        N_boot,
+        OOD_reference_policy,
+        calibration_refs?
+    }
+
+Semantics:
+
+    theta                discrepancy-weight / reconciliation parameter
+    μ_axis               axis sensitivities
+    μ_pair               pairwise sensitivities
+    ε                    numerical floor
+    aggregation_profile  W
+    Θ                    acceptance threshold
+    τ_*                  witness floors
+    δ_CI                 CI-width tolerance
+    ci_level             CI confidence level
+    Z_crit               OOD threshold
+    N_boot               bootstrap count
+    OOD_reference_policy rolling / fixed OOD regime
+    calibration_refs     optional calibration artifacts
+
+Normative rule:
+
+    P_o MUST be frozen before final scoring.
+
+### Definition 4.4 (Observer Pipeline) [E]
 
 An observer is a typed pipeline
 
@@ -186,7 +291,8 @@ An observer is a typed pipeline
         {A_a^o}_{a∈A},
         {Σ_a^o}_{a∈A},
         {E_ab^o}_{a≠b},
-        Π_o
+        P_o,
+        M_o
     )
 
 where:
@@ -195,27 +301,21 @@ where:
     A_a^o     : T → P(Ω_a^o)          articulator per axis
     Σ_a^o     : P(Ω_a^o) → S_a^o      summarizer per axis
     E_ab^o    = {σ_ab^1, …, σ_ab^m}   alignment ensemble, m ≥ 3
-    Π_o       = parameter bundle       frozen hyperparameters
+    P_o       = frozen parameter profile
+    M_o       = observer manifest
 
-Structural parallel (non-normative note):
+### Definition 4.5 (Observer Manifest) [E]
 
-    The pipeline decomposes observation into encode → articulate → summarize →
-    align → score, which mirrors the evaluator triad of C≡ §3 lifted from term
-    algebra into the domain of empirical measurement. The three articulators
-    {A_a^o} correspond to the three evaluator homomorphisms; the alignment
-    ensemble bridges pairwise coherence (TSC Core §3).
-
-### Definition 4.4 (Observer Manifest) [E]
-
-Every observer o MUST admit a serializable manifest
+Every observer MUST admit a serializable manifest
 
     M_o := {
         observer_id,
         observer_version,
         axis_aliases,
         domain_tag,
+        schema_ref?,
         component_refs,
-        parameter_profile,
+        parameter_profile_ref,
         provenance_policy,
         declared_totality,
         dependency_hashes
@@ -223,112 +323,92 @@ Every observer o MUST admit a serializable manifest
 
 where:
 
-    observer_id         = stable identifier
-    observer_version    = semantic version of observer design
-    axis_aliases        = optional semantic names for α, β, γ
-    domain_tag          = declared application domain
-    component_refs      = references to encoder / articulator / summarizer /
-                          aligner / scorer / witness suite
-    parameter_profile   = frozen thresholds and hyperparameters
-    provenance_policy   = what must be recorded
-    declared_totality   = stated domain on which the observer is intended to run
-    dependency_hashes   = content-addressable references if available
+    observer_id            stable identifier
+    observer_version       semantic version of observer design
+    axis_aliases           optional semantic names for α, β, γ
+    domain_tag             declared application domain
+    schema_ref             optional schema for batch objects
+    component_refs         encoder / articulator / summarizer / aligner / scorer / witness suite refs
+    parameter_profile_ref  pointer or embedded digest for P_o
+    provenance_policy      what must be recorded
+    declared_totality      stated domain on which the observer is intended to run
+    dependency_hashes      immutable references if available
 
-### Definition 4.5 (Measurement Bundle) [E]
+### Definition 4.6 (Measurement Bundle) [E]
 
 Running observer o on batch D yields
 
-    B_o(D) =
-    (
-      manifest,
-      batch_record,
-      summaries,
-      pairwise,
-      scores,
-      diagnostics,
-      witnesses,
-      ci,
-      ood,
-      provenance,
-      state_sequence,
-      verdict
-    )
+    B_o(D) := {
+        header,
+        observer,
+        batch_record,
+        execution,
+        controller,
+        classification,
+        summaries?,
+        pairwise?,
+        scores?,
+        diagnostics?,
+        witnesses?,
+        ci?,
+        ood?,
+        provenance?,
+        reason_codes
+    }
 
-with canonical subfields:
+Fields marked ? MAY be absent if execution terminates before they are computed.
 
-    summaries:
-        S_alpha
-        S_beta
-        S_gamma
+### Definition 4.7 (Batch Record) [E]
 
-    pairwise:
-        alpha_beta   = (barCoh_ab, Var_ab)
-        beta_gamma   = (barCoh_bg, Var_bg)
-        gamma_alpha  = (barCoh_ga, Var_ga)
+The batch record is
 
-    scores:
-        s_alpha
-        s_beta
-        s_gamma
-        C_Σ
+    batch_record := {
+        batch_id?,
+        domain_tag,
+        schema_ref?,
+        N,
+        sampling_policy?,
+        batch_hash?
+    }
 
-    diagnostics:
-        ℓ_alpha
-        ℓ_beta
-        ℓ_gamma
-        ℓ_Σ
-        ρ
+## 5. Run Classes, Outcomes, and Truth Values [E/N]
 
-    witnesses:
-        w_S3
-        w_gauge
-        w_scale
-        w_var
-        w_lip
+### Definition 5.1 (Three-Valued Classification Status) [E]
 
-    ci:
-        CI_lo
-        CI_hi
-        method
-        N_boot
+Let
 
-    ood:
-        Z_t
-        reference_window
-        ood_pass
+    Status3 := {PASS, FAIL, UNDECIDED}
 
-    verdict:
-        adm
-        ver
-        acc
-        dep
-        terminal_state
+Interpretation:
 
-## 5. Run Classes [E/N]
+    PASS       predicate established
+    FAIL       predicate refuted
+    UNDECIDED  predicate not yet evaluable from realized execution trace
 
-### Definition 5.1 (Declared Observer) [E]
+### Definition 5.2 (Declared Observer) [E]
 
 Decl(o) holds iff:
 
-    observer o has a valid manifest M_o.
+    observer o has a valid manifest M_o and frozen parameter profile P_o.
 
-### Definition 5.2 (Admissible Run) [E]
+### Definition 5.3 (Admissible Run) [E]
 
 Adm(o, D) holds iff:
 
-    (i)    Decl(o)
-    (ii)   η_o, A_a^o, Σ_a^o are well-typed on D or η_o(D)
-    (iii)  |D| ≥ N_min
-    (iv)   |E_ab^o| ≥ 3  for every required pair
-    (v)    summaries, coherences, witnesses, CI, OOD, provenance are computable
-    (vi)   all thresholds and hyperparameters are frozen before final scoring
-    (vii)  axis aliases, if present, are declared in provenance
+    (i)   Decl(o)
+    (ii)  η_o, A_a^o, Σ_a^o are well-typed on D or η_o(D)
+    (iii) |D| ≥ N_min
+    (iv)  |E_ab^o| ≥ 3 for every required pair
+    (v)   required artifacts for summaries, coherences, witnesses,
+          CI, OOD, and provenance are computable in principle
+    (vi)  P_o is frozen before final scoring
+    (vii) axis aliases, if present, are declared in provenance policy
 
 Admissible means:
 
     runnable and auditable.
 
-### Definition 5.3 (Verified Run) [E/N]
+### Definition 5.4 (Verified Run) [E/N]
 
 Ver(o, D) holds iff Adm(o, D) and all hard witness conditions pass:
 
@@ -342,19 +422,19 @@ Verified means:
 
     operationally and mathematically valid.
 
-### Definition 5.4 (Accepted Run) [E/N]
+### Definition 5.5 (Accepted Run) [E/N]
 
 Acc(o, D) holds iff Ver(o, D) and:
 
-    C_Σ           ≥ Θ
-    CI_hi − CI_lo ≤ δ_CI
-    Z_t           < Z_crit
+    C_Σ(W)         ≥ Θ
+    CI_hi − CI_lo  ≤ δ_CI
+    Z_t            < Z_crit
 
 Accepted means:
 
     valid + coherent enough + precise enough + distributionally stable enough.
 
-### Definition 5.5 (Deployment-Ready Run) [E]
+### Definition 5.6 (Deployment-Ready Run) [E]
 
 Dep(o, D) holds iff Acc(o, D) and additionally:
 
@@ -365,26 +445,88 @@ Recommended default range:
 
     τ_lip_pol ∈ [0.80, 0.95]
 
-The value SHOULD be chosen per domain. Tighter bounds increase engineering
-margin. The recommended starting point for new domains is τ_lip_pol = 0.90.
+Recommended starting point for new domains:
+
+    τ_lip_pol = 0.90
 
 DeploymentReady means:
 
     accepted with an extra engineering safety margin on contraction.
 
-### Invariant 5.6 (Verdict Implication Chain) [E]
+### Definition 5.7 (Execution Outcome) [E]
+
+Execution outcome is distinct from verdict classification.
+
+    ExecStatus := {OK, ERROR}
+
+with canonical object
+
+    execution := {
+        status,
+        error_code?,
+        error_stage?,
+        error_message?
+    }
+
+Interpretation:
+
+    status = OK      runtime completed normally
+    status = ERROR   runtime or transport failed before normal completion
+
+### Definition 5.8 (Controller Outcome) [N/E]
+
+Controller outcome records realized operational-state progression only.
+
+    CtrlTerminal := {ACCEPT, REJECT, TERMINAL}
+
+with canonical object
+
+    controller := {
+        state_sequence,
+        terminal_state?
+    }
+
+Normative rule:
+
+    terminal_state belongs to controller semantics, not runtime semantics.
+
+### Definition 5.9 (Classification Object) [E]
+
+The classification object is
+
+    classification := {
+        decl,
+        adm,
+        ver,
+        acc,
+        dep
+    }
+
+where each field takes values in Status3.
+
+### Invariant 5.10 (Implication Chain) [E]
 
 For all observers o and batches D:
 
-    Dep(o, D) ⟹ Acc(o, D) ⟹ Ver(o, D) ⟹ Adm(o, D) ⟹ Decl(o)
+    dep = PASS ⟹ acc = PASS ⟹ ver = PASS ⟹ adm = PASS ⟹ decl = PASS
 
-### Invariant 5.7 (Witness Failure Rule) [N/E]
+### Invariant 5.11 (Witness Failure Rule) [N/E]
 
 If any hard witness fails, then:
 
-    Ver = false
-    Acc = false
-    Dep = false
+    ver = FAIL
+    acc = FAIL
+    dep = FAIL
+
+### Invariant 5.12 (Execution / Classification Separation) [E]
+
+If execution.status = ERROR, then:
+
+    controller.state_sequence MUST be a realized prefix of a legal controller trace,
+    terminal_state MAY be absent,
+    and at least one classification field MAY be UNDECIDED.
+
+Runtime failure MUST NOT be encoded as a controller terminal state.
 
 ## 6. Triadic Closure & Dynamics [E]
 
@@ -403,16 +545,6 @@ where:
 with deterministic update:
 
     F : M × U × Y → M × U × Y
-
-Connection to observer pipeline (non-normative note):
-
-    A triadic episode formalizes a single cycle of the observer-world interaction.
-    The observer pipeline of §4.3 produces a measurement bundle from a batch;
-    the episode dynamics describe how that batch and the observer's internal state
-    co-evolve across successive observations. The three coordinates (m, u, y)
-    are not identified with the three evaluators (α, β, γ) — the evaluators
-    operate within a single episode to produce scores, while the episode dynamics
-    govern the temporal sequence of such evaluations.
 
 ### Definition 6.2 (Essential Dependence) [E]
 
@@ -442,10 +574,20 @@ dynamics without adding hidden state or memory.
 
 Interpretation:
 
-    Binary dichotomies are generally lossy projections of a triadically closed
-    process. This parallels the minimality result of C≡ §6: center-sensitive
-    predicates require three positions. Here, full dynamical closure requires
-    all three episode coordinates.
+    Binary dichotomies are generally lossy projections of a triadically closed process.
+
+### Note 6.5 (Episode vs Evaluation Layer) [E]
+
+The episode layer and the evaluator layer are distinct.
+
+    episode layer:
+        orders model / action / yield through time
+
+    evaluator layer:
+        applies α / β / γ measurements to articulated material within or across episodes
+
+The evaluator triad operates within observation episodes.
+The episode dynamics govern the temporal sequence of evaluations.
 
 ## 7. Internal Coherence Attractor [N/E]
 
@@ -471,9 +613,6 @@ Let
 
     ρ_o := L_sum^o · L_align^o · max{μ_ab}
 
-Note: this quantity was denoted κ_o in v1.0.2. It is renamed to ρ_o to avoid
-collision with the C≡ cohering seed κ (C≡ §1.4).
-
 ### Theorem 7.3 (Internal Attractor) [N/E]
 
 If
@@ -496,7 +635,7 @@ Interpretation:
 
 The fixed-point profile of observer o is
 
-    FP(o) := (S_o^*, C_Σ^*, ℓ_Σ^*)
+    FP(o) := (S_o^*, C_Σ(W)^*, ℓ_Σ(W)^*)
 
 ## 8. Refinement & Epistemic Time [E]
 
@@ -520,29 +659,25 @@ A refinement run is admissibility-preserving iff
 
 for every τ ∈ I.
 
-### Postulate A_weak (Monotone Refinement) [E]
+### Postulate A_weak (Monotone Convergent Subsequence) [E]
 
 Along an admissibility-preserving refinement run, coherence improves in the
 following sense:
 
-    There exists a convergent subsequence { r_{τ_k} }_{k ∈ ℕ} such that
+    There exists a convergent subsequence { r_{τ_k} } such that
 
         ℓ_Σ(B_{τ_{k+1}}) ≤ ℓ_Σ(B_{τ_k})
 
-    equivalently, when scores remain above ε,
+    equivalently,
 
         C_Σ(B_{τ_{k+1}}) ≥ C_Σ(B_{τ_k})
 
-Non-normative note on practical refinement:
+    under a fixed aggregation profile and numerical floor.
 
-    Individual refinement steps may temporarily worsen coherence. For example,
-    introducing a new alignment method or expanding the observation batch may
-    disrupt scores before the observer stabilizes. The postulate asserts that
-    the refinement process admits a monotone subsequence converging to improved
-    coherence — not that every step is an improvement.
+Non-normative note:
 
-    This is analogous to the Bolzano-Weierstrass property: a bounded sequence
-    in ℝ^n need not be monotone to contain a convergent subsequence.
+    Individual refinement steps may temporarily worsen coherence.
+    The postulate does not require every step to improve.
 
 ### Definition 8.3 (Epistemic Time) [E]
 
@@ -558,8 +693,8 @@ For states r_i, r_j in a refinement run:
 
 ## 9. Canonical Abstract Operations [E]
 
-This section freezes the implementation-facing semantics,
-but not the transport protocol.
+This section freezes implementation-facing semantics,
+but not transport protocol.
 
 A conforming implementation MAY use:
 
@@ -570,7 +705,7 @@ A conforming implementation MAY use:
     database records,
 
 or any other representation,
-provided the canonical information content is preserved.
+provided canonical information content is preserved.
 
 ### 9.1 Mandatory Operations
 
@@ -589,14 +724,10 @@ Semantics:
 Semantics:
 
     Executes the observer on batch D,
-    computes witnesses,
-    computes CI and OOD diagnostics,
-    and returns the full verification bundle.
-
-The state sequence in the returned bundle MUST follow the controller states
-defined in TSC Operational §4:
-
-    HANDSHAKE → MEASURE → WITNESS → {DIAGNOSE | VERDICT} → {ACCEPT | REJECT}
+    computes all reachable artifacts,
+    returns controller trace,
+    returns execution outcome,
+    and returns classification plus diagnostics.
 
 ### 9.2 Optional Operations
 
@@ -627,6 +758,7 @@ A canonical verify request contains:
         spec_name,
         spec_version,
         observer_manifest,
+        parameter_profile,
         batch,
         parameter_overrides?,
         witness_floor_overrides?,
@@ -636,37 +768,37 @@ A canonical verify request contains:
 
 Required semantics:
 
-    spec_name            = "TSC Observation Dynamics"
-    spec_version         = version string of this spec
-    observer_manifest    = M_o
-    batch                = the observation batch D
-    parameter_overrides  = optional pre-frozen override set
-    witness_floor_overrides = optional policy-layer overrides
-    profile              = conformance or execution profile
-    provenance_policy_override = stricter recording policy, if any
+    spec_name         = "TSC Observation Dynamics"
+    spec_version      = version string of this spec
+    observer_manifest = M_o
+    parameter_profile = P_o
+    batch             = observation batch D
 
 Constraint:
 
     Any override MUST be frozen before final scoring.
+    Any override that changes aggregation weights MUST be recorded.
 
 ### Definition 10.2 (Verification Response) [E]
 
-A canonical verify response is:
+A canonical verify response is
 
     VerifyResponse := {
         header,
         observer,
         batch_record,
-        summaries,
-        pairwise,
-        scores,
-        diagnostics,
-        witnesses,
-        ci,
-        ood,
-        provenance,
-        state_sequence,
-        verdict
+        execution,
+        controller,
+        classification,
+        summaries?,
+        pairwise?,
+        scores?,
+        diagnostics?,
+        witnesses?,
+        ci?,
+        ood?,
+        provenance?,
+        reason_codes
     }
 
 Required header fields:
@@ -678,31 +810,70 @@ Required header fields:
         timestamp
     }
 
-Required verdict fields:
+Required controller fields:
 
-    verdict := {
+    controller := {
+        state_sequence,
+        terminal_state?
+    }
+
+Required execution fields:
+
+    execution := {
+        status,
+        error_code?,
+        error_stage?,
+        error_message?
+    }
+
+Required classification fields:
+
+    classification := {
+        decl,
         adm,
         ver,
         acc,
-        dep,
-        terminal_state,
-        reason_codes
+        dep
     }
 
-Required state-sequence rule:
+### Definition 10.3 (Controller Trace Rule) [E/N]
 
-    state_sequence MUST begin with HANDSHAKE
-    and MUST contain the realized controller order.
+If execution.status = OK,
+then controller.state_sequence MUST be a legal trace over
 
-Required terminal-state values:
+    HANDSHAKE → MEASURE → WITNESS → {DIAGNOSE | VERDICT}
+              → {TERMINAL | ACCEPT | REJECT}
 
-    ACCEPT
-    REJECT
-    TERMINAL_ERROR
+If execution.status = ERROR,
+then controller.state_sequence MUST be a realized prefix of a legal trace.
 
-### Definition 10.3 (Reason Codes) [E]
+### Definition 10.4 (Canonical Score Object) [E]
 
-Reason codes SHOULD be drawn from the following set:
+If scores are present, they MUST have the form
+
+    scores := {
+        s_alpha,
+        s_beta,
+        s_gamma,
+        aggregation_profile,
+        C_Σ
+    }
+
+### Definition 10.5 (Canonical Diagnostics Object) [E]
+
+If diagnostics are present, they MUST have the form
+
+    diagnostics := {
+        ℓ_alpha,
+        ℓ_beta,
+        ℓ_gamma,
+        ℓ_Σ,
+        ρ
+    }
+
+### Definition 10.6 (Reason Codes) [E]
+
+Reason codes SHOULD be drawn from:
 
     INPUT_NOT_WELL_FORMED
     BATCH_TOO_SMALL
@@ -715,34 +886,71 @@ Reason codes SHOULD be drawn from the following set:
     THRESHOLD_FAIL
     CI_TOO_WIDE
     OOD_FAIL
+    RUNTIME_ERROR
     INTERNAL_ERROR
 
-### 10.4 Verify Invariants [E/N]
+### 10.7 Verify Invariants [E/N]
 
 **Invariant V1:**
 
-    scores.C_Σ = (scores.s_alpha · scores.s_beta · scores.s_gamma)^(1/3)
+    If scores are present, then
+
+        scores.C_Σ
+          =
+        exp((1/3) · (
+            w_alpha · ln(max(scores.s_alpha, ε)) +
+            w_beta  · ln(max(scores.s_beta,  ε)) +
+            w_gamma · ln(max(scores.s_gamma, ε))
+        ))
+
+    where (w_alpha, w_beta, w_gamma) = scores.aggregation_profile.
 
 **Invariant V2:**
 
-    if min(scores.s_alpha, scores.s_beta, scores.s_gamma) ≥ ε,
-    then diagnostics.ℓ_Σ = −ln(scores.C_Σ)
+    If scores and diagnostics are present, then
+
+        diagnostics.ℓ_Σ = −ln(scores.C_Σ)
 
 **Invariant V3:**
 
-    verdict.dep ⟹ verdict.acc ⟹ verdict.ver ⟹ verdict.adm
+    classification.dep = PASS
+        ⟹ classification.acc = PASS
+        ⟹ classification.ver = PASS
+        ⟹ classification.adm = PASS
+        ⟹ classification.decl = PASS
 
 **Invariant V4:**
 
     Any hard witness failure implies
-        verdict.ver = false,
-        verdict.acc = false,
-        verdict.dep = false
+
+        classification.ver = FAIL
+        classification.acc = FAIL
+        classification.dep = FAIL
 
 **Invariant V5:**
 
-    Provenance MUST contain enough information to replay
-    the verdict logic on the recorded summaries and witnesses.
+    Provenance, if present, MUST contain enough information
+    to replay the realized verdict logic on the recorded summaries,
+    witnesses, profile, and thresholds.
+
+**Invariant V6:**
+
+    execution.status = ERROR MUST NOT be represented by
+    controller.terminal_state = TERMINAL_ERROR.
+
+### Definition 10.8 (Legacy Boolean Compatibility) [E]
+
+For compatibility with v1.0.3-style consumers,
+implementations MAY emit
+
+    legacy_verdict := {
+        adm,
+        ver,
+        acc,
+        dep
+    }
+
+only if no classification field is UNDECIDED.
 
 ## 11. Conformance Profiles [E]
 
@@ -750,7 +958,7 @@ Reason codes SHOULD be drawn from the following set:
 
     MUST implement describe_observer
     MUST implement verify
-    MUST emit canonical verify response fields
+    MUST emit canonical request/response fields
 
 **Profile OD-Refinement:**
 
@@ -770,56 +978,86 @@ Reason codes SHOULD be drawn from the following set:
 
 Conformance statement format:
 
-    "Implements TSC Observation Dynamics v1.0.3 / Profile <name>"
+    "Implements TSC Observation Dynamics v1.0.4 / Profile <name>"
 
 ## 12. Provenance Minimum [E/N]
 
-Every verify response MUST record at least:
+Every successful or partially successful verify response MUST record at least:
 
     observer_id
     observer_version
+    parameter_profile digest or full embedded profile
     dependency hashes or immutable references if available
     batch size N
+    domain tag
+    aggregation profile
     sampling policy
-    parameter profile
     witness floors
     bootstrap method and N_boot
-    OOD reference description
-    state sequence
+    CI level
+    OOD reference policy / description
+    calibration refs if any
+    controller state sequence
     timestamp
 
 If any calibration map is used, it MUST be recorded.
-
 If any axis alias is used, it MUST be recorded.
+If any override is used, it MUST be recorded.
 
 ## 13. Self-Application [E]
 
-An observer-of-observers is itself an observer in the sense of §4.3.
+### Definition 13.1 (Bundle Domain Lift) [E]
 
-Given a set of observers O = {o_1, …, o_k} and a shared batch D,
-a meta-observer o^meta may be constructed with:
+Let Bundle be the set of canonical verify responses conforming to §10.2.
+Define the meta-domain
 
-    X^meta  = the space of measurement bundles { B_{o_i}(D) }
-    η^meta  = identity (bundles are already in the carrier)
-    A_a^meta = articulator that extracts axis-a summaries across observers
-    Σ_a^meta = summarizer that aggregates cross-observer axis-a information
-    E_ab^meta = alignment ensemble comparing observers' pairwise coherences
+    X_meta := Bundle
 
-The resulting meta-measurement bundle B_{o^meta}(O, D) measures whether
-multiple observers describe the same phenomenon coherently.
+A meta-batch is then an ordinary batch over the lifted domain:
 
-This construction does not create an infinite regress:
+    D_meta = (B_1, …, B_k) ∈ X_meta*
 
-    the meta-observer is subject to the same run classification (§5),
-    the same witness conditions (TSC Operational §1),
-    and the same verdict logic (§10.4).
+### Definition 13.2 (Meta-Observer) [E]
 
-Self-application terminates because the meta-observer is a finite pipeline
-applied to a finite set of bundles.
+A meta-observer o_meta is an observer over X_meta such that:
+
+    η_meta       encodes bundles into T
+    A_a^meta     extracts axis-a structures across bundles
+    Σ_a^meta     summarizes cross-bundle axis-a information
+    E_ab^meta    aligns summaries across bundles
+    P_meta       is a frozen parameter profile
+    M_meta       is a manifest
+
+### Definition 13.3 (Self-Application Contract) [E]
+
+Given base observers o_1, …, o_k applied to a shared phenomenon-batch D,
+construct their bundles
+
+    B_i := verify(o_i, D)
+
+and form
+
+    D_meta := (B_1, …, B_k)
+
+Then self-application is simply
+
+    verify(o_meta, D_meta)
+
+No new top-level API is introduced.
+
+### Proposition 13.4 (Finite Termination of Self-Application) [E]
+
+If D_meta is finite and o_meta is an admissible finite pipeline,
+then self-application terminates after finite execution steps.
+
+Reason:
+
+    The meta-observer processes a finite batch of finite artifacts;
+    no infinite regress is required by the contract.
 
 ## 14. External Hypotheses Boundary [C]
 
-The following are outside the normative scope of this document:
+The following are outside the normative scope of this specification:
 
     physical-time identification with epistemic time
     thermodynamic dissipation laws
@@ -837,10 +1075,11 @@ Canonical file:
 
 Derived non-normative artifacts MAY include:
 
-    1. a whitepaper that explains the motivation and interpretation
+    1. a whitepaper explaining motivation and interpretation
     2. implementation guides for specific languages
     3. benchmark suites
     4. a scientific paper with proofs, experiments, or case studies
+    5. concrete JSON Schema / protobuf definitions derived from §10
 
 Normative rule:
 
@@ -849,20 +1088,29 @@ Normative rule:
 
 ## 16. Final Position
 
-TSC Observation Dynamics v1.0.3 is the observation-layer specification of TSC.
+TSC Observation Dynamics v1.0.4 is the observation-layer specification of TSC.
 
 It is:
 
-    not the foundation          — that is C≡,
-    not the core measurement    — that is TSC Core,
-    not the operational protocol — that is TSC Operational,
-    but the layer that says
-        what an observer is,
-        how observer-runs are classified,
-        how refinement is ordered,
-        how those semantics cross the boundary into implementation,
-        and how observers may observe each other.
+    not the foundation,
+    not the core measurement calculus,
+    not the operational witness protocol,
 
-That is its name.
-That is its purpose.
-That is its place in the stack.
+but the layer that defines:
+
+    what an observer is,
+    how an observer-run is classified,
+    how refinement is ordered,
+    how self-application is normalized,
+    and how those semantics cross into implementation.
+
+The decisive move in v1.0.4 is this:
+
+    controller logic remains operational,
+    runtime failure remains runtime,
+    aggregation is explicit,
+    and replayability is first-class.
+
+That is cleaner mathematics.
+That is safer software.
+That is the right next layer in the stack.
