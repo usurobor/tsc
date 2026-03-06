@@ -1,8 +1,8 @@
-# TSC Observation Dynamics v1.0.7
+# TSC Observation Dynamics v1.0.8
 
-Formal Specification of Observer Construction, Verification, Epistemic Refinement, and Proof-Carrying Check Ledgers
+Formal Specification of Observer Construction, Verification, Epistemic Refinement, and Comparison-Safe Evaluation
 
-    Version:    v1.0.7
+    Version:    v1.0.8
     Status:     Proposed Extension Specification
     Artifact:   Specification
     Normative dependencies:
@@ -24,8 +24,8 @@ It defines:
     how refinement is ordered,
     how self-application is normalized,
     how symmetry is tested under weighted aggregation,
-    how verification remains replay-pure,
-    and how every terminal outcome carries explicit check-level evidence.
+    how verification remains replay-pure and proof-carrying,
+    and how cross-observer comparison becomes comparison-safe.
 
 Place in stack:
 
@@ -43,7 +43,7 @@ It is:
     not the operational witness protocol,
 
 but the layer that makes observer semantics executable, replayable, auditable,
-and proof-carrying.
+proof-carrying, and comparison-safe.
 
 ## 1. Status Discipline
 
@@ -57,36 +57,48 @@ Normative reading rule:
 
 ## 2. Change Log
 
+### From v1.0.7
+
+    CMP-02  ComparisonMode introduced:
+                RAW
+                PROFILE_NORMALIZED
+                REFERENCE_NORMALIZED
+                FULLY_NORMALIZED
+
+    CMP-03  ComparabilityLedger introduced.
+            Compare is now proof-carrying, not heuristic.
+
+    CMP-04  Raw comparability and normalized comparability are separated.
+            Cross-observer ranking claims require explicit comparability evidence.
+
+    NRM-02  Comparison normalizer N_cmp introduced with declared coverage scope,
+            monotonicity claim, and error bound.
+
+    REL-01  ScoreRelation introduced:
+                LEFT_HIGHER
+                RIGHT_HIGHER
+                EQUAL_WITHIN_TOL
+                INCOMPARABLE
+
+    EVD-04  No false parity claims.
+            A non-INCOMPARABLE relation cannot be asserted unless the
+            required comparability checks pass.
+
+    EXP-01  ComparisonExplanation object introduced.
+            Comparative outputs can now state the dominant axis gap,
+            branch pattern, and binding constraint explicitly.
+
+    PRV-02  Comparison provenance minimum added.
+
 ### From v1.0.6
 
-    POL-01  Evaluation policies are now first-class:
-                FAIL_FAST | EXHAUSTIVE
-            separately for witness-stage and verdict-stage checks.
-
+    POL-01  EvaluationPolicy introduced for witness and verdict stages.
     LED-01  WitnessLedger introduced.
-            Witness outcomes are no longer just a flat signal bundle;
-            they are fixed-slot check records with status, observed value,
-            threshold relation, and skip reason if not evaluated.
-
     LED-02  VerdictLedger introduced.
-            Threshold / CI / OOD checks are now proof-carrying check records.
-
     CLS-04  ver / acc / dep become ledger-derived.
-            Classification is no longer a free-floating flag set.
-
-    MAT-02  Trace-complete materialization is refined:
-            once a stage is reached, the corresponding ledger MUST exist.
-
-    EVD-02  Acceptance is now proof-carrying.
-            ACCEPT requires explicit PASS evidence for every required witness
-            and verdict check.
-
-    EVD-03  Fail-fast is reconciled with provenance.
-            Non-evaluated checks are represented explicitly as NOT_EVALUATED
-            with a skip reason, rather than being silently absent.
-
-    ORD-01  Canonical witness and verdict orders are frozen.
-            This removes ambiguity across SDK implementations.
+    MAT-02  Trace-complete materialization refined.
+    EVD-02  Acceptance made proof-carrying.
+    ORD-01  Canonical witness and verdict orders frozen.
 
 ### From v1.0.5
 
@@ -154,7 +166,7 @@ Examples:
 
 ### Definition 3.3 (Permutation Action) [E]
 
-For any permutation π ∈ S₃ and any axis-indexed object q, define
+For any π ∈ S₃ and any axis-indexed object q, define
 
     (π · q)_a := q_{π⁻¹(a)}.
 
@@ -168,12 +180,11 @@ For any compound object P with axis-indexed computational subfields,
 Interpretation:
 
     ABSOLUTE:
-        Permuting axis assignments in the observed material leaves
-        coherence unchanged under a fixed effective profile.
+        Permute observed axis-material, hold effective profile fixed.
 
     COVARIANT:
-        Permuting axis assignments in the observed material must be accompanied
-        by the same permutation of all axis-indexed computational profile fields.
+        Permute observed axis-material and co-permute all
+        computationally relevant axis-indexed profile fields.
 
 ### Definition 3.5 (Aggregation Profile) [N/E]
 
@@ -205,7 +216,7 @@ numerical floor ε, and aggregation profile W, define
         w_gamma · ln(max(s_gamma, ε))
     ))
 
-Uniform corollary:
+Uniform case:
 
     If W = W_uniform, then
 
@@ -257,7 +268,7 @@ and include at least:
     any axis-specific calibration maps
     any axis-specific numerical policies used in score construction
 
-Metadata-only fields, including axis aliases, are excluded from P_eff^axis.
+Metadata-only fields, including axis aliases, are excluded.
 
 ### Definition 3.10 (W1 Symmetry Witness Under Mode) [E]
 
@@ -310,28 +321,11 @@ with
 
     EvaluationPolicy := {FAIL_FAST, EXHAUSTIVE}
 
-Interpretation:
-
-    FAIL_FAST:
-        Stop evaluating later checks in the same stage after the first failure.
-
-    EXHAUSTIVE:
-        Evaluate every check in the stage regardless of earlier failures.
-
 ### Definition 4.4 (WitnessOrder) [E]
-
-The canonical atomic witness order is
 
     WitnessOrder_default := [S3, GAUGE, SCALE, VAR, LIP]
 
-Non-normative note:
-
-    VAR and LIP are often computed from the same W4 ensemble artifact,
-    but they remain distinct atomic acceptance conditions.
-
 ### Definition 4.5 (VerdictOrder) [E]
-
-The canonical verdict order is
 
     VerdictOrder_default := [THRESHOLD, CI, OOD]
 
@@ -504,27 +498,11 @@ where:
 
     WitnessAtoms := {S3, GAUGE, SCALE, VAR, LIP}
 
-These correspond to the atomic witness acceptance conditions:
-
-    S3     : w_S3    ≤ τ_S3
-    GAUGE  : w_gauge ≤ τ_gauge
-    SCALE  : w_scale ≤ τ_scale
-    VAR    : w_var   ≤ τ_var
-    LIP    : w_lip   < 1
-
 ### Definition 5.4 (VerdictAtoms) [E]
 
     VerdictAtoms := {THRESHOLD, CI, OOD}
 
-These correspond to the atomic verdict acceptance conditions:
-
-    THRESHOLD : C_Σ           ≥ Θ
-    CI        : CI_hi − CI_lo ≤ δ_CI
-    OOD       : Z_t           < Z_crit
-
-### Definition 5.5 (Witness Entry) [E]
-
-For each c ∈ WitnessAtoms, a witness entry is
+### Definition 5.5 (WitnessEntry) [E]
 
     WitnessEntry(c) := {
         status,
@@ -535,22 +513,12 @@ For each c ∈ WitnessAtoms, a witness entry is
         skip_reason?
     }
 
-Canonical relations:
-
-    S3       relation = ≤
-    GAUGE    relation = ≤
-    SCALE    relation = ≤
-    VAR      relation = ≤
-    LIP      relation = <
-
 Normative rule:
 
     If status ∈ {PASS, FAIL}, then observed_value MUST be present.
     If status = NOT_EVALUATED, then skip_reason MUST be present.
 
-### Definition 5.6 (Verdict Entry) [E]
-
-For each c ∈ VerdictAtoms, a verdict entry is
+### Definition 5.6 (VerdictEntry) [E]
 
     VerdictEntry(c) := {
         status,
@@ -562,20 +530,12 @@ For each c ∈ VerdictAtoms, a verdict entry is
         skip_reason?
     }
 
-Canonical relations:
-
-    THRESHOLD relation = ≥
-    CI        relation = ≤
-    OOD       relation = <
-
 Normative rule:
 
     If status ∈ {PASS, FAIL}, then observed_value MUST be present.
     If status = NOT_EVALUATED, then skip_reason MUST be present.
 
 ### Definition 5.7 (WitnessLedger) [E]
-
-A witness ledger is
 
     witness_ledger := {
         policy,
@@ -588,15 +548,7 @@ A witness ledger is
         LIP
     }
 
-where:
-
-    policy = P_eff.witness_eval_policy
-    order  = P_eff.witness_order
-    each slot is a WitnessEntry
-
 ### Definition 5.8 (VerdictLedger) [E]
-
-A verdict ledger is
 
     verdict_ledger := {
         policy,
@@ -607,22 +559,16 @@ A verdict ledger is
         OOD
     }
 
-where:
-
-    policy = P_eff.verdict_eval_policy
-    order  = P_eff.verdict_order
-    each slot is a VerdictEntry
-
 ### Definition 5.9 (Fail-Fast Witness Ledger Law) [E/N]
 
 If witness_ledger.policy = FAIL_FAST
 and first_failure = c,
 then:
 
-    (i)   every witness atom strictly before c in order has status = PASS
-    (ii)  the slot for c has status = FAIL
-    (iii) every witness atom strictly after c has status = NOT_EVALUATED
-          and skip_reason = FAIL_FAST_SHORT_CIRCUIT
+    (i)   every atom strictly before c has status = PASS
+    (ii)  c has status = FAIL
+    (iii) every atom strictly after c has status = NOT_EVALUATED
+          with skip_reason = FAIL_FAST_SHORT_CIRCUIT
 
 ### Definition 5.10 (Exhaustive Witness Ledger Law) [E]
 
@@ -636,10 +582,10 @@ If verdict_ledger.policy = FAIL_FAST
 and first_failure = c,
 then:
 
-    (i)   every verdict atom strictly before c in order has status = PASS
-    (ii)  the slot for c has status = FAIL
-    (iii) every verdict atom strictly after c has status = NOT_EVALUATED
-          and skip_reason = FAIL_FAST_SHORT_CIRCUIT
+    (i)   every atom strictly before c has status = PASS
+    (ii)  c has status = FAIL
+    (iii) every atom strictly after c has status = NOT_EVALUATED
+          with skip_reason = FAIL_FAST_SHORT_CIRCUIT
 
 ### Definition 5.12 (Exhaustive Verdict Ledger Law) [E]
 
@@ -655,12 +601,10 @@ then every verdict atom has status ∈ {PASS, FAIL}.
 
 ### Definition 6.2 (Information Preorder on Status3) [E]
 
-Define
-
     UNDECIDED ≤_I PASS
     UNDECIDED ≤_I FAIL
 
-and PASS, FAIL are incomparable.
+PASS and FAIL are incomparable.
 
 ### Definition 6.3 (Declared Observer) [E]
 
@@ -749,17 +693,9 @@ Define:
     dep = UNDECIDED
         otherwise
 
-Normative constraint:
+Constraint:
 
     τ_lip_pol < 1
-
-Recommended default range:
-
-    τ_lip_pol ∈ [0.80, 0.95]
-
-Recommended starting point:
-
-    τ_lip_pol = 0.90
 
 ### Definition 6.9 (Execution Outcome) [E]
 
@@ -791,8 +727,6 @@ Recommended starting point:
         acc,
         dep
     }
-
-where each field takes values in Status3.
 
 ### Invariant 6.12 (Implication Chain) [E]
 
@@ -838,8 +772,6 @@ If execution.status = OK and ver = FAIL, then:
 
     controller.state_sequence = τ_terminal
     controller.terminal_state = TERMINAL
-
-Witness failure MUST NOT terminate in REJECT.
 
 ### Branch Law 7.5 (Verdict-Failure Branch) [E/N]
 
@@ -898,10 +830,7 @@ Minimum obligations by last reached state:
         all fields required by the predecessor state
         controller.terminal_state
 
-Interpretation:
-
-    Once a stage is reached, its ledger must exist;
-    silent absence is not allowed.
+Silent absence is forbidden once a stage is reached.
 
 ## 8. Evidence Closure and Proof-Carrying Outcomes [E/N]
 
@@ -930,63 +859,6 @@ Reason codes SHOULD be drawn from:
 
 A reason code is evidence-closed iff its supporting artifacts are present.
 
-Required support:
-
-    INPUT_NOT_WELL_FORMED
-        → execution.status = ERROR
-          and execution.error_stage = HANDSHAKE
-
-    DOMAIN_INCOMPATIBLE or SCHEMA_MISMATCH
-        → observer manifest and batch_record present
-          and classification.cmp = FAIL
-
-    OVERRIDE_NOT_ALLOWED
-        → effective_profile present
-          and override information recorded
-
-    BATCH_TOO_SMALL
-        → batch_record.N present
-          and classification.adm = FAIL
-
-    ENSEMBLE_TOO_SMALL
-        → manifest or provenance records ensemble insufficiency
-          and classification.adm = FAIL
-
-    WITNESS_S3_FAIL
-        → witness_ledger.S3.status = FAIL
-          and controller.terminal_state = TERMINAL
-
-    WITNESS_GAUGE_FAIL
-        → witness_ledger.GAUGE.status = FAIL
-          and controller.terminal_state = TERMINAL
-
-    WITNESS_SCALE_FAIL
-        → witness_ledger.SCALE.status = FAIL
-          and controller.terminal_state = TERMINAL
-
-    WITNESS_VAR_FAIL
-        → witness_ledger.VAR.status = FAIL
-          and controller.terminal_state = TERMINAL
-
-    WITNESS_LIP_FAIL
-        → witness_ledger.LIP.status = FAIL
-          and controller.terminal_state = TERMINAL
-
-    THRESHOLD_FAIL
-        → verdict_ledger.THRESHOLD.status = FAIL
-          and controller.terminal_state = REJECT
-
-    CI_TOO_WIDE
-        → verdict_ledger.CI.status = FAIL
-          and controller.terminal_state = REJECT
-
-    OOD_FAIL
-        → verdict_ledger.OOD.status = FAIL
-          and controller.terminal_state = REJECT
-
-    RUNTIME_ERROR or INTERNAL_ERROR
-        → execution.status = ERROR
-
 ### Invariant 8.3 (Proof-Carrying Terminal Outcome) [E]
 
 If execution.status = OK and controller.terminal_state ∈ {REJECT, TERMINAL},
@@ -1002,9 +874,6 @@ If controller.terminal_state = ACCEPT, then:
     (i)   every witness atom has status = PASS
     (ii)  every verdict atom has status = PASS
     (iii) no failure reason code may be asserted
-
-Acceptance MUST be explicit proof of all required passes,
-not merely absence of a recorded failure.
 
 ## 9. Replay Purity and Reference Evolution [E/N]
 
@@ -1040,23 +909,11 @@ but proposal emission is not state mutation.
 
     commit_reference(U_ref) → R_ref_next
 
-Interpretation:
-
-    Reference evolution is explicit and external to verify.
-
 ## 10. Triadic Closure and Episode Dynamics [E]
 
 ### Definition 10.1 (Triadic Episode) [E]
 
-A triadic episode is
-
     h_t = (m_t, u_t, y_t) ∈ M × U × Y
-
-where:
-
-    m_t = model state
-    u_t = intervention / action
-    y_t = observed yield / outcome
 
 with deterministic update:
 
@@ -1103,8 +960,6 @@ by
 
 ### Definition 11.2 (Contraction Scalar) [N/E]
 
-Let
-
     ρ_o := L_sum^o · L_align^o · max{μ_ab}
 
 ### Theorem 11.3 (Internal Attractor) [N/E]
@@ -1125,17 +980,11 @@ converges to a unique fixed point
 
 ### Definition 12.1 (Refinement Run) [E]
 
-A refinement run is a sequence
-
     R = { r_τ }_{τ ∈ I}
 
 with
 
     r_τ = (o_τ, D_τ, P_eff,τ, R_ref,τ, B_τ)
-
-and
-
-    B_τ = B_{o_τ}(D_τ; P_eff,τ, R_ref,τ)
 
 ### Definition 12.2 (Admissibility-Preserving Refinement) [E]
 
@@ -1163,7 +1012,316 @@ Epistemic time is the refinement-order parameter τ.
 It orders observer-runs.
 It is not a physical clock variable.
 
-## 13. Canonical Abstract Operations [E]
+## 13. Comparison Safety [E/N]
+
+### Definition 13.1 (ComparisonMode) [E]
+
+    ComparisonMode := {
+        RAW,
+        PROFILE_NORMALIZED,
+        REFERENCE_NORMALIZED,
+        FULLY_NORMALIZED
+    }
+
+Interpretation:
+
+    RAW:
+        Compare bundles without normalization.
+
+    PROFILE_NORMALIZED:
+        Normalize profile differences, hold reference regime fixed.
+
+    REFERENCE_NORMALIZED:
+        Normalize reference-regime differences, hold profile fixed.
+
+    FULLY_NORMALIZED:
+        Normalize all declared differences covered by N_cmp.
+
+### Definition 13.2 (ScoreRelation) [E]
+
+    ScoreRelation := {
+        LEFT_HIGHER,
+        RIGHT_HIGHER,
+        EQUAL_WITHIN_TOL,
+        INCOMPARABLE
+    }
+
+### Definition 13.3 (CompareTolerance) [E]
+
+    T_cmp := {
+        delta_eq,
+        numeric_tol?
+    }
+
+with:
+
+    delta_eq > 0
+
+### Definition 13.4 (ComparisonAtoms) [E]
+
+    ComparisonAtoms := {
+        SAME_BATCH,
+        SCORES_AVAILABLE,
+        EVIDENCE_CLOSED,
+        PROFILE_EQ,
+        REFERENCE_EQ,
+        POLICY_EQ,
+        RNG_COMPAT,
+        NORMALIZER_VALID
+    }
+
+### Definition 13.5 (CompareCheckStatus) [E]
+
+    CompareCheckStatus := {PASS, FAIL, NOT_APPLICABLE}
+
+### Definition 13.6 (CompareEntry) [E]
+
+    CompareEntry(a) := {
+        status,
+        left_value?,
+        right_value?,
+        evidence_ref?,
+        note?
+    }
+
+Normative rule:
+
+    If status ∈ {PASS, FAIL}, the supporting evidence MUST be replayable.
+    If status = NOT_APPLICABLE, the reason MUST be clear from mode or artifact structure.
+
+### Definition 13.7 (Comparison Normalizer) [E]
+
+A comparison normalizer is
+
+    N_cmp := {
+        normalizer_id,
+        normalizer_version,
+        covers,
+        target_profile_digest?,
+        target_reference_regime?,
+        map_spec,
+        monotonicity_claim?,
+        error_bound,
+        proof_ref?
+    }
+
+where:
+
+    covers ⊆ {PROFILE_EQ, REFERENCE_EQ, POLICY_EQ, RNG_COMPAT}
+
+Interpretation:
+
+    N_cmp declares exactly which kinds of mismatch it is allowed to normalize.
+
+### Definition 13.8 (Comparability Ledger) [E]
+
+    comparability_ledger := {
+        mode,
+        required_passes,
+        SAME_BATCH,
+        SCORES_AVAILABLE,
+        EVIDENCE_CLOSED,
+        PROFILE_EQ,
+        REFERENCE_EQ,
+        POLICY_EQ,
+        RNG_COMPAT,
+        NORMALIZER_VALID,
+        failing_atoms?
+    }
+
+### Definition 13.9 (Atomic Comparison Checks) [E]
+
+SAME_BATCH = PASS iff one of the following holds:
+
+    (i)   left.batch_record.batch_hash = right.batch_record.batch_hash
+    (ii)  batch_hash is absent on both sides, but
+          batch_id, domain_tag, schema_ref, and N all agree
+
+Otherwise:
+
+    SAME_BATCH = FAIL
+
+SCORES_AVAILABLE = PASS iff:
+
+    both bundles contain scores.C_Σ and axis scores
+
+EVIDENCE_CLOSED = PASS iff:
+
+    both bundles are trace-complete with respect to their realized controller traces
+    and satisfy proof-carrying outcome constraints up to the stage being compared
+
+PROFILE_EQ = PASS iff:
+
+    left.effective_profile.profile_digest = right.effective_profile.profile_digest
+
+REFERENCE_EQ = PASS iff:
+
+    if OOD is used on either side, the reference snapshot digests are equal;
+    otherwise REFERENCE_EQ = NOT_APPLICABLE
+
+POLICY_EQ = PASS iff:
+
+    symmetry_mode,
+    witness_eval_policy,
+    verdict_eval_policy,
+    witness_order,
+    and verdict_order
+    are equal across the two effective profiles
+
+RNG_COMPAT = PASS iff:
+
+    replay classes are identical
+    and any declared numeric profile is compatible
+
+NORMALIZER_VALID = PASS iff:
+
+    mode ≠ RAW
+    and N_cmp is present
+    and every mismatch the comparison intends to overlook
+        is explicitly included in N_cmp.covers
+    and proof_ref or equivalent validation evidence is present
+
+In RAW mode:
+
+    NORMALIZER_VALID = NOT_APPLICABLE
+
+### Definition 13.10 (Required Pass Set by Mode) [E]
+
+Let Req(mode) be the set of atoms that MUST pass.
+
+For RAW:
+
+    Req(RAW)
+      =
+    {SAME_BATCH, SCORES_AVAILABLE, EVIDENCE_CLOSED, PROFILE_EQ, POLICY_EQ, RNG_COMPAT}
+    ∪ {REFERENCE_EQ if REFERENCE_EQ ≠ NOT_APPLICABLE}
+
+For PROFILE_NORMALIZED:
+
+    Req(PROFILE_NORMALIZED)
+      =
+    {SAME_BATCH, SCORES_AVAILABLE, EVIDENCE_CLOSED, POLICY_EQ, RNG_COMPAT, NORMALIZER_VALID}
+    ∪ {REFERENCE_EQ if REFERENCE_EQ ≠ NOT_APPLICABLE}
+
+    Additionally: if PROFILE_EQ = FAIL, then PROFILE_EQ MUST be in N_cmp.covers.
+
+For REFERENCE_NORMALIZED:
+
+    Req(REFERENCE_NORMALIZED)
+      =
+    {SAME_BATCH, SCORES_AVAILABLE, EVIDENCE_CLOSED, PROFILE_EQ, POLICY_EQ, RNG_COMPAT, NORMALIZER_VALID}
+
+    Additionally: if REFERENCE_EQ = FAIL, then REFERENCE_EQ MUST be in N_cmp.covers.
+
+For FULLY_NORMALIZED:
+
+    Req(FULLY_NORMALIZED)
+      =
+    {SAME_BATCH, SCORES_AVAILABLE, EVIDENCE_CLOSED, NORMALIZER_VALID}
+
+    Additionally: any FAIL among {PROFILE_EQ, REFERENCE_EQ, POLICY_EQ, RNG_COMPAT}
+    MUST belong to N_cmp.covers.
+
+### Definition 13.11 (Comparable Pair) [E]
+
+A pair of bundles (B_L, B_R) is comparable under mode if and only if:
+
+    every atom in Req(mode) has status = PASS
+
+and
+
+    no failed atom outside N_cmp.covers is ignored.
+
+### Definition 13.12 (Comparison Space) [E]
+
+A comparison space is a target space Y_cmp carrying at least one scalar coordinate
+
+    C_cmp : Y_cmp → ℝ
+
+If mode = RAW:
+
+    Y_cmp is the raw score space and
+    C_cmp(B) = B.scores.C_Σ
+
+If mode ≠ RAW:
+
+    N_cmp induces a mapping
+
+        Φ_cmp : Bundle → Y_cmp
+
+    and C_cmp(B) := C_cmp(Φ_cmp(B))
+
+Normative rule:
+
+    Any normalized scalar used for ordering MUST be produced by the declared normalizer.
+
+### Definition 13.13 (Comparison Metrics) [E]
+
+    comparison_metrics := {
+        left_score,
+        right_score,
+        delta_score,
+        delta_axis_scores?,
+        delta_axis_leverage?,
+        tolerance
+    }
+
+where:
+
+    left_score  = comparison scalar for left bundle
+    right_score = comparison scalar for right bundle
+    delta_score = left_score − right_score
+    tolerance   = T_cmp.delta_eq
+
+### Definition 13.14 (Derived Score Relation) [E]
+
+If the pair is not comparable:
+
+    score_relation = INCOMPARABLE
+
+Else if |delta_score| ≤ delta_eq:
+
+    score_relation = EQUAL_WITHIN_TOL
+
+Else if delta_score > delta_eq:
+
+    score_relation = LEFT_HIGHER
+
+Else:
+
+    score_relation = RIGHT_HIGHER
+
+### Definition 13.15 (Comparison Explanation) [E]
+
+    comparison_explanation := {
+        basis,
+        dominant_axis?,
+        dominant_constraint?,
+        terminal_pattern,
+        note?
+    }
+
+where:
+
+    basis ∈ {RAW, NORMALIZED}
+
+    dominant_axis
+        = argmax_a |delta_axis_leverage[a]|
+          if axis leverage deltas are available
+
+    dominant_constraint
+        = first failing witness atom,
+          or first failing verdict atom,
+          or null if neither side failed
+
+    terminal_pattern
+        = (left.controller.terminal_state?, right.controller.terminal_state?)
+
+Interpretation:
+
+    Explanation is descriptive, not an additional proof primitive.
+
+## 14. Canonical Abstract Operations [E]
 
 ### Operation OD-1
 
@@ -1193,15 +1351,25 @@ Default objective:
 
 ### Operation OD-5
 
-    compare(o_1, o_2, D, R_ref?, profile_normalization?) → ComparativeBundle
+    compare(B_left, B_right, mode, N_cmp?, T_cmp?) → CompareResponse
 
-If comparison claims parity,
-then the same effective profile and reference regime MUST be used
-or the normalization rule MUST be explicit.
+Semantics:
 
-## 14. Canonical Verify Contract [E]
+    compare is comparison-safe.
+    It MUST return a comparability ledger.
+    It MUST NOT emit LEFT_HIGHER / RIGHT_HIGHER / EQUAL_WITHIN_TOL
+    unless the pair is comparable under the declared mode.
 
-### Definition 14.1 (VerifyRequest) [E]
+If comparison claims parity or ordering,
+then the claim MUST be backed by:
+
+    comparability_ledger,
+    comparison_metrics,
+    and explicit basis (raw or normalized).
+
+## 15. Canonical Verify Contract [E]
+
+### Definition 15.1 (VerifyRequest) [E]
 
     VerifyRequest := {
         spec_name,
@@ -1223,7 +1391,7 @@ Constraint:
 
     before final scoring.
 
-### Definition 14.2 (VerifyResponse) [E]
+### Definition 15.2 (VerifyResponse) [E]
 
     VerifyResponse := {
         header,
@@ -1247,7 +1415,7 @@ Constraint:
         reason_codes
     }
 
-### Definition 14.3 (Effective Profile Object) [E]
+### Definition 15.3 (Effective Profile Object) [E]
 
     effective_profile := {
         profile_digest,
@@ -1262,7 +1430,7 @@ Constraint:
         override_digest?
     }
 
-### Definition 14.4 (Replay Object) [E]
+### Definition 15.4 (Replay Object) [E]
 
     replay := {
         replay_class,
@@ -1271,34 +1439,87 @@ Constraint:
         implementation_fingerprint?
     }
 
-### Definition 14.5 (Legacy Compatibility) [E]
+## 16. Canonical Compare Contract [E]
 
-Implementations MAY additionally emit:
+### Definition 16.1 (CompareRequest) [E]
 
-    legacy_witnesses := {
-        w_S3,
-        w_gauge,
-        w_scale,
-        w_var,
-        w_lip
+    CompareRequest := {
+        spec_name,
+        spec_version,
+        left_bundle,
+        right_bundle,
+        mode,
+        normalizer?,
+        tolerance?,
+        provenance_policy_override?
     }
 
-only if every witness atom has status ∈ {PASS, FAIL}.
+where:
 
-Implementations MAY additionally emit:
+    left_bundle  = canonical VerifyResponse
+    right_bundle = canonical VerifyResponse
+    mode         = ComparisonMode
+    normalizer   = N_cmp if mode ≠ RAW
+    tolerance    = T_cmp
 
-    legacy_verdict := {
-        decl,
-        cmp,
-        adm,
-        ver,
-        acc,
-        dep
+### Definition 16.2 (CompareResponse) [E]
+
+    CompareResponse := {
+        header,
+        left_ref,
+        right_ref,
+        mode,
+        normalizer?,
+        comparability_ledger,
+        comparison_metrics?,
+        score_relation,
+        comparison_explanation?,
+        reason_codes,
+        provenance?
     }
 
-only if no classification field is UNDECIDED.
+### Definition 16.3 (Comparison Reason Codes) [E]
 
-## 15. Verify Invariants [E/N]
+Reason codes SHOULD be drawn from:
+
+    BATCH_MISMATCH
+    SCORES_MISSING
+    EVIDENCE_NOT_CLOSED
+    PROFILE_MISMATCH
+    REFERENCE_MISMATCH
+    POLICY_MISMATCH
+    RNG_MISMATCH
+    NORMALIZER_MISSING
+    NORMALIZER_SCOPE_INVALID
+    NORMALIZER_PROOF_MISSING
+    COMPARE_INSUFFICIENT_EVIDENCE
+
+### Definition 16.4 (Comparison Evidence Closure) [E]
+
+A comparison reason code is evidence-closed iff its supporting comparison atom
+has status = FAIL and the corresponding evidence_ref is present.
+
+Examples:
+
+    BATCH_MISMATCH
+        → comparability_ledger.SAME_BATCH.status = FAIL
+
+    PROFILE_MISMATCH
+        → comparability_ledger.PROFILE_EQ.status = FAIL
+
+    REFERENCE_MISMATCH
+        → comparability_ledger.REFERENCE_EQ.status = FAIL
+
+    POLICY_MISMATCH
+        → comparability_ledger.POLICY_EQ.status = FAIL
+
+    RNG_MISMATCH
+        → comparability_ledger.RNG_COMPAT.status = FAIL
+
+    NORMALIZER_SCOPE_INVALID or NORMALIZER_PROOF_MISSING
+        → comparability_ledger.NORMALIZER_VALID.status = FAIL
+
+## 17. Verify Invariants [E/N]
 
 **Invariant V0:**
 
@@ -1313,84 +1534,108 @@ only if no classification field is UNDECIDED.
 
 **Invariant V2:**
 
-    If scores are present, then
-
-        scores.C_Σ
-          =
-        exp((1/3) · (
-            w_alpha · ln(max(scores.s_alpha, ε)) +
-            w_beta  · ln(max(scores.s_beta,  ε)) +
-            w_gamma · ln(max(scores.s_gamma, ε))
-        ))
+    classification.ver is derived exactly from witness_ledger when present.
 
 **Invariant V3:**
 
-    If scores and diagnostics are present, then
-
-        diagnostics.ℓ_Σ = −ln(scores.C_Σ)
+    classification.acc is derived exactly from verdict_ledger when present.
 
 **Invariant V4:**
 
-    If witness_ledger is present, then classification.ver is derived exactly
-    by Definition 6.6.
+    classification.dep is derived exactly from lip evidence and τ_lip_pol when present.
 
 **Invariant V5:**
-
-    If verdict_ledger is present, then classification.acc is derived exactly
-    by Definition 6.7.
-
-**Invariant V6:**
-
-    classification.dep is derived exactly by Definition 6.8 whenever the
-    required lip evidence is present.
-
-**Invariant V7:**
-
-    If witness_ledger.policy = FAIL_FAST,
-    then witness_ledger obeys Definition 5.9;
-    if witness_ledger.policy = EXHAUSTIVE,
-    then it obeys Definition 5.10.
-
-**Invariant V8:**
-
-    If verdict_ledger.policy = FAIL_FAST,
-    then verdict_ledger obeys Definition 5.11;
-    if verdict_ledger.policy = EXHAUSTIVE,
-    then it obeys Definition 5.12.
-
-**Invariant V9:**
 
     If execution.status = OK and ver = FAIL,
     then controller.terminal_state = TERMINAL.
 
-**Invariant V10:**
+**Invariant V6:**
 
     If execution.status = OK and ver = PASS and acc = FAIL,
     then controller.terminal_state = REJECT.
 
-**Invariant V11:**
+**Invariant V7:**
 
     If execution.status = OK and acc = PASS,
     then controller.terminal_state = ACCEPT.
 
-**Invariant V12:**
+**Invariant V8:**
 
-    verify MUST NOT mutate reference state.
+    The verify response MUST be trace-complete with respect to the realized controller prefix.
 
-**Invariant V13:**
+**Invariant V9:**
 
-    The response MUST be trace-complete with respect to the realized controller prefix.
+    Every asserted verify reason code MUST be evidence-closed.
 
-**Invariant V14:**
-
-    Every asserted reason code MUST be evidence-closed.
-
-**Invariant V15:**
+**Invariant V10:**
 
     If replay_class ≠ BIT_EXACT,
     the source of nondeterminism MUST be recorded.
 
-## 16. Provenance Minimum [E/N]
+**Invariant V11:**
+
+    verify MUST NOT mutate reference state.
+
+## 18. Compare Invariants [E/N]
+
+**Invariant C0:**
+
+    If mode = RAW,
+    then comparability_ledger.NORMALIZER_VALID.status = NOT_APPLICABLE.
+
+**Invariant C1:**
+
+    score_relation ≠ INCOMPARABLE
+        implies
+    every atom in Req(mode) has status = PASS.
+
+**Invariant C2:**
+
+    If score_relation ∈ {LEFT_HIGHER, RIGHT_HIGHER, EQUAL_WITHIN_TOL},
+    then comparison_metrics MUST be present.
+
+**Invariant C3:**
+
+    If mode ≠ RAW and score_relation ≠ INCOMPARABLE,
+    then normalizer MUST be present
+    and comparability_ledger.NORMALIZER_VALID.status = PASS.
+
+**Invariant C4:**
+
+    If any failed comparison atom lies outside N_cmp.covers,
+    then score_relation = INCOMPARABLE.
+
+**Invariant C5:**
+
+    Any asserted comparison reason code MUST be evidence-closed.
+
+**Invariant C6:**
+
+    If score_relation = INCOMPARABLE,
+    then reason_codes MUST be non-empty.
+
+**Invariant C7:**
+
+    No implementation may emit LEFT_HIGHER, RIGHT_HIGHER,
+    or EQUAL_WITHIN_TOL as a raw claim when mode = RAW and
+    PROFILE_EQ = FAIL or POLICY_EQ = FAIL or SAME_BATCH = FAIL.
+
+**Invariant C8:**
+
+    If delta_axis_leverage is present, then comparison_explanation.dominant_axis
+    MUST equal argmax_a |delta_axis_leverage[a]|.
+
+**Invariant C9:**
+
+    If one side terminates in TERMINAL due to witness failure,
+    comparison_explanation.dominant_constraint MAY identify the failing witness,
+    but this diagnostic note MUST NOT override score_relation semantics.
+
+**Invariant C10:**
+
+    compare MUST NOT mutate either input bundle or any referenced snapshot.
+
+## 19. Provenance Minimum [E/N]
 
 Every successful or partially successful verify response MUST record at least:
 
@@ -1421,11 +1666,27 @@ If any axis alias is used, it MUST be recorded.
 If replay_class ≠ BIT_EXACT, the nondeterminism source MUST be recorded.
 If any check is NOT_EVALUATED, its skip_reason MUST be recorded.
 
-## 17. Self-Application [E]
+Every CompareResponse MUST record at least:
 
-### Definition 17.1 (Bundle Domain Lift) [E]
+    left bundle identifier or digest
+    right bundle identifier or digest
+    mode
+    required pass set
+    comparability ledger
+    tolerance
+    score_relation
+    normalizer identifier/version if used
+    normalizer covers if used
+    timestamp
 
-Let Bundle be the set of canonical verify responses conforming to §14.2.
+If any normalized comparison is asserted,
+the normalizer error bound MUST be recorded.
+
+## 20. Self-Application [E]
+
+### Definition 20.1 (Bundle Domain Lift) [E]
+
+Let Bundle be the set of canonical VerifyResponses conforming to §15.2.
 Define
 
     X_meta := Bundle
@@ -1434,7 +1695,7 @@ A meta-batch is an ordinary batch over the lifted domain:
 
     D_meta = (B_1, …, B_k) ∈ X_meta*
 
-### Definition 17.2 (Meta-Observer) [E]
+### Definition 20.2 (Meta-Observer) [E]
 
 A meta-observer is an observer over X_meta subject to the same rules:
 
@@ -1443,14 +1704,20 @@ A meta-observer is an observer over X_meta subject to the same rules:
     same replay purity,
     same trace completeness,
     same witness and verdict ledgers,
-    same proof-carrying terminal outcomes.
+    same proof-carrying outcomes.
 
-### Proposition 17.3 (Finite Termination of Self-Application) [E]
+### Proposition 20.3 (Finite Termination of Self-Application) [E]
 
 If D_meta is finite and the meta-observer is an admissible finite pipeline,
 then self-application terminates after finite execution steps.
 
-## 18. External Hypotheses Boundary [C]
+### Note 20.4 (Comparison on Self-Application) [E]
+
+Meta-observers MAY compare bundles produced by observers over the same base batch,
+but the comparison contract of §§13–19 still governs.
+Self-application does not relax comparability requirements.
+
+## 21. External Hypotheses Boundary [C]
 
 The following remain outside the normative scope of this specification:
 
@@ -1459,20 +1726,19 @@ The following remain outside the normative scope of this specification:
     gravitational geometrization
     metaphysical necessity of triadicity
 
-## 19. Final Position
+## 22. Final Position
 
-TSC Observation Dynamics v1.0.7 is the proof-carrying observation-layer specification of TSC.
+TSC Observation Dynamics v1.0.8 is the comparison-safe, proof-carrying observation-layer specification of TSC.
 
 Its decisive moves are:
 
-    explicit evaluation policy,
-    fixed witness and verdict orders,
-    ledgers instead of silent omission,
-    classification derived from recorded checks,
-    fail-fast reconciled with provenance,
-    and acceptance made as evidentially explicit as rejection.
+    verification remains replay-pure and ledger-derived,
+    comparison now has explicit modes,
+    normalization scope is declared rather than implied,
+    parity claims require comparability evidence,
+    and cross-observer ordering can no longer hide behind silent mismatches.
 
-That is cleaner than 1.0.6.
+That is cleaner than v1.0.7.
 That is safer for SDKs.
 That is kinder to AI readers.
 That is the next step.
