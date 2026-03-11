@@ -337,6 +337,7 @@ ______________________________________________________________________
 1. **[C≡ v3.1.0](spec/c-equiv.md)** — Term algebra foundation
 1. **[Core v3.1.0](spec/tsc-core.md)** — Measurement calculus
 1. **[Operational v3.1.0](spec/tsc-oper.md)** — Protocol and procedures
+1. **[Observation Dynamics v1.0.13](spec/tsc-observation-dynamics.md)** — Observer construction, comparison, and grounding
 
 ### Reference Documents (As Needed)
 
@@ -352,12 +353,14 @@ ______________________________________________________________________
 1. Glossary (when stuck on terms)
 1. Core (for formulas)
 1. Operational (for implementation)
+1. Observation Dynamics (for observer/comparison details)
 
 **For machines:**
 
 1. C≡ (understand foundation)
 1. Core (understand measurement)
 1. Operational (understand protocol)
+1. Observation Dynamics (understand observer construction and comparison)
 1. Implement and validate
 
 ______________________________________________________________________
