@@ -281,6 +281,7 @@ TSC measures itself by treating the TSC specification corpus as phenomenon P.
 - C≡ foundation (spec/c-equiv.md)
 - TSC Core (spec/tsc-core.md)
 - TSC Operational (spec/tsc-oper.md)
+- Observation Dynamics (spec/tsc-observation-dynamics.md)
 - Glossary (spec/tsc-glossary.md)
 
 **Articulation:**
