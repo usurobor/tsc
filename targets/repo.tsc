@@ -1,0 +1,22 @@
+format = "tsc-target/0.1"
+name = "repo"
+kind = "aggregate"
+description = "Composite target across theory, implementation, and repo integration surfaces."
+
+include_targets = [
+  "spec",
+  "engine"
+]
+
+include = [
+  "README.md",
+  "ARCHITECTURE.md",
+  "CHANGELOG",
+  "project.tsc",
+  "targets/**/*.tsc",
+  "targets/README.md"
+]
+
+exclude = [
+  ".tsc/**"
+]

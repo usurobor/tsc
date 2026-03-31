@@ -1,0 +1,22 @@
+format = "tsc-target/0.1"
+name = "engine"
+kind = "implementation"
+description = "Measure the current verifier implementation surface."
+
+include = [
+  "reference/python/**/*.py",
+  "tests/**/*.py",
+  "pyproject.toml",
+  "Makefile",
+  "QUICKSTART.md"
+]
+
+optional = [
+  "engine/ocaml/**"
+]
+
+exclude = [
+  ".tsc/**",
+  "spec/**",
+  "examples/**"
+]

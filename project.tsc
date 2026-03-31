@@ -1,11 +1,11 @@
-# TSC Project Measurement Configuration
+format = "tsc-target-registry/0.1"
+default_target = "repo"
 
-[markdown]
-file = "README.md"
-alpha = "pattern_coherence"
-beta = "relational_coherence"
+[target.spec]
+manifest = "targets/spec.tsc"
 
-[markdown]
-file = "spec/c-equiv.md"
-alpha = "pattern_coherence"
-beta = "relational_coherence"
+[target.engine]
+manifest = "targets/engine.tsc"
+
+[target.repo]
+manifest = "targets/repo.tsc"
