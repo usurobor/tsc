@@ -145,6 +145,8 @@ They should not be collapsed into one ambiguous number.
 
 ## How It Works
 
+Three independent evaluators measure the same system. If they agree, the system coheres.
+
 ```
          One System
               |
@@ -292,7 +294,3 @@ CC-BY-4.0
 
 - **Issues:** [GitHub Issues](https://github.com/usurobor/tsc/issues)
 - **Email:** usurobor@gmail.com
-
----
-
-**End — TSC v3.1.0**

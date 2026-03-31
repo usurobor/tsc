@@ -69,6 +69,7 @@ These commands do not exist yet in the current CLI. They represent the intended 
 /reference/python/  # current reference implementation
 /examples/          # runnable example inputs
 /tests/             # implementation and conformance tests
+/runtime/           # runtime adapters (tsc-instructions.md)
 /project.tsc        # live measurement config (current orchestrator)
 /targets/           # named target manifests (draft, not yet consumed)
 ```
