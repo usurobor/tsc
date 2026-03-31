@@ -1,84 +1,90 @@
 # QUICKSTART
 
-This guide explains the **current executable path** for TSC.
+This guide explains the current runnable path for TSC.
 
-Today that means:
-- the theory is canonical
-- the Python implementation under `reference/python/` is the active reference path
-- the future canonical engine is intended to be OCaml
+Today, that path is the Python implementation in `reference/python/`.
 
-This guide is therefore about the current reference implementation, not the final implementation identity of the repo.
+If you want to understand the repo before running it, read:
+
+1. `README.md`
+2. `ARCHITECTURE.md`
+
+If you want to run TSC now, continue here.
 
 ---
 
-## 1) Install
+## 1. Install
 
 ```bash
 python3 -m pip install --upgrade pip
 pip install -e ".[dev]"
 ```
 
-This exposes a `tsc` CLI through the current reference implementation.
+This exposes the current `tsc` CLI.
 
 ---
 
-## 2) Run an example
+## 2. Run an example
 
 ```bash
 tsc examples/cellular-automata/glider.md --format text
 ```
 
-This exercises the current parser/controller path.
+This exercises the current parser and controller path.
 
 ---
 
-## 3) Understand the implementation status
-
-The current implementation should be read as:
-- usable
-- reference-grade
-- not the final canonical engine
-
-Its purpose is to:
-- exercise the theory
-- validate example handling
-- provide a working CLI while the canonical engine direction stabilizes
-
----
-
-## 4) Target model
-
-TSC is moving toward named targets.
-
-Examples:
+## 3. Run the test suite
 
 ```bash
-tsc self --target spec
-tsc self --target engine
-tsc self --target repo
+make test
 ```
 
-These commands do not exist yet in the current CLI. They represent the intended target model that `targets/` is defining. Today, `project.tsc` is still the live measurement config.
+This runs the current implementation and conformance tests.
 
 ---
 
-## 5) Current file structure
+## 4. Measure the repo with the current orchestrator
 
+```bash
+make self-coherence
 ```
-/spec/              # canonical theory
-/reference/python/  # current reference implementation
-/examples/          # runnable example inputs
-/tests/             # implementation and conformance tests
-/runtime/           # runtime adapters (tsc-instructions.md)
-/project.tsc        # live measurement config (current orchestrator)
-/targets/           # named target manifests (draft, not yet consumed)
-```
+
+The current orchestrator reads `project.tsc`.
 
 ---
 
-## 6) What to read next
+## 5. Current measurement surfaces
+
+TSC currently works with these repo surfaces:
+
+- `spec/` — canonical theory
+- `reference/python/` — current implementation
+- `examples/` — runnable example inputs
+- `tests/` — implementation and conformance tests
+- `project.tsc` — live measurement config
+- `targets/` — named target declarations
+
+The named targets in `targets/` define the model the repo is moving toward:
+
+- `spec`
+- `engine`
+- `repo`
+
+---
+
+## 6. Current implementation status
+
+The current executable implementation is the Python path under `reference/python/`.
+
+The next implementation track is an OCaml engine. The theory and target model stay stable across that change.
+
+---
+
+## 7. What to read next
 
 - `README.md` — repo charter
-- `ARCHITECTURE.md` — theory + target + verifier architecture
-- `project.tsc` — live measurement config
-- `targets/` — named target manifests (draft, defines intended model)
+- `ARCHITECTURE.md` — theory, targets, verifier
+- `project.tsc` — live config
+- `targets/` — named target declarations
+- `spec/` — canonical theory

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document explains the architecture of the TSC repo as it exists conceptually.
+This document describes the current architecture of the TSC repo.
 
 TSC is organized around three layers:
 
@@ -10,8 +10,7 @@ TSC is organized around three layers:
 - **targets**
 - **verifier**
 
-This is not yet a claim about the final directory layout.
-It is the architectural contract the repo should satisfy.
+These three layers define the repo.
 
 ---
 
@@ -20,32 +19,32 @@ It is the architectural contract the repo should satisfy.
 The theory lives in `spec/`.
 
 This is the canonical definition layer:
+
 - what TSC is
 - what α / β / γ mean
 - what witnesses and invariants are
 - what a target means
 
-If the verifier and the theory disagree, the theory defines the intended semantics and the verifier is wrong.
+If implementation and theory disagree, the theory defines the intended semantics.
 
 ---
 
 ## 2. Targets
 
-A target is a declared bundle that TSC knows how to measure.
+A target is an explicit declaration of what TSC measures.
 
-Examples:
-- `spec` — canonical theory documents only
-- `engine` — current implementation surfaces
-- `repo` — aggregate repo target
+Current target surfaces are:
 
-A target is not "whatever files happen to be nearby."
-It is an explicit measurement declaration.
+- `spec` — canonical theory documents
+- `engine` — implementation surfaces
+- `repo` — aggregate repository surface
 
-Targets are declared in:
-- `targets/*.tsc` — named target manifests (the intended model)
-- `targets/registry.tsc` — draft registry that will replace `project.tsc`
+The target model lives in:
 
-The current live measurement config is still `project.tsc`, which the Python orchestrator consumes directly. The target manifests are not yet loaded by tooling.
+- `project.tsc` — live measurement config for the current orchestrator
+- `targets/` — named target manifests
+
+`project.tsc` is the live config today. `targets/` defines the target model the repo is converging toward.
 
 ---
 
@@ -53,71 +52,74 @@ The current live measurement config is still `project.tsc`, which the Python orc
 
 The verifier is the executable layer.
 
-Current state:
-- the Python path under `reference/python/` is the active reference implementation
+The current executable path is:
 
-Intended state:
-- an OCaml engine becomes the canonical implementation
+- `reference/python/`
 
-That means the current Python implementation should be treated as:
-- reference
-- prototype
-- compatibility path
+That path exercises the theory, runs examples, and provides the current CLI.
 
-It should not continue to define the repo's future identity implicitly.
+The next implementation track is:
+
+- a canonical OCaml engine
+
+The theory remains independent of implementation language.
 
 ---
 
 ## 4. Self-measurement
 
-Self-measurement is one target, not the repo's identity.
+Self-measurement is one target surface inside the repo.
 
-The self-measurement surfaces exist to answer:
-- is the theory coherent as theory?
-- is the implementation coherent as implementation?
-- is the repo coherent as a whole?
+It exists to answer three separate questions:
 
-These must be separate targets.
+- is the theory coherent as theory
+- is the implementation coherent as implementation
+- is the repo coherent as a whole
 
-Otherwise one unfinished layer drags down everything and the score stops being informative.
+Those are different measurements. They should stay separated as different targets.
 
 ---
 
 ## 5. Generated state
 
-Generated measurement state belongs in `.tsc/`.
+Generated measurement output belongs in `.tsc/`.
 
-`.tsc/` is:
+`.tsc/` holds:
+
 - local measurement output
 - reports
 - generated history
 
-It is not the canonical source of the theory.
-It is not the canonical source of the target model.
+Canonical sources remain:
 
-Those live in:
-- `spec/` (theory)
-- `project.tsc` (live measurement config)
-- `targets/` (intended named-target model)
+- `spec/` for theory
+- `project.tsc` for live measurement config
+- `targets/` for named target declarations
 
 ---
 
-## 6. Immediate architectural direction
+## 6. Current development direction
 
-The next coherent architecture move is:
+The current architectural direction is:
 
-1. rewrite the repo charter
-2. define named targets
-3. keep Python explicitly reference-grade
-4. add an OCaml engine only after the target model is stable
-5. postpone large physical file moves until meaning is clear
+1. keep the repo charter explicit
+2. keep targets explicit
+3. keep the Python path usable as the current implementation
+4. add the OCaml engine as the next canonical implementation track
+5. keep file moves secondary to semantic clarity
+
+That keeps the repo stable while the target model and verifier mature.
 
 ---
 
-## 7. Non-goals
+## 7. Repo map
 
-This architecture does not assume:
-- immediate repo splitting
-- immediate physical re-layout
-- that self-measurement should dominate the repo narrative
-- that the Python implementation should remain canonical
+```text
+/spec/              canonical theory
+/reference/python/  current implementation
+/examples/          runnable examples
+/tests/             conformance and implementation tests
+/project.tsc        live measurement config
+/targets/           named target declarations
+/.tsc/              generated measurement output
+```
