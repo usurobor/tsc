@@ -1,272 +1,165 @@
 # TSC (Triadic Self-Coherence)
 
-TSC is an upstream **theory, target corpus, and verifier** for triadic coherence.
+TSC is a theory, a target model, and a verifier for triadic coherence.
 
-It does three things:
-
-1. **Defines** a formal account of coherence across three independent axes
-2. **Names** explicit measurement targets, including self-targets
-3. **Implements** a verifier that evaluates α / β / γ and aggregates them into `C_Σ`
-
-TSC is not primarily a product surface.
-It is the place where the theory is specified, the targets are made explicit, and the verifier is made honest.
-
----
-
-## What this repo is
-
-This repo has three layers:
-
-- **Theory** — the formal ideas in `spec/`
-- **Targets** — the named bundles measured by TSC, declared in `project.tsc` and `targets/`
-- **Verifier** — the implementation that evaluates those targets
-
-Self-measurement is one target among others.
-It is not the repo's identity.
-
----
-
-## What TSC asks
-
-TSC asks a narrow question:
-
-> Do three independent descriptions of the same system still describe one system?
-
-It does **not** claim any one description is "the truth."
-It checks whether they cohere.
-
-The result is:
+It measures one system through three independent evaluators:
 
 - **α** — pattern coherence
 - **β** — relational coherence
-- **γ** — generative / process coherence
-- **`C_Σ`** — aggregate triadic coherence
+- **γ** — process coherence
+
+Those three scores aggregate into `C_Σ`.
 
 ---
 
-## Current implementation status
+## What this repo contains
 
-- The **theory** is primary
-- The current executable path is still the **Python reference implementation**
-- The future **canonical engine** is intended to be OCaml
-- Self-measurement exists, but it is only one declared target
+- `spec/` — canonical theory
+- `reference/python/` — current executable implementation
+- `examples/` — runnable example inputs
+- `tests/` — implementation and conformance tests
+- `project.tsc` — live measurement config for the current orchestrator
+- `targets/` — named target declarations
+- `ARCHITECTURE.md` — repo architecture
+- `QUICKSTART.md` — implementation-oriented usage guide
 
 ---
 
-## Quick orientation
+## What TSC measures
 
-If you want to understand the theory:
-- start with `spec/`
+TSC asks one question:
 
-If you want to understand the current implementation:
-- read `QUICKSTART.md`
-- then inspect `reference/python/`
+> Do three independent descriptions of the same system still describe one system?
 
-If you want to understand what is being measured:
-- `project.tsc` is the live measurement config (consumed by the current Python orchestrator)
-- `targets/` declares the intended named-target model (not yet consumed by tooling)
+The result is:
 
-If you want to understand self-measurement:
-- read `ARCHITECTURE.md`
+- α for pattern
+- β for relation
+- γ for process
+- `C_Σ` for aggregate coherence
 
 ---
 
 ## Quick start
 
-### Current reference path
+### Install
 
 ```bash
-# run the current reference implementation
+python3 -m pip install --upgrade pip
+pip install -e ".[dev]"
+```
+
+### Run an example
+
+```bash
 tsc examples/cellular-automata/glider.md --format text
 ```
 
-### Named self-targets
+### Run tests
 
 ```bash
-# examples of the target model this repo is moving toward
-tsc self --target spec
-tsc self --target engine
-tsc self --target repo
+make test
 ```
 
-The named-target model matters because:
-- the theory may be coherent before the engine is finished
-- the engine may be incomplete without invalidating the theory
-- the aggregate repo score should not smear those two together
+### Measure the repo with the current orchestrator
+
+```bash
+make self-coherence
+```
+
+---
+
+## How TSC works
+
+TSC evaluates one target through three independent views.
+
+```
+         One System
+             |
+      +------+------+
+      |      |      |
+      α      β      γ
+      |      |      |
+      v      v      v
+     sα     sβ     sγ
+      \      |      /
+       \     |     /
+          C_Σ
+```
+
+The evaluators are intentionally different:
+
+- α checks repeating structure
+- β checks alignment across relations
+- γ checks stability through change
+
+---
+
+## Theory stack
+
+Start here:
+
+1. **[C≡ Kernel](spec/c-equiv.md)** — foundational equivalence
+2. **[Core](spec/tsc-core.md)** — coherence calculus
+3. **[Operational](spec/tsc-oper.md)** — protocol and procedure
+4. **[Observation Dynamics](spec/tsc-observation-dynamics.md)** — observer construction and comparison
+5. **[Glossary](spec/tsc-glossary.md)** — terminology
+
+---
+
+## Target model
+
+TSC works with explicit targets. Current target surfaces are declared in:
+
+- `project.tsc` — live config for the current orchestrator
+- `targets/` — named target declarations
+
+The named targets are:
+
+- **spec** — theory surface
+- **engine** — implementation surface
+- **repo** — aggregate repository surface
+
+Read:
+
+- `targets/README.md` for the target model
+- `ARCHITECTURE.md` for how theory, targets, and verifier fit together
+
+---
+
+## Implementation status
+
+The current executable path is the Python implementation in `reference/python/`.
+
+The repo architecture also defines an OCaml direction for the canonical engine. `ARCHITECTURE.md` describes that direction. `QUICKSTART.md` covers the current Python path.
 
 ---
 
 ## Repo map
 
 ```
-/spec/              # canonical theory
-/reference/         # current reference implementation(s)
-/examples/          # runnable examples
-/tests/             # conformance and implementation tests
-/project.tsc        # live measurement config (current orchestrator)
-/targets/           # named target manifests (draft, not yet consumed)
-/ARCHITECTURE.md    # self-measurement and target architecture
-/QUICKSTART.md      # implementation-oriented usage guide
+/spec/              canonical theory
+/reference/python/  current implementation
+/examples/          runnable examples
+/tests/             conformance and implementation tests
+/project.tsc        live orchestrator config
+/targets/           named target declarations
+/ARCHITECTURE.md    architecture
+/QUICKSTART.md      usage
 ```
-
----
-
-## Repo stance
-
-TSC is the upstream source of truth for the theory and its verifier.
-
-Downstream systems may consume released TSC concepts, targets, or engine behavior.
-They should not depend on TSC's unfinished self-measurement state as if it were settled doctrine.
-
----
-
-## Why self-measurement still matters
-
-Self-measurement is useful because it forces TSC to test itself instead of only measuring external examples.
-
-But it should be read correctly:
-- a low spec score means the theory/docs need tightening
-- a low engine score means the implementation is immature
-- a low repo score means the whole repo surface is still not converged
-
-Those are different failures.
-They should not be collapsed into one ambiguous number.
-
----
-
-## Next steps
-
-1. Stabilize the target model
-2. Keep Python as reference
-3. Build the canonical OCaml engine
-4. Only then decide whether the physical repo layout needs larger moves
-
----
-
-## How It Works
-
-Three independent evaluators measure the same system. If they agree, the system coheres.
-
-```
-         One System
-              |
-    +---------+---------+
-    |         |         |
-    α         β         γ
- (Pattern)  (Relation) (Process)
-    |         |         |
-    v         v         v
-  O_α       O_β       O_γ
-(Observations)
-    |         |         |
-    v         v         v
-  s_α       s_β       s_γ
-(Scores)
-    |         |         |
-    +-----> Aggregate <-+
-              |
-              v
-       C_Σ = (s_α · s_β · s_γ)^(1/3)
-              |
-              v
-         PASS / FAIL
-```
-
-**Three independent evaluators:**
-
-- **α (Sequential):** Pattern stability — does structure repeat consistently?
-- **β (Structural):** Relational alignment — do structure, relations, and process fit together?
-- **γ (Generative):** Process stability — does the system evolve consistently?
-
-**Mathematical guarantee:** The three evaluators are proven non-isomorphic (different idempotent profiles), so they can't collapse to measure the same thing.
-
----
-
-## Foundation (v3.0.0 Reformulation)
-
-TSC v3.0.0+ is built on **term algebra**, not category theory:
-
-**Core primitive:** `e ~ tri(e,e,e)`
-
-Wholeness (e) articulates itself as one-as-two held in three positions. Everything unfolds from this single equivalence.
-
-**Three evaluators (monoid homomorphisms):**
-
-- α: (ℕ, ⊕, 0) — sequential/additive
-- β: (ℕ³, ⊔, 0³) — structural/lattice
-- γ: (ℕ×ℕ, ⊗, (0,0)) — generative/multiplicative
-
-**Independence proof (Theorem 2.3):** Distinct idempotent profiles guarantee no Eckmann-Hilton collapse.
-
-[Full spec →](spec/c-equiv.md)
-
----
-
-## Specification Stack
-
-### Normative Documents
-
-1. **[C≡ Kernel](spec/c-equiv.md)** — Term algebra foundation (start here)
-2. **[Core v3.1.0](spec/tsc-core.md)** — Measurement calculus
-3. **[Operational v3.1.0](spec/tsc-oper.md)** — Protocol and procedures
-4. **[Observation Dynamics v1.0.13](spec/tsc-observation-dynamics.md)** — Observer construction and comparison
-
-### Reference Documents
-
-- **[Glossary v3.1.0](spec/tsc-glossary.md)** — Multi-audience terminology
-
----
-
-## Installation
-
-**Current status:** TSC is a **specification**. Reference implementation in progress.
-
-### From Source
-
-```bash
-git clone https://github.com/usurobor/tsc.git
-cd tsc
-pip install -e ".[dev]"
-
-# Run tests
-make test
-
-# Measure TSC itself
-make self-coherence
-```
-
-### Requirements
-
-- Python 3.10+
-- NumPy (optional, for faster computation)
 
 ---
 
 ## Contributing
 
-### How to Contribute
+Contributions are useful in four areas:
 
-1. **Implementations:** Build TSC in your language
-2. **Observers:** Domain-specific observation functions
-3. **Tooling:** CI/CD integrations, dashboards
-4. **Documentation:** Tutorials, case studies
+1. **Theory** — tighten definitions, proofs, and terminology
+2. **Targets** — add clearer target declarations and examples
+3. **Verifier** — improve implementation and execution paths
+4. **Tests** — strengthen conformance and invariance checks
 
-### Contribution Guidelines
-
-- All implementations **must** pass self-coherence validation
-- Include provenance bundle with every measurement
-- Follow Operational protocol exactly
-- Document extensions clearly (normative vs experimental)
-
-### Governance
-
-**Spec changes require:**
-
-- Mathematical justification
-- Self-coherence validation (does TSC still cohere?)
-- Community review
-
-**Breaking changes** require major version bump (e.g., v4.0.0).
+When you change the theory, targets, or verifier, keep them aligned.
 
 ---
 
@@ -280,11 +173,11 @@ CC-BY-4.0
 
 ```bibtex
 @software{tsc2025,
-  title = {TSC: Triadic Self-Coherence Framework},
-  author = {Peter Lisovin},
-  year = {2025},
+  title   = {TSC: Triadic Self-Coherence Framework},
+  author  = {Peter Lisovin},
+  year    = {2025},
   version = {v3.1.0},
-  url = {https://github.com/usurobor/tsc}
+  url     = {https://github.com/usurobor/tsc}
 }
 ```
 
