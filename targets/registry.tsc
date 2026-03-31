@@ -1,0 +1,20 @@
+# TSC Target Registry (draft)
+#
+# This is the intended target-aware registry format. It is not yet
+# consumed by the current Python orchestrator. The live measurement
+# config remains in project.tsc (repeated [markdown] sections).
+#
+# When the orchestrator supports tsc-target-registry/0.1, this file
+# replaces project.tsc as the authoritative config surface.
+
+format = "tsc-target-registry/0.1"
+default_target = "repo"
+
+[target.spec]
+manifest = "targets/spec.tsc"
+
+[target.engine]
+manifest = "targets/engine.tsc"
+
+[target.repo]
+manifest = "targets/repo.tsc"

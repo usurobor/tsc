@@ -1,4 +1,12 @@
 # TSC Project Measurement Configuration
+#
+# This file is the live config surface consumed by the current Python
+# orchestrator (reference/python/measure_project.py). It uses repeated
+# [markdown] sections because that is what the parser understands today.
+#
+# The intended target-aware registry lives in targets/registry.tsc.
+# When the orchestrator is updated to support tsc-target-registry/0.1,
+# this file will be replaced by that registry.
 
 [markdown]
 file = "README.md"

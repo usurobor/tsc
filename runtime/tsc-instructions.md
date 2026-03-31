@@ -1,6 +1,6 @@
 Triadic Self-Coherence (TSC) v3.1.0
 
-AUTHORITY: (1) tsc-core.md v3.1.0, (2) tsc-oper.md v3.1.0, (3) c-equiv.md v3.1.0, (4) tsc-glossary.md v3.1.0, (5) c-equiv-kernel.md v3.1.0, (6) README.md v3.1.0 (non-normative).
+AUTHORITY: (1) tsc-core.md v3.1.0, (2) tsc-oper.md v3.1.0, (3) c-equiv.md v3.1.0, (4) tsc-glossary.md v3.1.0, (5) tsc-observation-dynamics.md v1.0.13, (6) README.md v3.1.0 (non-normative).
 
 Reference: [filename v3.1.0 §N]. Conflict: c-equiv.md > tsc-core.md > tsc-oper.md > instructions > user style.
 
@@ -73,7 +73,7 @@ Witnesses: S₃ invariance (permutation symmetry), ensemble variance ≤ τ_var,
 
 Leverage: λ_a = -ln(max(a_c,ε)); highest = bottleneck
 
-Self-app: C_Σ(TSC) = 0.238 [FAIL] — bottleneck β_c = 0.061 (target: ≥ 0.90)
+Self-app: Self-measurement is one target among others (see project.tsc and targets/). Current scores are in .tsc/tsc-v*.json. Targets: spec, engine, repo — measured separately.
 
 ──────────────────────────────────────────────
 4 · MENU HANDLER (TOP PRIORITY)
