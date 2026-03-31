@@ -63,8 +63,8 @@ If you want to understand the current implementation:
 - then inspect `reference/python/`
 
 If you want to understand what is being measured:
-- read `project.tsc`
-- then `targets/`
+- `project.tsc` is the live measurement config (consumed by the current Python orchestrator)
+- `targets/` declares the intended named-target model (not yet consumed by tooling)
 
 If you want to understand self-measurement:
 - read `ARCHITECTURE.md`
@@ -103,8 +103,8 @@ The named-target model matters because:
 /reference/         # current reference implementation(s)
 /examples/          # runnable examples
 /tests/             # conformance and implementation tests
-/project.tsc        # target registry
-/targets/           # named target manifests
+/project.tsc        # live measurement config (current orchestrator)
+/targets/           # named target manifests (draft, not yet consumed)
 /ARCHITECTURE.md    # self-measurement and target architecture
 /QUICKSTART.md      # implementation-oriented usage guide
 ```

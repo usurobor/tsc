@@ -16,5 +16,10 @@ Current targets:
 - `engine` — implementation only
 - `repo` — aggregate repository target
 
-The target model is more important than the current parser syntax.
-If the engine evolves, these files define the semantics it should preserve.
+## Status
+
+These target manifests and `registry.tsc` are **draft declarations**. They define the intended semantics of the named-target model but are not yet consumed by the current Python orchestrator.
+
+The live measurement config is still `project.tsc` in the repo root (repeated `[markdown]` sections). When the orchestrator is updated to support `tsc-target-registry/0.1`, `registry.tsc` will replace `project.tsc` as the authoritative config surface.
+
+The target model is more important than the current parser syntax. If the engine evolves, these files define the semantics it should preserve.

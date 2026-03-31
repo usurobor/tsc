@@ -41,9 +41,11 @@ Examples:
 A target is not "whatever files happen to be nearby."
 It is an explicit measurement declaration.
 
-Targets are registered in:
-- `project.tsc`
-- `targets/*.tsc`
+Targets are declared in:
+- `targets/*.tsc` — named target manifests (the intended model)
+- `targets/registry.tsc` — draft registry that will replace `project.tsc`
+
+The current live measurement config is still `project.tsc`, which the Python orchestrator consumes directly. The target manifests are not yet loaded by tooling.
 
 ---
 
@@ -94,9 +96,9 @@ It is not the canonical source of the theory.
 It is not the canonical source of the target model.
 
 Those live in:
-- `spec/`
-- `project.tsc`
-- `targets/`
+- `spec/` (theory)
+- `project.tsc` (live measurement config)
+- `targets/` (intended named-target model)
 
 ---
 

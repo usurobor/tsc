@@ -58,7 +58,7 @@ tsc self --target engine
 tsc self --target repo
 ```
 
-If those commands do not exist yet in the current CLI, read them as the intended target model that `project.tsc` and `targets/` are defining.
+These commands do not exist yet in the current CLI. They represent the intended target model that `targets/` is defining. Today, `project.tsc` is still the live measurement config.
 
 ---
 
@@ -69,8 +69,8 @@ If those commands do not exist yet in the current CLI, read them as the intended
 /reference/python/  # current reference implementation
 /examples/          # runnable example inputs
 /tests/             # implementation and conformance tests
-/project.tsc        # target registry
-/targets/           # named target manifests
+/project.tsc        # live measurement config (current orchestrator)
+/targets/           # named target manifests (draft, not yet consumed)
 ```
 
 ---
@@ -79,5 +79,5 @@ If those commands do not exist yet in the current CLI, read them as the intended
 
 - `README.md` — repo charter
 - `ARCHITECTURE.md` — theory + target + verifier architecture
-- `project.tsc` — target registry
-- `targets/` — named target manifests
+- `project.tsc` — live measurement config
+- `targets/` — named target manifests (draft, defines intended model)

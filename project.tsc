@@ -1,11 +1,19 @@
-format = "tsc-target-registry/0.1"
-default_target = "repo"
+# TSC Project Measurement Configuration
+#
+# This file is the live config surface consumed by the current Python
+# orchestrator (reference/python/measure_project.py). It uses repeated
+# [markdown] sections because that is what the parser understands today.
+#
+# The intended target-aware registry lives in targets/registry.tsc.
+# When the orchestrator is updated to support tsc-target-registry/0.1,
+# this file will be replaced by that registry.
 
-[target.spec]
-manifest = "targets/spec.tsc"
+[markdown]
+file = "README.md"
+alpha = "pattern_coherence"
+beta = "relational_coherence"
 
-[target.engine]
-manifest = "targets/engine.tsc"
-
-[target.repo]
-manifest = "targets/repo.tsc"
+[markdown]
+file = "spec/c-equiv.md"
+alpha = "pattern_coherence"
+beta = "relational_coherence"
