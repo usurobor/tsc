@@ -91,7 +91,7 @@ let call_provider ~config ~system_message ~user_message =
   let url = api_url config in
   let content = build_request_body ~config ~system_message ~user_message in
   let headers = build_headers config in
-  match Ezcurl.post ~url ~headers ~content () with
+  match Ezcurl.post ~url ~headers ~content:(`String content) () with
   | Ok response ->
     if response.Ezcurl.code >= 200 && response.Ezcurl.code < 300 then
       Ok response.Ezcurl.body
