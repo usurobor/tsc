@@ -2,131 +2,68 @@
 
 All notable changes to TSC will be documented in this file.
 
----
-
-## [3.1.0] - 2025-11-11
-
-### Changed - Documentation Unification
-
-**Version consistency:**
-
-- **Updated:** All version references unified to v3.1.0 across codebase
-- **Updated:** pyproject.toml, CLI, tests, and documentation
-- **Fixed:** Runtime instructions menu numbering (1-20, was all "1.")
-
-**Documentation improvements:**
-
-- **Rewrote:** README.md to remove v2.x braided category theory references
-- **Clarified:** Current self-measurement status (C_Σ = 0.238 [FAIL])
-- **Identified:** Bottleneck as β_c = 0.061 (relational alignment)
-- **Removed:** Obsolete "braided parser" and "braided witness" language from user docs
-- **Simplified:** Focus on term algebra foundation established in v3.0.0
-- **Added:** Concrete roadmap to self-coherence (target: C_Σ ≥ 0.90)
-
-**What stayed the same:**
-
-- Core specifications (C≡, Core, Operational) unchanged
-- Python implementation unchanged
-- Mathematical foundations unchanged
-- Self-measurement protocol unchanged
-
-### Why This Release?
-
-v3.0.0 completed the mathematical reformulation, but user-facing documentation still referenced v2.x concepts. v3.1.0 unifies version strings and brings documentation in line with the term algebra foundation.
+Version history prior to v0.1.0 is archived. The Python reference implementation
+and category-theoretic framing were replaced by the current OCaml engine and
+term-algebra foundation.
 
 ---
 
-## [3.0.0] - 2025-11-09
-
-### Changed - Complete Reformulation
-
-**Breaking changes from v2.x:**
-
-#### Foundation
-- **Removed:** Braided monoidal category axioms (C1-C6)
-- **Removed:** Hexagon coherence conditions
-- **Removed:** LaTeX-heavy specifications
-- **Added:** Term algebra with tri(T₁,T₂,T₃) primitive
-- **Added:** Single equivalence: e ~ tri(e,e,e)
-
-#### Evaluators
-- **Replaced:** Abstract "three axes" with concrete monoid homomorphisms
-- **Added:** α: (ℕ, ⊕, 0) - sequential evaluator
-- **Added:** β: (ℕ³, ⊔, 0³) - structural evaluator  
-- **Added:** γ: (ℕ×ℕ, ⊗, (0,0)) - generative evaluator
-- **Proved:** Non-isomorphism via idempotent profiles (Theorem 2.3)
-
-#### Specification Format
-- **Changed:** All notation to Unicode (no LaTeX escaping)
-- **Changed:** Proofs are constructive and elementary
-- **Changed:** Spec is now proof-assistant ready
-
-#### What Stayed The Same
-- Geometric mean aggregation: C_Σ = (s_α·s_β·s_γ)^(1/3)
-- S₃ symmetry requirement
-- Degeneracy property (any axis = 0 ⟹ C_Σ = 0)
-- Measurement protocol structure
-
-### Why This Change?
-
-**Old approach:** Category theory imposed to prevent collapse (Eckmann-Hilton).
-
-**New approach:** Algebraic independence proven directly.
-
-**Benefit:** Simpler, more rigorous, accessible to non-category-theorists.
-
----
-
-## [2.3.2] - 2025-11-08
-
-### Added
-- Function notation parser: C^I_a(x,y) → x ⊙_a y
-- Unit elimination rule: 1_a ⊙_a x → x
-- Braided witness: 100% pass rate achieved
+## [0.1.1] - 2026-04-01
 
 ### Fixed
-- LaTeX parsing (400+ line parser for escaping hell)
+- CI: added generated `tsc_engine.opam` so `opam install . --deps-only` discovers the package and installs dune (#4)
+- Engine: `Ezcurl.post` requires `~params:[]` and `~content:(`String ...)` — bare string caused type error at `provider.ml:94` (#5)
 
-### Results
-- braid_mean: 0.923 → 0.000 (perfect!)
-- C_Σ: 0.238 (unchanged - witness not main contributor)
+### TSC
+- α: B — two targeted fixes, both traced to root cause
+- β: B+ — engine ↔ CI ↔ opam chain now consistent
+- γ: B — fixes were reactive (CI failure post-merge), not caught pre-merge
 
 ---
 
-## [2.3.1] - 2025-11-07
+## [0.1.0] - 2026-04-01
+
+First working implementation of the TSC measurement engine.
 
 ### Added
-- Shared braid_parser.py module
-- Refactored debug harness
-- Validated 2/3 core axioms (C4 Associativity, C5 MFI)
-
-### Results
-- braid_mean: 0.923 → 0.600 (35% reduction)
-- Still missing C3 (Unit Laws) - function notation blocked
-
----
-
-## [2.3.0] - 2025-11-06
+- **Engine** (`engine/ocaml/`): OCaml-first, LLM-native measurement engine
+  - `provider.ml` — HTTP transport via ezcurl (no subprocess, no temp files)
+  - `main.ml` — CLI entry point: reads target files, bundles spec + instructions, calls provider
+  - `target_registry.ml` — discovers and loads `.tsc` target definitions
+  - `prompt.ml` — assembles measurement prompts from bundled context
+  - `report.ml` — parses structured JSON responses into scored reports
+  - `response_schema.ml` — defines expected provider response structure
+  - `types.ml` — core domain types (targets, scores, config)
+  - `bundle.ml` — file bundling for context assembly
+- **Targets** (`targets/`): declarative measurement target definitions
+  - `spec.tsc` — measures spec corpus coherence
+  - `engine.tsc` — measures engine implementation coherence
+  - `repo.tsc` — measures repository-level coherence
+  - `registry.tsc` — target registry configuration
+- **CI** (`.github/workflows/ci.yml`): OCaml build pipeline
+  - ocaml/setup-ocaml@v3, OCaml 5.2
+  - `opam install . --deps-only`, `dune build`, `dune runtest`
+  - Markdown link checking via lychee
+- **Self-measurement** (`.github/workflows/tsc.yml`): runs all three targets when `TSC_ENABLED=true`
+- **Runtime** (`runtime/`): measurement instructions and self-measure protocol
+- **Makefile**: `make setup`, `make build`, `make test`, `make measure`, `make clean`
+- **Docs** (`docs/engine/0.1.0/`): design doc, implementation plan, self-coherence report
 
 ### Changed
-- Bootstrap resampling across axis replicates
-- S₃ witness operational (all permutations tested)
+- Python reference implementation archived to `archive/python-reference/`
+- `README.md`, `ARCHITECTURE.md`, `QUICKSTART.md` rewritten for the OCaml engine
+- `project.tsc` superseded by `targets/registry.tsc`
 
-### Results
-- C_Σ: 0.238 (FAIL - below Θ=0.90)
-- β_c: 0.061 (bottleneck - semantic cross-references needed)
-
----
-
-## [2.2.0] - 2025-10
-
-### Added
-- C≡ specification (braided monoidal foundation)
-- Self-measurement framework
-- Three-axis coherence (α, β, γ)
+### TSC
+- α: B+ — clean module boundaries, each file has one job
+- β: B — engine ↔ spec ↔ targets are connected but self-measurement not yet validated end-to-end (CI skips without secrets)
+- γ: B- — first implementation; design docs exist but the build-measure-iterate loop hasn't closed yet
 
 ---
 
-## [2.0.0] - 2025-09
+## Archive
 
-Initial TSC framework.
+Versions 2.0.0–3.1.0 used a Python implementation with category-theoretic axioms
+(braided monoidal categories, hexagon coherence). That approach was replaced by
+the current term-algebra foundation and OCaml engine. See `archive/python-reference/`
+for the historical code.
