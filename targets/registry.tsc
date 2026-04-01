@@ -1,8 +1,7 @@
-# TSC target registry (draft)
+# TSC target registry
 #
 # This file defines the named-target model.
-# It is not yet consumed by the current Python orchestrator.
-# The live config remains in project.tsc.
+# The engine reads this file to resolve target names to manifests.
 
 format = "tsc-target-registry/0.1"
 default_target = "repo"

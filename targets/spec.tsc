@@ -9,12 +9,11 @@ include = [
 
 exclude = [
   ".tsc/**",
-  "reference/**",
+  "engine/**",
   "runtime/**",
   "tests/**",
   "examples/**",
   "targets/**",
-  "project.tsc",
   "README.md",
   "QUICKSTART.md",
   "ARCHITECTURE.md"

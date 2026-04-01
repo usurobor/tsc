@@ -1,0 +1,23 @@
+(lang dune 3.0)
+
+(name tsc_engine)
+
+(generate_opam_files true)
+
+(source
+ (github usurobor/tsc))
+
+(authors "Peter Lisovin")
+
+(license CC-BY-4.0)
+
+(package
+ (name tsc_engine)
+ (synopsis "TSC measurement engine — OCaml-first, LLM-native")
+ (depends
+  (ocaml
+   (>= 4.14.0))
+  dune
+  digestif
+  yojson
+  (ppx_expect :with-test)))

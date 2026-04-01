@@ -1,40 +1,49 @@
 # QUICKSTART
 
-This guide explains the current runnable path for TSC.
+This guide explains how to build and run the TSC engine.
 
-The current implementation is `reference/python/`.
+The canonical implementation is `engine/ocaml/`.
 
-## 1. Install
-
-```bash
-python3 -m pip install --upgrade pip
-pip install -e ".[dev]"
-```
-
-## 2. Run an example
+## 1. Prerequisites
 
 ```bash
-tsc examples/cellular-automata/glider.md --format text
+opam switch create tsc 4.14.1
+opam install dune ppx_expect
 ```
 
-## 3. Run tests
+## 2. Build
 
 ```bash
-make test
+cd engine/ocaml
+dune build
 ```
 
-## 4. Measure the repo
+## 3. Run a measurement
+
+Set provider credentials:
 
 ```bash
-make self-coherence
+export TSC_PROVIDER=anthropic
+export TSC_MODEL=claude-sonnet-4-20250514
+export TSC_API_KEY=your-key-here
 ```
 
-The current orchestrator reads `project.tsc`.
+Run:
+
+```bash
+tsc-engine measure --target spec --root ../..
+```
+
+## 4. Available targets
+
+- `spec` — theory surface
+- `engine` — implementation surface
+- `repo` — aggregate repository surface
 
 ## 5. Read next
 
-- `README.md` — repo overview
+- `README.md` — repo charter
 - `ARCHITECTURE.md` — theory, targets, verifier
-- `project.tsc` — live config
 - `targets/` — named target declarations
+- `runtime/SELF-MEASURE.md` — scoring instruction
 - `spec/` — canonical theory

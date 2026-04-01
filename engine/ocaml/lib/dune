@@ -1,0 +1,11 @@
+(library
+ (name tsc_engine)
+ (public_name tsc_engine)
+ (libraries digestif yojson)
+ (modules
+  target_registry
+  bundle
+  prompt
+  response_schema
+  report
+  types))

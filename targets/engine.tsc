@@ -1,17 +1,15 @@
 format = "tsc-target/0.1"
 name = "engine"
 kind = "implementation"
-description = "Current executable implementation surface."
+description = "Canonical implementation surface."
 
 include = [
-  "reference/python/**/*.py",
-  "tests/**/*.py",
-  "pyproject.toml",
-  "Makefile"
-]
-
-optional = [
-  "engine/ocaml/**"
+  "engine/ocaml/**/*.ml",
+  "engine/ocaml/**/*.mli",
+  "engine/ocaml/dune-project",
+  "engine/ocaml/lib/dune",
+  "engine/ocaml/bin/dune",
+  "tests/ocaml/**"
 ]
 
 exclude = [
@@ -21,6 +19,5 @@ exclude = [
   "targets/**",
   "README.md",
   "ARCHITECTURE.md",
-  "QUICKSTART.md",
-  "project.tsc"
+  "QUICKSTART.md"
 ]

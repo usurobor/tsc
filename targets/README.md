@@ -16,10 +16,7 @@ Current targets:
 
 ## Authority
 
-Today:
-
-- `project.tsc` is the live config used by the current Python orchestrator
-- `targets/registry.tsc` is the draft target registry
-- `targets/*.tsc` define the target model the repo is converging toward
+- `targets/registry.tsc` is the target registry
+- `targets/*.tsc` define the target manifests
 
 The target model matters because theory, implementation, and aggregate repo state should not collapse into one ambiguous self-score.
