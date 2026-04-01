@@ -6,7 +6,6 @@
   target_registry
   bundle
   prompt
-  provider
   response_schema
   report
   types))

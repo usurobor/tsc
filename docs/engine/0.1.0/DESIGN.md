@@ -65,6 +65,18 @@ Both assumptions no longer serve the repo.
 - self-measurement instructions must define α / β / γ precisely enough for provider swaps
 - no duplicate source of truth for target resolution
 
+## Invariants
+
+These must remain true after this change:
+
+1. **Theory independence** — `spec/` remains independent of implementation language. No OCaml-specific content in theory docs.
+2. **Target determinism** — given the same registry + manifests + file tree, target resolution produces the same ordered file list.
+3. **Scoring authority** — `runtime/SELF-MEASURE.md` is the single textual authority for how α / β / γ are scored. The engine constructs prompts from it; it does not contain scoring logic itself.
+4. **Purity boundary** — `engine/ocaml/lib/` is pure (no I/O, no Unix, no Sys). All I/O lives in `bin/` (CLI wiring) and `bin/provider.ml`.
+5. **Secret isolation** — API keys are injected at runtime via environment variables. No secrets in repo, no secrets in generated reports.
+6. **Report derivation** — generated reports in `.tsc/` are derived artifacts only. Canonical sources are `spec/`, `targets/`, `engine/ocaml/`, `runtime/SELF-MEASURE.md`.
+7. **One registry** — `targets/registry.tsc` is the single target authority. No parallel target resolution path.
+
 ## Proposal
 
 Build a new OCaml engine around four deterministic stages and one LLM stage.

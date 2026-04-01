@@ -4,6 +4,7 @@
     Usage: tsc-engine measure --target <name> [--instruction <path>] *)
 
 open Tsc_engine
+open Tsc_engine.Types
 
 (** Read a file, return (Ok content) or (Error msg). *)
 let read_file path =
@@ -72,13 +73,13 @@ let expand_glob ~root pattern =
     List.sort String.compare !results
   end
 
-(** Resolve a target manifest into (path, content) pairs. *)
-let resolve_files ~root manifest =
+(** Resolve a single manifest's include/exclude into (path, content) pairs. *)
+let resolve_manifest_files ~root manifest =
   let included =
-    List.concat_map (expand_glob ~root) manifest.Types.manifest_include
+    List.concat_map (expand_glob ~root) manifest.manifest_include
   in
   let excluded =
-    List.concat_map (expand_glob ~root) manifest.Types.manifest_exclude
+    List.concat_map (expand_glob ~root) manifest.manifest_exclude
   in
   let filtered =
     List.filter (fun p -> not (List.mem p excluded)) included
@@ -86,8 +87,46 @@ let resolve_files ~root manifest =
   List.filter_map (fun path ->
     match read_file (Filename.concat root path) with
     | Ok content -> Some (path, content)
-    | Error _ -> None
+    | Error msg ->
+      Printf.eprintf "Warning: skipping %s: %s\n%!" path msg;
+      None
   ) filtered
+
+(** Resolve a target with include_targets expansion.
+    Loads nested target manifests from the registry and merges their files. *)
+let resolve_files ~root ~registry manifest =
+  (* First resolve any nested include_targets *)
+  let nested_files =
+    List.concat_map (fun target_name ->
+      match Target_registry.resolve_target_path registry target_name with
+      | Error e ->
+        Printf.eprintf "Warning: cannot resolve nested target '%s': %s\n%!" target_name e;
+        []
+      | Ok manifest_path ->
+        match read_file (Filename.concat root manifest_path) with
+        | Error e ->
+          Printf.eprintf "Warning: cannot read manifest for '%s': %s\n%!" target_name e;
+          []
+        | Ok content ->
+          match Target_registry.parse_manifest content with
+          | Error e ->
+            Printf.eprintf "Warning: cannot parse manifest for '%s': %s\n%!" target_name e;
+            []
+          | Ok nested_manifest ->
+            resolve_manifest_files ~root nested_manifest
+    ) manifest.manifest_include_targets
+  in
+  (* Then resolve this manifest's own includes *)
+  let own_files = resolve_manifest_files ~root manifest in
+  (* Merge, dedup by path, preserving order *)
+  let seen = Hashtbl.create 64 in
+  let dedup files =
+    List.filter (fun (path, _) ->
+      if Hashtbl.mem seen path then false
+      else begin Hashtbl.add seen path (); true end
+    ) files
+  in
+  dedup (nested_files @ own_files)
 
 (** Get current timestamp as ISO 8601. *)
 let timestamp () =
@@ -133,11 +172,17 @@ let parse_args () =
     cli_output_dir = !output_dir;
   }
 
+(** Create directory and parents. No shell — uses Unix.mkdir directly. *)
+let rec mkdir_p path =
+  if Sys.file_exists path then ()
+  else begin
+    mkdir_p (Filename.dirname path);
+    (try Unix.mkdir path 0o755 with Unix.Unix_error (Unix.EEXIST, _, _) -> ())
+  end
+
 (** Write a string to a file, creating parent directories. *)
 let write_file path content =
-  let dir = Filename.dirname path in
-  if not (Sys.file_exists dir) then
-    ignore (Sys.command (Printf.sprintf "mkdir -p '%s'" dir));
+  mkdir_p (Filename.dirname path);
   let oc = open_out path in
   Fun.protect ~finally:(fun () -> close_out oc) (fun () ->
     output_string oc content
@@ -178,14 +223,14 @@ let () =
 
   (* Step 3: Build bundle *)
   Printf.eprintf "Building file bundle...\n%!";
-  let files = resolve_files ~root manifest in
+  let files = resolve_files ~root ~registry manifest in
   let bundle =
     Bundle.build_bundle
       ~target_name:args.cli_target
       ~target_kind:manifest.manifest_kind
       ~files
   in
-  Printf.eprintf "Bundle contains %d files.\n%!" (List.length bundle.Types.bundle_files);
+  Printf.eprintf "Bundle contains %d files.\n%!" (List.length bundle.bundle_files);
 
   (* Step 4: Load instruction *)
   let instruction =
@@ -206,52 +251,74 @@ let () =
     | Ok c -> c
   in
   Printf.eprintf "Calling %s/%s...\n%!" config.provider_name config.provider_model;
-  let _response =
+  let raw_response =
     match Provider.call_provider ~config ~system_message:system_msg ~user_message:user_msg with
     | Error e -> Printf.eprintf "Error calling provider: %s\n" e; exit 1
     | Ok r -> r
   in
 
   (* Step 7: Validate response *)
-  (* Note: Full JSON parsing requires a JSON library.
-     For v0.1.0, we output the raw response and metadata. *)
-  Printf.eprintf "Provider responded. Writing raw output...\n%!";
+  Printf.eprintf "Validating response...\n%!";
+  let json =
+    match Response_schema.parse_json raw_response with
+    | Error e ->
+      Printf.eprintf "Error: response is not valid JSON: %s\n" e;
+      Printf.eprintf "Raw response saved for inspection.\n";
+      (* Fall through to save raw response even on parse failure *)
+      None
+    | Ok j -> Some j
+  in
+  let validated_result =
+    match json with
+    | None -> None
+    | Some j ->
+      match Response_schema.validate_result j with
+      | Error e ->
+        Printf.eprintf "Warning: response did not pass schema validation: %s\n" e;
+        None
+      | Ok r ->
+        Printf.eprintf "Response validated successfully.\n%!";
+        Some r
+  in
 
   (* Step 8: Write reports *)
   let ts = timestamp () in
-  let metadata : Types.run_metadata = {
+  let metadata : run_metadata = {
     meta_target = args.cli_target;
     meta_file_hashes =
       List.map (fun f ->
-        (f.Types.file_path, f.Types.file_hash)
-      ) bundle.Types.bundle_files;
+        (f.file_path, f.file_hash)
+      ) bundle.bundle_files;
     meta_prompt_version = "SELF-MEASURE/1.0";
     meta_provider = config.provider_name;
     meta_model = config.provider_model;
     meta_timestamp = ts;
   } in
 
+  (* Always write raw response *)
   let raw_report_path =
     Filename.concat args.cli_output_dir
       (Printf.sprintf "tsc-%s-%s-raw.txt" args.cli_target ts)
   in
-  write_file raw_report_path _response;
+  write_file raw_report_path raw_response;
 
-  let meta_path =
-    Filename.concat args.cli_output_dir
-      (Printf.sprintf "tsc-%s-%s-meta.json" args.cli_target ts)
-  in
-  let meta_json =
-    Printf.sprintf
-      {|{"target":"%s","prompt_version":"%s","provider":"%s","model":"%s","timestamp":"%s","file_count":%d}|}
-      metadata.meta_target
-      metadata.meta_prompt_version
-      metadata.meta_provider
-      metadata.meta_model
-      metadata.meta_timestamp
-      (List.length metadata.meta_file_hashes)
-  in
-  write_file meta_path meta_json;
-
-  Printf.printf "Done. Reports written to:\n  %s\n  %s\n" raw_report_path meta_path;
-  ignore metadata
+  (* Write structured reports if validation passed *)
+  (match validated_result with
+   | Some result ->
+     let json_path =
+       Filename.concat args.cli_output_dir
+         (Printf.sprintf "tsc-%s-%s.json" args.cli_target ts)
+     in
+     write_file json_path (Report.to_json ~result ~metadata);
+     let text_path =
+       Filename.concat args.cli_output_dir
+         (Printf.sprintf "tsc-%s-%s.txt" args.cli_target ts)
+     in
+     write_file text_path (Report.to_text ~result ~metadata);
+     Printf.printf "Done. Reports written to:\n  %s\n  %s\n  %s\n"
+       raw_report_path json_path text_path
+   | None ->
+     Printf.printf "Done. Raw response written to:\n  %s\n\
+                     Structured reports not generated (validation failed).\n"
+       raw_report_path
+  )

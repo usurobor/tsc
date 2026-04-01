@@ -3,19 +3,20 @@
 **Branch:** `claude/ocaml-engine-v0.1.0`
 **Mode:** MCA
 **Active Skills:** design, ocaml, writing
+**Loaded post-iteration:** architecture-evolution, process-economics
 
 ---
 
 ## Acceptance Criteria Evidence
 
 ### AC1: OCaml engine resolves `spec`, `engine`, and `repo` from `targets/registry.tsc`
-- **File:** `engine/ocaml/lib/target_registry.ml`
-- **Evidence:** `parse_registry` parses `tsc-target-registry/0.1` format. `resolve_target_path` maps target name → manifest path. `parse_manifest` reads include/exclude/include_targets.
+- **File:** `engine/ocaml/lib/target_registry.ml`, `engine/ocaml/bin/main.ml`
+- **Evidence:** `parse_registry` parses `tsc-target-registry/0.1` format. `resolve_target_path` maps target name → manifest path. `parse_manifest` reads include/exclude/include_targets. `resolve_files` in main.ml expands `include_targets` recursively for aggregate targets.
 - **Status:** Met (code exists; no build verification — see Known Limitations)
 
 ### AC2: File bundles are built deterministically without Markdown parsing
 - **File:** `engine/ocaml/lib/bundle.ml`
-- **Evidence:** `build_bundle` sorts files by path, computes hash per file via `hash_content`. No Markdown AST anywhere in the codebase. Files are raw text.
+- **Evidence:** `build_bundle` sorts files by path, computes SHA-256 hash per file via `Digestif.SHA256`. No Markdown AST anywhere in the codebase. Files are raw text.
 - **Status:** Met
 
 ### AC3: LLM scoring uses one canonical instruction surface
@@ -25,12 +26,12 @@
 
 ### AC4: Structured output validated against JSON schema
 - **File:** `engine/ocaml/lib/response_schema.ml`
-- **Evidence:** `validate_result` checks all required fields (target, alpha, beta, gamma, bottleneck_axis, confidence, summary, axis_evidence, unresolved_ambiguity, next_fixes). `validate_score` rejects out-of-range values. Returns `Error` for malformed input.
-- **Status:** Met (uses internal JSON type; production should use yojson)
+- **Evidence:** `parse_json` uses `Yojson.Safe.from_string`. `validate_result` checks all required fields. `validate_score` rejects out-of-range values. `main.ml` wires validation — writes structured reports only on success, raw response always.
+- **Status:** Met
 
 ### AC5: Reports in machine-readable and human-readable form
 - **File:** `engine/ocaml/lib/report.ml`
-- **Evidence:** `to_json` generates JSON with result + metadata. `to_text` generates human-readable summary with C_Σ calculation, evidence, and run metadata.
+- **Evidence:** `to_json` uses `Yojson.Safe.pretty_to_string` for structured output. `to_text` generates human-readable summary with C_Σ, evidence, and run metadata.
 - **Status:** Met
 
 ### AC6: Python is no longer the live implementation path
@@ -38,81 +39,121 @@
 - **Status:** Met
 
 ### AC7: Docs describe the OCaml engine truthfully
-- **README.md:** "The canonical implementation is the OCaml engine in `engine/ocaml/`."
-- **ARCHITECTURE.md:** Verifier section says "The canonical implementation is: engine/ocaml/"
+- **README.md:** `engine/ocaml/` listed as canonical implementation
+- **ARCHITECTURE.md:** Verifier section says `engine/ocaml/`
 - **QUICKSTART.md:** Shows OCaml build/run path with opam/dune
 - **Status:** Met
 
 ### AC8: API secrets injected at runtime, never stored in repo
-- **File:** `engine/ocaml/lib/provider.ml`
-- **Evidence:** `config_from_env` reads `TSC_PROVIDER`, `TSC_MODEL`, `TSC_API_KEY`, `TSC_BASE_URL` from environment. No hardcoded secrets anywhere.
+- **File:** `engine/ocaml/bin/provider.ml`
+- **Evidence:** `config_from_env` reads `TSC_PROVIDER`, `TSC_MODEL`, `TSC_API_KEY`, `TSC_BASE_URL` from environment. No hardcoded secrets. Request body built via `Yojson.Safe` (no string interpolation of secrets). Curl invoked via `Unix.create_process` with `--config -` (no shell).
 - **Status:** Met
 
 ### AC9: Re-running produces comparable metadata
 - **File:** `engine/ocaml/bin/main.ml`, `engine/ocaml/lib/report.ml`
-- **Evidence:** `run_metadata` includes target, file_hashes (path→hash), prompt_version, provider, model, timestamp. JSON report includes full metadata block.
+- **Evidence:** `run_metadata` includes target, file_hashes (path→SHA-256), prompt_version, provider, model, timestamp. JSON report includes full metadata block via Yojson.
 - **Status:** Met
 
 ### AC10: `targets/registry.tsc` is consumed by the engine
 - **File:** `targets/registry.tsc`
-- **Evidence:** Header changed from "draft" to "The engine reads this file to resolve target names to manifests." `targets/README.md` authority section no longer says "draft."
+- **Evidence:** Header: "The engine reads this file to resolve target names to manifests." No "draft" qualifier.
 - **Status:** Met
 
 ### AC11: `dune build` succeeds
-- **Evidence:** No OCaml toolchain available in this environment. Code follows dune conventions (dune-project, lib/dune, bin/dune). Cannot verify build.
+- **Evidence:** No OCaml toolchain available in this environment. Cannot verify build.
 - **Status:** Not verified (environmental limitation — flagged in Plan §Risks item 6)
 
 ### AC12: Purity boundaries respected
-- **Evidence:** `types.ml`, `target_registry.ml`, `bundle.ml`, `prompt.ml`, `response_schema.ml`, `report.ml` — all pure, no I/O, no Unix, no Sys (except `Sys.getenv_opt` in `provider.ml`). `provider.ml` is the only module that performs I/O (HTTP via curl subprocess). `bin/main.ml` wires I/O.
+- **Evidence:** `lib/` contains only pure modules: `types.ml`, `target_registry.ml`, `bundle.ml`, `prompt.ml`, `response_schema.ml`, `report.ml` — no I/O, no Unix, no Sys. `provider.ml` lives in `bin/` (not `lib/`), is the only module that performs I/O. `bin/main.ml` wires I/O.
 - **Status:** Met
 
 ---
 
-## Triadic Self-Assessment
+## Triadic Self-Assessment (post-iteration)
 
 ### α — pattern coherence
-The engine has a consistent pattern: types define the domain, pure modules transform data, one impure module does I/O, CLI wires them. Field names are disambiguated at definition (ocaml skill §2.1). Module names match their responsibility. The target model uses consistent terminology (target, manifest, registry, bundle) across all surfaces.
+The engine has a consistent pattern: types define the domain, pure modules in `lib/` transform data, one impure module (`bin/provider.ml`) does I/O, CLI (`bin/main.ml`) wires them. Field names are disambiguated at definition (ocaml skill §2.1). Module names match their responsibility. The target model uses consistent terminology (target, manifest, registry, bundle) across all surfaces.
 
-**Score:** 0.80 — coherent structure, but hash implementation uses MD5 placeholder instead of SHA-256.
+SHA-256 hashing now uses `digestif` (not stdlib MD5 placeholder). JSON uses `yojson` throughout (not internal type). Purity boundary is clean — provider is in `bin/`, not `lib/`.
+
+**Score:** 0.85
 
 ### β — relational coherence
-Docs, targets, and engine agree on what the system is:
-- README says "engine/ocaml/ — canonical implementation"
-- ARCHITECTURE says "The canonical implementation is: engine/ocaml/"
-- targets/engine.tsc includes `engine/ocaml/**/*.ml`
-- targets/registry.tsc is consumed by the engine
-- SELF-MEASURE.md defines the scoring contract the engine sends
+All surfaces agree on what the system is:
+- README, ARCHITECTURE, QUICKSTART → `engine/ocaml/` is canonical
+- targets/engine.tsc → includes `engine/ocaml/**/*.ml`
+- targets/registry.tsc → consumed by engine, no "draft"
+- SELF-MEASURE.md → defines the scoring contract the engine sends
+- `runtime/tsc-instructions.md` → scoped to "theory-mode LLM integration", points to SELF-MEASURE.md for measurement
 
-One relational gap: `runtime/tsc-instructions.md` still references `v3.1.0` and the old authority chain without mentioning the engine transition.
+`include_targets` expansion implemented — `repo` target actually resolves spec + engine files.
 
-**Score:** 0.75 — surfaces agree on the new identity, but legacy runtime instructions carry old assumptions.
+**Score:** 0.80
 
 ### γ — process coherence
 The system can survive change:
-- theory is independent of implementation language (spec/ unchanged)
-- target model is explicit and consumed
-- scoring instruction is a separate surface from the engine
-- provider is swappable via env vars
-- reports include enough metadata for run comparison
+- theory independent of implementation language (spec/ unchanged)
+- target model explicit and consumed
+- scoring instruction is a separate surface
+- provider swappable via env vars
+- reports include metadata for run comparison
+- invariant list explicit in DESIGN.md
 
-Gap: no CI integration, no build verification, no formal stability policy for cross-run comparability.
+Gaps: no CI, no build verification, no formal stability policy.
 
-**Score:** 0.70 — change paths are clear, but operational infrastructure is not yet present.
+**Score:** 0.72
 
 ### C_Σ
-(0.80 + 0.75 + 0.70) / 3 = **0.75**
+(0.85 + 0.80 + 0.72) / 3 = **0.79**
 
 ### Bottleneck
-**γ** — process coherence. The engine exists as code but has no build verification, no CI, and no operational infrastructure yet. The theory and target model are stable, but the verifier layer needs operational proof.
+**γ** — process coherence. Operational infrastructure (CI, build verification) absent. The architecture is sound but unproven at runtime.
+
+---
+
+## Cycle Iteration
+
+### Triggers fired
+- [x] loaded skill failed to prevent a finding: `architecture-evolution` not loaded → invariant list missing from first pass
+- [x] loaded skill failed to prevent a finding: `ocaml` loaded but purity boundary violated (provider.ml in lib/)
+
+### Friction log
+1. First pass shipped MD5 placeholder and internal JSON type — known debt that should have been resolved before first commit, not as immediate outputs
+2. `provider.ml` placed in `lib/` despite being impure — direct violation of ocaml skill §2.3
+3. Shell injection risk in `provider.ml` (curl via `Printf.sprintf`) and `main.ml` (`Sys.command` for mkdir) — ocaml skill §2.5 says safe subprocess
+4. Response validation was bypassed with a "TODO" comment despite being AC4
+5. `include_targets` parsed but never expanded — functional gap in aggregate target resolution
+6. No invariant list in design spec — architecture-evolution §2.6 requires it
+7. `architecture-evolution` and `process-economics` skills not loaded for a system-boundary change
+
+### Root cause
+Skill selection gap. Chose `design`, `ocaml`, `writing` as active skills. Should have included `architecture-evolution` for a system-boundary change. The `ocaml` skill was loaded but not applied deeply enough — purity boundary and safe-subprocess rules were violated on first pass.
+
+### Skill impact
+- **ocaml** (loaded): should have prevented purity violation and shell injection. Loaded but not deeply applied.
+- **architecture-evolution** (not loaded): should have prevented missing invariant list and would have forced explicit boundary-move comparison.
+- **process-economics** (not loaded): would have flagged that process overhead (version dir, self-coherence) was not priced.
+
+### MCA
+Iteration applied: provider moved to `bin/`, shell injection fixed, validation wired, include_targets expanded, invariant list added. For future cycles: `architecture-evolution` must be loaded for any system-boundary MCA.
+
+### Cycle level
+**L6** — L5 misses (purity violation, shell injection, validation bypass) were caught in self-review and fixed. L6 cross-surface alignment achieved after iteration. L7 partially achieved (system boundary changed, target model made canonical) but invariant discipline and skill selection were not clean on first pass.
 
 ---
 
 ## Known Limitations
 
 1. No OCaml toolchain in this environment — AC11 cannot be verified
-2. `bundle.ml` uses `Digest` (MD5) as hash placeholder — production needs SHA-256
-3. `response_schema.ml` uses internal JSON type — production needs yojson
-4. `provider.ml` uses curl subprocess — production could use an HTTP library
-5. `runtime/tsc-instructions.md` carries stale v3.1.0 references
-6. No CI integration
-7. No formal chunking policy for large targets
+2. No CI integration
+3. No formal chunking policy for large targets
+4. No formal cross-run stability policy
+5. `target_registry.ml` uses imperative style (refs + while loop) — could be refactored to fold
+
+## Deferred Outputs
+
+| Item | Next MCA | First AC |
+|---|---|---|
+| CI integration | `claude/ci-engine-v0.1.1` | `dune build` passes in GitHub Actions |
+| Chunking policy | blocked until first real runs | — |
+| Stability policy | blocked until multi-run data | — |
