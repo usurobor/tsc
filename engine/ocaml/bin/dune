@@ -1,0 +1,4 @@
+(executable
+ (name main)
+ (public_name tsc-engine)
+ (libraries tsc_engine unix))

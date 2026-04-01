@@ -1,0 +1,11 @@
+(library
+ (name tsc_engine)
+ (public_name tsc_engine)
+ (modules
+  target_registry
+  bundle
+  prompt
+  provider
+  response_schema
+  report
+  types))
