@@ -31,16 +31,20 @@ Current target surfaces are:
 
 The target model lives in:
 
-- `project.tsc` — live config for the current orchestrator
-- `targets/` — named target declarations
+- `targets/registry.tsc` — target registry
+- `targets/*.tsc` — target manifests
 
 ## Verifier
 
 The verifier is the executable layer.
 
-The current implementation lives in:
+The canonical implementation is:
 
-- `reference/python/`
+- `engine/ocaml/` — OCaml engine
+
+The engine resolves named targets from `targets/registry.tsc`, builds raw file bundles, sends them to an LLM with the scoring instruction in `runtime/SELF-MEASURE.md`, validates structured output, and writes reports.
+
+The engine does not parse Markdown semantically. Files are raw text.
 
 ## Generated state
 
@@ -49,17 +53,18 @@ Generated measurement output belongs in `.tsc/`.
 Canonical sources remain:
 
 - `spec/`
-- `project.tsc`
 - `targets/`
+- `engine/ocaml/`
+- `runtime/SELF-MEASURE.md`
 
 ## Repo map
 
 ```text
 /spec/              canonical theory
-/reference/python/  current implementation
+/engine/ocaml/      canonical implementation
+/runtime/           scoring instruction
 /examples/          runnable examples
 /tests/             conformance and implementation tests
-/project.tsc        live measurement config
 /targets/           named target declarations
 /.tsc/              generated measurement output
 ```

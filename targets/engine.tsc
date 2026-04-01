@@ -1,22 +1,23 @@
 format = "tsc-target/0.1"
 name = "engine"
 kind = "implementation"
-description = "Measure the current verifier implementation surface."
+description = "Canonical implementation surface."
 
 include = [
-  "reference/python/**/*.py",
-  "tests/**/*.py",
-  "pyproject.toml",
-  "Makefile",
-  "QUICKSTART.md"
-]
-
-optional = [
-  "engine/ocaml/**"
+  "engine/ocaml/**/*.ml",
+  "engine/ocaml/**/*.mli",
+  "engine/ocaml/dune-project",
+  "engine/ocaml/lib/dune",
+  "engine/ocaml/bin/dune",
+  "tests/ocaml/**"
 ]
 
 exclude = [
   ".tsc/**",
   "spec/**",
-  "examples/**"
+  "examples/**",
+  "targets/**",
+  "README.md",
+  "ARCHITECTURE.md",
+  "QUICKSTART.md"
 ]

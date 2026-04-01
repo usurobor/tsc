@@ -1,7 +1,7 @@
 format = "tsc-target/0.1"
 name = "spec"
 kind = "theory"
-description = "Measure only the canonical theory/spec surface."
+description = "Canonical theory surface."
 
 include = [
   "spec/**/*.md"
@@ -9,8 +9,12 @@ include = [
 
 exclude = [
   ".tsc/**",
-  "reference/**",
+  "engine/**",
   "runtime/**",
   "tests/**",
-  "examples/**"
+  "examples/**",
+  "targets/**",
+  "README.md",
+  "QUICKSTART.md",
+  "ARCHITECTURE.md"
 ]

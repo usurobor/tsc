@@ -1,6 +1,6 @@
 # Targets
 
-This directory contains named TSC measurement targets.
+This directory defines the named TSC targets.
 
 A target is an explicit declaration of:
 - what is being measured
@@ -8,18 +8,15 @@ A target is an explicit declaration of:
 - which files do not
 - what kind of target it is
 
-These manifests exist to prevent one repo-wide self-score from blurring distinct questions.
-
 Current targets:
 
-- `spec` — theory only
-- `engine` — implementation only
-- `repo` — aggregate repository target
+- `spec` — theory surface
+- `engine` — implementation surface
+- `repo` — aggregate repository surface
 
-## Status
+## Authority
 
-These target manifests and `registry.tsc` are **draft declarations**. They define the intended semantics of the named-target model but are not yet consumed by the current Python orchestrator.
+- `targets/registry.tsc` is the target registry
+- `targets/*.tsc` define the target manifests
 
-The live measurement config is still `project.tsc` in the repo root (repeated `[markdown]` sections). When the orchestrator is updated to support `tsc-target-registry/0.1`, `registry.tsc` will replace `project.tsc` as the authoritative config surface.
-
-The target model is more important than the current parser syntax. If the engine evolves, these files define the semantics it should preserve.
+The target model matters because theory, implementation, and aggregate repo state should not collapse into one ambiguous self-score.

@@ -13,10 +13,10 @@ These aggregate into `C_Σ`.
 ## Repo contents
 
 - `spec/` — canonical theory
-- `reference/python/` — current implementation
+- `engine/ocaml/` — canonical implementation
+- `runtime/SELF-MEASURE.md` — canonical LLM scoring instruction
 - `examples/` — runnable examples
 - `tests/` — conformance and implementation tests
-- `project.tsc` — live measurement config
 - `targets/` — named target declarations
 
 ## What TSC measures
@@ -27,30 +27,7 @@ TSC asks one question:
 
 ## Quick start
 
-Install:
-
-```bash
-python3 -m pip install --upgrade pip
-pip install -e ".[dev]"
-```
-
-Run an example:
-
-```bash
-tsc examples/cellular-automata/glider.md --format text
-```
-
-Run tests:
-
-```bash
-make test
-```
-
-Measure the repo with the current orchestrator:
-
-```bash
-make self-coherence
-```
+See `QUICKSTART.md` for build and run instructions.
 
 ## Theory stack
 
@@ -77,7 +54,9 @@ Read:
 
 ## Implementation
 
-The current executable path is `reference/python/`.
+The canonical implementation is the OCaml engine in `engine/ocaml/`.
+
+The engine resolves named targets, builds raw file bundles, and sends them to an LLM with a canonical scoring instruction (`runtime/SELF-MEASURE.md`). It does not parse Markdown semantically.
 
 ## Contributing
 
