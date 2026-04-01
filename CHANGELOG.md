@@ -2,18 +2,7 @@
 
 ## Release Coherence Ledger
 
-Each release is scored on two dimensions: **coherence quality** (TSC grades) and **architectural scope** (engineering level).
-
-**TSC grades** use the triadic axes, applied as intuition-level letter grades (A+ to F):
-
-- **C_Σ** — Aggregate coherence: `(s_α · s_β · s_γ)^(1/3)`. Do the three axes describe the same system?
-- **α (PATTERN)** — Structural consistency and internal logic. Does repeated sampling yield stable structure?
-- **β (RELATION)** — Alignment between pattern, relations, and process. Do the parts fit together?
-- **γ (EXIT/PROCESS)** — Evolution stability and procedural explicitness. Does the system change consistently?
-
-These are intuition-level ratings, not outputs from a running TSC engine (formal C_Σ ranges 0–1; ≥0.80 = PASS).
-
-**Engineering level** per [cnos ENGINEERING-LEVELS.md](https://github.com/usurobor/cnos/blob/main/docs/gamma/ENGINEERING-LEVELS.md):
+Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [cnos ENGINEERING-LEVELS.md](https://github.com/usurobor/cnos/blob/main/docs/gamma/ENGINEERING-LEVELS.md):
 
 - **L4** — Pre-architecture: working prototype, no stable boundaries yet
 - **L5** — Local correctness: fix works, follows patterns, no boundary change
