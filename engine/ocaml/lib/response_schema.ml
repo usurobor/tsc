@@ -1,44 +1,37 @@
 (** Response schema: validate structured JSON output from the LLM.
 
-    Pure module — no I/O. Receives raw JSON string, returns validated result. *)
+    Pure module — no I/O. Receives raw JSON string, returns validated result.
+    Uses Yojson.Safe for JSON parsing. *)
 
 open Types
 
-(** Minimal JSON value type for validation.
-    Production should use a JSON library (yojson). *)
-type json =
-  | String of string
-  | Number of float
-  | Array of json list
-  | Object of (string * json) list
-  | Null
-
 (** Extract a string field from a JSON object. *)
 let get_string key = function
-  | Object fields ->
+  | `Assoc fields ->
     (match List.assoc_opt key fields with
-     | Some (String s) -> Ok s
+     | Some (`String s) -> Ok s
      | Some _ -> Error (Printf.sprintf "field '%s' is not a string" key)
      | None -> Error (Printf.sprintf "missing field '%s'" key))
   | _ -> Error "expected JSON object"
 
 (** Extract a float field from a JSON object. *)
 let get_float key = function
-  | Object fields ->
+  | `Assoc fields ->
     (match List.assoc_opt key fields with
-     | Some (Number f) -> Ok f
+     | Some (`Float f) -> Ok f
+     | Some (`Int i) -> Ok (Float.of_int i)
      | Some _ -> Error (Printf.sprintf "field '%s' is not a number" key)
      | None -> Error (Printf.sprintf "missing field '%s'" key))
   | _ -> Error "expected JSON object"
 
 (** Extract a string list field from a JSON object. *)
 let get_string_list key = function
-  | Object fields ->
+  | `Assoc fields ->
     (match List.assoc_opt key fields with
-     | Some (Array items) ->
+     | Some (`List items) ->
        let rec collect acc = function
          | [] -> Ok (List.rev acc)
-         | String s :: rest -> collect (s :: acc) rest
+         | `String s :: rest -> collect (s :: acc) rest
          | _ :: _ -> Error (Printf.sprintf "field '%s' contains non-string items" key)
        in
        collect [] items
@@ -49,9 +42,9 @@ let get_string_list key = function
 (** Extract axis_evidence from a JSON sub-object. *)
 let get_axis_evidence key json =
   match json with
-  | Object fields ->
+  | `Assoc fields ->
     (match List.assoc_opt key fields with
-     | Some (Object _ as sub) ->
+     | Some (`Assoc _ as sub) ->
        (match get_string_list "positive" sub,
               get_string_list "negative" sub,
               get_string "reason" sub with
@@ -67,12 +60,12 @@ let get_axis_evidence key json =
 (** Extract a list of suggested fixes. *)
 let get_fixes key json =
   match json with
-  | Object fields ->
+  | `Assoc fields ->
     (match List.assoc_opt key fields with
-     | Some (Array items) ->
+     | Some (`List items) ->
        let rec collect acc = function
          | [] -> Ok (List.rev acc)
-         | Object _ as fix :: rest ->
+         | `Assoc _ as fix :: rest ->
            (match get_string "axis" fix, get_string "fix" fix with
             | Ok axis, Ok desc ->
               collect ({ fix_axis = axis; fix_description = desc } :: acc) rest
@@ -90,9 +83,22 @@ let validate_score name value =
   if value >= 0.0 && value <= 1.0 then Ok value
   else Error (Printf.sprintf "%s score %.3f is out of range [0.0, 1.0]" name value)
 
+(** Parse raw JSON string into Yojson value. *)
+let parse_json raw =
+  try Ok (Yojson.Safe.from_string raw)
+  with Yojson.Json_error msg -> Error (Printf.sprintf "JSON parse error: %s" msg)
+
 (** Validate a complete measure result from parsed JSON.
     Returns Ok measure_result or Error string. *)
 let validate_result json =
+  let axis_evidence_obj =
+    match json with
+    | `Assoc fields ->
+      (match List.assoc_opt "axis_evidence" fields with
+       | Some x -> x
+       | None -> `Null)
+    | _ -> `Null
+  in
   match
     get_string "target" json,
     get_float "alpha" json,
@@ -101,21 +107,9 @@ let validate_result json =
     get_string "bottleneck_axis" json,
     get_float "confidence" json,
     get_string "summary" json,
-    get_axis_evidence "alpha" (match json with
-      | Object fields ->
-        (match List.assoc_opt "axis_evidence" fields with
-         | Some x -> x | None -> Null)
-      | _ -> Null),
-    get_axis_evidence "beta" (match json with
-      | Object fields ->
-        (match List.assoc_opt "axis_evidence" fields with
-         | Some x -> x | None -> Null)
-      | _ -> Null),
-    get_axis_evidence "gamma" (match json with
-      | Object fields ->
-        (match List.assoc_opt "axis_evidence" fields with
-         | Some x -> x | None -> Null)
-      | _ -> Null),
+    get_axis_evidence "alpha" axis_evidence_obj,
+    get_axis_evidence "beta" axis_evidence_obj,
+    get_axis_evidence "gamma" axis_evidence_obj,
     get_string_list "unresolved_ambiguity" json,
     get_fixes "next_fixes" json
   with

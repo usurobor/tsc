@@ -1,72 +1,55 @@
 (** Report generation: validated result → machine + human reports.
 
-    Pure module — returns report strings. Caller writes to disk. *)
+    Pure module — returns report strings. Caller writes to disk.
+    Uses Yojson.Safe for structured JSON output. *)
 
 open Types
 
+(** Build axis evidence as Yojson value. *)
+let evidence_to_yojson ev =
+  `Assoc [
+    ("positive", `List (List.map (fun s -> `String s) ev.evidence_positive));
+    ("negative", `List (List.map (fun s -> `String s) ev.evidence_negative));
+    ("reason", `String ev.evidence_reason);
+  ]
+
 (** Generate machine-readable JSON report. *)
 let to_json ~result ~metadata =
-  let evidence_json ev =
-    Printf.sprintf
-      {|{"positive":[%s],"negative":[%s],"reason":"%s"}|}
-      (String.concat "," (List.map (Printf.sprintf {|"%s"|}) ev.evidence_positive))
-      (String.concat "," (List.map (Printf.sprintf {|"%s"|}) ev.evidence_negative))
-      (String.escaped ev.evidence_reason)
+  let json =
+    `Assoc [
+      ("target", `String result.result_target);
+      ("alpha", `Float result.result_alpha);
+      ("beta", `Float result.result_beta);
+      ("gamma", `Float result.result_gamma);
+      ("bottleneck_axis", `String result.result_bottleneck_axis);
+      ("confidence", `Float result.result_confidence);
+      ("summary", `String result.result_summary);
+      ("axis_evidence", `Assoc [
+        ("alpha", evidence_to_yojson result.result_alpha_evidence);
+        ("beta", evidence_to_yojson result.result_beta_evidence);
+        ("gamma", evidence_to_yojson result.result_gamma_evidence);
+      ]);
+      ("unresolved_ambiguity",
+        `List (List.map (fun s -> `String s) result.result_unresolved_ambiguity));
+      ("next_fixes",
+        `List (List.map (fun f ->
+          `Assoc [
+            ("axis", `String f.fix_axis);
+            ("fix", `String f.fix_description);
+          ]
+        ) result.result_next_fixes));
+      ("metadata", `Assoc [
+        ("target", `String metadata.meta_target);
+        ("file_hashes", `Assoc (List.map (fun (p, h) ->
+          (p, `String h)) metadata.meta_file_hashes));
+        ("prompt_version", `String metadata.meta_prompt_version);
+        ("provider", `String metadata.meta_provider);
+        ("model", `String metadata.meta_model);
+        ("timestamp", `String metadata.meta_timestamp);
+      ]);
+    ]
   in
-  let fixes_json =
-    String.concat "," (List.map (fun f ->
-      Printf.sprintf {|{"axis":"%s","fix":"%s"}|}
-        f.fix_axis (String.escaped f.fix_description)
-    ) result.result_next_fixes)
-  in
-  let hashes_json =
-    String.concat "," (List.map (fun (path, hash) ->
-      Printf.sprintf {|"%s":"%s"|} path hash
-    ) metadata.meta_file_hashes)
-  in
-  Printf.sprintf
-    {|{
-  "target": "%s",
-  "alpha": %.3f,
-  "beta": %.3f,
-  "gamma": %.3f,
-  "bottleneck_axis": "%s",
-  "confidence": %.3f,
-  "summary": "%s",
-  "axis_evidence": {
-    "alpha": %s,
-    "beta": %s,
-    "gamma": %s
-  },
-  "unresolved_ambiguity": [%s],
-  "next_fixes": [%s],
-  "metadata": {
-    "target": "%s",
-    "file_hashes": {%s},
-    "prompt_version": "%s",
-    "provider": "%s",
-    "model": "%s",
-    "timestamp": "%s"
-  }
-}|}
-    result.result_target
-    result.result_alpha
-    result.result_beta
-    result.result_gamma
-    result.result_bottleneck_axis
-    result.result_confidence
-    (String.escaped result.result_summary)
-    (evidence_json result.result_alpha_evidence)
-    (evidence_json result.result_beta_evidence)
-    (evidence_json result.result_gamma_evidence)
-    (String.concat "," (List.map (Printf.sprintf {|"%s"|}) result.result_unresolved_ambiguity))
-    fixes_json
-    metadata.meta_target
-    hashes_json
-    metadata.meta_prompt_version
-    metadata.meta_provider
-    metadata.meta_model
-    metadata.meta_timestamp
+  Yojson.Safe.pretty_to_string json
 
 (** Generate human-readable text report. *)
 let to_text ~result ~metadata =

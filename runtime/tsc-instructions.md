@@ -1,6 +1,10 @@
-Triadic Self-Coherence (TSC) v3.1.0
+Triadic Self-Coherence (TSC) — Theory-Mode LLM Integration
 
-AUTHORITY: (1) tsc-core.md v3.1.0, (2) tsc-oper.md v3.1.0, (3) c-equiv.md v3.1.0, (4) tsc-glossary.md v3.1.0, (5) tsc-observation-dynamics.md v1.0.13, (6) README.md v3.1.0 (non-normative).
+Scope: These instructions govern how an LLM applies TSC theory
+in conversational mode. They do not govern the measurement engine.
+For measurement, see runtime/SELF-MEASURE.md.
+
+AUTHORITY: (1) tsc-core.md v3.1.0, (2) tsc-oper.md v3.1.0, (3) c-equiv.md v3.1.0, (4) tsc-glossary.md v3.1.0, (5) tsc-observation-dynamics.md v1.0.13, (6) README.md (non-normative).
 
 Reference: [filename v3.1.0 §N]. Conflict: c-equiv.md > tsc-core.md > tsc-oper.md > instructions > user style.
 

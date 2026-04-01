@@ -6,10 +6,9 @@
 open Types
 
 (** Compute SHA-256 hex digest of a string.
-    Uses Digest module (MD5 in stdlib) as placeholder.
-    Production should use a SHA-256 library. *)
+    Uses digestif for real SHA-256. *)
 let hash_content content =
-  Digest.string content |> Digest.to_hex
+  Digestif.SHA256.digest_string content |> Digestif.SHA256.to_hex
 
 (** Build a bundle_file from a path and its content. *)
 let make_bundle_file ~target_kind ~path ~content =
