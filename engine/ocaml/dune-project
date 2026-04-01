@@ -20,4 +20,5 @@
   dune
   digestif
   yojson
+  ezcurl
   (ppx_expect :with-test)))

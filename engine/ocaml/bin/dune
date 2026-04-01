@@ -2,4 +2,4 @@
  (name main)
  (public_name tsc-engine)
  (modules main provider)
- (libraries tsc_engine unix))
+ (libraries tsc_engine unix ezcurl))

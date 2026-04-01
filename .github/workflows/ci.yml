@@ -6,31 +6,27 @@ on:
   pull_request:
 
 jobs:
-  build-test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
         with:
-          fetch-depth: 0  # Need full git history for gamma_axis temporal measurement
+          ocaml-compiler: "5.2"
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only --with-test -y
 
-      - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+      - name: Build
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
 
-      - name: Ruff (lint)
-        run: ruff check .
-
-      - name: Markdown format (check only)
-        run: mdformat --check .
-
-      - name: Pytest
-        run: pytest
+      - name: Test
+        working-directory: engine/ocaml
+        run: opam exec -- dune runtest
 
   linkcheck:
     runs-on: ubuntu-latest

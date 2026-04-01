@@ -4,95 +4,110 @@ on:
   pull_request:
     paths:
       - 'spec/**'
-      - 'reference/python/tsc_measure.py'  # Changed from self_measure.py
+      - 'engine/ocaml/**'
+      - 'targets/**'
+      - 'runtime/**'
   push:
     branches: [main]
     paths:
       - 'spec/**'
-      - 'reference/python/tsc_measure.py'  # Changed from self_measure.py
+      - 'engine/ocaml/**'
+      - 'targets/**'
+      - 'runtime/**'
 
 jobs:
   self-measure:
     runs-on: ubuntu-latest
-    
+    # Only run if the LLM API key is available
+    if: ${{ vars.TSC_ENABLED == 'true' }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Need full git history for γ_c
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
+          fetch-depth: 0
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
         with:
-          python-version: '3.10'
-      
+          ocaml-compiler: "5.2"
+
       - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -e ".[dev]"
-      
-      - name: Run self-measurement
-        id: measure
-        run: |
-          tsc self || echo "verdict=FAIL" >> $GITHUB_OUTPUT
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+
+      - name: Run self-measurement (spec target)
+        id: measure-spec
         continue-on-error: true
-      
-      - name: Get version and find report
-        id: version
+        env:
+          TSC_PROVIDER: ${{ secrets.TSC_PROVIDER }}
+          TSC_MODEL: ${{ secrets.TSC_MODEL }}
+          TSC_API_KEY: ${{ secrets.TSC_API_KEY }}
+          TSC_BASE_URL: ${{ secrets.TSC_BASE_URL }}
         run: |
-          VERSION=$(python -c "import tomllib; print('v' + tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "report_file=.tsc/tsc-$VERSION.json" >> $GITHUB_OUTPUT
-      
+          mkdir -p .tsc
+          opam exec -- dune exec --root engine/ocaml -- tsc-engine \
+            --target spec \
+            --registry targets/registry.tsc \
+            --instruction runtime/SELF-MEASURE.md \
+            --output .tsc/spec-report.json
+
+      - name: Run self-measurement (engine target)
+        id: measure-engine
+        continue-on-error: true
+        env:
+          TSC_PROVIDER: ${{ secrets.TSC_PROVIDER }}
+          TSC_MODEL: ${{ secrets.TSC_MODEL }}
+          TSC_API_KEY: ${{ secrets.TSC_API_KEY }}
+          TSC_BASE_URL: ${{ secrets.TSC_BASE_URL }}
+        run: |
+          opam exec -- dune exec --root engine/ocaml -- tsc-engine \
+            --target engine \
+            --registry targets/registry.tsc \
+            --instruction runtime/SELF-MEASURE.md \
+            --output .tsc/engine-report.json
+
+      - name: Run self-measurement (repo target)
+        id: measure-repo
+        continue-on-error: true
+        env:
+          TSC_PROVIDER: ${{ secrets.TSC_PROVIDER }}
+          TSC_MODEL: ${{ secrets.TSC_MODEL }}
+          TSC_API_KEY: ${{ secrets.TSC_API_KEY }}
+          TSC_BASE_URL: ${{ secrets.TSC_BASE_URL }}
+        run: |
+          opam exec -- dune exec --root engine/ocaml -- tsc-engine \
+            --target repo \
+            --registry targets/registry.tsc \
+            --instruction runtime/SELF-MEASURE.md \
+            --output .tsc/repo-report.json
+
       - name: Display results
+        if: always()
         run: |
-          REPORT_FILE="${{ steps.version.outputs.report_file }}"
-          
-          echo "## TSC Report" >> $GITHUB_STEP_SUMMARY
-          echo '```json' >> $GITHUB_STEP_SUMMARY
-          cat "$REPORT_FILE" | python -m json.tool >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          
-          # Extract key metrics (updated paths)
-          C_SIGMA=$(cat "$REPORT_FILE" | python -c "import sys, json; print(json.load(sys.stdin)['current']['scores']['C_sigma'])")
-          VERDICT=$(cat "$REPORT_FILE" | python -c "import sys, json; print(json.load(sys.stdin)['verdict'])")
-          ALPHA=$(cat "$REPORT_FILE" | python -c "import sys, json; print(json.load(sys.stdin)['current']['scores']['alpha_c'])")
-          BETA=$(cat "$REPORT_FILE" | python -c "import sys, json; print(json.load(sys.stdin)['current']['scores']['beta_c'])")
-          GAMMA=$(cat "$REPORT_FILE" | python -c "import sys, json; print(json.load(sys.stdin)['current']['scores']['gamma_c'])")
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "**α (alpha):** $ALPHA" >> $GITHUB_STEP_SUMMARY
-          echo "**β (beta):** $BETA" >> $GITHUB_STEP_SUMMARY
-          echo "**γ (gamma):** $GAMMA" >> $GITHUB_STEP_SUMMARY
-          echo "**C_Σ:** $C_SIGMA" >> $GITHUB_STEP_SUMMARY
-          echo "**Verdict:** $VERDICT" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "$VERDICT" = "FAIL" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "⚠️ **Note:** FAIL verdict indicates the repository needs improvement." >> $GITHUB_STEP_SUMMARY
-          fi
-      
-      - name: Upload report artifact
+          echo "## TSC Self-Measurement Report" >> $GITHUB_STEP_SUMMARY
+          for target in spec engine repo; do
+            report=".tsc/${target}-report.json"
+            if [ -f "$report" ]; then
+              echo "### Target: $target" >> $GITHUB_STEP_SUMMARY
+              echo '```json' >> $GITHUB_STEP_SUMMARY
+              cat "$report" | python3 -m json.tool >> $GITHUB_STEP_SUMMARY 2>/dev/null || cat "$report" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            else
+              echo "### Target: $target" >> $GITHUB_STEP_SUMMARY
+              echo "*No report generated.*" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+      - name: Upload reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coherence-report-${{ github.sha }}
-          path: ${{ steps.version.outputs.report_file }}
+          name: tsc-reports-${{ github.sha }}
+          path: .tsc/*-report.json
           retention-days: 90
-      
-      - name: Upload README
-        uses: actions/upload-artifact@v4
-        with:
-          name: coherence-readme-${{ github.sha }}
-          path: .tsc/README.md
-          retention-days: 90
-      
-      - name: Check verdict (informational)
-        run: |
-          REPORT_FILE="${{ steps.version.outputs.report_file }}"
-          VERDICT=$(cat "$REPORT_FILE" | python -c "import sys, json; print(json.load(sys.stdin)['verdict'])")
-          if [ "$VERDICT" = "FAIL" ]; then
-            echo "::warning::TSC check failed. See .tsc/ for details."
-          else
-            echo "::notice::TSC check passed!"
-          fi
+          if-no-files-found: ignore

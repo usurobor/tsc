@@ -1,63 +1,40 @@
-# TSC Framework v2.2.2+ Developer UX
-# REQUIRES: Python 3.10+ (pattern matching)
-.PHONY: help setup lint fmt typecheck test quickstart linkcheck self-coherence all clean
+# TSC Engine — OCaml
+# REQUIRES: opam, dune, OCaml >= 4.14
+.PHONY: help setup build test clean measure linkcheck
 
-# Detect Python command
-PYTHON := $(shell command -v python3.11 2>/dev/null || command -v python3.10 2>/dev/null || command -v python3 2>/dev/null || command -v python 2>/dev/null)
-PIP := $(PYTHON) -m pip
+ENGINE := engine/ocaml
 
 help:
-	@echo "Common targets:"
-	@echo "  setup           - pip install -e .[dev]"
-	@echo "  lint            - ruff check ."
-	@echo "  fmt             - ruff format . && mdformat ."
-	@echo "  typecheck       - mypy type checking"
-	@echo "  test            - pytest conformance tests"
-	@echo "  quickstart      - run the glider example via CLI"
-	@echo "  linkcheck       - check Markdown links (requires lychee)"
-	@echo "  self-coherence  - verify TSC self-application (v2.3.0+)"
-	@echo "  all             - run lint + typecheck + test (CI simulation)"
-	@echo "  clean           - remove cache files"
+	@echo "Targets:"
+	@echo "  setup       - opam install dependencies"
+	@echo "  build       - dune build"
+	@echo "  test        - dune runtest"
+	@echo "  measure     - run TSC self-measurement (requires TSC_PROVIDER, TSC_MODEL, TSC_API_KEY)"
+	@echo "  linkcheck   - check Markdown links (requires lychee)"
+	@echo "  clean       - dune clean"
 
 setup:
-	$(PIP) install --upgrade pip
-	$(PIP) install -e ".[dev]"
+	cd $(ENGINE) && opam install . --deps-only --with-test -y
 
-lint:
-	$(PYTHON) -m ruff check .
-
-fmt:
-	$(PYTHON) -m ruff format .
-	$(PYTHON) -m mdformat .
-
-typecheck:
-	$(PYTHON) -m mypy reference/ --strict --ignore-missing-imports || echo "⚠ mypy not installed; run 'pip install mypy'"
+build:
+	cd $(ENGINE) && dune build
 
 test:
-	$(PYTHON) -m pytest tests/conformance/ -v
+	cd $(ENGINE) && dune runtest
 
-quickstart:
-	$(PYTHON) -m reference.cli.tsc examples/cellular-automata/glider.md --format text || true
+measure:
+	@test -n "$$TSC_API_KEY" || (echo "error: TSC_API_KEY not set" && exit 1)
+	mkdir -p .tsc
+	cd $(ENGINE) && dune exec -- tsc-engine \
+		--target repo \
+		--registry ../../targets/registry.tsc \
+		--instruction ../../runtime/SELF-MEASURE.md \
+		--output ../../.tsc/repo-report.json
 
 linkcheck:
 	@command -v lychee >/dev/null 2>&1 \
 		&& lychee --verbose --no-progress --max-concurrency 4 --accept 200..299,403,429 -- *.md **/*.md \
-		|| (echo "⚠ lychee not installed; run link check in GitHub Actions or 'cargo install lychee' locally." && exit 0)
-
-self-coherence:
-	@echo "🔬 Running TSC self-application verification..."
-	$(PYTHON) -m reference.cli.tsc self --out coherence_report.json || true
-	@echo ""
-	@cat coherence_report.json | $(PYTHON) -m json.tool | grep -E '"(C_sigma|verdict)"'
-
-all: lint typecheck test
-	@echo "✓ All checks passed"
+		|| echo "lychee not installed; run 'cargo install lychee' or use GitHub Actions."
 
 clean:
-	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name .mypy_cache -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name .ruff_cache -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete 2>/dev/null || true
-	@echo "✓ Cache files cleaned"
-
+	cd $(ENGINE) && dune clean

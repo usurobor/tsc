@@ -4,8 +4,7 @@
     Lives in bin/, not lib/, because lib/ is pure.
     Secrets come from runtime environment only, never from repo.
 
-    Transport: curl subprocess via Unix.create_process (no shell).
-    All arguments passed as argv — no string interpolation into shell. *)
+    Transport: ezcurl (libcurl bindings). No subprocess, no shell. *)
 
 open Tsc_engine.Types
 
@@ -72,65 +71,31 @@ let build_request_body ~config ~system_message ~user_message =
   in
   Yojson.Safe.to_string json
 
-(** Build the curl argv for a given provider config and data file.
-    Returns a string array suitable for Unix.create_process.
-    No shell involved — all values are discrete argv entries. *)
-let build_curl_argv ~config ~url ~data_file =
-  let base = [|
-    "curl";
-    "--silent";
-    "--show-error";
-    "--fail-with-body";
-    "-X"; "POST";
-    url;
-    "-H"; "Content-Type: application/json";
-  |] in
-  let auth_headers =
-    match config.provider_name with
-    | "anthropic" -> [|
-        "-H"; Printf.sprintf "x-api-key: %s" config.provider_api_key;
-        "-H"; "anthropic-version: 2023-06-01";
-      |]
-    | _ -> [|
-        "-H"; Printf.sprintf "Authorization: Bearer %s" config.provider_api_key;
-      |]
-  in
-  let data_arg = [| "-d"; Printf.sprintf "@%s" data_file |] in
-  Array.concat [base; auth_headers; data_arg]
+(** Build HTTP headers for the given provider. *)
+let build_headers config =
+  let content_type = "Content-Type", "application/json" in
+  match config.provider_name with
+  | "anthropic" ->
+    [ content_type;
+      "x-api-key", config.provider_api_key;
+      "anthropic-version", "2023-06-01" ]
+  | _ ->
+    [ content_type;
+      "Authorization", Printf.sprintf "Bearer %s" config.provider_api_key ]
 
 (** Call the LLM provider with a system message and user message.
     Returns the raw response body string.
 
-    Uses curl subprocess via Unix.create_process.
-    All arguments passed as argv entries — no shell, no interpolation. *)
+    Uses ezcurl for HTTP — no subprocess, no shell, no temp files. *)
 let call_provider ~config ~system_message ~user_message =
   let url = api_url config in
-  let request_body = build_request_body ~config ~system_message ~user_message in
-  (* Write request body to temp file *)
-  let tmp_file = Filename.temp_file "tsc_request_" ".json" in
-  let oc = open_out tmp_file in
-  Fun.protect ~finally:(fun () -> close_out oc) (fun () ->
-    output_string oc request_body
-  );
-  let argv = build_curl_argv ~config ~url ~data_file:tmp_file in
-  Fun.protect ~finally:(fun () -> Sys.remove tmp_file) (fun () ->
-    (* Pipe for capturing stdout *)
-    let (r_out, w_out) = Unix.pipe () in
-    let pid =
-      Unix.create_process "curl" argv
-        Unix.stdin w_out Unix.stderr
-    in
-    Unix.close w_out;
-    (* Read response from curl stdout *)
-    let ic_out = Unix.in_channel_of_descr r_out in
-    let buf = Buffer.create 4096 in
-    (try while true do
-       Buffer.add_char buf (input_char ic_out)
-     done with End_of_file -> ());
-    close_in ic_out;
-    let _, status = Unix.waitpid [] pid in
-    match status with
-    | Unix.WEXITED 0 -> Ok (Buffer.contents buf)
-    | Unix.WEXITED n -> Error (Printf.sprintf "curl exited with code %d" n)
-    | _ -> Error "curl terminated abnormally"
-  )
+  let content = build_request_body ~config ~system_message ~user_message in
+  let headers = build_headers config in
+  match Ezcurl.post ~url ~headers ~content () with
+  | Ok response ->
+    if response.Ezcurl.code >= 200 && response.Ezcurl.code < 300 then
+      Ok response.Ezcurl.body
+    else
+      Error (Printf.sprintf "HTTP %d: %s" response.Ezcurl.code response.Ezcurl.body)
+  | Error (_, msg) ->
+    Error (Printf.sprintf "HTTP request failed: %s" msg)

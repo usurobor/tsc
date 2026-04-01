@@ -7,14 +7,14 @@ The canonical implementation is `engine/ocaml/`.
 ## 1. Prerequisites
 
 ```bash
-opam switch create tsc 4.14.1
-opam install dune ppx_expect
+opam switch create tsc 5.2.0
 ```
 
 ## 2. Build
 
 ```bash
 cd engine/ocaml
+opam install . --deps-only --with-test -y
 dune build
 ```
 
