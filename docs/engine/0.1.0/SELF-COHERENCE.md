@@ -46,7 +46,7 @@
 
 ### AC8: API secrets injected at runtime, never stored in repo
 - **File:** `engine/ocaml/bin/provider.ml`
-- **Evidence:** `config_from_env` reads `TSC_PROVIDER`, `TSC_MODEL`, `TSC_API_KEY`, `TSC_BASE_URL` from environment. No hardcoded secrets. Request body built via `Yojson.Safe` (no string interpolation of secrets). Curl invoked via `Unix.create_process` with `--config -` (no shell).
+- **Evidence:** `config_from_env` reads `TSC_PROVIDER`, `TSC_MODEL`, `TSC_API_KEY`, `TSC_BASE_URL` from environment. No hardcoded secrets. Request body built via `Yojson.Safe`. Curl invoked via `Unix.create_process` with discrete argv entries (no shell, no config-string interpolation). Anthropic requests include `anthropic-version: 2023-06-01` header.
 - **Status:** Met
 
 ### AC9: Re-running produces comparable metadata
@@ -125,6 +125,8 @@ Gaps: no CI, no build verification, no formal stability policy.
 5. `include_targets` parsed but never expanded — functional gap in aggregate target resolution
 6. No invariant list in design spec — architecture-evolution §2.6 requires it
 7. `architecture-evolution` and `process-economics` skills not loaded for a system-boundary change
+8. Review found: first iteration's `--config -` curl approach still interpolated values into a config format string. Replaced with pure argv (`build_curl_argv` returns `string array` for `Unix.create_process`).
+9. Review found: Anthropic requests missing required `anthropic-version` header — default path would fail at the API.
 
 ### Root cause
 Skill selection gap. Chose `design`, `ocaml`, `writing` as active skills. Should have included `architecture-evolution` for a system-boundary change. The `ocaml` skill was loaded but not applied deeply enough — purity boundary and safe-subprocess rules were violated on first pass.
