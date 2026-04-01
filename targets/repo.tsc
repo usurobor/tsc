@@ -1,7 +1,7 @@
 format = "tsc-target/0.1"
 name = "repo"
 kind = "aggregate"
-description = "Composite target across theory, implementation, and repo integration surfaces."
+description = "Aggregate repository target across theory, implementation, and integration surfaces."
 
 include_targets = [
   "spec",
@@ -11,9 +11,10 @@ include_targets = [
 include = [
   "README.md",
   "ARCHITECTURE.md",
+  "QUICKSTART.md",
   "project.tsc",
-  "targets/**/*.tsc",
-  "targets/README.md"
+  "targets/README.md",
+  "targets/registry.tsc"
 ]
 
 exclude = [

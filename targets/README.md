@@ -1,15 +1,25 @@
 # Targets
 
-A target declares what TSC measures: which files, what kind of surface, what to exclude.
+This directory defines the named TSC targets.
+
+A target is an explicit declaration of:
+- what is being measured
+- which files belong to that surface
+- which files do not
+- what kind of target it is
 
 Current targets:
 
-- `spec` — theory
-- `engine` — implementation
-- `repo` — aggregate
-
-`registry.tsc` maps target names to manifests.
+- `spec` — theory surface
+- `engine` — implementation surface
+- `repo` — aggregate repository surface
 
 ## Authority
 
-The current orchestrator reads `project.tsc` in the repo root. These manifests and `registry.tsc` are draft declarations. When the orchestrator supports `tsc-target-registry/0.1`, `registry.tsc` replaces `project.tsc`.
+Today:
+
+- `project.tsc` is the live config used by the current Python orchestrator
+- `targets/registry.tsc` is the draft target registry
+- `targets/*.tsc` define the target model the repo is converging toward
+
+The target model matters because theory, implementation, and aggregate repo state should not collapse into one ambiguous self-score.
