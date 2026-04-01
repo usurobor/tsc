@@ -1,9 +1,15 @@
 # Targets
 
-Each `.tsc` file in this directory declares a measurement target — what files belong to it, what kind of surface it represents, and what to exclude.
+A target declares what TSC measures: which files, what kind of surface, what to exclude.
 
-`registry.tsc` maps target names to their manifests.
+Current targets:
 
-## Status
+- `spec` — theory
+- `engine` — implementation
+- `repo` — aggregate
 
-These manifests are draft declarations. The current orchestrator reads `project.tsc` in the repo root. When the orchestrator supports `tsc-target-registry/0.1`, `registry.tsc` replaces `project.tsc`.
+`registry.tsc` maps target names to manifests.
+
+## Authority
+
+The current orchestrator reads `project.tsc` in the repo root. These manifests and `registry.tsc` are draft declarations. When the orchestrator supports `tsc-target-registry/0.1`, `registry.tsc` replaces `project.tsc`.
