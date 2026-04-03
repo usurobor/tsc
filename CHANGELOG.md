@@ -33,7 +33,7 @@ OCaml engine replaces Python reference. Theory (spec/) is stable and predates th
 - **Targets** (`targets/`): declarative `.tsc` definitions for spec, engine, and repo coherence
 - **CI**: OCaml 5.2 build + linkcheck (`.github/workflows/ci.yml`)
 - **Self-measurement**: runs all targets when `TSC_ENABLED=true` (`.github/workflows/tsc.yml`)
-- **Docs** (`docs/engine/0.1.0/`): design, plan, self-coherence report
+- **Docs** (`docs/alpha/engine/0.1.0/`): design, plan, self-coherence report
 
 ### Changed
 - Python archived to `archive/python-reference/`
