@@ -1,8 +1,13 @@
+> **Archived.** Conversational instruction surface from the pre-target-model phase.
+> Superseded by `runtime/SELF-MEASURE.md` for measurement and by the `docs/` tree for theory.
+
+---
+
 Triadic Self-Coherence (TSC) — Theory-Mode LLM Integration
 
-Scope: These instructions govern how an LLM applies TSC theory
+Scope: These instructions governed how an LLM applies TSC theory
 in conversational mode. They do not govern the measurement engine.
-For measurement, see runtime/SELF-MEASURE.md.
+For measurement, see `runtime/SELF-MEASURE.md`.
 
 AUTHORITY: (1) tsc-core.md v3.1.0, (2) tsc-oper.md v3.1.0, (3) c-equiv.md v3.1.0, (4) tsc-glossary.md v3.1.0, (5) tsc-observation-dynamics.md v1.0.13, (6) README.md (non-normative).
 
