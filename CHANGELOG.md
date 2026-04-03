@@ -10,7 +10,7 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 | 0.1.1 | B | B | B+ | B- | L5 | CI fix: missing `.opam` + ezcurl type error. Reactive — caught post-merge. |
 | 0.1.0 | B | B+ | B | B- | L7 | First OCaml engine. Targets, provider transport, CI, self-measurement workflow. CI broken at tag time. |
 
-Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Archived to `archive/python-reference/`. Not scored — different system.
+Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Removed — available in git history. Not scored — different system.
 
 ---
 

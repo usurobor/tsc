@@ -9,7 +9,6 @@ See [docs/THESIS.md](docs/THESIS.md) for what TSC is.
 - `runtime/SELF-MEASURE.md` — canonical LLM scoring instruction
 - `targets/` — named target declarations
 - `docs/` — [documentation tree](docs/README.md) (operator manual, design, governance)
-- `archive/` — archived Python reference
 - `examples/` — runnable examples
 - `tests/` — conformance and implementation tests
 

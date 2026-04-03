@@ -67,6 +67,5 @@ Canonical sources remain:
 /docs/              documentation tree (α/β/γ)
 /examples/          runnable examples
 /tests/             conformance and implementation tests
-/archive/           archived Python reference
 /.tsc/              generated measurement output
 ```
