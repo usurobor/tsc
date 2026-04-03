@@ -1,73 +1,33 @@
 # TSC (Triadic Self-Coherence)
 
-TSC is a theory, a target model, and a verifier for triadic coherence.
-
-It evaluates one system through three independent scores:
-
-- **α** — pattern coherence
-- **β** — relational coherence
-- **γ** — process coherence
-
-These aggregate into `C_Σ`.
+See [docs/THESIS.md](docs/THESIS.md) for what TSC is.
 
 ## Repo contents
 
 - `spec/` — canonical theory
 - `engine/ocaml/` — canonical implementation
 - `runtime/SELF-MEASURE.md` — canonical LLM scoring instruction
+- `targets/` — named target declarations
+- `docs/` — [documentation tree](docs/README.md) (operator manual, design, governance)
+- `archive/` — archived Python reference
 - `examples/` — runnable examples
 - `tests/` — conformance and implementation tests
-- `targets/` — named target declarations
-
-## What TSC measures
-
-TSC asks one question:
-
-> Do three independent descriptions of the same system still describe one system?
 
 ## Quick start
 
-See `QUICKSTART.md` for build and run instructions.
+See the [operator manual](docs/beta/guides/OPERATOR-MANUAL.md) for build, configuration, and run instructions.
 
 ## Theory stack
 
-Start with:
+Start with `spec/c-equiv.md`, then `tsc-core.md`, `tsc-oper.md`, `tsc-observation-dynamics.md`, `tsc-glossary.md`. See the [doctrine bundle](docs/alpha/doctrine/) for reading order.
 
-1. `spec/c-equiv.md`
-2. `spec/tsc-core.md`
-3. `spec/tsc-oper.md`
-4. `spec/tsc-observation-dynamics.md`
-5. `spec/tsc-glossary.md`
+## Architecture
 
-## Targets
-
-TSC uses explicit targets. Current target surfaces are:
-
-- `spec`
-- `engine`
-- `repo`
-
-Read:
-
-- `targets/README.md` for the target model
-- `ARCHITECTURE.md` for how theory, targets, and verifier fit together
-
-## Implementation
-
-The canonical implementation is the OCaml engine in `engine/ocaml/`.
-
-The engine resolves named targets, builds raw file bundles, and sends them to an LLM with a canonical scoring instruction (`runtime/SELF-MEASURE.md`). It does not parse Markdown semantically.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for how theory, targets, and verifier fit together.
 
 ## Contributing
 
-Useful contributions fall into four areas:
-
-1. theory
-2. targets
-3. verifier
-4. tests
-
-Keep them aligned.
+Useful contributions fall into four areas: theory, targets, verifier, tests. Keep them aligned.
 
 ## License
 
@@ -76,11 +36,11 @@ CC-BY-4.0
 ## Citation
 
 ```bibtex
-@software{tsc2025,
+@software{tsc2026,
   title   = {TSC: Triadic Self-Coherence Framework},
   author  = {Peter Lisovin},
-  year    = {2025},
-  version = {v3.1.0},
+  year    = {2026},
+  version = {v0.1.1},
   url     = {https://github.com/usurobor/tsc}
 }
 ```

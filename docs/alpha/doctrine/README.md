@@ -15,7 +15,6 @@ The canonical spec is `spec/tsc-core.md`. All other spec documents elaborate on 
 | Operational rules | [spec/tsc-oper.md](../../../spec/tsc-oper.md) | How to apply TSC to a system |
 | Observation dynamics | [spec/tsc-observation-dynamics.md](../../../spec/tsc-observation-dynamics.md) | How measurement interacts with the measured |
 | Glossary | [spec/tsc-glossary.md](../../../spec/tsc-glossary.md) | Term definitions |
-| Scoring instruction | [runtime/SELF-MEASURE.md](../../../runtime/SELF-MEASURE.md) | LLM-executable scoring rules and output contract |
 
 ## Reading order
 

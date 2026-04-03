@@ -177,7 +177,7 @@ The engine writes two files per run:
 | C | >= 0.70 |
 | F | < 0.70 |
 
-The bottleneck rule: `C_Σ` cannot exceed the lowest axis score by more than one grade band. One collapsed axis drags the whole score.
+The geometric mean naturally penalizes imbalance — one collapsed axis drags `C_Σ` disproportionately. The report names the lowest-scoring axis as the bottleneck.
 
 ---
 

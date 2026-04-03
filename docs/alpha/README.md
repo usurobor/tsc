@@ -1,4 +1,4 @@
-# α — Pattern (articulation)
+# α — Pattern coherence
 
 What has been articulated. Doctrine, specs, engine design.
 

@@ -8,9 +8,9 @@ It answers one question:
 
 The three descriptions are:
 
-- **α (pattern)** — does the system have stable internal structure?
-- **β (relation)** — do the parts refer to each other consistently?
-- **γ (process)** — does the system evolve without losing identity?
+- **α — pattern coherence** — does the system have stable internal structure?
+- **β — relational coherence** — do the parts refer to each other consistently?
+- **γ — process coherence** — does the system evolve without losing identity?
 
 These are not metrics to optimize. They are observations. A system either coheres or it does not.
 

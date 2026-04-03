@@ -1,4 +1,4 @@
-# γ — Process (evolution)
+# γ — Process coherence
 
 How the system changes over time.
 

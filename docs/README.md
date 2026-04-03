@@ -17,21 +17,21 @@ This tree follows the documentation system defined in [beta/governance/DOCUMENTA
 
 ## By axis
 
-### α — Pattern (articulation)
+### α — Pattern coherence
 
 | Document | Location |
 |----------|----------|
 | Doctrine bundle | [alpha/doctrine/](alpha/doctrine/) |
 | Engine bundle | [alpha/engine/](alpha/engine/) |
 
-### β — Relation (coherence)
+### β — Relational coherence
 
 | Document | Location |
 |----------|----------|
 | Operator manual | [beta/guides/OPERATOR-MANUAL.md](beta/guides/OPERATOR-MANUAL.md) |
 | Documentation system | [beta/governance/DOCUMENTATION-SYSTEM.md](beta/governance/DOCUMENTATION-SYSTEM.md) |
 
-### γ — Process (evolution)
+### γ — Process coherence
 
 | Document | Location |
 |----------|----------|

@@ -18,9 +18,9 @@ The docs tree has two dimensions:
 | Directory | Axis | Question it answers |
 |-----------|------|---------------------|
 | (root) | The whole | What is TSC? (`THESIS.md`) How to read these docs? (`README.md`) |
-| `alpha/` | **Pattern** | What has been articulated? Doctrine, specs, engine design. |
-| `beta/` | **Relation** | Do the parts reveal one system? Governance, guides, evidence. |
-| `gamma/` | **Evolution** | How does it change? Plans, checklists, release history. |
+| `alpha/` | **Pattern coherence** | What has been articulated? Doctrine, specs, engine design. |
+| `beta/` | **Relational coherence** | Do the parts reveal one system? Governance, guides, evidence. |
+| `gamma/` | **Process coherence** | How does it change? Plans, checklists, release history. |
 
 ### 1.2 Feature bundles
 

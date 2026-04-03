@@ -63,8 +63,10 @@ Canonical sources remain:
 /spec/              canonical theory
 /engine/ocaml/      canonical implementation
 /runtime/           scoring instruction
+/targets/           named target declarations
+/docs/              documentation tree (α/β/γ)
 /examples/          runnable examples
 /tests/             conformance and implementation tests
-/targets/           named target declarations
+/archive/           archived Python reference
 /.tsc/              generated measurement output
 ```

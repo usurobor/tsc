@@ -104,7 +104,7 @@ Gaps: no CI, no build verification, no formal stability policy.
 **Score:** 0.72
 
 ### C_Σ
-(0.85 + 0.80 + 0.72) / 3 = **0.79**
+(0.85 · 0.80 · 0.72)^(1/3) = **0.79**
 
 ### Bottleneck
 **γ** — process coherence. Operational infrastructure (CI, build verification) absent. The architecture is sound but unproven at runtime.

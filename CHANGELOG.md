@@ -6,10 +6,40 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
+| 0.2.0 | B+ | B+ | B+ | B | L6 | Doc coherence: triadic structure, operator manual, terminology standardized, 14 issues filed and resolved. |
 | 0.1.1 | B | B | B+ | B- | L5 | CI fix: missing `.opam` + ezcurl type error. Reactive — caught post-merge. |
 | 0.1.0 | B | B+ | B | B- | L7 | First OCaml engine. Targets, provider transport, CI, self-measurement workflow. CI broken at tag time. |
 
 Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Archived to `archive/python-reference/`. Not scored — different system.
+
+---
+
+## 0.2.0 (2026-04-03)
+
+Documentation coherence iteration. Thorough cross-file review, 14 issues filed, all resolved.
+
+### Added
+- **Operator manual** (`docs/beta/guides/OPERATOR-MANUAL.md`): build, config, run, CI, troubleshooting
+- **THESIS.md** (`docs/THESIS.md`): entry point above the triad
+- **DOCUMENTATION-SYSTEM.md** (`docs/beta/governance/`): triadic doc structure adapted from cnos
+- **Doctrine bundle** (`docs/alpha/doctrine/`): indexes spec/ theory
+- **Engine bundle** (`docs/alpha/engine/`): indexes engine design, versioned artifacts
+- CI uploads binary artifact (`tsc-engine-linux-x86_64`)
+
+### Changed
+- Env vars renamed: `TSC_PROVIDER` → `LLM_PROVIDER`, `TSC_MODEL` → `LLM_MODEL`, `TSC_API_KEY` → `LLM_API_KEY`
+- QUICKSTART.md replaced with pointer to operator manual (#7, #13)
+- README.md rewritten as repo index — no longer re-explains TSC (#12, #16)
+- Axis terminology standardized to "pattern / relational / process" across all docs (#14)
+- ARCHITECTURE.md repo map now includes `docs/` and `archive/` (#15)
+- Bottleneck rule removed from operator manual — geometric mean suffices (#10)
+- SELF-MEASURE.md moved from doctrine bundle to engine bundle (#20)
+- SELF-COHERENCE.md formula corrected to geometric mean notation (#18)
+- Broken link in engine bundle README fixed (#19)
+- Citation version updated to v0.1.1 (#8)
+
+### Archived
+- `runtime/tsc-instructions.md` → `archive/tsc-instructions.md` (#9)
 
 ---
 
