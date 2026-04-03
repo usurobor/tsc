@@ -44,10 +44,10 @@ jobs:
         id: measure-spec
         continue-on-error: true
         env:
-          TSC_PROVIDER: ${{ secrets.TSC_PROVIDER }}
-          TSC_MODEL: ${{ secrets.TSC_MODEL }}
-          TSC_API_KEY: ${{ secrets.TSC_API_KEY }}
-          TSC_BASE_URL: ${{ secrets.TSC_BASE_URL }}
+          LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+
         run: |
           mkdir -p .tsc
           opam exec -- dune exec --root engine/ocaml -- tsc-engine \
@@ -60,10 +60,10 @@ jobs:
         id: measure-engine
         continue-on-error: true
         env:
-          TSC_PROVIDER: ${{ secrets.TSC_PROVIDER }}
-          TSC_MODEL: ${{ secrets.TSC_MODEL }}
-          TSC_API_KEY: ${{ secrets.TSC_API_KEY }}
-          TSC_BASE_URL: ${{ secrets.TSC_BASE_URL }}
+          LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+
         run: |
           opam exec -- dune exec --root engine/ocaml -- tsc-engine \
             --target engine \
@@ -75,10 +75,10 @@ jobs:
         id: measure-repo
         continue-on-error: true
         env:
-          TSC_PROVIDER: ${{ secrets.TSC_PROVIDER }}
-          TSC_MODEL: ${{ secrets.TSC_MODEL }}
-          TSC_API_KEY: ${{ secrets.TSC_API_KEY }}
-          TSC_BASE_URL: ${{ secrets.TSC_BASE_URL }}
+          LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+
         run: |
           opam exec -- dune exec --root engine/ocaml -- tsc-engine \
             --target repo \

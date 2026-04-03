@@ -46,7 +46,7 @@
 
 ### AC8: API secrets injected at runtime, never stored in repo
 - **File:** `engine/ocaml/bin/provider.ml`
-- **Evidence:** `config_from_env` reads `TSC_PROVIDER`, `TSC_MODEL`, `TSC_API_KEY`, `TSC_BASE_URL` from environment. No hardcoded secrets. Request body built via `Yojson.Safe`. Curl invoked via `Unix.create_process` with discrete argv entries (no shell, no config-string interpolation). Anthropic requests include `anthropic-version: 2023-06-01` header.
+- **Evidence:** `config_from_env` reads `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_BASE_URL` from environment. No hardcoded secrets. Request body built via `Yojson.Safe`. Curl invoked via `Unix.create_process` with discrete argv entries (no shell, no config-string interpolation). Anthropic requests include `anthropic-version: 2023-06-01` header.
 - **Status:** Met
 
 ### AC9: Re-running produces comparable metadata

@@ -23,9 +23,9 @@ dune build
 Set provider credentials:
 
 ```bash
-export TSC_PROVIDER=anthropic
-export TSC_MODEL=claude-sonnet-4-20250514
-export TSC_API_KEY=your-key-here
+export LLM_PROVIDER=anthropic
+export LLM_MODEL=claude-sonnet-4-20250514
+export LLM_API_KEY=your-key-here
 ```
 
 Run:

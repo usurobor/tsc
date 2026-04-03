@@ -9,7 +9,7 @@ help:
 	@echo "  setup       - opam install dependencies"
 	@echo "  build       - dune build"
 	@echo "  test        - dune runtest"
-	@echo "  measure     - run TSC self-measurement (requires TSC_PROVIDER, TSC_MODEL, TSC_API_KEY)"
+	@echo "  measure     - run TSC self-measurement (requires LLM_PROVIDER, LLM_MODEL, LLM_API_KEY)"
 	@echo "  linkcheck   - check Markdown links (requires lychee)"
 	@echo "  clean       - dune clean"
 
@@ -23,7 +23,7 @@ test:
 	cd $(ENGINE) && dune runtest
 
 measure:
-	@test -n "$$TSC_API_KEY" || (echo "error: TSC_API_KEY not set" && exit 1)
+	@test -n "$$LLM_API_KEY" || (echo "error: LLM_API_KEY not set" && exit 1)
 	mkdir -p .tsc
 	cd $(ENGINE) && dune exec -- tsc-engine \
 		--target repo \

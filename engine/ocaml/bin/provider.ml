@@ -9,21 +9,21 @@
 open Tsc_engine.Types
 
 (** Read provider configuration from environment variables.
-    Required: TSC_PROVIDER, TSC_MODEL, TSC_API_KEY
-    Optional: TSC_BASE_URL *)
+    Required: LLM_PROVIDER, LLM_MODEL, LLM_API_KEY
+    Optional: LLM_BASE_URL *)
 let config_from_env () =
   let get var =
     match Sys.getenv_opt var with
     | Some v when String.length v > 0 -> Ok v
     | _ -> Error (Printf.sprintf "environment variable %s is not set" var)
   in
-  match get "TSC_PROVIDER", get "TSC_MODEL", get "TSC_API_KEY" with
+  match get "LLM_PROVIDER", get "LLM_MODEL", get "LLM_API_KEY" with
   | Ok name, Ok model, Ok key ->
     Ok {
       provider_name = name;
       provider_model = model;
       provider_api_key = key;
-      provider_base_url = Sys.getenv_opt "TSC_BASE_URL";
+      provider_base_url = Sys.getenv_opt "LLM_BASE_URL";
     }
   | Error e, _, _ | _, Error e, _ | _, _, Error e -> Error e
 
