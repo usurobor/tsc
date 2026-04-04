@@ -20,6 +20,7 @@
   (ocaml
    (>= 4.14.0))
   dune
+  dune-build-info
   digestif
   yojson
   ezcurl

@@ -59,26 +59,20 @@ fi
 OS="$(uname -s)"
 ARCH="$(uname -m)"
 
-case "$OS" in
-  Linux)  PLATFORM="linux" ;;
-  Darwin) PLATFORM="macos" ;;
+# v0.3.0: only linux-x64 binaries are published.
+# When more targets are added to release.yml, expand this detection.
+case "${OS}-${ARCH}" in
+  Linux-x86_64) PLATFORM="linux"; ARCH="x64" ;;
   *)
-    fail "Cannot continue — unsupported operating system: $OS" \
+    fail "Cannot continue — no pre-built binary for ${OS} ${ARCH}" \
       "" \
-      "Supported: Linux, macOS" \
-      "File an issue: https://github.com/${REPO}/issues"
-    ;;
-esac
-
-case "$ARCH" in
-  x86_64)  ARCH="x64" ;;
-  aarch64) ARCH="arm64" ;;
-  arm64)   ARCH="arm64" ;;
-  *)
-    fail "Cannot continue — unsupported architecture: $ARCH" \
+      "Currently supported: Linux x86_64" \
+      "macOS and ARM support is planned — file or upvote an issue:" \
+      "  https://github.com/${REPO}/issues" \
       "" \
-      "Supported: x86_64, aarch64, arm64" \
-      "File an issue: https://github.com/${REPO}/issues"
+      "You can build from source instead:" \
+      "  git clone https://github.com/${REPO}.git && cd tsc" \
+      "  make setup && make build"
     ;;
 esac
 

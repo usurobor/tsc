@@ -29,9 +29,11 @@ tagging v0.3.0 and running the release workflow.
 
 ### α — pattern coherence
 
-The binary has one name (`tsc`), one version source (`main.ml` + `dune-project`),
-and one install path. The installer follows UX-CLI skill patterns: symbols,
-actionable errors, NO_COLOR. No decorative color. No silent fallbacks.
+The binary has one name (`tsc`), one version source (`dune-project`, injected
+via `dune-build-info`), and one install path. The installer follows UX-CLI
+skill patterns: symbols, actionable errors, NO_COLOR. No decorative color.
+No silent fallbacks. Platform detection matches exactly what the release
+workflow publishes (linux-x64 only in v0.3.0).
 
 The install.sh structure matches the design proposal exactly:
 prerequisites → detect → fetch → download → verify → move → confirm.
@@ -71,7 +73,6 @@ Version bump is manual (known debt).
 
 ## Known Debt
 
-- Version string duplicated in `main.ml` and `dune-project` (must bump both)
 - macOS binary requires a macos runner
 - No checksum verification in installer
 - No retry on download failure
@@ -80,5 +81,10 @@ Version bump is manual (known debt).
 
 ## Friction Log
 
-- `%%VERSION%%` substitution in dune requires `dune subst` which only runs during `dune-release`. Chose hardcoded version string instead — simpler, two places to bump is acceptable at this scale.
-- `Build_info.V1` would have been cleaner but adds a library dependency for a single string. Not worth it.
+- `%%VERSION%%` substitution in dune requires `dune subst` which only runs
+  during `dune-release`. Used `dune-build-info` library instead — reads version
+  from `dune-project` at build time. One dependency, but single source of truth.
+- Initial implementation detected macOS and ARM platforms but the release
+  workflow only publishes linux-x64. Fixed by restricting detection to match
+  what is actually published. Explicit build-from-source fallback for other
+  platforms.

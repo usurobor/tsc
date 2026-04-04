@@ -148,7 +148,10 @@ type cli_args = {
   cli_output_dir : string;
 }
 
-let version = "0.3.0"
+let version =
+  match Build_info.V1.version () with
+  | None -> "dev"
+  | Some v -> Build_info.V1.Version.to_string v
 
 let () =
   if Array.length Sys.argv = 2 && Sys.argv.(1) = "--version" then begin

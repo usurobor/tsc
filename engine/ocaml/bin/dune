@@ -2,4 +2,4 @@
  (name main)
  (public_name tsc)
  (modules main provider)
- (libraries tsc_engine unix ezcurl))
+ (libraries tsc_engine unix ezcurl dune-build-info))
