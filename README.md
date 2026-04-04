@@ -14,7 +14,11 @@ See [docs/THESIS.md](docs/THESIS.md) for what TSC is.
 
 ## Quick start
 
-See the [operator manual](docs/beta/guides/OPERATOR-MANUAL.md) for build, configuration, and run instructions.
+```bash
+curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
+```
+
+See the [operator manual](docs/beta/guides/OPERATOR-MANUAL.md) for configuration and usage.
 
 ## Theory stack
 
@@ -39,7 +43,7 @@ CC-BY-4.0
   title   = {TSC: Triadic Self-Coherence Framework},
   author  = {Peter Lisovin},
   year    = {2026},
-  version = {v0.2.0},
+  version = {v0.3.0},
   url     = {https://github.com/usurobor/tsc}
 }
 ```

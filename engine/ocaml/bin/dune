@@ -1,5 +1,5 @@
 (executable
  (name main)
- (public_name tsc-engine)
+ (public_name tsc)
  (modules main provider)
  (libraries tsc_engine unix ezcurl))

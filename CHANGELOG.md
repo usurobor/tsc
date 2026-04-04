@@ -6,11 +6,33 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
+| 0.3.0 | — | — | — | — | L6 | Installable binary: rename to `tsc`, install.sh, release workflow, --version. |
 | 0.2.0 | B+ | B+ | B+ | B | L6 | Doc coherence: triadic structure, operator manual, terminology standardized, 14 issues filed and resolved. |
 | 0.1.1 | B | B | B+ | B- | L5 | CI fix: missing `.opam` + ezcurl type error. Reactive — caught post-merge. |
 | 0.1.0 | B | B+ | B | B- | L7 | First OCaml engine. Targets, provider transport, CI, self-measurement workflow. CI broken at tag time. |
 
 Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Removed — available in git history. Not scored — different system.
+
+---
+
+## 0.3.0 (2026-04-04)
+
+Installable CLI binary. Full CDD cycle (#21).
+
+### Added
+- **Installer** (`install.sh`): one-liner install via `curl | sh`. Atomic temp-file install, UX-CLI compliant output, NO_COLOR support, explicit platform detection.
+- **Release workflow** (`.github/workflows/release.yml`): tag-triggered, builds and attaches `tsc-linux-x64` to GitHub Release.
+- **`--version` flag**: `tsc --version` prints version derived from source.
+
+### Changed
+- Binary renamed from `tsc-engine` to `tsc` everywhere (bin/dune, Makefile, CI, workflows, operator manual).
+- CI artifact renamed from `tsc-engine-linux-x86_64` to `tsc-linux-x64`.
+- Operator manual: new "Install" section with one-liner and build-from-source paths.
+- README quick start: install one-liner instead of "see operator manual".
+
+### Design
+- [DESIGN.md](docs/alpha/engine/0.3.0/DESIGN.md): installer survey (cnos, rustup, deno, homebrew, bun), UX-CLI compliance analysis, atomic install pattern.
+- [PLAN.md](docs/alpha/engine/0.3.0/PLAN.md): 6-step implementation plan.
 
 ---
 

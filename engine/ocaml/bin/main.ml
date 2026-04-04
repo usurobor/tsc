@@ -1,7 +1,7 @@
-(** TSC Engine — CLI entrypoint.
+(** TSC — CLI entrypoint.
 
     Wires pure library modules with I/O.
-    Usage: tsc-engine measure --target <name> [--instruction <path>] *)
+    Usage: tsc --target <name> [--instruction <path>] *)
 
 open Tsc_engine
 open Tsc_engine.Types
@@ -148,6 +148,14 @@ type cli_args = {
   cli_output_dir : string;
 }
 
+let version = "0.3.0"
+
+let () =
+  if Array.length Sys.argv = 2 && Sys.argv.(1) = "--version" then begin
+    Printf.printf "tsc %s\n" version;
+    exit 0
+  end
+
 let parse_args () =
   let target = ref "" in
   let instruction = ref "runtime/SELF-MEASURE.md" in
@@ -159,7 +167,7 @@ let parse_args () =
     ("--root", Arg.Set_string root, "Repository root directory");
     ("--output", Arg.Set_string output_dir, "Output directory for reports");
   ] in
-  let usage = "tsc-engine measure --target <name> [options]" in
+  let usage = "tsc --target <name> [options]" in
   Arg.parse specs (fun _ -> ()) usage;
   if !target = "" then begin
     Arg.usage specs usage;

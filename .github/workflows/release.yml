@@ -1,0 +1,40 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+
+      - name: Build
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+
+      - name: Prepare binary
+        run: |
+          cp engine/ocaml/_build/default/bin/main.exe tsc-linux-x64
+          chmod +x tsc-linux-x64
+          ./tsc-linux-x64 --version
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: tsc-linux-x64
+          generate_release_notes: true

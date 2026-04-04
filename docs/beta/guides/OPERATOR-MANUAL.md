@@ -19,15 +19,36 @@ The engine does not interpret file contents. The LLM scores coherence; the engin
 
 ---
 
-## 2. Build
+## 2. Install
 
-### Prerequisites
+### One-liner (recommended)
 
-- OCaml >= 4.14 (5.2 recommended)
-- opam
-- libcurl (for ezcurl)
+```bash
+curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
+```
+
+This detects your platform, downloads the latest release binary, and installs
+to `/usr/local/bin/tsc`. Override the install directory with `BIN_DIR`:
+
+```bash
+BIN_DIR=$HOME/.local/bin curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
+```
+
+If `/usr/local/bin` requires root:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sudo sh
+```
+
+Verify:
+
+```bash
+tsc --version
+```
 
 ### From source
+
+Prerequisites: OCaml >= 4.14 (5.2 recommended), opam, libcurl (for ezcurl).
 
 ```bash
 opam switch create tsc 5.2.0
@@ -44,10 +65,6 @@ make build
 ```
 
 The binary is `engine/ocaml/_build/default/bin/main.exe`.
-
-### From CI
-
-Every passing CI build uploads the binary as an artifact (`tsc-engine-linux-x86_64`). Download it from the [Actions tab](https://github.com/usurobor/tsc/actions/workflows/ci.yml).
 
 ---
 
@@ -108,7 +125,7 @@ export LLM_BASE_URL=http://localhost:11434/v1/chat/completions
 ### Basic usage
 
 ```bash
-tsc-engine \
+tsc \
   --target repo \
   --registry targets/registry.tsc \
   --instruction runtime/SELF-MEASURE.md \

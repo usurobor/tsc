@@ -25,7 +25,7 @@ test:
 measure:
 	@test -n "$$LLM_API_KEY" || (echo "error: LLM_API_KEY not set" && exit 1)
 	mkdir -p .tsc
-	cd $(ENGINE) && dune exec -- tsc-engine \
+	cd $(ENGINE) && dune exec -- tsc \
 		--target repo \
 		--registry ../../targets/registry.tsc \
 		--instruction ../../runtime/SELF-MEASURE.md \

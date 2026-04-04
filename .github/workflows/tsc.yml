@@ -50,7 +50,7 @@ jobs:
 
         run: |
           mkdir -p .tsc
-          opam exec -- dune exec --root engine/ocaml -- tsc-engine \
+          opam exec -- dune exec --root engine/ocaml -- tsc \
             --target spec \
             --registry targets/registry.tsc \
             --instruction runtime/SELF-MEASURE.md \
@@ -65,7 +65,7 @@ jobs:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
 
         run: |
-          opam exec -- dune exec --root engine/ocaml -- tsc-engine \
+          opam exec -- dune exec --root engine/ocaml -- tsc \
             --target engine \
             --registry targets/registry.tsc \
             --instruction runtime/SELF-MEASURE.md \
@@ -80,7 +80,7 @@ jobs:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
 
         run: |
-          opam exec -- dune exec --root engine/ocaml -- tsc-engine \
+          opam exec -- dune exec --root engine/ocaml -- tsc \
             --target repo \
             --registry targets/registry.tsc \
             --instruction runtime/SELF-MEASURE.md \
