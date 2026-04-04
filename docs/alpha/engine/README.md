@@ -20,4 +20,5 @@ The canonical implementation is `engine/ocaml/`. The operator manual is [docs/be
 
 | Version | Directory | Note |
 |---------|-----------|------|
+| 0.3.0 | [0.3.0/](0.3.0/) | Installable CLI binary. Rename to `tsc`. |
 | 0.1.0 | [0.1.0/](0.1.0/) | First release. Replaces Python reference. |
