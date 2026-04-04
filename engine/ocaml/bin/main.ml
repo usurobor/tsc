@@ -155,7 +155,7 @@ let version =
 
 let () =
   if Array.length Sys.argv = 2 && Sys.argv.(1) = "--version" then begin
-    Printf.printf "tsc %s\n" version;
+    Printf.printf "tsc %s (%s)\n" version Build_commit.commit;
     exit 0
   end
 

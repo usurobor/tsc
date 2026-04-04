@@ -15,7 +15,7 @@
 | AC5 | Met | All success output uses `✓` |
 | AC6 | Met | `NO_COLOR` env var and non-TTY suppress ANSI escapes |
 | AC7 | Met | Unknown OS/arch hits explicit `fail()` with supported list |
-| AC8 | Met | `tsc --version` prints `tsc 0.3.0` |
+| AC8 | Met | `tsc --version` prints `tsc 0.3.0 (abc1234)` — version from dune-project via dune-build-info, commit from git via build rule |
 | AC9 | Met | `grep -r tsc-engine` in build/workflow files returns zero hits |
 | AC10 | Met | Operator manual has "Install" section with one-liner + from-source |
 | AC11 | Met | README quick start has `curl \| sh` one-liner |
@@ -30,7 +30,7 @@ tagging v0.3.0 and running the release workflow.
 ### α — pattern coherence
 
 The binary has one name (`tsc`), one version source (`dune-project`, injected
-via `dune-build-info`), and one install path. The installer follows UX-CLI
+via `dune-build-info`, commit hash via dune build rule), and one install path. The installer follows UX-CLI
 skill patterns: symbols, actionable errors, NO_COLOR. No decorative color.
 No silent fallbacks. Platform detection matches exactly what the release
 workflow publishes (linux-x64 only in v0.3.0).

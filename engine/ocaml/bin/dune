@@ -1,5 +1,10 @@
 (executable
  (name main)
  (public_name tsc)
- (modules main provider)
+ (modules main provider build_commit)
  (libraries tsc_engine unix ezcurl dune-build-info))
+
+(rule
+ (target build_commit.ml)
+ (deps (universe))
+ (action (bash "echo 'let commit = \"'$(git rev-parse --short HEAD 2>/dev/null || echo unknown)'\"' > %{target}")))
