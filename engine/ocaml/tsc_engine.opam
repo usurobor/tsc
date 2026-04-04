@@ -11,6 +11,7 @@ bug-reports: "https://github.com/usurobor/tsc/issues"
 depends: [
   "ocaml" {>= "4.14.0"}
   "dune" {>= "3.0"}
+  "dune-build-info"
   "digestif"
   "yojson"
   "ezcurl"
