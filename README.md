@@ -15,8 +15,20 @@ See [docs/THESIS.md](docs/THESIS.md) for what TSC is.
 ## Quick start
 
 ```bash
+# Install
 curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
+
+# Configure (needs an LLM API key)
+export LLM_PROVIDER=anthropic
+export LLM_MODEL=claude-sonnet-4-20250514
+export LLM_API_KEY=sk-ant-your-key
+
+# Measure this repo's theory surface
+git clone https://github.com/usurobor/tsc.git && cd tsc
+tsc --target spec --registry targets/registry.tsc --instruction runtime/SELF-MEASURE.md --output report.json
 ```
+
+See the [full quick start guide](QUICKSTART.md) for measuring your own files.
 
 See the [operator manual](docs/beta/guides/OPERATOR-MANUAL.md) for configuration and usage.
 
