@@ -1,8 +1,13 @@
 (executable
  (name main)
  (public_name coh)
- (modules main provider dotenv build_commit)
- (libraries tsc_engine unix ezcurl dune-build-info))
+ (modules main provider dotenv build_version build_commit)
+ (libraries tsc_engine unix ezcurl))
+
+(rule
+ (target build_version.ml)
+ (deps ../../../VERSION)
+ (action (bash "echo 'let version = \"'$(cat %{deps}| tr -d '\\n')'\"' > %{target}")))
 
 (rule
  (target build_commit.ml)

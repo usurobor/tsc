@@ -14,6 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Gate — tag must match VERSION
+        run: |
+          expected="v$(cat VERSION | tr -d '\n')"
+          actual="${GITHUB_REF_NAME}"
+          if [ "$expected" != "$actual" ]; then
+            echo "::error::Tag $actual does not match VERSION ($expected)"
+            exit 1
+          fi
+
       - name: Set up OCaml
         uses: ocaml/setup-ocaml@v3
         with:
