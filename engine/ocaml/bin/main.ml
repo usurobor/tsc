@@ -255,6 +255,9 @@ let () =
   let user_msg = Prompt.build_user_message ~bundle in
 
   (* Step 6: Call provider *)
+  let env_file = Filename.concat root ".tsc/.env" in
+  let n = Dotenv.load env_file in
+  if n > 0 then Printf.eprintf "Loaded %d variable(s) from %s\n%!" n env_file;
   Printf.eprintf "Loading provider configuration from environment...\n%!";
   let config =
     match Provider.config_from_env () with

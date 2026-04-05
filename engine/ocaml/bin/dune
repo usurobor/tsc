@@ -1,7 +1,7 @@
 (executable
  (name main)
  (public_name coh)
- (modules main provider build_commit)
+ (modules main provider dotenv build_commit)
  (libraries tsc_engine unix ezcurl dune-build-info))
 
 (rule
