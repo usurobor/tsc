@@ -1,7 +1,7 @@
-(** TSC — CLI entrypoint.
+(** Coherence engine — CLI entrypoint.
 
     Wires pure library modules with I/O.
-    Usage: tsc --target <name> [--instruction <path>] *)
+    Usage: coh --target <name> [--instruction <path>] *)
 
 open Tsc_engine
 open Tsc_engine.Types
@@ -155,7 +155,7 @@ let version =
 
 let () =
   if Array.length Sys.argv = 2 && Sys.argv.(1) = "--version" then begin
-    Printf.printf "tsc %s (%s)\n" version Build_commit.commit;
+    Printf.printf "coh %s (%s)\n" version Build_commit.commit;
     exit 0
   end
 
@@ -170,7 +170,7 @@ let parse_args () =
     ("--root", Arg.Set_string root, "Repository root directory");
     ("--output", Arg.Set_string output_dir, "Output directory for reports");
   ] in
-  let usage = "tsc --target <name> [options]" in
+  let usage = "coh --target <name> [options]" in
   Arg.parse specs (fun _ -> ()) usage;
   if !target = "" then begin
     Arg.usage specs usage;
