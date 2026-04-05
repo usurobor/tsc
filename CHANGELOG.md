@@ -6,12 +6,24 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
+| 0.3.1 | A- | A- | A- | B+ | L5 | Binary renamed `tsc` → `coh` to avoid TypeScript compiler collision. |
 | 0.3.0 | A- | A- | A- | B+ | L6 | Installable binary: rename to `tsc`, install.sh, release workflow, --version. Version source unified. |
 | 0.2.0 | B+ | B+ | B+ | B | L6 | Doc coherence: triadic structure, operator manual, terminology standardized, 14 issues filed and resolved. |
 | 0.1.1 | B | B | B+ | B- | L5 | CI fix: missing `.opam` + ezcurl type error. Reactive — caught post-merge. |
 | 0.1.0 | B | B+ | B | B- | L7 | First OCaml engine. Targets, provider transport, CI, self-measurement workflow. CI broken at tag time. |
 
 Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Removed — available in git history. Not scored — different system.
+
+---
+
+## 0.3.1 (2026-04-05)
+
+Binary naming collision fix.
+
+### Changed
+- Binary renamed from `tsc` to `coh` (coherence). `tsc` conflicts with the TypeScript compiler on any machine with Node.js installed.
+- Release artifact renamed from `tsc-linux-x64` to `coh-linux-x64`.
+- CI artifact, install.sh, operator manual, workflows all updated.
 
 ---
 

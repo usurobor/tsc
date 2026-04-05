@@ -28,7 +28,7 @@ curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
 ```
 
 This detects your platform, downloads the latest release binary, and installs
-to `/usr/local/bin/tsc`. Override the install directory with `BIN_DIR`:
+to `/usr/local/bin/coh`. Override the install directory with `BIN_DIR`:
 
 ```bash
 BIN_DIR=$HOME/.local/bin curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
@@ -43,7 +43,7 @@ curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sudo
 Verify:
 
 ```bash
-tsc --version
+coh --version
 ```
 
 ### From source
@@ -125,7 +125,7 @@ export LLM_BASE_URL=http://localhost:11434/v1/chat/completions
 ### Basic usage
 
 ```bash
-tsc \
+coh \
   --target repo \
   --registry targets/registry.tsc \
   --instruction runtime/SELF-MEASURE.md \

@@ -29,12 +29,12 @@ jobs:
 
       - name: Prepare binary
         run: |
-          cp engine/ocaml/_build/default/bin/main.exe tsc-linux-x64
-          chmod +x tsc-linux-x64
-          ./tsc-linux-x64 --version
+          cp engine/ocaml/_build/default/bin/main.exe coh-linux-x64
+          chmod +x coh-linux-x64
+          ./coh-linux-x64 --version
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: tsc-linux-x64
+          files: coh-linux-x64
           generate_release_notes: true

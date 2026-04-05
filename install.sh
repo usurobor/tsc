@@ -1,5 +1,5 @@
 #!/bin/sh
-# tsc installer — downloads pre-built tsc binary from GitHub Releases
+# coh installer — downloads pre-built coh binary from GitHub Releases
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
@@ -14,7 +14,7 @@ set -e
 
 REPO="usurobor/tsc"
 BIN_DIR="${BIN_DIR:-/usr/local/bin}"
-BINARY_NAME="tsc"
+BINARY_NAME="coh"
 MIN_SIZE=1000000  # 1 MB — reject obviously bad downloads
 
 # --- UX helpers ---

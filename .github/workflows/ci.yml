@@ -31,7 +31,7 @@ jobs:
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: tsc-linux-x64
+          name: coh-linux-x64
           path: engine/ocaml/_build/default/bin/main.exe
           retention-days: 90
 
