@@ -8,4 +8,5 @@
   prompt
   response_schema
   report
+  mechanical_scoring
   types))
