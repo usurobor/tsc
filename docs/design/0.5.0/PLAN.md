@@ -1,156 +1,216 @@
-# Plan: hybrid scoring implementation
+# Plan — mechanical + hybrid scoring for TSC
 
 **Issue:** #22
-**Design:** [DESIGN.md](DESIGN.md)
 **Version:** 0.5.0
+**Mode:** MCA
+**Active Skills:** design, writing, cap
+**Engineering Level:** L7
 
----
+## Goal
+
+Restore local, offline file-based measurement without giving up the new OCaml engine or the LLM-based semantic scorer.
+
+The end state is one engine with three modes:
+
+- mechanical
+- llm
+- hybrid
+
+and one shared pipeline:
+
+1. resolve input
+2. build bundle
+3. score bundle
+4. validate result
+5. write report
+
+## Why this plan exists
+
+The current engine made semantic scoring stronger, but removed a capability the old system had:
+
+- direct file input
+- no-network measurement
+- low-cost local iteration
+- deterministic structural feedback
+
+That is a regression. This plan restores that capability inside the canonical OCaml engine instead of reviving Python as a parallel implementation.
 
 ## Sequencing principle
 
-Do not add new target or provider complexity while the scoring split is still unclear. Implement in this order: shared bundle path → mechanical scorer → mode switch → report schema → hybrid orchestration → docs → default behavior.
+Do not add new target or provider complexity while the scoring split is still unclear. Implement in this order:
+
+1. one shared bundle path
+2. one deterministic mechanical scorer
+3. one clear mode switch
+4. one shared report schema
+5. one hybrid orchestration layer
+6. only then update docs and default behavior
+
+## Scope
+
+This plan covers:
+
+- mechanical scoring backend
+- hybrid orchestration
+- direct file input
+- report schema integration
+- CLI mode selection
+- docs updates
+
+This plan does not cover:
+
+- new theory
+- new targets
+- provider redesign
+- Python compatibility
+- secondary output formats
 
 ---
 
-## Step 1 — shared bundle model
+## Step 1 — stabilize the shared bundle path
 
 ### Deliverable
 
-One deterministic bundle type shared by all backends and both input paths.
+Named targets and direct file inputs both produce the same `Bundle.t`.
 
 ### Work
 
-- Define `bundle` type: path, target kind, raw content, content hash, optional chunk metadata
-- Named target input (`--target spec --registry ...`) produces a bundle
-- Direct file input (`--files docs/**/*.md`) produces a bundle
-- Both paths use the same bundle construction
-
-### Exit
-
-Bundle model exists. Both input paths produce it. No scoring yet.
-
----
-
-## Step 2 — direct file input + bundle normalization
-
-### Deliverable
-
-`coh --files docs/**/*.md README.md` resolves files and builds a bundle without a registry or target definition.
-
-### Work
-
-- Add `--files` flag to CLI
-- File resolution: expand globs, read content, build bundle entries
+- Confirm the current target-resolution path produces a deterministic bundle
+- Add direct file/glob input path
 - Normalize ordering, hashing, and metadata shape
-- Ensure both paths (named target + direct file) produce the same canonical bundle form
-- No credentials required
-- No network required
+- Ensure both paths produce the same canonical bundle form
 
 ### Exit
 
-`coh --files <paths>` builds a bundle with the same downstream interface as `--target`. No scoring yet.
+The engine can build a bundle from:
+
+- `--target spec --registry targets/registry.tsc`
+- `--files docs/**/*.md README.md`
+
+with the same downstream interface.
 
 ---
 
-## Step 3 — report schema
+## Step 2 — define the mechanical scoring contract
 
 ### Deliverable
 
-One canonical JSON report schema used by all modes.
+`engine/ocaml/lib/mechanical_scoring.mli`
 
 ### Work
 
-- Define report type with minimum fields: target, mode, alpha, beta, gamma, c_sigma, bottleneck_axis, evidence, unresolved_ambiguity, next_fixes, run_metadata
-- Hybrid extensions: mechanical, llm, final (each with evidence_kind)
-- JSON serialization
-- Mode and evidence_kind always present
+- Define `config`
+- Define `axis_result`
+- Define `result`
+- Define `diagnostic`
+- Define deterministic guarantees
+- Define what "mechanical" means and does not mean
 
 ### Exit
 
-Report schema exists and can be populated by any backend.
+The structural scorer has a stable interface before implementation details expand.
 
 ---
 
-## Step 4 — refactor LLM backend to use shared bundle + report
+## Step 3 — implement mechanical scoring
 
 ### Deliverable
 
-Current LLM scoring path refactored to consume the shared bundle model and emit the shared report schema.
+`engine/ocaml/lib/mechanical_scoring.ml`
 
 ### Work
 
-- Current provider.ml / response_schema.ml adapted to accept a bundle
-- Output mapped to the shared report schema
-- `runtime/SELF-MEASURE.md` remains the canonical instruction
-- No behavioral change — same results, new internal plumbing
+Implement deterministic structural signals for:
 
-### Exit
+**α / pattern:**
+- Terminology consistency
+- Repeated heading / section structure
+- Duplicate-definition tension
+- Naming drift
 
-`coh --mode llm --target spec` works as before, using shared bundle and report. No regression.
+**β / relational:**
+- Cross-file reference consistency
+- Authority / ownership agreement
+- Source-of-truth alignment
+- Target-to-file fit
 
----
-
-## Step 5 — mechanical backend
-
-### Deliverable
-
-`engine/ocaml/lib/mechanical_scoring.ml` — pure OCaml, no I/O beyond file reads, deterministic.
-
-### Interface first
-
-Define `engine/ocaml/lib/mechanical_scoring.mli` before implementation:
-
-- Input: `Bundle.t`
-- Output: `Report.result` with `evidence_kind = "structural-proxy"`
-- Deterministic guarantee: identical bundle → identical result
-- No provider, no network, no Markdown AST
-
-### Work
-
-V1 structural signals:
-
-**α (pattern coherence):**
-- Terminology consistency — repeated terms across files align
-- Heading / section structure repetition
-- Duplicate-definition tension (same concept defined differently)
-- Naming drift across bundle
-
-**β (relational coherence):**
-- Cross-file reference density and consistency
-- Authority / ownership agreement between files
-- Source-of-truth alignment (do files agree on who owns what?)
-- Target-to-file fit (does the bundle match what the target declared?)
-
-**γ (process coherence):**
+**γ / process:**
 - Generated vs canonical distinction
 - Evolution / version surface consistency
 - Traceability / closeout presence
 - Drift across declared authority surfaces
 
-Properties:
-- Deterministic on identical input
-- No network, no credentials
-- No Markdown semantic parser
-- Labels output as `evidence_kind: "structural-proxy"`
-
 ### Exit
 
-`coh --mode mechanical --files <paths>` produces a valid report with structural-proxy scores. No network calls.
+The engine can score a bundle with no provider, no network, and no Markdown AST.
 
 ---
 
-## Step 6 — hybrid backend
+## Step 4 — wire the mode switch
 
 ### Deliverable
 
-`engine/ocaml/lib/hybrid_scoring.ml` — runs both backends, preserves both result sets.
+One clear mode surface in the CLI and engine.
+
+### Work
+
+Add:
+
+- `--mode mechanical`
+- `--mode llm`
+- `--mode hybrid`
+- `--mode auto`
+
+Behavior:
+
+- `mechanical` → mechanical scorer only
+- `llm` → provider scorer only
+- `hybrid` → run both
+- `auto` → hybrid if provider credentials present, else mechanical
+
+### Exit
+
+Mode choice is explicit and visible in every run.
+
+---
+
+## Step 5 — unify the report schema
+
+### Deliverable
+
+One canonical report model across all modes.
+
+### Work
+
+Extend the current result/report layer so it can represent:
+
+- mechanical-only result
+- llm-only result
+- hybrid result with:
+  - mechanical
+  - llm
+  - final
+
+### Exit
+
+Reports preserve backend distinction without inventing multiple incompatible output formats.
+
+---
+
+## Step 6 — implement hybrid scoring
+
+### Deliverable
+
+`engine/ocaml/lib/hybrid_scoring.ml` or equivalent orchestration in the main flow.
 
 ### Work
 
 - Run both backends over the same bundle
-- Preserve both result sets in report
-- Compute final result
-- Final-source rule: LLM is semantic authority when available; mechanical remains visible, not discarded
+- Preserve both result sets
+- Compute final
+- Make the final-source rule explicit:
+  - LLM is semantic authority when available
+  - Mechanical remains visible, not discarded
 
 ### Exit
 
@@ -158,7 +218,7 @@ Hybrid mode produces one report with both structural and semantic views.
 
 ---
 
-## Step 7 — tests
+## Step 7 — add tests
 
 ### Deliverable
 
@@ -187,20 +247,22 @@ The backend split is test-protected.
 
 ---
 
-## Step 8 — docs
+## Step 8 — update docs
 
 ### Deliverable
 
-Docs reflect the new mode model.
+Docs reflect the new mode model clearly.
 
 ### Work
 
 Update:
+
 - `README.md`
 - `QUICKSTART.md`
 - `ARCHITECTURE.md`
 
 Key messaging:
+
 - OCaml remains the canonical engine
 - Python stays retired
 - Offline/local file scoring is restored
@@ -209,24 +271,27 @@ Key messaging:
 
 ### Exit
 
-Docs describe the implementation truthfully.
+The docs describe the implementation truthfully.
 
 ---
 
-## Step 9 — default mode policy
+## Step 9 — decide the default mode policy
 
 ### Deliverable
 
-Explicit product decision on CLI default.
+Explicit product decision.
 
 ### Work
 
-Confirm default: **auto**
+Confirm whether the default CLI behavior should be:
 
-- If credentials present → hybrid
-- If credentials absent → mechanical
+- `auto` or
+- `mechanical`
+
+Recommended default: **auto**
 
 Reason:
+
 - Preserves the richer semantic path when available
 - Never blocks local usage when credentials are absent
 
@@ -239,7 +304,7 @@ One documented default.
 ## Acceptance Criteria
 
 - [ ] AC1: `coh --mode mechanical --files <paths>` works without credentials or network
-- [ ] AC2: `coh --mode llm --target spec` still works (no regression)
+- [ ] AC2: `coh --mode llm --target spec --registry targets/registry.tsc` still works
 - [ ] AC3: `coh --mode hybrid` preserves both result sets and one final result
 - [ ] AC4: Direct file input and named target input share the same bundle model
 - [ ] AC5: Mechanical scoring is deterministic on identical input
@@ -251,12 +316,30 @@ One documented default.
 
 ## Risks
 
-| # | Risk | Mitigation |
-|---|------|------------|
-| 1 | Mechanical mode overclaims semantic authority | Label as structural-proxy explicitly; preserve backend provenance |
-| 2 | Users compare mechanical and LLM scores as equivalent | Keep both result sets visible; define final.source explicitly |
-| 3 | Mechanical scoring becomes too clever | Keep it deterministic and structural; no hidden LLM fallback; no semantic Markdown parsing |
-| 4 | Direct file input drifts from target-based measurement | One shared bundle model; test parity at the bundle layer |
+### 1. Mechanical mode overclaims semantic authority
+
+Mitigation:
+- Label it structural/proxy scoring explicitly
+- Preserve backend provenance in reports
+
+### 2. Users compare mechanical and LLM scores as if they mean the same thing
+
+Mitigation:
+- Keep both result sets visible
+- Define `final.source` explicitly
+
+### 3. Mechanical scoring becomes too clever
+
+Mitigation:
+- Keep it deterministic and structural
+- No hidden LLM fallback
+- No semantic Markdown parsing
+
+### 4. Direct file input drifts from target-based measurement
+
+Mitigation:
+- One shared bundle model
+- Test parity at the bundle layer
 
 ## Non-goals
 
@@ -269,11 +352,13 @@ One documented default.
 ## End state
 
 TSC regains:
+
 - offline measurement
 - direct file input
 - cheap local iteration
 
 without losing:
+
 - the OCaml engine
 - named targets
 - semantic scoring
