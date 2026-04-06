@@ -1,0 +1,4 @@
+(test
+ (name test_mechanical_scoring)
+ (libraries tsc_engine yojson)
+ (preprocess (pps ppx_expect)))
