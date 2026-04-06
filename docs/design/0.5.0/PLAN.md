@@ -6,6 +6,12 @@
 
 ---
 
+## Sequencing principle
+
+Do not add new target or provider complexity while the scoring split is still unclear. Implement in this order: shared bundle path → mechanical scorer → mode switch → report schema → hybrid orchestration → docs → default behavior.
+
+---
+
 ## Step 1 — shared bundle model
 
 ### Deliverable
@@ -25,7 +31,7 @@ Bundle model exists. Both input paths produce it. No scoring yet.
 
 ---
 
-## Step 2 — direct file input
+## Step 2 — direct file input + bundle normalization
 
 ### Deliverable
 
@@ -35,12 +41,14 @@ Bundle model exists. Both input paths produce it. No scoring yet.
 
 - Add `--files` flag to CLI
 - File resolution: expand globs, read content, build bundle entries
+- Normalize ordering, hashing, and metadata shape
+- Ensure both paths (named target + direct file) produce the same canonical bundle form
 - No credentials required
 - No network required
 
 ### Exit
 
-`coh --files <paths>` builds a bundle and prints it (or a summary). No scoring yet.
+`coh --files <paths>` builds a bundle with the same downstream interface as `--target`. No scoring yet.
 
 ---
 
@@ -88,13 +96,36 @@ Current LLM scoring path refactored to consume the shared bundle model and emit 
 
 `engine/ocaml/lib/mechanical_scoring.ml` — pure OCaml, no I/O beyond file reads, deterministic.
 
+### Interface first
+
+Define `engine/ocaml/lib/mechanical_scoring.mli` before implementation:
+
+- Input: `Bundle.t`
+- Output: `Report.result` with `evidence_kind = "structural-proxy"`
+- Deterministic guarantee: identical bundle → identical result
+- No provider, no network, no Markdown AST
+
 ### Work
 
-V1 structural proxies:
+V1 structural signals:
 
-- **α (terminology consistency):** intra-bundle term frequency alignment, repeated concept overlap
-- **β (relational coherence):** cross-file reference density, authority/version/generated-vs-canonical consistency
-- **γ (process coherence):** structural stability under chunking, bundle construction consistency
+**α (pattern coherence):**
+- Terminology consistency — repeated terms across files align
+- Heading / section structure repetition
+- Duplicate-definition tension (same concept defined differently)
+- Naming drift across bundle
+
+**β (relational coherence):**
+- Cross-file reference density and consistency
+- Authority / ownership agreement between files
+- Source-of-truth alignment (do files agree on who owns what?)
+- Target-to-file fit (does the bundle match what the target declared?)
+
+**γ (process coherence):**
+- Generated vs canonical distinction
+- Evolution / version surface consistency
+- Traceability / closeout presence
+- Drift across declared authority surfaces
 
 Properties:
 - Deterministic on identical input
