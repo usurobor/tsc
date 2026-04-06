@@ -42,7 +42,13 @@ The canonical implementation is:
 
 - `engine/ocaml/` — OCaml engine
 
-The engine resolves named targets from `targets/registry.tsc`, builds raw file bundles, sends them to an LLM with the scoring instruction in `runtime/SELF-MEASURE.md`, validates structured output, and writes reports.
+The engine resolves named targets from `targets/registry.tsc` (or accepts direct file paths via `--files`), builds deterministic file bundles, and scores them using one of three backends:
+
+- **mechanical** — deterministic structural scoring (no network, no credentials)
+- **llm** — semantic scoring via `runtime/SELF-MEASURE.md`
+- **hybrid** — both backends, preserving both results
+
+Default mode is **auto**: hybrid if LLM credentials are present, mechanical otherwise.
 
 The engine does not parse Markdown semantically. Files are raw text.
 
@@ -61,8 +67,9 @@ Canonical sources remain:
 
 ```text
 /spec/              canonical theory
-/engine/ocaml/      canonical implementation
-/runtime/           scoring instruction
+/engine/ocaml/      canonical implementation (mechanical + LLM + hybrid backends)
+/runtime/           LLM scoring instruction
+/scripts/           release automation (stamp, check, release)
 /targets/           named target declarations
 /docs/              documentation tree (α/β/γ)
 /examples/          runnable examples

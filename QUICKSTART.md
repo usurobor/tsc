@@ -8,14 +8,41 @@ Measure the coherence of any text corpus in under 2 minutes.
 curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
 ```
 
-## 2. Configure
+## 2. Measure something
 
-TSC uses an LLM to score coherence. Set your provider credentials:
+### Offline — no credentials needed
 
 ```bash
-export LLM_PROVIDER=anthropic          # or: openai
-export LLM_MODEL=claude-sonnet-4-20250514       # or: gpt-4o
-export LLM_API_KEY=sk-ant-your-key     # your API key
+git clone https://github.com/usurobor/tsc.git && cd tsc
+
+# Measure this repo's theory surface
+coh --mode mechanical --target spec
+
+# Or measure specific files directly
+coh --mode mechanical --files docs/*.md README.md
+```
+
+### With an LLM — semantic scoring
+
+```bash
+export LLM_PROVIDER=anthropic
+export LLM_MODEL=claude-sonnet-4-20250514
+export LLM_API_KEY=sk-ant-your-key
+
+# Auto mode: hybrid (mechanical + LLM) when credentials present
+coh --target spec
+```
+
+Or store credentials in `.tsc/.env` (chmod 600):
+
+```bash
+mkdir -p .tsc && cat > .tsc/.env <<'EOF'
+LLM_PROVIDER=anthropic
+LLM_MODEL=claude-sonnet-4-20250514
+LLM_API_KEY=sk-ant-your-key
+EOF
+chmod 600 .tsc/.env
+coh --target spec
 ```
 
 <details>
@@ -28,21 +55,23 @@ export LLM_API_KEY=sk-your-key
 ```
 </details>
 
-## 3. Measure something
+## 3. Scoring modes
 
-### Measure this repo's theory surface
+| Mode | What it does | Needs credentials? |
+|------|-------------|-------------------|
+| `mechanical` | Deterministic structural scoring | No |
+| `llm` | Semantic scoring via LLM | Yes |
+| `hybrid` | Both backends, one report | Yes |
+| `auto` | Hybrid if credentials present, else mechanical | Optional |
 
 ```bash
-git clone https://github.com/usurobor/tsc.git && cd tsc
-
-tsc \
-  --target spec \
-  --registry targets/registry.tsc \
-  --instruction runtime/SELF-MEASURE.md \
-  --output report.json
+coh --mode mechanical --target spec   # fast, offline, deterministic
+coh --mode llm --target spec          # semantic judgment
+coh --mode hybrid --target spec       # both
+coh --target spec                     # auto (default)
 ```
 
-### Measure your own files
+## 4. Create your own target
 
 Create a target manifest (`my-target.tsc`):
 
@@ -75,16 +104,10 @@ manifest = "my-target.tsc"
 Run it:
 
 ```bash
-tsc \
-  --target my-project \
-  --registry my-registry.tsc \
-  --instruction runtime/SELF-MEASURE.md \
-  --output report.json
+coh --target my-project --registry my-registry.tsc
 ```
 
-> **Note:** The `--instruction` file tells the LLM how to score. You can use `runtime/SELF-MEASURE.md` from this repo as a starting point, or write your own.
-
-## 4. Read the output
+## 5. Read the output
 
 The report contains triadic scores:
 
@@ -96,8 +119,10 @@ The report contains triadic scores:
 
 **C_Σ** is the aggregate: `(s_α · s_β · s_γ)^(1/3)`. A score ≥ 0.80 means the corpus holds together as one coherent system.
 
+Reports are written to `.tsc/`:
+
 ```bash
-cat report.json | python3 -m json.tool   # pretty-print
+cat .tsc/tsc-spec-*-mechanical.json | python3 -m json.tool
 ```
 
 ## What's next

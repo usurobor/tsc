@@ -18,19 +18,30 @@ See [docs/THESIS.md](docs/THESIS.md) for what TSC is.
 # Install
 curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
 
-# Configure (needs an LLM API key)
+# Mechanical scoring — no credentials, no network
+git clone https://github.com/usurobor/tsc.git && cd tsc
+coh --mode mechanical --target spec
+
+# LLM scoring — needs an API key
 export LLM_PROVIDER=anthropic
 export LLM_MODEL=claude-sonnet-4-20250514
 export LLM_API_KEY=sk-ant-your-key
+coh --target spec   # auto mode: hybrid if credentials present, else mechanical
 
-# Measure this repo's theory surface
-git clone https://github.com/usurobor/tsc.git && cd tsc
-tsc --target spec --registry targets/registry.tsc --instruction runtime/SELF-MEASURE.md --output report.json
+# Direct file input
+coh --mode mechanical --files docs/*.md README.md
 ```
 
-See the [full quick start guide](QUICKSTART.md) for measuring your own files.
+### Scoring modes
 
-See the [operator manual](docs/beta/guides/OPERATOR-MANUAL.md) for configuration and usage.
+| Mode | What it does | Needs credentials? |
+|------|-------------|-------------------|
+| `mechanical` | Deterministic structural scoring | No |
+| `llm` | Semantic scoring via LLM | Yes |
+| `hybrid` | Both backends, preserves both results | Yes |
+| `auto` | Hybrid if credentials present, else mechanical | Optional |
+
+See the [full quick start guide](QUICKSTART.md) and the [operator manual](docs/beta/guides/OPERATOR-MANUAL.md).
 
 ## Theory stack
 
