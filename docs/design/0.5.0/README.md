@@ -10,10 +10,12 @@
 
 - [x] DESIGN.md — hybrid scoring architecture
 - [x] PLAN.md — 9-step implementation plan
-- [ ] mechanical_scoring.ml — implementation
-- [ ] CLI --mode flag
-- [ ] Unified report schema
-- [ ] Hybrid scoring orchestration
-- [ ] Tests
-- [ ] Docs update
-- [ ] SELF-COHERENCE.md
+- [x] mechanical_scoring.mli — interface contract
+- [x] mechanical_scoring.ml — implementation (12 structural signals)
+- [x] CLI --mode flag (mechanical, llm, hybrid, auto)
+- [x] Direct file input (--files)
+- [x] Unified report schema (JSON across all modes)
+- [x] Hybrid scoring orchestration
+- [x] Tests (expect tests for determinism, ranges, JSON shape)
+- [x] Docs (README, QUICKSTART, ARCHITECTURE updated)
+- [x] SELF-COHERENCE.md
