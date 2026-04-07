@@ -125,6 +125,17 @@ type config = {
 val default_config : config
 (** Canonical default config. *)
 
+val c_sigma_geometric :
+  ?weights:weights -> alpha:float -> beta:float -> gamma:float -> unit -> float
+(** Aggregate axis scores into [C_Σ] using a weighted geometric mean.
+
+    This is the canonical aggregation formula for [C_Σ] across all
+    scoring backends (mechanical, LLM, hybrid). All report surfaces
+    must use this helper rather than re-deriving the formula, so that
+    [C_Σ] has one definition in the codebase.
+
+    Defaults to [default_config.weights] (equal weights). *)
+
 val score_bundle : ?config:config -> Bundle.t -> result
 (** Score a resolved bundle structurally.
 

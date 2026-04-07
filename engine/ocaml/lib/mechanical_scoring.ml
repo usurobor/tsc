@@ -122,6 +122,14 @@ let default_config : config = {
 
 (* --- Utility functions --- *)
 
+(** Weighted geometric mean of axis scores. Canonical [C_Σ] aggregator. *)
+let c_sigma_geometric ?weights ~alpha ~beta ~gamma () =
+  let w = match weights with Some w -> w | None -> default_config.weights in
+  let clamp x = if x < 0.0 then 0.0 else if x > 1.0 then 1.0 else x in
+  let a = clamp alpha and b = clamp beta and g = clamp gamma in
+  let product = (a ** w.alpha) *. (b ** w.beta) *. (g ** w.gamma) in
+  product ** (1.0 /. (w.alpha +. w.beta +. w.gamma))
+
 (** Truncate a string for evidence excerpts. *)
 let truncate max_len s =
   if String.length s <= max_len then s
@@ -748,9 +756,8 @@ let score_bundle ?(config = default_config) (bundle : target_bundle) =
   let beta = score_beta ~config ~target files in
   let gamma = score_gamma ~config files in
   let c_sigma =
-    let wa = config.weights.alpha and wb = config.weights.beta and wg = config.weights.gamma in
-    let product = (alpha.score ** wa) *. (beta.score ** wb) *. (gamma.score ** wg) in
-    product ** (1.0 /. (wa +. wb +. wg)) in
+    c_sigma_geometric ~weights:config.weights
+      ~alpha:alpha.score ~beta:beta.score ~gamma:gamma.score () in
   let bottleneck_axis =
     if alpha.score <= beta.score && alpha.score <= gamma.score then `Alpha
     else if beta.score <= gamma.score then `Beta
@@ -780,9 +787,8 @@ let score_files ?(config = default_config) (files : bundle_file list) =
   let beta = score_beta ~config ~target:None files in
   let gamma = score_gamma ~config files in
   let c_sigma =
-    let wa = config.weights.alpha and wb = config.weights.beta and wg = config.weights.gamma in
-    let product = (alpha.score ** wa) *. (beta.score ** wb) *. (gamma.score ** wg) in
-    product ** (1.0 /. (wa +. wb +. wg)) in
+    c_sigma_geometric ~weights:config.weights
+      ~alpha:alpha.score ~beta:beta.score ~gamma:gamma.score () in
   let bottleneck_axis =
     if alpha.score <= beta.score && alpha.score <= gamma.score then `Alpha
     else if beta.score <= gamma.score then `Beta

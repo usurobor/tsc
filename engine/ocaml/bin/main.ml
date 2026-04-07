@@ -162,7 +162,10 @@ type cli_args = {
   cli_output_dir : string;
   cli_mode : scoring_mode;
   cli_files : string list;
+  cli_registry : string;
 }
+
+let default_registry_path = "targets/registry.tsc"
 
 let () =
   if Array.length Sys.argv = 2 && Sys.argv.(1) = "--version" then begin
@@ -177,12 +180,16 @@ let parse_args () =
   let output_dir = ref ".tsc" in
   let mode_str = ref "auto" in
   let file_args = ref [] in
+  let registry = ref default_registry_path in
   let specs = [
     ("--target", Arg.Set_string target, "Target name (spec, engine, repo)");
     ("--instruction", Arg.Set_string instruction, "Path to self-measure instruction");
     ("--root", Arg.Set_string root, "Repository root directory");
     ("--output", Arg.Set_string output_dir, "Output directory for reports");
     ("--mode", Arg.Set_string mode_str, "Scoring mode: mechanical, llm, hybrid, auto (default: auto)");
+    ("--registry", Arg.Set_string registry,
+       Printf.sprintf "Path to target registry, relative to --root (default: %s)"
+         default_registry_path);
     ("--files", Arg.Rest_all (fun args -> file_args := args), "Direct file paths to measure");
   ] in
   let usage = "coh [--mode mechanical|llm|hybrid|auto] --target <name> [options]\n\
@@ -203,6 +210,7 @@ let parse_args () =
     cli_output_dir = !output_dir;
     cli_mode = mode;
     cli_files = List.rev !file_args;
+    cli_registry = !registry;
   }
 
 (** Create directory and parents. *)
@@ -338,45 +346,57 @@ let run_llm ~args ~bundle ~provider_config =
   );
   validated_result
 
-(** Run hybrid scoring: both mechanical and LLM on the same bundle. *)
+(** Run hybrid scoring: both mechanical and LLM on the same bundle.
+    The hybrid output embeds the two canonical per-backend reports and
+    derives [final] using the shared geometric [C_Σ] helper, so every
+    surface agrees on the aggregation formula. *)
 let run_hybrid ~args ~bundle ~provider_config =
   let mech_result = run_mechanical ~args ~bundle in
   let llm_result = run_llm ~args ~bundle ~provider_config in
-  (* Write combined hybrid report *)
   let ts = timestamp () in
   let target_label = if args.cli_target <> "" then args.cli_target else "direct" in
+  let canonical_llm_json = match llm_result with
+    | None -> `String "llm-failed"
+    | Some r ->
+      let metadata : run_metadata = {
+        meta_target = args.cli_target;
+        meta_file_hashes =
+          List.map (fun f -> (f.file_path, f.file_hash)) bundle.bundle_files;
+        meta_prompt_version = "SELF-MEASURE/1.0";
+        meta_provider = provider_config.provider_name;
+        meta_model = provider_config.provider_model;
+        meta_timestamp = ts;
+      } in
+      Yojson.Safe.from_string (Report.to_json ~result:r ~metadata)
+  in
+  let final_json = match llm_result with
+    | Some r ->
+      `Assoc [
+        ("source", `String "llm");
+        ("alpha", `Float r.result_alpha);
+        ("beta", `Float r.result_beta);
+        ("gamma", `Float r.result_gamma);
+        ("c_sigma", `Float (Mechanical_scoring.c_sigma_geometric
+                              ~alpha:r.result_alpha
+                              ~beta:r.result_beta
+                              ~gamma:r.result_gamma ()));
+      ]
+    | None ->
+      `Assoc [
+        ("source", `String "mechanical");
+        ("alpha", `Float mech_result.alpha.score);
+        ("beta", `Float mech_result.beta.score);
+        ("gamma", `Float mech_result.gamma.score);
+        ("c_sigma", `Float mech_result.c_sigma);
+      ]
+  in
   let hybrid_json =
     `Assoc [
       ("target", `String target_label);
       ("mode", `String "hybrid");
       ("mechanical", Mechanical_scoring.result_to_json mech_result);
-      ("llm", (match llm_result with
-        | Some r ->
-          `Assoc [
-            ("alpha", `Float r.result_alpha);
-            ("beta", `Float r.result_beta);
-            ("gamma", `Float r.result_gamma);
-            ("c_sigma", `Float ((r.result_alpha +. r.result_beta +. r.result_gamma) /. 3.0));
-            ("evidence_kind", `String "semantic-judgment");
-          ]
-        | None -> `String "llm-failed"));
-      ("final", (match llm_result with
-        | Some r ->
-          `Assoc [
-            ("source", `String "llm");
-            ("alpha", `Float r.result_alpha);
-            ("beta", `Float r.result_beta);
-            ("gamma", `Float r.result_gamma);
-            ("c_sigma", `Float ((r.result_alpha +. r.result_beta +. r.result_gamma) /. 3.0));
-          ]
-        | None ->
-          `Assoc [
-            ("source", `String "mechanical");
-            ("alpha", `Float mech_result.alpha.score);
-            ("beta", `Float mech_result.beta.score);
-            ("gamma", `Float mech_result.gamma.score);
-            ("c_sigma", `Float mech_result.c_sigma);
-          ]));
+      ("llm", canonical_llm_json);
+      ("final", final_json);
     ]
   in
   let hybrid_path =
@@ -419,7 +439,7 @@ let () =
       bundle_from_files ~root args.cli_files
     end else begin
       Printf.eprintf "Loading target registry...\n%!";
-      let registry_path = Filename.concat root "targets/registry.tsc" in
+      let registry_path = Filename.concat root args.cli_registry in
       let registry =
         match read_file registry_path with
         | Error e -> Printf.eprintf "Error: %s\n" e; exit 1

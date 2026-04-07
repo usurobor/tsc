@@ -13,6 +13,14 @@ let evidence_to_yojson ev =
     ("reason", `String ev.evidence_reason);
   ]
 
+(** Canonical [C_Σ] for a validated semantic result. *)
+let c_sigma_of result =
+  Mechanical_scoring.c_sigma_geometric
+    ~alpha:result.result_alpha
+    ~beta:result.result_beta
+    ~gamma:result.result_gamma
+    ()
+
 (** Generate machine-readable JSON report. *)
 let to_json ~result ~metadata =
   let json =
@@ -21,6 +29,7 @@ let to_json ~result ~metadata =
       ("alpha", `Float result.result_alpha);
       ("beta", `Float result.result_beta);
       ("gamma", `Float result.result_gamma);
+      ("c_sigma", `Float (c_sigma_of result));
       ("bottleneck_axis", `String result.result_bottleneck_axis);
       ("confidence", `Float result.result_confidence);
       ("summary", `String result.result_summary);
@@ -53,9 +62,7 @@ let to_json ~result ~metadata =
 
 (** Generate human-readable text report. *)
 let to_text ~result ~metadata =
-  let c_sigma =
-    (result.result_alpha +. result.result_beta +. result.result_gamma) /. 3.0
-  in
+  let c_sigma = c_sigma_of result in
   let evidence_text name ev =
     Printf.sprintf "  %s:\n    positive: %s\n    negative: %s\n    reason: %s"
       name
