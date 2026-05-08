@@ -20,6 +20,7 @@ The canonical implementation is `engine/ocaml/`. The operator manual is [docs/be
 
 | Version | Directory | Note |
 |---------|-----------|------|
+| 0.5.0 | [0.5.0/](0.5.0/) | Hybrid scoring: mechanical + llm + hybrid + auto modes. Three-mode engine, 61-assertion OCaml test suite, direct file input. Full CDD cycle (#25). |
 | 0.4.0 | [0.4.0/](0.4.0/) | Dotenv credential loading, VERSION as single source of truth, release scripts. |
 | 0.3.1 | — | Binary renamed `tsc` → `coh`. Single-commit hot fix; no design phase — frozen artifact directory not created. |
 | 0.3.0 | [0.3.0/](0.3.0/) | Installable CLI binary. Rename to `tsc`. |

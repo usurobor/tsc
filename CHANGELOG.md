@@ -24,6 +24,7 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
+| 0.5.0 | A | A | A | A | L6 | Hybrid scoring: mechanical + llm + hybrid + auto modes. 12 structural signals, 61-assertion OCaml test suite, direct file input. Full CDD cycle (#25). |
 | 0.4.0 | C+ | B | C+ | C | L6 | Dotenv credential loading + VERSION as single source of truth + release scripts. Partial-protocol release: no CDD cycle, β review absent, post-release artifacts retroactive (#27). |
 | 0.3.1 | A- | A- | A- | B+ | L5 | Binary renamed `tsc` → `coh` to avoid TypeScript compiler collision. |
 | 0.3.0 | A- | A- | A- | B+ | L6 | Installable binary: rename to `tsc`, install.sh, release workflow, --version. Version source unified. |
@@ -32,6 +33,30 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 | 0.1.0 | B | B+ | B | B- | L7 | First OCaml engine. Targets, provider transport, CI, self-measurement workflow. CI broken at tag time. |
 
 Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Removed — available in git history. Not scored — different system.
+
+---
+
+## 0.5.0 (2026-05-08)
+
+Hybrid scoring pipeline. Full CDD cycle (#25, Sub 2 of #23).
+
+### Added
+- **`mechanical_scoring.ml`**: 12 structural signals across α/β/γ axes (pattern, relational, process). Implements `mechanical_scoring.mli` from #22.
+- **`hybrid_scoring.ml`**: pure combiner producing `mechanical`, `llm`, and `final` sub-objects. LLM is authority unless both backends agree; `final.source` named explicitly.
+- **`bundle.ml`** `type t` + `type file`: direct file input (`--files <glob>`) shares the same `Bundle.t` as named targets.
+- **`--mode {mechanical,llm,hybrid,auto}`** + **`--files <glob>`** (repeatable) CLI flags. `auto` resolves to `mechanical` without credentials, `hybrid` with.
+- **`"mode"` field** in every report output via `report.ml to_json ~mode`.
+- **OCaml test suite** (`engine/ocaml/test/test_mechanical.ml`): 61 assertions covering bundle parity, determinism, JSON schema shape, hybrid preservation.
+- **`fixtures/report.schema.json`**: canonical report schema fixture (reference documentation).
+- **README, QUICKSTART, ARCHITECTURE** updated to document all modes and direct-file usage.
+
+### Fixed
+- `sig_traceability_presence`: bare `"#"` in `trace_kws` caused semantic inversion (fired on any Markdown heading). Removed; remaining keywords cover the intended patterns.
+
+### Known debt
+- AC8 partial: pre-existing Python in `tests/conformance/` — Sub 3 owns removal.
+- v3.2.0 provenance fields in report sub-objects — Sub 1.
+- Mechanical score calibration and hybrid adjudication policy — future cycles.
 
 ---
 
