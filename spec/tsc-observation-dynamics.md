@@ -7,8 +7,21 @@ Artifact: Specification
 
 Normative dependencies:
     C≡ v3.1.0
-    TSC Core v3.1.0
-    TSC Operational v3.1.0
+    TSC Core v3.2.0
+    TSC Operational v3.2.0
+
+Compatibility note for v3.2.0 dependency uplift:
+    TSC Core v3.2.0 introduces the Barrier-Coherence Link
+    (delta -> phi(delta) -> D -> Coh = exp(-D)) and splits the
+    aggregate into C_Sigma^math (strict degeneracy) and
+    C_Sigma^num (numerical, ε-floored). Observation Dynamics is
+    forward-compatible: the typed transformation chain it requires
+    (calibration bases, grounding witness, no ungrounded inflation)
+    now has the barrier link as its typed discrepancy → energy step.
+    Implementations MUST carry the v3.2.0 provenance fields
+    (per-pair delta and D, phi specification, eta_phi clip,
+    L_link constants, aggregate_math/aggregate_numeric, gauge
+    witness ref+spread) through the observation ledgers.
 
 Recommended repository path:
     spec/tsc-observation-dynamics.md

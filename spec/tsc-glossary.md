@@ -685,15 +685,28 @@ ______________________________________________________________________
 
 #### W2: Gauge Independence (Computational Symmetry)
 
-**What it tests:** Do you get the same C_Σ when you strip axis labels and auto-discover them?
+**What it tests:** Do you get the same C_Σ when you strip axis labels and auto-discover them — *and* you can't hide gauge dependence by cherry-picking the most flattering permutation?
 
-**The procedure:** Remove all axis labels from your observations. Run a blind discovery algorithm that assigns observations to axes based solely on their structural properties (no peeking at labels). Compare the resulting C_Σ to the labeled version.
+**The procedure (two signals):**
 
-**The threshold:** τ_gauge ≈ 0.05.
+1. Remove all axis labels from your observations and apply a *deterministic* canonical remap (e.g., lexicographic ordering of structural fingerprints) to assign observations to axes. Compare the resulting C_Σ to the labeled version. Difference = `w_gauge_ref`.
+2. For all 6 permutations π ∈ S₃ of the unlabeled remap, compute C_Σ. The spread (max − min) is `w_gauge_spread`.
 
-**If it fails:** Your measurement is label-dependent—it's seeing the names ("this is α data"), not the structure. This shouldn't be possible if you're implementing correctly. The structure should determine the assignment, not the labels. Implementation bug—fix it.
+```
+w_gauge_ref    = |C_Σ(labeled) − C_Σ(unlabeled, canonical-remap)|
+w_gauge_spread = max{C_Σ(unlabeled, π·remap)} − min{C_Σ(unlabeled, π·remap)}
+```
 
-**Note:** W1 tests mathematical invariance (permute and recompute). W2 tests computational invariance (can you rediscover the structure from scratch). Both are required. (See TSC Operational §2)
+**The thresholds:**
+
+- `w_gauge_ref ≤ τ_gauge` (default 0.05)
+- `w_gauge_spread ≤ τ_gauge_spread` (default = τ_gauge)
+
+**Why two signals?** Pre-v3.2.0 W2 took `max{π}` of the unlabeled C_Σ — that lets an implementation hide gauge dependence by selecting whichever π matches the labeled value best. The spread test closes that loophole: a label-blind implementation must agree across *all* permutations, not just the lucky one.
+
+**If it fails:** If only `w_gauge_ref` fails — your canonical remap doesn't recover the labeled assignment; your structure detection is biased. If only `w_gauge_spread` fails — your implementation is sensitive to which permutation it lands on; the labels are leaking through somewhere. Either way: implementation bug — fix it.
+
+**Note:** W1 tests mathematical invariance (permute and recompute). W2 tests computational invariance (can you rediscover the structure from scratch *and* be permutation-blind). Both are required. (See TSC Operational §2)
 
 ______________________________________________________________________
 
@@ -701,7 +714,7 @@ ______________________________________________________________________
 
 **What it tests:** Does uniform scaling preserve coherence?
 
-**The procedure:** Apply a uniform scale transform φ (e.g., multiply all feature values by 2). Recompute C_Σ on the scaled observations. Measure the difference from the original.
+**The procedure:** Apply a uniform scale transform ψ (e.g., multiply all feature values by 2). Recompute C_Σ on the scaled observations. Measure the difference from the original. (Note: ψ denotes the W3 scale map; the barrier transform φ in Core §3.2 is a different object.)
 
 **The threshold:** τ_scale ≈ 0.10.
 
@@ -728,7 +741,7 @@ ______________________________________________________________________
 - Use more similar methods (reduce diversity)
 - Or collect more data (sometimes variance drops with larger sample)
 
-**The Lipschitz test:** Compute κ = L_sum · L_align · max{λ\_{αβ}, λ\_{βγ}, λ\_{γα}}.
+**The Lipschitz test:** Compute κ = L_sum · L_align · max{L_link(λ\_{αβ}), L_link(λ\_{βγ}), L_link(λ\_{γα})}, where L_link is the link-Lipschitz constant for the barrier+exponential coherence map (Core §7.1). For the canonical barrier φ(δ) = δ/(1−δ): L_link(λ) = (4/λ)·exp(λ−2) when λ ≤ 2, and L_link(λ) = λ when λ ≥ 2. Pre-v3.2.0 specs used max{λ} directly, which underestimates the Lipschitz envelope when λ < 2.
 
 **Pass rule:** κ ≤ τ_lip with default τ_lip = 0.95 (a safety margin strictly below 1).
 
@@ -1008,7 +1021,8 @@ ______________________________________________________________________
 | δ_CI      | CI width tolerance                  | 0.20         | Operational §5     |
 | Z_crit    | OOD threshold                       | 2.5          | Operational §5     |
 | τ_S3      | S₃ witness                          | 0.05         | Operational §2     |
-| τ_gauge   | Gauge witness                       | 0.05         | Operational §2     |
+| τ_gauge   | Gauge witness (ref)                 | 0.05         | Operational §2     |
+| τ_gauge_spread | Gauge witness (spread)         | τ_gauge      | Operational §2     |
 | τ_scale   | Scale witness                       | 0.10         | Operational §2     |
 | τ_var     | Variance witness                    | 0.15         | Operational §2     |
 | τ_lip     | Lipschitz witness (κ ≤ τ_lip)       | 0.95         | Operational §2     |

@@ -120,10 +120,11 @@ D(Sₐ, Sᵦ; σ) := λₐᵦ · φ(δ(Sₐ, Sᵦ; σ))     D ∈ [0, ∞]
 Coh(Sₐ, Sᵦ; σ) := exp(−D(Sₐ, Sᵦ; σ))     (convention: exp(−∞) = 0)
 ```
 
-**Limits:**
+**Limits and endpoint policy:**
 
 - δ = 0 ⟹ D = 0 ⟹ Coh = 1 (perfect match)
-- δ → 1 ⟹ D → ∞ ⟹ Coh → 0 (complete mismatch; strict zero)
+- δ → 1⁻ ⟹ D → ∞ ⟹ Coh → 0 (limit form)
+- δ = 1 ⟹ D = ∞ ⟹ Coh = 0 (strict equality at the endpoint, by convention)
 
 **Role of λₐᵦ.** λₐᵦ > 0 is purely a *sensitivity* parameter — it scales the energy curve. It does **not** establish a coherence floor; the floor (Coh = 0) arises strictly from δ = 1.
 
@@ -252,13 +253,29 @@ T(Sα, Sβ, Sγ) = (Tα(Sβ, Sγ), Tβ(Sγ, Sα), Tγ(Sα, Sβ))
 
 **Interpretation:** Each summary Tₐ is refined based on pairwise coherences with the other two (Jacobi-style parallel update). Fixed point T(S\*) = S\* represents mutually coherent summaries.
 
+**Link-Lipschitz constant.** For the canonical barrier φ(δ) = δ/(1−δ), the coherence link f_λ(δ) := exp(−λ · φ(δ)) has
+
+```
+|f_λ'(δ)| = λ/(1−δ)² · exp(−λ · δ/(1−δ))
+```
+
+Its supremum over δ ∈ [0,1) is:
+
+```
+L_link(λ) := sup_{δ∈[0,1)} |f_λ'(δ)|
+           = (4/λ) · exp(λ − 2)        if 0 < λ ≤ 2   (attained at δ* = 1 − λ/2)
+           = λ                          if λ ≥ 2       (attained at δ = 0)
+```
+
+(Continuous at λ = 2 where both branches give 2.) Implementations using a non-default φ MUST recompute and record L_link.
+
 **Contraction test:** Define
 
 ```
-κ := Lₛᵤₘ · Lₐₗᵢgₙ · max{λₐᵦ}
+κ := Lₛᵤₘ · Lₐₗᵢgₙ · max{L_link(λₐᵦ)}
 ```
 
-where Lₛᵤₘ, Lₐₗᵢgₙ are Lipschitz constants for summary and alignment operations.
+where Lₛᵤₘ, Lₐₗᵢgₙ are Lipschitz constants for the *summary* and *summary→δ alignment* operations (over bounded δ space). The barrier+exponential link contributes through L_link, not through λₐᵦ directly — using max{λₐᵦ} as in pre-v3.2.0 specifications underestimates the Lipschitz envelope when λ < 2.
 
 If κ < 1, then T is contraction on 𝒮³ with unique fixed point (S*α, S*β, S\*γ).
 
@@ -291,7 +308,7 @@ ______________________________________________________________________
 - Pairwise coherences: Coh̄αβ, Coh̄βγ, Coh̄γα
 - Variances: Varαβ, Varβγ, Varγα
 - Leverage: λ_α, λ_β, λ_γ, λ_Σ
-- Stability: Lₛᵤₘ, Lₐₗᵢgₙ, κ
+- Stability: Lₛᵤₘ, Lₐₗᵢgₙ, L_link(λₐᵦ) per pair, κ
 - OOD statistic: Zₜ
 - Provenance: complete parameter record
 
@@ -311,7 +328,7 @@ C_Σ(Oα, Oβ, Oγ) = C_Σ(Oπ(α), Oπ(β), Oπ(γ))
 
 **P4 (Degeneracy):** Any component = 0 ⟹ C_Σ = 0.
 
-**P5 (Lipschitz):** C_Σ is Lipschitz continuous with constant L\_{C_Σ} ≤ κ.
+**P5 (Scoped Lipschitz Stability):** On the nondegenerate numerical domain where all sᵢ ≥ ε, C_Σ^num is Lipschitz continuous with implementation-recorded constant L\_{C_Σ}^{num} ≤ κ (with κ as in §7.1, using L_link). At mathematical degeneracy (any sᵢ = 0), C_Σ^math preserves the strict zero endpoint; global Lipschitz continuity is **not** required there — the geometric mean has unbounded derivative at zero.
 
 ______________________________________________________________________
 

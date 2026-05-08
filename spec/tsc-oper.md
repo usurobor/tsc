@@ -40,27 +40,40 @@ w_S3 = max{π∈S₃} |C_Σ(Oα, Oβ, Oγ) - C_Σ(Oπ(α), Oπ(β), Oπ(γ))|
 
 ### W2: Role-Gauge (Implementation Independence)
 
-**Signal:**
+W2 has two complementary signals. Reporting only the best-permutation match (as pre-v3.2.0 specifications did) lets an implementation hide gauge dependence by selecting a favorable π; v3.2.0 requires both a reference match and a spread test.
+
+**Signals:**
 
 ```
-w_gauge = |C_Σ(labeled) - max{π∈S₃} C_Σ(unlabeled remapped by π)|
+w_gauge_ref    = |C_Σ(labeled) − C_Σ(unlabeled, canonical-remap)|
+w_gauge_spread = max_{π∈S₃} C_Σ(unlabeled remapped by π)
+                 − min_{π∈S₃} C_Σ(unlabeled remapped by π)
 ```
 
-**Test:** Stripping role labels and auto-discovering best axis assignment yields same C_Σ.
+The *canonical remap* is a deterministic, structure-derived axis assignment (e.g., lexicographic ordering of structural fingerprints) recorded in provenance.
 
-**Purpose:** Enforce that measurement procedure doesn't depend on which axis labels are used—role is presentation gauge, not intrinsic property.
+**Pass conditions (both required):**
 
-**Note:** W1 tests mathematical invariance (permute inputs); W2 tests computational invariance (implementation ignores labels). Both required.
+```
+w_gauge_ref    ≤ τ_gauge
+w_gauge_spread ≤ τ_gauge_spread     (default τ_gauge_spread = τ_gauge)
+```
+
+**Test:** Stripping role labels and applying the canonical remap matches the labeled measurement (`w_gauge_ref`); and no permutation of the unlabeled assignment shifts C_Σ beyond τ_gauge_spread (`w_gauge_spread`).
+
+**Purpose:** Enforce that measurement procedure doesn't depend on which axis labels are used. The reference signal verifies label-blindness; the spread signal verifies *true* permutation insensitivity (no hiding behind a chosen π).
+
+**Note:** W1 tests mathematical invariance (permute inputs to C_Σ); W2 tests computational invariance (implementation ignores labels). Both required.
 
 ### W3: Scale-Equivariance
 
 **Signal:**
 
 ```
-w_scale = |C_Σ(φ(Oα), φ(Oβ), φ(Oγ)) - C_Σ(Oα, Oβ, Oγ)|
+w_scale = |C_Σ(ψ(Oα), ψ(Oβ), ψ(Oγ)) - C_Σ(Oα, Oβ, Oγ)|
 ```
 
-**Test:** Uniform scale transform φ (e.g., all features × 2) preserves coherence.
+**Test:** Uniform scale transform ψ (e.g., all features × 2) preserves coherence. Note: ψ here denotes the W3 scale map, distinct from the barrier transform φ in Core §3.2.
 
 **Purpose:** Enforce A3. Coherence is scale-free.
 
@@ -77,8 +90,10 @@ w_var = max{Varαβ, Varβγ, Varγα}
 **Lipschitz signal:**
 
 ```
-w_lip = κ = Lₛᵤₘ · Lₐₗᵢgₙ · max{λₐᵦ}
+w_lip = κ = Lₛᵤₘ · Lₐₗᵢgₙ · max{L_link(λₐᵦ)}
 ```
+
+where L_link is the link-Lipschitz constant for the barrier+exponential coherence map (Core §7.1). Implementations using a non-default barrier φ MUST recompute and record L_link.
 
 **Test:**
 
@@ -93,13 +108,14 @@ ______________________________________________________________________
 
 **Floor table:**
 
-| Witness   | Symbol  | Default | Units         |
-| --------- | ------- | ------- | ------------- |
-| S₃        | τ_S3    | 0.05    | absolute      |
-| Gauge     | τ_gauge | 0.05    | absolute      |
-| Scale     | τ_scale | 0.10    | absolute      |
-| Variance  | τ_var   | 0.15    | dimensionless |
-| Lipschitz | τ_lip   | 0.95    | dimensionless |
+| Witness        | Symbol           | Default     | Units         |
+| -------------- | ---------------- | ----------- | ------------- |
+| S₃             | τ_S3             | 0.05        | absolute      |
+| Gauge (ref)    | τ_gauge          | 0.05        | absolute      |
+| Gauge (spread) | τ_gauge_spread   | τ_gauge     | absolute      |
+| Scale          | τ_scale          | 0.10        | absolute      |
+| Variance       | τ_var            | 0.15        | dimensionless |
+| Lipschitz      | τ_lip            | 0.95        | dimensionless |
 
 **Verdict:** Witness w passes if w ≤ τ_w.
 
@@ -197,10 +213,11 @@ ______________________________________________________________________
 ```
 1. C_Σ^num ≥ Θ AND zero_component_present = false   (coherence threshold; strict math degeneracy fails this)
 2. w_S3 ≤ τ_S3                                       (mathematical symmetry)
-3. w_gauge ≤ τ_gauge                                 (computational independence)
+3a. w_gauge_ref    ≤ τ_gauge                         (label-blind reference match)
+3b. w_gauge_spread ≤ τ_gauge_spread                  (permutation-insensitive)
 4. w_scale ≤ τ_scale                                 (scale equivariance)
 5. w_var ≤ τ_var                                     (ensemble stability)
-6. w_lip < 1                                         (contraction)
+6. w_lip < 1                                         (contraction; w_lip uses L_link)
 7. CIₕᵢ - CIₗₒ ≤ δ_CI                                (precision)
 8. Zₜ < Zcᵣᵢₜ                                        (distribution stability)
 ```
@@ -241,9 +258,10 @@ Consumers MUST read canonical keys; MAY fall back to legacy keys if canonical ab
 - λₐᵦ (pairwise sensitivities)
 - ε (numerical floor)
 - Θ (acceptance threshold)
-- All witness floors τ\_\*
+- All witness floors τ\_\* (including τ_gauge_spread)
 - φ specification (default `delta_over_one_minus_delta`)
 - η_φ (barrier clip, if applied)
+- Canonical-remap procedure for W2 (deterministic axis assignment)
 
 **Computation:**
 
@@ -260,16 +278,18 @@ Consumers MUST read canonical keys; MAY fall back to legacy keys if canonical ab
 - [CIₗₒ, CIₕᵢ] over C_Σ^num
 - Per-pair δ values (normalized discrepancy)
 - Per-pair D values (discrepancy energy)
+- Per-pair L_link(λₐᵦ) values
 - Coh̄αβ, Coh̄βγ, Coh̄γα
 - Varαβ, Varβγ, Varγα
 - λ_α, λ_β, λ_γ, λ_Σ
-- All witness signals: w_S3, w_gauge, w_scale, w_var, w_lip
+- All witness signals: w_S3, w_gauge_ref, w_gauge_spread, w_scale, w_var, w_lip
 - OOD: Zₜ, reference window (note: reference window must be reset on barrier-transform cutover)
 
 **Calibration:**
 
-- Lₛᵤₘ, Lₐₗᵢgₙ (Lipschitz constants)
-- κ (contraction scalar)
+- Lₛᵤₘ, Lₐₗᵢgₙ (Lipschitz constants for summary and summary→δ alignment, over bounded δ space)
+- L_link(λₐᵦ) per pair (link-Lipschitz from barrier+exponential, Core §7.1)
+- κ (contraction scalar; uses L_link, not bare λₐᵦ)
 - Scale calibration maps (if any)
 - Ground metrics for W₁ distances
 
@@ -281,6 +301,42 @@ Consumers MUST read canonical keys; MAY fall back to legacy keys if canonical ab
 - Timestamp, version
 
 **Format:** JSON or equivalent structured format. Must be machine-readable.
+
+**Canonical v3.2.0 JSON additions (minimal set).** These fields MUST appear in the provenance bundle alongside the v3.1.0 fields. They make the discrepancy → energy → coherence chain typed and provenance-visible:
+
+```json
+{
+  "discrepancy_symbol": "delta",
+  "discrepancy_range": "[0,1]",
+  "coherence_link": "barrier_exponential",
+  "barrier_phi": "delta/(1-delta)",
+  "barrier_clip_eta_phi": null,
+  "endpoint_policy": "delta=1 -> D=infinity -> Coh=0",
+  "energy_variable": "D_ab",
+  "link_lipschitz_constants": {
+    "alpha_beta": null,
+    "beta_gamma": null,
+    "gamma_alpha": null
+  },
+  "aggregate_math": {
+    "C_sigma_math": null,
+    "zero_component_present": false
+  },
+  "aggregate_numeric": {
+    "C_sigma_num": null,
+    "epsilon": null,
+    "numeric_floor_applied": false
+  },
+  "gauge_witness": {
+    "w_gauge_ref": null,
+    "w_gauge_spread": null,
+    "tau_gauge_spread": null,
+    "canonical_remap_procedure": null
+  }
+}
+```
+
+This composes with the existing Observation Dynamics provenance (typed calibration bases, grounding records, grounding witness, no-ungrounded-inflation): the barrier link is the typed transformation step the chain previously lacked.
 
 ______________________________________________________________________
 
