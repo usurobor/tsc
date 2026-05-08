@@ -91,3 +91,19 @@ Yes. All implementation files compile (`dune build` passes). All 58 tests pass (
 | 8 Review | `.cdd/unreleased/25/beta-review.md` | review | β pending |
 | 9 Gate | pending | release | β pending |
 | 10 Release | pending | release | β pending |
+
+## Review-Readiness | round 1 | implementation SHA: 71238ec | branch CI: local build green (dune build + dune exec test/test_mechanical.exe — 58/58 pass) | ready for β
+
+Pre-review gate (alpha/SKILL.md §2.6):
+
+1. `origin/cycle/25` rebased onto `origin/main` (56af43a) — branch created from that SHA; no new main commits since dispatch. Verified at 2026-05-08T00:00Z.
+2. Self-coherence carries CDD Trace through step 7 — ✓
+3. Tests present: `engine/ocaml/test/test_mechanical.ml` — 58 assertions covering AC4, AC5, AC6, AC12. `dune exec test/test_mechanical.exe` → all pass.
+4. Every AC has evidence — ✓ (see §ACs)
+5. Known debt explicit — ✓ (see §Debt)
+6. Schema/shape audit: mechanical_scoring.mli contract unchanged. `report.ml` `to_json` signature extended with optional `~mode` (backward-compat). Hybrid JSON shape validated by test.
+7. Peer enumeration: report callers — `run_llm`, `run_mechanical`, `run_hybrid` — all three audited and updated.
+8. Harness audit: no shell or CI harnesses generate report JSON. Not applicable.
+9. Post-patch re-audit: OCaml (dune build clean) + Markdown (docs reviewed against AC7). No other languages in diff.
+10. Branch CI: local build green. Remote CI state unknown — β should wait for green before merge.
+11. Git author email: `alpha@cdd.tsc` ✓ (verified via `git log -1 --format='%ae' HEAD`)
