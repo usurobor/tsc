@@ -1,8 +1,8 @@
-# TSC Glossary v3.1.0
+# TSC Glossary v3.2.0
 
-**Version:** v3.1.0 (Triadic Foundation + Measurement Framework)\
+**Version:** v3.2.0 (Triadic Foundation + Measurement Framework + Barrier Transform)\
 **Status:** Informative (accessible terminology guide)\
-**Corresponds to:** C≡ v3.1.0, TSC Core v3.1.0, TSC Operational v3.1.0, TSC Observation Dynamics v1.0.13
+**Corresponds to:** C≡ v3.1.0, TSC Core v3.2.0, TSC Operational v3.2.0, TSC Observation Dynamics v1.0.13
 
 ______________________________________________________________________
 
@@ -406,23 +406,41 @@ They're in different spaces. Different dimensions. Different representations. Ho
 - Graph matching (align structural patterns)
 - And more—the key is having multiple heterogeneous methods
 
-**The discrepancy function:**
+**The normalized discrepancy:**
 
 ```
-Δ(S_a, S_b; σ) = θ · Δ_struct + (1-θ) · Δ_dist
+δ(S_a, S_b; σ) = θ · δ_struct + (1-θ) · δ_dist
 ```
 
 Part structural (comparing dimensions d_a vs d_b and invariants ℐ_a vs ℐ_b), part distributional (comparing probability distributions p_a vs p_b). The parameter θ (default 0.7) weights how much you care about structural match versus statistical match.
 
 Both components are normalized to [0,1]. A discrepancy of 0 means perfect match (the two summaries are identical under alignment σ). A discrepancy of 1 means complete mismatch (they share nothing).
 
-**From discrepancy to coherence:**
+Bounded δ matters: it preserves comparability across heterogeneous alignment methods, supports scale-equivariance (W3), and keeps the dependence-aware ledgers in tsc-observation-dynamics finite.
+
+**The barrier transform (why bounded δ doesn't trap us at a coherence floor):**
+
+A bounded δ ∈ [0,1] cannot, on its own, send coherence to a strict zero through `exp(−λ·δ)` — the best you ever achieve is `exp(−λ)`. That makes λ do double duty (sensitivity *and* floor), which is semantic overload.
+
+Resolution: pass δ through a monotone barrier function φ: [0,1] → [0,∞] before exponentiating:
 
 ```
-Coh(S_a, S_b; σ) = exp(-λ_ab · Δ)
+φ(0) = 0
+lim{δ → 1⁻} φ(δ) = +∞
 ```
 
-This maps discrepancy Δ ∈ [0,1] to coherence ∈ [0,1]. When Δ = 0 (perfect match), Coh = 1 (perfect coherence). As Δ increases, coherence decays exponentially at rate λ_ab (the sensitivity parameter).
+Canonical default: `φ(δ) = δ / (1 − δ)`, with `φ(1) = +∞` by convention.
+
+**Discrepancy energy and coherence:**
+
+```
+D(S_a, S_b; σ) = λ_ab · φ(δ(S_a, S_b; σ))      D ∈ [0, ∞]
+Coh(S_a, S_b; σ) = exp(−D(S_a, S_b; σ))         (with exp(−∞) = 0)
+```
+
+Now δ ∈ [0,1] cleanly carries the *duality* (the discernible mismatch between Left and Right material aspects), while D ∈ [0,∞] carries the *unity-collapse* limit: complete relational loss requires infinite energy to sustain, and that limit is exactly where Coh becomes strictly zero.
+
+Crucially, λ_ab is purely a *sensitivity* parameter — it scales the energy curve, it does not set a floor. Coh = 0 if and only if δ = 1.
 
 **The ensemble approach:** Don't trust one alignment method. Different methods make different assumptions. Build an ensemble 𝒜_ab with at least 3 heterogeneous methods. For each method σ in the ensemble, compute Coh(S_a, S_b; σ). Then:
 
@@ -482,15 +500,25 @@ ______________________________________________________________________
 
 ### Aggregate Coherence (The Final Verdict Input)
 
-Three scores, one number: **C_Σ**.
+Three scores, one number: **C_Σ**. But to keep the mathematics honest *and* the computer happy, we maintain two compatible forms.
 
-**The formula:**
+**Mathematical (normative — for proofs):**
 
 ```
-C_Σ = (s_α · s_β · s_γ)^(1/3)
+C_Σ^math = (s_α · s_β · s_γ)^(1/3)
 ```
 
-This is the **geometric mean**—the cube root of the product. Not the arithmetic mean (average), not the maximum, not the minimum. The geometric mean.
+**Numerical (operational — for computation, CI, OOD, verdict):**
+
+```
+C_Σ^num = exp((1/3)(w_α ln(max(s_α, ε)) + w_β ln(max(s_β, ε)) + w_γ ln(max(s_γ, ε))))
+```
+
+When all three scores are at or above the floor ε, the two forms coincide exactly. They diverge **only** when at least one score is below ε.
+
+This split exists for one reason: the math wants `s_i = 0 ⟹ C_Σ = 0` to be a strict, provable property (Degeneracy Axiom from C≡ §5.4). The computer wants no `log(0) = −∞`. Splitting the definitions lets both win — the spec proves things about C_Σ^math, the implementation computes C_Σ^num, and provenance records `zero_component_present` whenever the two would diverge.
+
+Either way, the formula is still the **geometric mean**—the cube root of the product. Not the arithmetic mean (average), not the maximum, not the minimum. The geometric mean.
 
 **Why geometric mean?** Because of the **Degeneracy Guard**: If any score is 0, the aggregate is 0. The product of anything with 0 is 0. The cube root of 0 is 0. You cannot compensate failure in one dimension with success in others.
 
@@ -515,7 +543,7 @@ with weights w_α, w_β, w_γ > 0 summing to 3. This is the weighted geometric m
 - **Disruption-antitone:** Follows from axiom (P4′) for each score and monotonicity of products and cube roots
 - **Degeneracy guard:** Any factor = 0 ⟹ product = 0
 
-**When you implement:** Floor all inputs at ε (typically 10⁻⁵) before taking logs to prevent log(0) = -∞. Use max(s_i, ε) in the formula. (See TSC Core §5)
+**When you implement:** Compute C_Σ^num for all numerical work (CI, OOD, verdict). Always record `numeric_floor_applied`, `epsilon`, and `zero_component_present` in provenance whenever any s_i < ε. The `zero_component_present` flag is what the verdict layer reads to enforce the strict mathematical degeneracy: when true, the verdict treats C_Σ^math = 0 as a coherence-threshold FAIL (not a witness FAIL_DEGENERATE). (See TSC Core §5, Operational §5)
 
 ______________________________________________________________________
 
@@ -682,7 +710,7 @@ ______________________________________________________________________
 - **Normalize properly:** Scale to unit variance or standard ranges
 - **Apply calibration maps:** Transform to dimensionless quantities
 
-Then retry. If it still fails, your discrepancy function Δ isn't scale-equivariant. Review Core §3. (See TSC Operational §2)
+Then retry. If it still fails, your normalized discrepancy δ isn't scale-equivariant. Review Core §3. (See TSC Operational §2)
 
 ______________________________________________________________________
 
@@ -972,6 +1000,8 @@ ______________________________________________________________________
 | θ         | Structural vs distributional weight | 0.7          | Core §3            |
 | λ_a       | Axis sensitivity (a∈{α,β,γ})        | tuned        | Core §4            |
 | λ_ab      | Pairwise sensitivity                | tuned        | Core §3            |
+| φ         | Barrier transform δ → D             | δ/(1−δ)      | Core §3.2          |
+| η_φ       | Barrier clip near δ=1               | 10⁻¹²        | Core §3.2, §12     |
 | ε         | Numerical floor                     | 10⁻⁵         | Core §5            |
 | M         | α evaluator cap (≥ 3)               | 10 (example) | C≡ §3.1            |
 | **Θ**     | **Decision threshold**              | **0.75**     | **Operational §5** |
@@ -1012,4 +1042,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**End — TSC Glossary v3.1.0**
+**End — TSC Glossary v3.2.0**

@@ -1,8 +1,10 @@
-# TSC Operational v3.1.0
+# TSC Operational v3.2.0
 
-**Version:** 3.1.0\
+**Version:** 3.2.0\
 **Status:** Normative\
-**Foundation:** TSC Core v3.1.0
+**Foundation:** TSC Core v3.2.0
+
+**Change from v3.1.0:** Verdict logic reads C_Σ^num for threshold comparison and treats `zero_component_present = true` as a strict FAIL on the coherence threshold (since C_Σ^math = 0). Provenance bundle adds barrier-transform fields (δ, D, φ specification, clip parameter) and aggregate-form fields (C_Σ^math indicator, C_Σ^num value). See §5, §6.
 
 ______________________________________________________________________
 
@@ -193,15 +195,21 @@ ______________________________________________________________________
 **Pass conditions (all must hold):**
 
 ```
-1. C_Σ ≥ Θ                    (coherence threshold)
-2. w_S3 ≤ τ_S3                (mathematical symmetry)
-3. w_gauge ≤ τ_gauge          (computational independence)
-4. w_scale ≤ τ_scale          (scale equivariance)
-5. w_var ≤ τ_var              (ensemble stability)
-6. w_lip < 1                  (contraction)
-7. CIₕᵢ - CIₗₒ ≤ δ_CI         (precision)
-8. Zₜ < Zcᵣᵢₜ                 (distribution stability)
+1. C_Σ^num ≥ Θ AND zero_component_present = false   (coherence threshold; strict math degeneracy fails this)
+2. w_S3 ≤ τ_S3                                       (mathematical symmetry)
+3. w_gauge ≤ τ_gauge                                 (computational independence)
+4. w_scale ≤ τ_scale                                 (scale equivariance)
+5. w_var ≤ τ_var                                     (ensemble stability)
+6. w_lip < 1                                         (contraction)
+7. CIₕᵢ - CIₗₒ ≤ δ_CI                                (precision)
+8. Zₜ < Zcᵣᵢₜ                                        (distribution stability)
 ```
+
+**Notes on condition 1:**
+
+- The numerical aggregate C_Σ^num (Core §5.2) is the comparison value; the ε-floor prevents `log(0)` in the weighted form.
+- When `zero_component_present = true`, the mathematical aggregate C_Σ^math = 0 (Core §5.4), so condition 1 fails by definition irrespective of the C_Σ^num value the floor produces.
+- This is **FAIL** (system genuinely lost a coherence dimension), not **FAIL_DEGENERATE** (which is reserved for measurement-process failures via witnesses).
 
 **Fail-fast:** Exit on first failure for efficiency.
 
@@ -234,6 +242,8 @@ Consumers MUST read canonical keys; MAY fall back to legacy keys if canonical ab
 - ε (numerical floor)
 - Θ (acceptance threshold)
 - All witness floors τ\_\*
+- φ specification (default `delta_over_one_minus_delta`)
+- η_φ (barrier clip, if applied)
 
 **Computation:**
 
@@ -244,13 +254,17 @@ Consumers MUST read canonical keys; MAY fall back to legacy keys if canonical ab
 
 **Results:**
 
-- s_α, s_β, s_γ, C_Σ
-- [CIₗₒ, CIₕᵢ]
+- s_α, s_β, s_γ
+- C_Σ^num (numerical aggregate, used for verdict and CI)
+- `numeric_floor_applied`, `zero_component_present` (mathematical-aggregate flags)
+- [CIₗₒ, CIₕᵢ] over C_Σ^num
+- Per-pair δ values (normalized discrepancy)
+- Per-pair D values (discrepancy energy)
 - Coh̄αβ, Coh̄βγ, Coh̄γα
 - Varαβ, Varβγ, Varγα
 - λ_α, λ_β, λ_γ, λ_Σ
 - All witness signals: w_S3, w_gauge, w_scale, w_var, w_lip
-- OOD: Zₜ, reference window
+- OOD: Zₜ, reference window (note: reference window must be reset on barrier-transform cutover)
 
 **Calibration:**
 
@@ -392,4 +406,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**End — TSC Operational v3.1.0**
+**End — TSC Operational v3.2.0**
