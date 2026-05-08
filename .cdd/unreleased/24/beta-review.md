@@ -230,3 +230,65 @@ None — F5 is C-tier.
 **Option B (implement derivation):** Add a beta derivation step in `report.ml::to_json` — compute Coh values from each delta using `Coherence.coherence_link`, then aggregate to an `s_beta` value and overwrite `result.result_beta`. Requires an explicit formula (not in the issue ACs). This would be beyond the declared cycle scope; β recommends Option A to close F5 within the current cycle scope.
 
 β recommends Option A. If derivation is the desired design direction, file it as a new issue with an explicit formula before closing this cycle.
+
+---
+
+## Round 3 — β re-review
+
+**Verdict:** APPROVED
+
+**Round:** 3
+**origin/main SHA:** 52d03873570b31971fed0bb106903fa200a0087d
+**Cycle head SHA:** 3828d08a90ab406465a196f738693d9aea6df1d2
+**Fixed this round:** F5 (`b6c15dc`) — resolved.
+**Branch CI state:** green (doc-only fix; α confirmed `dune runtest` exits 0 at b6c15dc; F1–F4 fixes code-bearing, all passing per R2 verification)
+**Merge instruction:** `git merge --no-ff cycle/24-v320-engine` into main with `Closes #24`
+
+---
+
+## §2.0.0 Contract Integrity (R3)
+
+| Check | Result | Notes |
+|---|---|---|
+| Status truth preserved | yes | |
+| Canonical sources/paths verified | yes | |
+| Scope/non-goals consistent | yes | |
+| Constraint strata consistent | yes | F5 fix removes false engine-derivation claim; all surfaces now agree |
+| Exceptions field-specific/reasoned | yes | |
+| Path resolution base explicit | yes | |
+| Proof shape adequate | yes | |
+| Cross-surface projections updated | yes | SELF-MEASURE.md §3.2 + §3.3 and response_schema.ml docstring are now consistent with engine behavior |
+| No witness theater / false closure | yes | SELF-MEASURE.md §3.3 instructs LLM to provide real `beta = s_beta ∈ [0,1]`; no false engine-derivation claim |
+| PR body matches branch files | yes/n/a | |
+
+---
+
+## Fix verification (R3)
+
+### F5 — SELF-MEASURE.md §3.3 false engine-derivation claim
+
+**Resolved.** α chose Option A (doc truthfulness) as β recommended.
+
+1. **SELF-MEASURE.md §3.2**: Added `s_beta ∈ [0, 1]` as an LLM-estimated component score — "relational coherence score (β axis cross-file fit)". LLM is now explicitly instructed to estimate and provide this value.
+
+2. **SELF-MEASURE.md §3.3**: Changed to `beta = s_beta` — instructs LLM to provide a real score in [0,1], not `0.0` placeholder. No mention of engine derivation.
+
+3. **response_schema.ml `validate_result` docstring**: Now correctly states "The three top-level scores (alpha, beta, gamma) are LLM-provided values in [0, 1]; the delta fields carry per-pair discrepancy estimates used in provenance JSON." — no false engine-derivation claim.
+
+4. **Grep confirmation (per α self-coherence R3)**: `grep -n "engine derives beta\|engine derives s_beta\|placeholder.*engine" runtime/SELF-MEASURE.md engine/ocaml/lib/response_schema.ml` → 0 hits.
+
+The fix is complete and coherent: SELF-MEASURE.md now correctly describes the scoring contract (LLM provides real scores; engine applies barrier transform to δ values for provenance), and response_schema.ml accurately characterizes the validated fields.
+
+---
+
+## Findings (R3)
+
+None. F5 resolved. No new findings.
+
+---
+
+## Approval scope
+
+All seven ACs are evidenced in the diff. F1–F5 are resolved across rounds. CI green at branch head. No remaining incoherence found in the contract, implementation, or operator-visible surfaces.
+
+β approves this branch for merge into main. Merge closes #24.
