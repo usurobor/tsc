@@ -585,7 +585,7 @@ let sig_version_surface_consistency ~cfg (files : bundle_file list) : signal =
 
 (** Signal: Traceability presence — issue refs, changelog, commit SHAs. *)
 let sig_traceability_presence ~cfg (files : bundle_file list) : signal =
-  let trace_kws = ["changelog"; "closes #"; "fixes #"; "issue #"; "#"] in
+  let trace_kws = ["changelog"; "closes #"; "fixes #"; "issue #"] in
   let files_with_trace = List.filter (fun f ->
     contains_any trace_kws f.file_content
   ) files in

@@ -30,7 +30,7 @@ Tier 3: cnos.core/skills/write (prose quality), cdd/design (reference), cdd/plan
 - `engine/ocaml/lib/report.ml` — `to_json`/`to_text` gain `~mode` parameter; every report now has `"mode"` field (Step 5)
 - `engine/ocaml/lib/dune` — added mechanical_scoring and hybrid_scoring to modules list; -w -16 flag
 - `engine/ocaml/bin/main.ml` — `--mode {mechanical,llm,hybrid,auto}`, `--files <glob>` (repeatable), mode dispatch, auto fallback (Steps 1, 4, 9)
-- `engine/ocaml/test/test_mechanical.ml` — 58 assertions: AC4 bundle parity, AC5 determinism, AC6 schema, AC12 backend preservation (Step 7)
+- `engine/ocaml/test/test_mechanical.ml` — 61 assertions: AC4 bundle parity, AC5 determinism, AC6 schema, AC12 backend preservation (Step 7)
 - `engine/ocaml/test/dune` — test stanza
 - `engine/ocaml/test/fixtures/report.schema.json` — canonical schema fixture (Step 6)
 - `README.md`, `QUICKSTART.md`, `ARCHITECTURE.md` — document all modes and direct-file usage (Step 8)
@@ -44,7 +44,7 @@ Tier 3: cnos.core/skills/write (prose quality), cdd/design (reference), cdd/plan
 | AC3 | `coh --mode hybrid` produces mechanical+llm+final sub-objects | ✓ | Hybrid_scoring.to_json produces mechanical/llm/final per DESIGN.md §5 |
 | AC4 | Direct file input and named target share same `Bundle.t` shape | ✓ | Both call Bundle.build_bundle with same sort; test_bundle_parity passes |
 | AC5 | Mechanical scoring is deterministic on identical input | ✓ | test_mechanical_determinism: 6 assertions; score_files is pure |
-| AC6 | Canonical JSON schema across modes | ✓ | test_mechanical_json_schema + test_hybrid_json_schema; fixtures/report.schema.json |
+| AC6 | Canonical JSON schema across modes | ✓ | test_mechanical_json_schema + test_hybrid_json_schema (inline field checks); fixtures/report.schema.json is reference documentation (not loaded programmatically) |
 | AC7 | README, QUICKSTART, ARCHITECTURE document all modes + direct-file | ✓ | All three docs updated: mode table, --files usage, hybrid report shape |
 | AC8 | No Python reintroduced | ✓ (partial) | `git diff main..cycle/25 -- '*.py'` → 0 lines; pre-existing Python in tests/conformance/ owned by Sub 3 — see Known Debt |
 | AC9 | LLM backend reads `runtime/SELF-MEASURE.md` | ✓ | `main.ml`: `let instruction = ref "runtime/SELF-MEASURE.md"` is default; run_llm reads it |
@@ -60,7 +60,7 @@ No ambiguity pushed. All 12 ACs have concrete evidence. The one partial AC (AC8)
 
 **Is every claim backed by evidence in the diff?**
 
-Yes. All implementation files compile (`dune build` passes). All 58 tests pass (`dune exec test/test_mechanical.exe`). The mechanical_scoring.ml types exactly match mechanical_scoring.mli per OCaml's module system enforcement.
+Yes. All implementation files compile (`dune build` passes). All 61 tests pass (`dune exec test/test_mechanical.exe`). The mechanical_scoring.ml types exactly match mechanical_scoring.mli per OCaml's module system enforcement.
 
 **Peer enumeration:** This change touches the report layer (report.ml). The LLM report path (`run_llm`) is audited: it calls `Report.to_json ~result ~metadata ~mode:"llm" ()` — the new signature is backward-compatible via the optional `~mode` parameter. The text path `Report.to_text` is likewise updated. The mechanical and hybrid paths produce independent JSON (not through report.ml).
 
@@ -86,19 +86,19 @@ Yes. All implementation files compile (`dune build` passes). All 58 tests pass (
 | 4 Gap | this file §Gap | cdd | Named: LLM-only engine, no `--mode`, no `--files`, `.mli` without `.ml`. |
 | 5 Mode | this file §Mode | cdd, write, design, plan | MCA — implementing committed plan. Tier 3: write, design, plan. |
 | 6 Artifacts | `engine/ocaml/lib/`, `engine/ocaml/bin/main.ml`, `engine/ocaml/test/`, docs | ocaml, write | Steps 1,3–9 complete: bundle.ml, mechanical_scoring.ml, hybrid_scoring.ml, report.ml, main.ml, tests, docs |
-| 7 Self-coherence | this file | cdd | AC-by-AC evidence mapped above; 58 tests pass; dune build clean. |
+| 7 Self-coherence | this file | cdd | AC-by-AC evidence mapped above; 61 tests pass; dune build clean. |
 | 7a Pre-review | this file §Review-Readiness | cdd | Gate rows checked — see Review-Readiness section below. |
-| 8 Review | `.cdd/unreleased/25/beta-review.md` | review | β pending |
-| 9 Gate | pending | release | β pending |
-| 10 Release | pending | release | β pending |
+| 8 Review | `.cdd/unreleased/25/beta-review.md` | review | β: change-request (F1 bare # in traceability) → β applied fix + approved; 61/61 pass |
+| 9 Gate | pending | release | pending merge |
+| 10 Release | pending | release | pending merge |
 
-## Review-Readiness | round 1 | implementation SHA: 71238ec | branch CI: local build green (dune build + dune exec test/test_mechanical.exe — 58/58 pass) | ready for β
+## Review-Readiness | round 2 | implementation SHA: bc9d301 + β F1 fix | branch CI: local build green (dune build + dune exec test/test_mechanical.exe — 61/61 pass) | approved by β
 
 Pre-review gate (alpha/SKILL.md §2.6):
 
 1. `origin/cycle/25` rebased onto `origin/main` (56af43a) — branch created from that SHA; no new main commits since dispatch. Verified at 2026-05-08T00:00Z.
 2. Self-coherence carries CDD Trace through step 7 — ✓
-3. Tests present: `engine/ocaml/test/test_mechanical.ml` — 58 assertions covering AC4, AC5, AC6, AC12. `dune exec test/test_mechanical.exe` → all pass.
+3. Tests present: `engine/ocaml/test/test_mechanical.ml` — 61 assertions covering AC4, AC5, AC6, AC12. `dune exec test/test_mechanical.exe` → all pass.
 4. Every AC has evidence — ✓ (see §ACs)
 5. Known debt explicit — ✓ (see §Debt)
 6. Schema/shape audit: mechanical_scoring.mli contract unchanged. `report.ml` `to_json` signature extended with optional `~mode` (backward-compat). Hybrid JSON shape validated by test.
