@@ -20,5 +20,7 @@ The canonical implementation is `engine/ocaml/`. The operator manual is [docs/be
 
 | Version | Directory | Note |
 |---------|-----------|------|
+| 0.4.0 | [0.4.0/](0.4.0/) | Dotenv credential loading, VERSION as single source of truth, release scripts. |
+| 0.3.1 | — | Binary renamed `tsc` → `coh`. Single-commit hot fix; no design phase — frozen artifact directory not created. |
 | 0.3.0 | [0.3.0/](0.3.0/) | Installable CLI binary. Rename to `tsc`. |
 | 0.1.0 | [0.1.0/](0.1.0/) | First release. Replaces Python reference. |
