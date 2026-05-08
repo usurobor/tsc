@@ -2,19 +2,21 @@
 cycle: 29
 issue: "Sub 6 (#23): Generate v3.2.0 self-coherence report"
 branch: cycle/29-self-coherence
-phase: scaffold
+phase: alpha
 role: alpha
 ---
 
 # Cycle 29 — Self-Coherence
 
-**Gap:** *(α fills in)*
+**Gap:** No v3.2.0 self-coherence report exists. Spec v3.2.0 claims a typed transformation chain (barrier transform, typed provenance, W2 dual-signal gauge witness). Without a self-coherence run under a v3.2.0-conformant engine, the claim is theoretical only. The cnos release skill expects post-release self-coherence; the spec v3.2.0 RELEASE.md explicitly deferred this to a follow-on. Dependencies (#24 OCaml v3.2.0 engine, #25 hybrid scoring) are now CLOSED.
 
-**Mode:** *(α fills in)*
+**Mode:** MCA. The work is execution: run the v3.2.0 engine against canonical targets, capture provenance, author the report. No new design or architecture decision required beyond the path policy resolved in this issue.
 
 ## §Skills
 
-- Tier 3: `cdd/post-release` (self-coherence report is the post-release measurement for the spec v3.2.0 release)
+- Tier 1: `CDD.md`, `alpha/SKILL.md`
+- Tier 3: `cdd/post-release` — the self-coherence report is the post-release measurement for the spec v3.2.0 release
+- Tier 3: `cnos.core/skills/write` — report is a documentation artifact; write skill applies as generation constraint
 
 ## §ACs
 
