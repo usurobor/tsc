@@ -110,3 +110,37 @@ role: alpha
 - Missing `schema_version` → `Error`.
 - v3.0.0 → `Error`.
 - Test: `test_coherence.ml::test_ood_guard()` — all assertions pass.
+
+## §Self-check
+
+**Did α's work push ambiguity onto β?** No. Each AC maps to concrete evidence in the diff (module, function, test assertion).
+
+**Is every claim backed by evidence in the diff?**
+
+- AC1: `coherence.ml::coherence_link` + `test_coherence_link()` assertions.
+- AC2: `lipschitz.ml::l_link` + `test_l_link()` assertions.
+- AC3: `coherence.ml::aggregate` + `test_aggregate()` assertions.
+- AC4: `coherence.ml::gauge_witness` + `test_gauge_witness()` assertions.
+- AC5: `coherence.ml::provenance_json` + `report.ml::provenance_v320` + `provenance_v3_2_0.schema.json` + `test_provenance_v320_shape()`.
+- AC6: `response_schema.ml::extract_deltas` + rewritten `runtime/SELF-MEASURE.md`.
+- AC7: `ood.ml::check_schema_version` + `test_ood_guard()`.
+
+**Peer enumeration:**
+- New modules added to `dune` lib listing — verified no library name collision (single `tsc_engine` library).
+- `report.ml::to_json` signature change: added optional `delta_*` parameters with defaults `None` — existing call sites still compile (labeled optional args with defaults).
+- `response_schema.ml`: `validate_result` unchanged; new `extract_deltas` is additive.
+- No `phi` symbol existed in the codebase pre-diff (grepped); W3 scale transform `psi` is not yet implemented; no collision risk.
+
+**Harness audit:** No shell harnesses, CI workflow emitters, or fixture generators write the affected schemas. The one existing fixture (`report.schema.json`) is not schema-bearing for the new provenance keys — it covers `mode`/`alpha`/`beta`/`gamma`/`c_sigma`/`bottleneck_axis`, which are unchanged in shape.
+
+## §Debt
+
+1. **W3 psi rename** — the issue scopes "rename any internal `phi`-the-scale-transform identifier to `psi`." No such identifier exists in the current codebase. The new `phi` function in `coherence.ml` IS the barrier transform. If a W3 scale transform is added in future, it should be named `psi`. No code change required now; declared as explicit "no-op" for this cycle.
+
+2. **Alternate barrier functions** — spec allows substituting φ; engine only supports default `δ/(1−δ)`. Deferred per issue non-goals.
+
+3. **η_φ clipping** — recorded as `null` in provenance; not yet enforced numerically. Declared deferred per issue.
+
+4. **AC6 integration test (sample run)** — AC6 oracle requires "a sample provider call with a small bundle returns parseable δ values." This requires a live LLM provider (LLM_API_KEY). Integration test cannot run in the current environment without credentials. Manual oracle: `extract_deltas` function compiled and validated against in-memory JSON in test_coherence.ml implicit coverage (response_schema.ml builds on JSON parsing). Full end-to-end integration test (coh CLI → SELF-MEASURE.md → parse δ fields) is deferred — requires provider credentials and CI secrets not available here.
+
+5. **Provisional close-out** — per CDD §1.4 α step 10, α close-out will be provisional at review-readiness time (bounded dispatch model). Declared as known debt per CDD §1.6a.
