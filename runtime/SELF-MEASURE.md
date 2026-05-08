@@ -1,4 +1,4 @@
-# Self-Measure
+# Self-Measure v3.2.0
 
 You are evaluating a TSC target bundle.
 
@@ -110,31 +110,75 @@ Do not punish `repo` only because one layer is unfinished if the bundle already 
 
 ---
 
-## 3. Scoring rules
+## 3. Scoring rules — v3.2.0 protocol
 
-Score each axis from 0.0 to 1.0.
+**Do not output Coh (coherence) values directly. Output normalized discrepancy δ values in [0,1] per pair.**
 
-Use these interpretations:
+The engine will apply the barrier transform `φ(δ) = δ/(1−δ)` and compute
+`Coh = exp(−λ · φ(δ))` deterministically. Your job is to estimate δ.
 
-- **0.9–1.0** — strong coherence, only minor polish needed
-- **0.75–0.89** — coherent but still carrying visible debt
-- **0.5–0.74** — mixed, meaningful incoherence remains
-- **0.25–0.49** — weak coherence, major contradictions or missing structure
-- **0.0–0.24** — incoherent, does not yet present as one system
+### 3.1 Normalized discrepancy δ
 
-Do not inflate scores for ambition.
-Score only what the bundle supports.
+For each pair (α,β), (β,γ), (γ,α):
+
+```
+δ(a, b) = θ · δ_struct(a, b) + (1-θ) · δ_dist(a, b)
+```
+
+where θ = 0.7 (default).
+
+- **δ_struct**: structural misalignment — do the two axes describe the same structure?
+  - 0.0 = perfectly aligned
+  - 1.0 = completely misaligned
+- **δ_dist**: distributional divergence — do the two axes have similar feature distributions?
+  - 0.0 = same distribution
+  - 1.0 = no overlap
+
+Report δ ∈ [0, 1] for each pair. Use these thresholds:
+
+| δ range   | Interpretation                        |
+|-----------|---------------------------------------|
+| 0.0–0.10  | Very high coherence between the pair  |
+| 0.10–0.25 | Good coherence, minor misalignment    |
+| 0.25–0.50 | Moderate coherence, visible gaps      |
+| 0.50–0.75 | Poor coherence, significant mismatch  |
+| 0.75–1.00 | Near-incoherent, fundamental mismatch |
+
+### 3.2 Component scores s_α, s_γ
+
+Also estimate:
+- **s_alpha** ∈ [0, 1]: pattern coherence score for the bundle as a whole (α axis stability under perturbation)
+- **s_gamma** ∈ [0, 1]: process coherence score (γ axis temporal / evolution stability)
+
+The engine derives s_beta from the three pairwise Coh values.
+
+### 3.3 Score mapping for top-level fields
+
+For backward compatibility, compute the three top-level `alpha`, `beta`, `gamma` fields as:
+
+```
+alpha = s_alpha
+beta  = (derived by engine; set to geometric mean of the three δ-based Coh values as a preview)
+gamma = s_gamma
+```
+
+To provide a usable `beta` preview before engine processing, compute:
+```
+beta_preview ≈ exp(-1.0 * (delta_alpha_beta + delta_beta_gamma + delta_gamma_alpha) / 3.0)
+```
+
+Set `beta = beta_preview` in the top-level fields.
 
 ---
 
 ## 4. Evidence rules
 
-Every axis judgment must cite bundle evidence.
+Every judgment must cite bundle evidence.
 
 For each axis:
 - name the strongest positive evidence
 - name the strongest negative evidence
-- explain why the score lands where it does
+- explain why the discrepancy value lands where it does
 
 Do not write generic praise or generic criticism.
 
@@ -142,6 +186,7 @@ Do not write generic praise or generic criticism.
 - yes: "README, ARCHITECTURE, and targets agree on theory / targets / verifier, but target authority is still transitional"
 
 If evidence is insufficient:
+- increase the δ value (more discrepancy)
 - lower confidence
 - say what is missing
 
@@ -149,9 +194,9 @@ If evidence is insufficient:
 
 ## 5. Bottleneck rule
 
-After scoring α / β / γ:
+After scoring:
 
-- identify the lowest axis
+- identify the lowest-coherence axis (highest δ pairings)
 - name it as the bottleneck
 - explain why it constrains the whole more than the stronger axes help
 
@@ -183,6 +228,9 @@ Return JSON only.
   "alpha": 0.0,
   "beta": 0.0,
   "gamma": 0.0,
+  "delta_alpha_beta": 0.0,
+  "delta_beta_gamma": 0.0,
+  "delta_gamma_alpha": 0.0,
   "bottleneck_axis": "alpha|beta|gamma",
   "confidence": 0.0,
   "summary": "short overall judgment",
@@ -215,6 +263,8 @@ Return JSON only.
 
 No markdown.
 No prose before or after the JSON.
+
+**Key difference from v3.1:** The three `delta_*` fields are **required**. They carry normalized discrepancy δ ∈ [0, 1] for each pair. The engine applies the barrier transform to obtain Coh values — do not compute Coh yourself.
 
 ---
 

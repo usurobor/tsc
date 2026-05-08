@@ -88,8 +88,24 @@ let parse_json raw =
   try Ok (Yojson.Safe.from_string raw)
   with Yojson.Json_error msg -> Error (Printf.sprintf "JSON parse error: %s" msg)
 
+(** Extract an optional float field (Ok None when absent). *)
+let get_float_opt key json =
+  match json with
+  | `Assoc fields ->
+    (match List.assoc_opt key fields with
+     | None -> Ok None
+     | Some (`Float f) -> Ok (Some f)
+     | Some (`Int i) -> Ok (Some (Float.of_int i))
+     | Some _ -> Error (Printf.sprintf "field '%s' is not a number" key))
+  | _ -> Error "expected JSON object"
+
 (** Validate a complete measure result from parsed JSON.
-    Returns Ok measure_result or Error string. *)
+    Returns Ok measure_result or Error string.
+
+    v3.2.0: also accepts optional per-pair delta fields
+    (delta_alpha_beta, delta_beta_gamma, delta_gamma_alpha). When present,
+    the engine performs the barrier-transform chain deterministically
+    (coherence.ml) instead of treating the LLM output as Coh directly. *)
 let validate_result json =
   let axis_evidence_obj =
     match json with
@@ -150,3 +166,16 @@ let validate_result json =
   | _, _, _, _, _, _, _, _, _, Error e, _, _
   | _, _, _, _, _, _, _, _, _, _, Error e, _
   | _, _, _, _, _, _, _, _, _, _, _, Error e -> Error e
+
+(** Extract per-pair delta values from a v3.2.0 LLM response.
+    Returns (delta_alpha_beta, delta_beta_gamma, delta_gamma_alpha) — each
+    float option.  All fields are optional; absent means the LLM did not emit
+    them (pre-v3.2.0 response format). *)
+let extract_deltas json =
+  match
+    get_float_opt "delta_alpha_beta"  json,
+    get_float_opt "delta_beta_gamma"  json,
+    get_float_opt "delta_gamma_alpha" json
+  with
+  | Ok d_ab, Ok d_bg, Ok d_ga -> Ok (d_ab, d_bg, d_ga)
+  | Error e, _, _ | _, Error e, _ | _, _, Error e -> Error e
