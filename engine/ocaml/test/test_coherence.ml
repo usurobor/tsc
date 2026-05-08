@@ -50,7 +50,7 @@ let test_coherence_link () =
   let values = List.map (fun d -> Coherence.coherence_link ~lambda:1.0 ~delta:d) samples in
   let rec monotone_check = function
     | a :: b :: rest ->
-      check (a >= b) (Printf.sprintf "AC1: monotone at delta=%g -> %g" a b);
+      check (a >= b) (Printf.sprintf "AC1: monotone — coh[i]=%g >= coh[i+1]=%g" a b);
       monotone_check (b :: rest)
     | _ -> ()
   in
