@@ -69,3 +69,28 @@ D4 — **No CI.** Mechanical mode is deterministic; bootstrap CI requires LLM/hy
 | 7a Pre-review | `.cdd/unreleased/29/self-coherence.md` | cdd, alpha | Gate passed: (1) branch rebased on origin/main ee4a84d at 2026-05-08T21:51Z; (2) CDD Trace through step 7 present; (3) tests not applicable — docs-only change; (4) all 6 ACs evidenced; (5) debt D1–D4 explicit; (6) no schema-bearing contract changed; (7) no peer family; (8) no harness audit needed; (9) no mid-cycle patch; (10) local build+tests pass (opam exec -- dune build+runtest, 2026-05-08T21:51Z), CI on non-main branches requires PR — not applicable to docs-only change; (11) all commits alpha@cdd.tsc. Implementation SHA: ef833de. |
 
 ## Review-readiness | round 1 | base SHA: ee4a84d | implementation SHA: ef833de | branch CI: local build+tests green at 2026-05-08T21:51Z (CI does not run on non-main branches without PR; docs-only change, no OCaml code modified) | ready for β
+
+## Fix-round | round 1 → 2 | β verdict: REQUEST CHANGES (4 findings)
+
+**Root cause:** `docs/alpha/engine/0.7.0/SELF-COHERENCE.md` was committed but never declared in `self-coherence.md` §ACs, §CDD-Trace step 6, or §Self-check. Path decision was doctrine path (`docs/alpha/doctrine/3.2.0/`). F2, F3, F4 all derive from the undeclared engine-path report.
+
+**Resolution: Option A (β-recommended single commit).**
+
+| Finding | Status | Fix commit |
+|---------|--------|------------|
+| F1 — engine-path report undeclared in self-coherence.md | **Resolved** | `97f627a` — `git rm docs/alpha/engine/0.7.0/SELF-COHERENCE.md` |
+| F2 — score discrepancy between the two reports | **Resolved** (engine-path report removed; doctrine-path report is consistent with provenance JSON) | `97f627a` |
+| F3 — "direct" target in engine-path has no provenance JSON | **Resolved** (engine-path report removed) | `97f627a` |
+| F4 — W2 spread in engine-path reflects corpus instability not gauge invariance | **Resolved** (engine-path report removed) | `97f627a` |
+
+**README revert:** `docs/alpha/engine/README.md` v0.7.0 version-history row removed in the same commit. Engine README restored to pre-cycle state (0.5.0 is the latest row).
+
+**Re-audit:** Doctrine-path surfaces are unchanged — `docs/alpha/doctrine/3.2.0/SELF-COHERENCE.md`, `provenance/{spec,engine,repo}.json`, and `docs/alpha/doctrine/README.md` are identical to round 1. ACs 1–6 remain fully met. No new surfaces introduced.
+
+**Pre-review gate re-check (affected rows):**
+- Row 6 (schema audit): not applicable — fix commit is docs-only (deletion + one-line removal).
+- Row 7 (peer enumeration): no engine-path peer remains in diff; doctrine-path report is the sole output.
+- Row 9 (post-patch re-audit): docs-only fix; OCaml code unchanged.
+- Row 10 (CI): docs-only change; no OCaml code modified; local build+tests green.
+
+## Review-readiness | round 2 | base SHA: ee4a84d | implementation SHA: 97f627a | branch CI: local build+tests green (docs-only; no OCaml code modified) | ready for β
