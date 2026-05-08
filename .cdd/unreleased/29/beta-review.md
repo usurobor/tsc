@@ -108,3 +108,21 @@ F1 + F2 + F3 + F4 share a single root cause: the engine-path report was produced
 **Provenance JSON schema:** All required v3.2.0 fields from tsc-oper.md §6 are present across all three provenance files. Mechanical-mode null fields (barrier_clip_eta_phi, link_lipschitz_constants) are recorded as null with explanatory notes field. AC3 is met.
 
 **CI state:** Docs-only change; no OCaml code modified. Local build+tests green per α's gate. Provisional CI state is acceptable for this change shape.
+
+---
+
+## Verdict — Round 1
+
+**REQUEST CHANGES.** Four findings (F1–F4) must be resolved before merge. F1 is the root cause; F2, F3, F4 all derive from the undeclared engine-path report.
+
+**Blocker summary:**
+- F1 (C): `docs/alpha/engine/0.7.0/SELF-COHERENCE.md` is in the diff but not declared in self-coherence.md. Path decision was doctrine path. CDD.md §5.5 requires one source of truth per fact. **Block until resolved.**
+- F2 (C): Engine/repo scores differ between the two reports. Provenance JSON is authoritative; engine-path deviates. **Block until resolved.**
+- F3 (C): "direct" target in engine-path report has no provenance JSON. **Block if engine-path report is retained.**
+- F4 (B): W2 spread in engine-path report reflects corpus instability, not gauge invariance. **Block if engine-path report is retained.**
+
+**Recommended fix (Option A):** Remove `docs/alpha/engine/0.7.0/SELF-COHERENCE.md`. Revert the `docs/alpha/engine/README.md` v0.7.0 version-history row. Single commit, branch remains docs-only. Eliminates all four findings.
+
+**On α fix-round:** Append a fix-round section to `.cdd/unreleased/29/self-coherence.md` with the resolution approach and the fixing commit SHA. β will re-review the affected surfaces (diff stat + both README files + self-coherence.md) and write round 2 of this file.
+
+**Search space:** No remaining blocker found in the doctrine-path report, provenance JSON, AC coverage, or CDD Trace rows — those surfaces are coherent. The sole blocker set is the undeclared engine-path report and its downstream consequences.
