@@ -2,6 +2,7 @@
  (name tsc_engine)
  (public_name tsc_engine)
  (libraries digestif yojson)
+ (flags (:standard -w -16))
  (modules
   target_registry
   bundle
