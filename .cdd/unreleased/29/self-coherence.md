@@ -22,12 +22,12 @@ role: alpha
 
 | AC | Status | Evidence |
 |----|--------|----------|
-| AC1 — Self-coherence report exists | pending | |
-| AC2 — Per-target scores recorded | pending | |
-| AC3 — v3.2.0 provenance attached | pending | |
-| AC4 — W2 ref+spread reported | pending | |
-| AC5 — Honest grading | pending | |
-| AC6 — Report referenced in canonical doc index | pending | |
+| AC1 — Self-coherence report exists | **Met** | `docs/alpha/doctrine/3.2.0/SELF-COHERENCE.md` created in commit e45e866 |
+| AC2 — Per-target scores recorded | **Met** | Report §Per-Target Results: spec α=0.968/β=0.910/γ=0.815/C_Σ=0.898; engine α=0.650/β=0.225/γ=0.687/C_Σ=0.521; repo α=0.915/β=0.385/γ=0.680/C_Σ=0.660. Confidence note per target. |
+| AC3 — v3.2.0 provenance attached | **Met** | `docs/alpha/doctrine/3.2.0/provenance/{spec,engine,repo}.json` contain `provenance_v320` block with all v3.2.0 required fields from `spec/tsc-oper.md` §6 (discrepancy_symbol, barrier_phi, aggregate_math, aggregate_numeric, gauge_witness). Fields not computable in mechanical mode (L_link, per-pair δ) recorded as `null` with explanation. |
+| AC4 — W2 ref+spread reported | **Met** | Report §W2 Gauge Witness: w_gauge_ref=0.000 and w_gauge_spread=0.000 per target; both ≤ τ_gauge_spread=0.050 (pass). Trivial-pass explanation given: geometric mean is S₃-symmetric by construction in mechanical mode. |
+| AC5 — Honest grading | **Met** | Engine β=0.225 reported with root cause (_build/ artifact contamination). Aggregate C_Σ=0.675 grade C+. Bottleneck named (β). Hybrid deferral declared explicitly in §Known Gaps. Not everything A+. |
+| AC6 — Report referenced in canonical doc index | **Met** | `docs/alpha/doctrine/README.md` §Self-coherence reports table added with link to 3.2.0/SELF-COHERENCE.md, engine version, and mode. |
 
 ## §Self-check
 
