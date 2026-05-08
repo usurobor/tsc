@@ -154,20 +154,15 @@ The engine derives s_beta from the three pairwise Coh values.
 
 ### 3.3 Score mapping for top-level fields
 
-For backward compatibility, compute the three top-level `alpha`, `beta`, `gamma` fields as:
+Set the three top-level fields as:
 
 ```
 alpha = s_alpha
-beta  = (derived by engine; set to geometric mean of the three δ-based Coh values as a preview)
+beta  = 0.0   (placeholder; the engine derives beta from the per-pair δ values)
 gamma = s_gamma
 ```
 
-To provide a usable `beta` preview before engine processing, compute:
-```
-beta_preview ≈ exp(-1.0 * (delta_alpha_beta + delta_beta_gamma + delta_gamma_alpha) / 3.0)
-```
-
-Set `beta = beta_preview` in the top-level fields.
+The engine derives `beta` from `delta_alpha_beta`, `delta_beta_gamma`, and `delta_gamma_alpha` deterministically. Do not compute Coh or any beta approximation yourself.
 
 ---
 
