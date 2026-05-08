@@ -77,3 +77,34 @@ round: 1
 | `alpha/SKILL.md` | Tier 1a | yes | yes | Pre-review gate passed; incremental commits; debt explicit |
 | `cdd/post-release` | Issue §Skills, Tier 3 | yes (declared) | yes | Report structured as post-release measurement |
 | `cnos.core/skills/write` | Issue §Skills, Tier 3 | yes (declared) | yes | Report prose is clear, non-redundant |
+
+---
+
+## Findings
+
+| # | Finding | Evidence | Severity | Type |
+|---|---------|----------|----------|------|
+| F1 | Two self-coherence reports in diff; engine-path report undeclared in self-coherence.md | `git diff --stat` shows `docs/alpha/engine/0.7.0/SELF-COHERENCE.md` and `docs/alpha/engine/README.md`. Neither appears in self-coherence.md §ACs, CDD Trace step 6, or §Self-check. Path decision declared in self-coherence.md §Path Decision: "Keyed to spec version (docs/alpha/doctrine/3.2.0/)." CDD.md §5.5: "one source of truth per fact." | C | judgment + contract |
+| F2 | Score discrepancy between the two reports for engine and repo targets | Provenance JSON (authoritative engine output): engine γ=0.6870376→0.687, engine c_sigma_mechanical=0.5206792→0.521, repo γ=0.6800543→0.680, repo c_sigma_mechanical=0.6598163→0.660. Engine-path report §1.2: engine γ=0.691, C_Σ=0.522; §1.3: repo γ=0.682, C_Σ=0.661. Doctrine report is consistent with provenance JSON. Engine-path deviates because its W2 table mixes two runs with different input file sets (~8 min apart per report's own note). | C | mechanical |
+| F3 | Engine-path report contains "direct" 4th target (C_Σ=0.921) with no provenance JSON | Engine-path §1.4 reports `direct` target (tsc-core.md + runtime/SELF-MEASURE.md). No `provenance/direct.json` in diff. Issue scope declares three targets: spec, engine, repo. AC3 oracle requires provenance per target. Applies only if engine-path report is retained. | C | judgment |
+| F4 | Engine-path W2 spread values (engine 0.0013, repo 0.0007) derive from corpus instability between runs, not from gauge-invariance testing | Engine-path §2 note: "Tiny gamma variation in engine/repo between runs reflects files added to the working tree between the two runs (~8 minutes apart)." W2 gauge spread measures invariance to the canonical remap procedure (axis-label permutation), not corpus change. Doctrine report's w_gauge_spread=0.000 based on S₃-symmetry argument is correct for the W2 definition. Applies only if engine-path report is retained. | B | judgment |
+
+### Resolution paths
+
+F1 + F2 + F3 + F4 share a single root cause: the engine-path report was produced but not declared, and its data is inconsistent with the authoritative provenance JSON. Two options:
+
+**Option A (recommended — single commit):** Remove `docs/alpha/engine/0.7.0/SELF-COHERENCE.md` from the branch. Revert the `docs/alpha/engine/README.md` v0.7.0 version-history row. The doctrine-path report is the canonical output as declared by the path decision. The engine README retains the 0.3.0 precedent. Eliminates F1, F2, F3, F4.
+
+**Option B (if engine-path continuity is required):** Declare the engine-path report in self-coherence.md §ACs (AC6 extended or new AC), CDD Trace step 6, and §Self-check; state its relationship to the doctrine canonical. Reconcile engine/repo scores using provenance JSON values (not run-2 values). Add `provenance/direct.json` or remove §1.4 "direct" from the engine-path report. Reframe the W2 table: clarify spread reflects corpus instability, not gauge stability, or replace with the S₃-symmetry argument matching the doctrine report. Requires ~4 fix commits.
+
+---
+
+## Notes
+
+**D3 (α declared debt):** "Aggregate C_Σ formula not specified in spec. The report uses geometric mean of per-target C_Σ values." β assessment: the formula is internally consistent (geometric mean of per-target arithmetic means, `(0.898 × 0.521 × 0.660)^(1/3) = 0.675`). Explicit declaration as debt is correct; no additional finding required. γ should assess whether this formula should be canonicalized in tsc-oper.md.
+
+**W2 interpretation in doctrine report:** The doctrine report's w_gauge_spread=0.000 is correctly grounded in the S₃-symmetry argument for mechanical mode. The `canonical_remap_procedure` field in provenance JSON is present. AC4 is met at the doctrine path.
+
+**Provenance JSON schema:** All required v3.2.0 fields from tsc-oper.md §6 are present across all three provenance files. Mechanical-mode null fields (barrier_clip_eta_phi, link_lipschitz_constants) are recorded as null with explanatory notes field. AC3 is met.
+
+**CI state:** Docs-only change; no OCaml code modified. Local build+tests green per α's gate. Provisional CI state is acceptable for this change shape.
