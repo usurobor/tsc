@@ -16,6 +16,12 @@ The canonical spec is `spec/tsc-core.md`. All other spec documents elaborate on 
 | Observation dynamics | [spec/tsc-observation-dynamics.md](../../../spec/tsc-observation-dynamics.md) | How measurement interacts with the measured |
 | Glossary | [spec/tsc-glossary.md](../../../spec/tsc-glossary.md) | Term definitions |
 
+## Self-coherence reports
+
+| Version | Path | Engine | Mode |
+|---------|------|--------|------|
+| 3.2.0 | [3.2.0/SELF-COHERENCE.md](3.2.0/SELF-COHERENCE.md) | v0.7.0 (OCaml) | mechanical |
+
 ## Reading order
 
 1. `c-equiv.md` — the foundational equivalence

@@ -1,0 +1,45 @@
+{
+  "target": "repo",
+  "mode": "mechanical",
+  "schema_version": "v3.2.0",
+  "engine_version": "0.7.0",
+  "timestamp": "2026-05-08T21:40:50Z",
+  "scores": {
+    "alpha": 0.9146545640376706,
+    "beta": 0.38474025974025977,
+    "gamma": 0.680054347826087,
+    "c_sigma_mechanical": 0.6598163905346724,
+    "bottleneck_axis": "beta",
+    "confidence": 1.0
+  },
+  "provenance_v320": {
+    "discrepancy_symbol": "delta",
+    "discrepancy_range": "[0,1]",
+    "coherence_link": "barrier_exponential",
+    "barrier_phi": "delta/(1-delta)",
+    "barrier_clip_eta_phi": null,
+    "endpoint_policy": "delta=1 -> D=infinity -> Coh=0",
+    "energy_variable": "D_ab",
+    "link_lipschitz_constants": {
+      "alpha_beta": null,
+      "beta_gamma": null,
+      "gamma_alpha": null
+    },
+    "aggregate_math": {
+      "C_sigma_math": 0.6213,
+      "zero_component_present": false
+    },
+    "aggregate_numeric": {
+      "C_sigma_num": 0.6213,
+      "epsilon": 1e-05,
+      "numeric_floor_applied": false
+    },
+    "gauge_witness": {
+      "w_gauge_ref": 0.0,
+      "w_gauge_spread": 0.0,
+      "tau_gauge_spread": 0.05,
+      "canonical_remap_procedure": "lexicographic ascending by score value (lowest->alpha, middle->beta, highest->gamma)"
+    }
+  },
+  "notes": "Repo is an aggregate target (includes spec + engine). Beta bottleneck (0.385) driven by 7/14 links unresolved and authority_alignment signal = 0.0 (31 authority-claim files across the combined corpus). The engine sub-target's _build/ artifact issue contributes here as well. Mechanical mode: c_sigma_mechanical is arithmetic mean. L_link values are null. W2 gauge witness is trivially 0."
+}
