@@ -14,10 +14,11 @@ let evidence_to_yojson ev =
   ]
 
 (** Generate machine-readable JSON report. *)
-let to_json ~result ~metadata =
+let to_json ~result ~metadata ?(mode = "llm") () =
   let json =
     `Assoc [
       ("target", `String result.result_target);
+      ("mode", `String mode);
       ("alpha", `Float result.result_alpha);
       ("beta", `Float result.result_beta);
       ("gamma", `Float result.result_gamma);
@@ -52,7 +53,7 @@ let to_json ~result ~metadata =
   Yojson.Safe.pretty_to_string json
 
 (** Generate human-readable text report. *)
-let to_text ~result ~metadata =
+let to_text ~result ~metadata ?(mode = "llm") () =
   let c_sigma =
     (result.result_alpha +. result.result_beta +. result.result_gamma) /. 3.0
   in
@@ -66,6 +67,7 @@ let to_text ~result ~metadata =
   Printf.sprintf
     "TSC Measurement Report\n\
      ======================\n\
+     Mode: %s\n\
      Target: %s\n\
      \n\
      Scores:\n\
@@ -97,6 +99,7 @@ let to_text ~result ~metadata =
      \  model: %s\n\
      \  timestamp: %s\n\
      \  files: %d\n"
+    mode
     result.result_target
     result.result_alpha
     result.result_beta
