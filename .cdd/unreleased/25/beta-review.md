@@ -104,3 +104,41 @@ Additionally, the AC6 oracle claim reads: *"Schema validator against `engine/oca
 1. F1 fix lands cleanly (`dune build` green, 61/61 still pass)
 2. Self-coherence updated per above
 3. No new surfaces introduced
+
+---
+
+# Round 2 — APPROVED
+
+**Verdict:** APPROVED
+
+**Round:** 2
+**origin/main SHA at review base:** 56af43a3d03427cf739741c278121273d0ce1207
+**Branch head SHA:** 2ef36ce05266c6bfd316488b4a0f1205c9953914
+**Fixed this round:** 45b16bf (F1 fix + beta-review.md), 2ef36ce (self-coherence fix-round)
+**Branch CI state:** green (merge-tree: 61/61 pass, `dune build` clean)
+**Merge instruction:** `git merge --no-ff cycle/25` into main with `Closes #25`
+
+## R2 Verification
+
+### F1 resolved
+`trace_kws` at `mechanical_scoring.ml:588` now reads:
+```ocaml
+let trace_kws = ["changelog"; "closes #"; "fixes #"; "issue #"] in
+```
+Bare `"#"` removed. Confirmed by `git show origin/cycle/25:engine/ocaml/lib/mechanical_scoring.ml | grep trace_kws`.
+
+### F2 (note) resolved
+- Test count corrected to 61 throughout self-coherence (§Impact Graph, §Self-check, §CDD Trace).
+- AC6 oracle claim corrected to "inline field checks; fixtures/report.schema.json is reference documentation (not loaded programmatically)".
+
+### Test suite on merge tree
+`dune exec test/test_mechanical.exe` on the pre-committed merge tree (`origin/main` merged with `origin/cycle/25`): 61/61 pass, zero unmerged paths, zero new validator findings.
+
+### Pre-merge gate
+| Row | Result |
+|---|---|
+| 1 Identity truth | `beta@cdd.tsc` ✓ |
+| 2 Canonical-skill freshness | `origin/main` @ 56af43a confirmed current before review; no re-load required |
+| 3 Non-destructive merge-test | Clean merge, 61/61 on merge tree, worktree torn down |
+
+No new findings. Search space closed. Branch is coherent and ready to merge.
