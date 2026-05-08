@@ -219,3 +219,37 @@ F1 closes the main.ml gap in AC6's integration path. The full end-to-end integra
 | 9 | Post-patch re-audit (OCaml only diff) | ✅ `dune runtest` exits 0 at 0600608; all four fix commits re-tested |
 | 10 | Branch CI green | ✅ `dune runtest` exits 0 at 0600608 (local; no CI secrets required) |
 | 11 | Author email `alpha@cdd.tsc` | ✅ all four fix commits authored as `alpha@cdd.tsc` |
+
+## Fix round 2 | β R2 → α R3 | 2026-05-08
+
+### Findings addressed
+
+| Finding | Commit | Notes |
+|---------|--------|-------|
+| F5 — SELF-MEASURE.md §3.3 false claim + response_schema.ml docstring false claim | `b6c15dc` | Option A (doc truthfulness): §3.2 restored s_beta as a LLM-estimated component score; §3.3 changed `beta = 0.0 (placeholder; engine derives…)` → `beta = s_beta` so LLMs emit a real value in [0,1]. Removed the false directive "engine derives beta from per-pair δ values deterministically". response_schema.ml `validate_result` docstring corrected: "delta fields carry provenance data; alpha/beta/gamma are LLM-provided scores in [0,1]". No code change to report.ml or coherence.ml — the engine already passes result.result_beta through; with LLMs now instructed to supply a real score, beta and C_sigma_math will reflect genuine values. |
+
+### Post-fix re-audit
+
+- `dune runtest` clean at `b6c15dc` (0 test failures; changes are doc-only to runtime/SELF-MEASURE.md and a comment in response_schema.ml — no executable logic changed).
+- Peer enumeration: SELF-MEASURE.md §3.2 and §3.3 both corrected in the same commit; response_schema.ml docstring corrected. No other surface claims engine derives beta from deltas.
+- Grep confirmation: `grep -n "engine derives beta\|engine derives s_beta\|placeholder.*engine" runtime/SELF-MEASURE.md engine/ocaml/lib/response_schema.ml` → 0 hits.
+
+---
+
+## Review-readiness | round 3 | implementation SHA: b6c15dc | ready for β
+
+**Pre-review gate (α R3 — post fix-round re-validation):**
+
+| Row | Check | Status |
+|-----|-------|--------|
+| 1 | `origin/cycle/24-v320-engine` rebased onto `origin/main` | ✅ main HEAD: 52d03873 at 2026-05-08; no rebase required |
+| 2 | `.cdd/unreleased/24/self-coherence.md` carries CDD Trace through step 7 | ✅ |
+| 3 | Tests present or explicit reason none apply | ✅ F5 fix is doc-only; 0 regressions (dune runtest clean at b6c15dc) |
+| 4 | Every AC has evidence | ✅ AC6 evidence updated: SELF-MEASURE.md now correctly instructs LLM to provide real beta ∈ [0,1] |
+| 5 | Known debt explicit | ✅ §Debt items 1–5 unchanged |
+| 6 | Schema/shape audit | ✅ No schema change; LLM-provided beta field was already in the JSON contract |
+| 7 | Peer enumeration | ✅ Both false-claim sites corrected: SELF-MEASURE.md §3.2 + §3.3 + response_schema.ml docstring |
+| 8 | Harness audit | ✅ No shell/CI/template writers for affected surfaces |
+| 9 | Post-patch re-audit (doc-only diff) | ✅ grep confirms 0 remaining false-claim occurrences; dune runtest clean |
+| 10 | Branch CI green | ✅ dune runtest exits 0 at b6c15dc |
+| 11 | Author email `alpha@cdd.tsc` | ✅ b6c15dc authored as `alpha@cdd.tsc` |
