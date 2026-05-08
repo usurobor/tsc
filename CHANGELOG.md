@@ -1,5 +1,23 @@
 # Changelog
 
+## Spec releases
+
+The spec lineage (C≡, TSC Core, TSC Operational, TSC Glossary, TSC Observation Dynamics) versions independently from the engine. Spec releases are theory work with no binary deployment; validation is mathematical reproduction and cross-spec consistency.
+
+### Spec v3.2.0 (2026-05-08) — Barrier-Coherence Patch
+
+Coherence delta: C_Σ A- (`α A`, `β A`, `γ A-`) · **Level:** L7
+
+Discrepancy → coherence link refactored as a typed transformation chain `δ → φ(δ) → D → Coh = exp(−D)`. Resolves three latent contradictions in v3.1.0: P2 unreachable (bounded Δ vs Δ → ∞ claim), λ overloaded (sensitivity *and* floor), and Degeneracy Axiom muddled with ε-flooring. Aggregate split into mathematical C_Σ^math and numerical C_Σ^num; they coincide whenever min sᵢ ≥ ε. Pre-v3.2.0 link-Lipschitz envelope corrected via L_link(λ); W2 split into ref + spread to close the best-π gauge loophole; W3 scale transform renamed φ → ψ; canonical v3.2.0 provenance JSON skeleton added.
+
+**Affected:** `spec/tsc-core.md`, `spec/tsc-oper.md`, `spec/tsc-glossary.md`, `spec/tsc-observation-dynamics.md` (dependency uplift). C≡ v3.1.0 unchanged.
+
+**See:** `RELEASE.md` for full coherence delta, validation, and known issues. Engine implementation deferred to a follow-on engine release.
+
+---
+
+## Engine releases
+
 ## Release Coherence Ledger
 
 Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [cnos ENGINEERING-LEVELS.md](https://github.com/usurobor/cnos/blob/main/docs/gamma/ENGINEERING-LEVELS.md).
