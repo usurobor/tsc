@@ -24,6 +24,7 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
+| 0.6.0 | B+ | B+ | A | B+ | L6 | Spec v3.2.0 engine: barrier transform φ, L_link case-split, math/num split, W2 gauge witness (ref+spread), provenance JSON skeleton, SELF-MEASURE.md δ-based protocol, OOD cutover guard. 69-assertion test suite. (#24, cycle: L6) |
 | 0.5.0 | A | A | A | A | L6 | Hybrid scoring: mechanical + llm + hybrid + auto modes. 12 structural signals, 61-assertion OCaml test suite, direct file input. Full CDD cycle (#25). |
 | 0.4.0 | C+ | B | C+ | C | L6 | Dotenv credential loading + VERSION as single source of truth + release scripts. Partial-protocol release: no CDD cycle, β review absent, post-release artifacts retroactive (#27). |
 | 0.3.1 | A- | A- | A- | B+ | L5 | Binary renamed `tsc` → `coh` to avoid TypeScript compiler collision. |
@@ -33,6 +34,30 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 | 0.1.0 | B | B+ | B | B- | L7 | First OCaml engine. Targets, provider transport, CI, self-measurement workflow. CI broken at tag time. |
 
 Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Removed — available in git history. Not scored — different system.
+
+---
+
+## 0.6.0 (2026-05-08)
+
+TSC spec v3.2.0 implementation in the OCaml engine. Full CDD cycle (#24, Sub 1 of #23).
+
+### Added
+- **`engine/ocaml/lib/coherence.ml`**: barrier transform `φ(δ) = δ/(1−δ)`, discrepancy energy `D`, coherence link `Coh = exp(−D)` with strict zero at `δ=1`. Math/num aggregate split (`C_Σ^math`, `C_Σ^num`, `zero_component_present`, `numeric_floor_applied`). W2 gauge witness (`w_gauge_ref`, `w_gauge_spread`, `tau_gauge_spread`). Provenance JSON assembly.
+- **`engine/ocaml/lib/lipschitz.ml`**: L_link closed-form case-split — `(4/λ)·exp(λ−2)` for `0 < λ ≤ 2`, `λ` for `λ ≥ 2`, continuous at `λ = 2`.
+- **`engine/ocaml/lib/ood.ml`**: OOD cutover guard — refuses/warns on `schema_version < "v3.2.0"` with reset diagnostic.
+- **`engine/ocaml/test/test_coherence.ml`**: 69 assertions covering AC1–AC7 (barrier transform, L_link, math/num split, W2 gauge witness, OOD cutover).
+- **`engine/ocaml/test/fixtures/provenance_v3_2_0.schema.json`**: JSON schema for all required v3.2.0 provenance keys.
+
+### Changed
+- **`engine/ocaml/lib/report.ml`**: `to_json` accepts optional per-pair δ args; `provenance_v320` wires `gauge_witness` and `l_link` so W2 and L_link fields are populated in real reports.
+- **`engine/ocaml/lib/response_schema.ml`**: `extract_deltas` added; `validate_result` docstring corrected (LLM-provided vs. engine-computed fields accurately described).
+- **`engine/ocaml/bin/main.ml`**: `run_llm` calls `extract_deltas` and passes δ values to `Report.to_json`.
+- **`runtime/SELF-MEASURE.md`**: rewritten for δ-based scoring — LLM provides per-pair discrepancy values (δ_αβ, δ_βγ, δ_γα) and per-component scores; engine applies transformation chain.
+
+### Known debt
+- AC6 live-LLM integration test: `LLM_API_KEY` not available in this environment; δ-extraction path wired but not exercised end-to-end.
+- Beta derivation from δ values: deferred design extension.
+- `alpha/SKILL.md` §2.6 pre-review gate patch (cnos repo): caller-path trace row not yet landed.
 
 ---
 

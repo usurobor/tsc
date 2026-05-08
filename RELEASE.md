@@ -1,36 +1,36 @@
 # RELEASE.md
 
-**Release:** TSC Engine v0.5.0 — Hybrid Scoring
-**Issue:** #25 (Sub 2 of master #23)
-**Branch merged:** cycle/25 → main
-**Merge commit:** 597e87d
+**Release:** TSC Engine v0.6.0 — Spec v3.2.0 OCaml Implementation
+**Issue:** #24 (Sub 1 of master #23)
+**Branch merged:** cycle/24-v320-engine → main
+**Merge commit:** 36d0fe5125b12d1e03a20fef52c6512b7d819627
 **Date:** 2026-05-08
 
 ## Outcome
 
-Coherence delta: C_Σ A (`α A`, `β A`, `γ A`) · **Level:** L6
+Coherence delta: C_Σ B+ (`α B+`, `β A`, `γ B+`) · **Level:** L6
 
-The OCaml engine now has three measurement modes — `mechanical`, `llm`, `hybrid` — plus an `auto` default that picks `hybrid` when credentials are present, else `mechanical`. Offline and CI measurement are unblocked: `coh --mode mechanical --files <paths>` requires no network or credentials. Every report carries a top-level `mode` field. Hybrid mode produces `mechanical`, `llm`, and `final` sub-objects in one JSON output, preserving both backends without blurring them.
+The OCaml engine now implements the full TSC spec v3.2.0 transformation chain. The v0.5.0 engine asked the LLM for `α/β/γ ∈ [0,1]` scores and computed `C_Σ = (s_α·s_β·s_γ)^(1/3)` directly. The v0.6.0 engine asks the LLM for per-pair discrepancy values (δ), applies the barrier transform `φ(δ) = δ/(1−δ)` deterministically, and computes coherence via the full chain `D = Σ_λ w_λ·φ(δ_λ)` and `Coh = exp(−D)`. Every report now carries the canonical v3.2.0 provenance JSON skeleton.
 
 ## What shipped
 
-- **`engine/ocaml/lib/mechanical_scoring.ml`** — 12 structural signals across α/β/γ axes (pattern, relational, process), implementing the `.mli` contract from cycle #22.
-- **`engine/ocaml/lib/hybrid_scoring.ml`** — pure combiner; LLM is authority unless both backends agree; `final.source` named explicitly.
-- **`engine/ocaml/lib/bundle.ml`** — `type t` + `type file`; direct file input (`--files <glob>`) shares the same `Bundle.t` as named targets (bundle parity).
-- **`engine/ocaml/bin/main.ml`** — `--mode {mechanical,llm,hybrid,auto}` + `--files <glob>` (repeatable) CLI surface; `auto` fallback reads `LLM_API_KEY`.
-- **`engine/ocaml/lib/report.ml`** — `to_json ~mode` adds `"mode"` to every report output.
-- **`engine/ocaml/test/test_mechanical.ml`** — 61 assertions covering bundle parity (AC4), determinism (AC5), JSON schema shape (AC6), hybrid backend preservation (AC12).
-- **`engine/ocaml/test/fixtures/report.schema.json`** — canonical report schema fixture (reference documentation).
-- **`README.md`, `QUICKSTART.md`, `ARCHITECTURE.md`** — document all modes and direct-file usage.
+- **`engine/ocaml/lib/coherence.ml`** (new) — barrier transform (`phi`, `discrepancy_energy`, `coherence_link`), math/num aggregate split (`aggregate_math`, `aggregate_numeric`, `zero_component_present`, `numeric_floor_applied`), W2 gauge witness (`gauge_witness` with `w_gauge_ref`, `w_gauge_spread`, `tau_gauge_spread`, `canonical_remap_procedure`), provenance JSON assembly (`provenance_json`).
+- **`engine/ocaml/lib/lipschitz.ml`** (new) — L_link case-split: `(4/λ)·exp(λ−2)` for `0 < λ ≤ 2`, `λ` for `λ ≥ 2`, continuous at `λ = 2`.
+- **`engine/ocaml/lib/ood.ml`** (new) — OOD cutover guard: refuses or warns when a reference window carries `schema_version < "v3.2.0"`, emitting the reset diagnostic.
+- **`engine/ocaml/lib/report.ml`** (extended) — `to_json` accepts optional `delta_alpha_beta`, `delta_beta_gamma`, `delta_gamma_alpha` and wires them into provenance via `provenance_v320`; `provenance_v320` calls `Coherence.gauge_witness` and `Lipschitz.l_link` so W2 and L_link fields are populated in real reports.
+- **`engine/ocaml/lib/response_schema.ml`** (extended) — `extract_deltas` parses per-pair δ values from LLM JSON; `validate_result` docstring corrected to accurately describe LLM-provided vs. engine-computed fields.
+- **`engine/ocaml/bin/main.ml`** (extended) — `run_llm` calls `extract_deltas` after `validate_result` and passes δ values to `Report.to_json`.
+- **`engine/ocaml/test/test_coherence.ml`** (new) — 69 assertions covering AC1–AC7: barrier transform endpoint policy, L_link case-split and continuity, math/num aggregate split, W2 gauge witness, OOD cutover diagnostic.
+- **`engine/ocaml/test/fixtures/provenance_v3_2_0.schema.json`** (new) — JSON schema for all required v3.2.0 provenance keys.
+- **`runtime/SELF-MEASURE.md`** (rewritten) — LLM backend instructions updated for δ-based scoring: LLM provides per-pair discrepancy values (δ_αβ, δ_βγ, δ_γα) and per-component scores (s_α, s_β, s_γ) directly; engine applies the transformation chain deterministically.
 
 ## Review summary
 
-Two rounds. R1: one correctness finding (bare `"#"` in `trace_kws` caused traceability signal to fire on every Markdown heading — semantic inversion fixed by removing the overly broad keyword) and one documentation note (assertion count 58 vs. actual 61; AC6 oracle claim corrected). R2: approved. Single fix round; no residual findings.
+Three rounds. R1 (4 findings): two integration-wiring gaps (new modules not wired into runtime call path) and two behavioral findings (LLM asked to compute a Coh approximation; test label mislabeled Coh values as δ values). R2 (1 finding): write-before-verify — fix for R1 F3 replaced a bad LLM instruction with a false engine-behavior claim. R3: approved. Single implementation root (pre-review caller-path check missing); all findings closed before merge.
 
 ## Known debt carried forward
 
-- **AC8 partial:** pre-existing Python in `tests/conformance/` predates this cycle — Sub 3 owns removal.
-- **v3.2.0 provenance fields:** Sub 1 will extend `mechanical` and `llm` sub-objects with v3.2.0 provenance JSON keys; the unified report container accommodates extension without re-engineering.
-- **Mechanical score calibration:** V1 uses structural-proxy signal weights; a calibration pass is deferred.
-- **Hybrid adjudication policy:** V1 average policy; future calibration may introduce weighted adjudication.
-- **`--mode auto` integration test:** credential-absent path verified by code review; an automated integration test is deferred to Sub 3.
+- **AC6 integration test (live LLM):** full end-to-end oracle requires a live LLM provider (`LLM_API_KEY`). The schema side is validated via fixture; the δ-extraction path through `main.ml` is wired but not exercised end-to-end in this environment.
+- **Beta derivation from δ:** engine currently passes `s_beta` through from the LLM (unchanged). Deriving `s_beta` deterministically from `δ_αβ, δ_βγ, δ_γα` is a deferred design extension (requires an explicit formula; not in this cycle's ACs).
+- **Pre-review gate skill patch:** `alpha/SKILL.md` §2.6 in the `cnos` repo needs a "verify non-test callers for new module wiring" row. Filed as a project MCI for the next cnos CDD cycle.
+- **Master #23:** Sub 3 (test migration) remains open.
