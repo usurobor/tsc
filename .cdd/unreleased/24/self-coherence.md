@@ -144,3 +144,17 @@ role: alpha
 4. **AC6 integration test (sample run)** — AC6 oracle requires "a sample provider call with a small bundle returns parseable δ values." This requires a live LLM provider (LLM_API_KEY). Integration test cannot run in the current environment without credentials. Manual oracle: `extract_deltas` function compiled and validated against in-memory JSON in test_coherence.ml implicit coverage (response_schema.ml builds on JSON parsing). Full end-to-end integration test (coh CLI → SELF-MEASURE.md → parse δ fields) is deferred — requires provider credentials and CI secrets not available here.
 
 5. **Provisional close-out** — per CDD §1.4 α step 10, α close-out will be provisional at review-readiness time (bounded dispatch model). Declared as known debt per CDD §1.6a.
+
+## CDD Trace
+
+| Step | Artifact | Skills loaded | Decision |
+|------|----------|---------------|----------|
+| 0 Observe | — | — | Gap: v3.2.0 spec shipped; engine uses v3.1-era LLM-only scoring without barrier transform, math/num split, L_link, W2 ref+spread, or provenance JSON. |
+| 1 Select | Issue #24 | — | Selected per CDD §3 (P1; master #23 cannot close while Sub 1 open). |
+| 2 Branch | `cycle/24-v320-engine` | cdd | Branch created by γ from `origin/main` (52d0387), pre-flight passed. |
+| 3 Bootstrap | `.cdd/unreleased/24/self-coherence.md` scaffold | cdd | Scaffold committed by γ at branch creation. |
+| 4 Gap | `.cdd/unreleased/24/self-coherence.md` §Gap | — | Named incoherence: no barrier transform, no math/num split, no L_link, no W2 ref+spread, no v3.2.0 provenance JSON. |
+| 5 Mode | `.cdd/unreleased/24/self-coherence.md` §Skills | cdd, write/SKILL.md, design/SKILL.md, plan/SKILL.md | MCA. Active Tier 3: cdd/design, cdd/plan. |
+| 6 Artifacts | `engine/ocaml/lib/coherence.ml`, `lipschitz.ml`, `ood.ml`, `report.ml`, `response_schema.ml`; `engine/ocaml/test/test_coherence.ml`; `engine/ocaml/test/fixtures/provenance_v3_2_0.schema.json`; `runtime/SELF-MEASURE.md` | design, plan | Design: issue body serves as design artifact. Plan: implementation order AC1→AC2→AC3→AC4→AC5→AC6→AC7 per ACs ordering constraints. Tests before/alongside code. |
+| 7 Self-coherence | `.cdd/unreleased/24/self-coherence.md` | cdd | AC-by-AC check completed; self-check completed; debt declared. |
+| 7a Pre-review | `.cdd/unreleased/24/self-coherence.md` | cdd | Pre-review gate: see review-readiness section below. |
