@@ -5,6 +5,9 @@
 
 open Types
 
+type t = target_bundle
+type file = bundle_file
+
 (** Compute SHA-256 hex digest of a string.
     Uses digestif for real SHA-256. *)
 let hash_content content =
