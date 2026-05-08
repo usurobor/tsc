@@ -42,7 +42,50 @@ The canonical implementation is:
 
 - `engine/ocaml/` — OCaml engine
 
-The engine resolves named targets from `targets/registry.tsc`, builds raw file bundles, sends them to an LLM with the scoring instruction in `runtime/SELF-MEASURE.md`, validates structured output, and writes reports.
+The engine has one shared pipeline:
+
+1. Resolve input (named target or direct file globs)
+2. Build deterministic bundle (same model for both inputs)
+3. Choose scoring backend based on `--mode`
+4. Compute result
+5. Validate and write report
+
+### Scoring modes
+
+| Mode | Backend | Credentials |
+|------|---------|-------------|
+| `mechanical` | `mechanical_scoring.ml` — deterministic structural proxies | None |
+| `llm` | `prompt.ml` + LLM provider via `runtime/SELF-MEASURE.md` | Required |
+| `hybrid` | Both backends; `hybrid_scoring.ml` combines results | Required |
+| `auto` | Resolves to `hybrid` when credentials present, else `mechanical` | Optional |
+
+**Mechanical mode** scores structural coherence proxies for α, β, γ across twelve signals. It does not call an LLM, perform network I/O, or parse Markdown into a semantic AST. Determinism guarantee: identical bundle + config → identical result.
+
+**LLM mode** sends the bundle to the configured provider using the instruction in `runtime/SELF-MEASURE.md`. This is the semantic scoring path.
+
+**Hybrid mode** runs both backends on the same bundle. Both results are preserved in the report. The `final` sub-object names which backend authored the final adjudication. LLM is semantic authority; `agreement` is reported when both backends agree within threshold.
+
+### Direct file input
+
+`--files <glob>` bypasses named targets. Both `--files` and `--target` produce the same `Bundle.t` shape — same content hashes, same ordering, same metadata. Direct file input restores offline/CI measurement without credentials.
+
+### Report schema
+
+Every report contains:
+
+```json
+{
+  "mode": "mechanical | llm | hybrid",
+  "target": "spec | null",
+  "alpha": 0.0–1.0,
+  "beta":  0.0–1.0,
+  "gamma": 0.0–1.0,
+  "c_sigma": 0.0–1.0,
+  "bottleneck_axis": "alpha | beta | gamma"
+}
+```
+
+Hybrid reports add `mechanical`, `llm`, and `final` sub-objects. The schema fixture lives at `engine/ocaml/test/fixtures/report.schema.json`.
 
 The engine does not parse Markdown semantically. Files are raw text.
 
@@ -57,15 +100,21 @@ Canonical sources remain:
 - `engine/ocaml/`
 - `runtime/SELF-MEASURE.md`
 
+Python is retired as a live engine. OCaml is the canonical implementation.
+
 ## Repo map
 
 ```text
-/spec/              canonical theory
-/engine/ocaml/      canonical implementation
-/runtime/           scoring instruction
-/targets/           named target declarations
-/docs/              documentation tree (α/β/γ)
-/examples/          runnable examples
-/tests/             conformance and implementation tests
-/.tsc/              generated measurement output
+/spec/                    canonical theory
+/engine/ocaml/            canonical implementation
+  lib/mechanical_scoring  deterministic structural backend
+  lib/hybrid_scoring      backend combiner (pure)
+  lib/bundle              shared bundle model
+  bin/main.ml             CLI entrypoint (--mode, --files, --target)
+/runtime/                 scoring instruction (SELF-MEASURE.md)
+/targets/                 named target declarations
+/docs/                    documentation tree (α/β/γ)
+/examples/                runnable examples
+/tests/                   conformance and implementation tests
+/.tsc/                    generated measurement output
 ```

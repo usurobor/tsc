@@ -18,19 +18,34 @@ See [docs/THESIS.md](docs/THESIS.md) for what TSC is.
 # Install
 curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
 
-# Configure (needs an LLM API key)
+# Measure files locally — no credentials required (mechanical mode)
+git clone https://github.com/usurobor/tsc.git && cd tsc
+coh --mode mechanical --files spec/ --output .tsc/
+
+# Measure with LLM (semantic + structural, requires credentials)
 export LLM_PROVIDER=anthropic
 export LLM_MODEL=claude-sonnet-4-20250514
 export LLM_API_KEY=sk-ant-your-key
+coh --mode hybrid --target spec --registry targets/registry.tsc
 
-# Measure this repo's theory surface
-git clone https://github.com/usurobor/tsc.git && cd tsc
-tsc --target spec --registry targets/registry.tsc --instruction runtime/SELF-MEASURE.md --output report.json
+# Auto mode: picks hybrid if credentials present, mechanical otherwise
+coh --target spec --registry targets/registry.tsc
 ```
 
-See the [full quick start guide](QUICKSTART.md) for measuring your own files.
+See the [full quick start guide](QUICKSTART.md) for all modes and options.
 
 See the [operator manual](docs/beta/guides/OPERATOR-MANUAL.md) for configuration and usage.
+
+## Scoring modes
+
+| Mode | Credentials needed | What it does |
+|------|--------------------|--------------|
+| `mechanical` | No | Deterministic structural-proxy scoring. Works offline and in CI. |
+| `llm` | Yes | Semantic scoring via `runtime/SELF-MEASURE.md`. |
+| `hybrid` | Yes | Runs both backends; report contains `mechanical`, `llm`, and `final` sub-objects. |
+| `auto` | Optional | `hybrid` when credentials are present; `mechanical` otherwise. (Default.) |
+
+Direct file input (`--files <glob>`) works with any mode. Named targets (`--target`) require `--registry`.
 
 ## Theory stack
 

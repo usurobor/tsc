@@ -8,14 +8,46 @@ Measure the coherence of any text corpus in under 2 minutes.
 curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
 ```
 
-## 2. Configure
+## 2. Choose a mode
 
-TSC uses an LLM to score coherence. Set your provider credentials:
+TSC has four scoring modes:
+
+| Mode | Credentials | What it does |
+|------|-------------|--------------|
+| `mechanical` | None | Deterministic structural-proxy scoring. Works offline and in CI. |
+| `llm` | Required | Semantic scoring via `runtime/SELF-MEASURE.md`. |
+| `hybrid` | Required | Runs both backends; report contains `mechanical`, `llm`, and `final`. |
+| `auto` | Optional | `hybrid` with credentials, `mechanical` without. **(Default.)** |
+
+## 3. Measure without credentials (mechanical mode)
+
+No API key needed.
+
+```bash
+git clone https://github.com/usurobor/tsc.git && cd tsc
+
+# Score files directly
+coh --mode mechanical --files spec/ --output .tsc/
+
+# Score a named target
+coh --mode mechanical --target spec --registry targets/registry.tsc
+```
+
+## 4. Measure with LLM credentials
 
 ```bash
 export LLM_PROVIDER=anthropic          # or: openai
 export LLM_MODEL=claude-sonnet-4-20250514       # or: gpt-4o
-export LLM_API_KEY=sk-ant-your-key     # your API key
+export LLM_API_KEY=sk-ant-your-key
+
+# Hybrid (structural + semantic — recommended when credentials available)
+coh --mode hybrid --target spec --registry targets/registry.tsc
+
+# LLM-only
+coh --mode llm --target spec --registry targets/registry.tsc
+
+# Auto (default — picks hybrid or mechanical based on credential presence)
+coh --target spec --registry targets/registry.tsc
 ```
 
 <details>
@@ -28,21 +60,19 @@ export LLM_API_KEY=sk-your-key
 ```
 </details>
 
-## 3. Measure something
+## 5. Direct file input
 
-### Measure this repo's theory surface
+Use `--files` to measure arbitrary file sets without a target manifest:
 
 ```bash
-git clone https://github.com/usurobor/tsc.git && cd tsc
-
-tsc \
-  --target spec \
-  --registry targets/registry.tsc \
-  --instruction runtime/SELF-MEASURE.md \
-  --output report.json
+coh --mode mechanical --files docs/**/*.md --files README.md
+coh --mode mechanical --files spec/
 ```
 
-### Measure your own files
+`--files` and `--target` use the same bundle model. Both produce the same
+content hashes and report shape.
+
+## 6. Measure your own files (named target)
 
 Create a target manifest (`my-target.tsc`):
 
@@ -75,18 +105,15 @@ manifest = "my-target.tsc"
 Run it:
 
 ```bash
-tsc \
+coh \
+  --mode auto \
   --target my-project \
-  --registry my-registry.tsc \
-  --instruction runtime/SELF-MEASURE.md \
-  --output report.json
+  --registry my-registry.tsc
 ```
 
-> **Note:** The `--instruction` file tells the LLM how to score. You can use `runtime/SELF-MEASURE.md` from this repo as a starting point, or write your own.
+## 7. Read the output
 
-## 4. Read the output
-
-The report contains triadic scores:
+Every report contains triadic scores:
 
 | Axis | What it measures |
 |------|-----------------|
@@ -96,8 +123,23 @@ The report contains triadic scores:
 
 **C_Σ** is the aggregate: `(s_α · s_β · s_γ)^(1/3)`. A score ≥ 0.80 means the corpus holds together as one coherent system.
 
+Every report includes a `mode` field. Hybrid reports add `mechanical`, `llm`, and `final` sub-objects:
+
+```json
+{
+  "mode": "hybrid",
+  "alpha": 0.85,
+  "beta": 0.78,
+  "gamma": 0.72,
+  "c_sigma": 0.78,
+  "mechanical": { "alpha": 0.81, "evidence_kind": "structural-proxy", ... },
+  "llm":        { "alpha": 0.85, "evidence_kind": "semantic-judgment", ... },
+  "final":      { "source": "llm", "alpha": 0.85, ... }
+}
+```
+
 ```bash
-cat report.json | python3 -m json.tool   # pretty-print
+cat .tsc/tsc-spec-*.json | python3 -m json.tool   # pretty-print
 ```
 
 ## What's next
