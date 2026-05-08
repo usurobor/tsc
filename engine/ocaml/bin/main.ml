@@ -342,7 +342,11 @@ let run_llm ~args ~bundle ~ts =
         None
       | Ok r ->
         Printf.eprintf "Response validated.\n%!";
-        Some r
+        let (d_ab, d_bg, d_ga) = match Response_schema.extract_deltas j with
+          | Ok triple -> triple
+          | Error _ -> (None, None, None)
+        in
+        Some (r, d_ab, d_bg, d_ga)
   in
   let metadata : run_metadata = {
     meta_target = bundle.bundle_target_name;
@@ -359,12 +363,13 @@ let run_llm ~args ~bundle ~ts =
   in
   write_file raw_path raw_response;
   (match validated_result with
-   | Some result ->
+   | Some (result, d_ab, d_bg, d_ga) ->
      let json_path =
        Filename.concat args.cli_output_dir
          (Printf.sprintf "tsc-%s-%s.json" bundle.bundle_target_name ts)
      in
-     write_file json_path (Report.to_json ~result ~metadata ~mode:"llm" ());
+     write_file json_path (Report.to_json ~result ~metadata ~mode:"llm"
+       ~delta_alpha_beta:d_ab ~delta_beta_gamma:d_bg ~delta_gamma_alpha:d_ga ());
      let text_path =
        Filename.concat args.cli_output_dir
          (Printf.sprintf "tsc-%s-%s.txt" bundle.bundle_target_name ts)
