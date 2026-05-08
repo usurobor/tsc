@@ -220,13 +220,93 @@ let test_ood_guard () =
    | Ok () -> fail "AC7: expected Error for v3.0.0 reference window")
 
 (* ------------------------------------------------------------------ *)
+(* AC5: Provenance JSON v3.2.0 shape *)
+
+let has_field key = function
+  | `Assoc fields -> List.mem_assoc key fields
+  | _ -> false
+
+let get_subobj key = function
+  | `Assoc fields ->
+    (match List.assoc_opt key fields with
+     | Some (`Assoc _ as o) -> o
+     | _ -> fail (Printf.sprintf "AC5: missing or non-object field '%s'" key))
+  | _ -> fail "AC5: expected JSON object"
+
+let test_provenance_v320_shape () =
+  (* Build a provenance JSON via coherence.provenance_json (the canonical builder) *)
+  let prov = Coherence.provenance_json
+    ~l_link_alpha_beta:(Some 1.47)
+    ~l_link_beta_gamma:(Some 2.0)
+    ~l_link_gamma_alpha:(Some 3.5)
+    ~c_sigma_math:(Some 0.72)
+    ~zero_component_present:false
+    ~c_sigma_num:(Some 0.73)
+    ~epsilon:(Some 1e-5)
+    ~numeric_floor_applied:false
+    ~w_gauge_ref:(Some 0.01)
+    ~w_gauge_spread:(Some 0.02)
+    ~tau_gauge_spread:(Some 0.05)
+    ~canonical_remap_procedure:(Some "lexicographic ascending by score value")
+    ()
+  in
+  (* Required top-level keys per spec/tsc-oper.md §6 + provenance_v3_2_0.schema.json *)
+  let required_keys = [
+    "discrepancy_symbol"; "discrepancy_range"; "coherence_link";
+    "barrier_phi"; "barrier_clip_eta_phi"; "endpoint_policy";
+    "energy_variable"; "link_lipschitz_constants";
+    "aggregate_math"; "aggregate_numeric"; "gauge_witness";
+  ] in
+  List.iter (fun k ->
+    check (has_field k prov)
+      (Printf.sprintf "AC5: provenance has required key '%s'" k)
+  ) required_keys;
+  (* link_lipschitz_constants sub-keys *)
+  let llc = get_subobj "link_lipschitz_constants" prov in
+  List.iter (fun k ->
+    check (has_field k llc)
+      (Printf.sprintf "AC5: link_lipschitz_constants has '%s'" k)
+  ) ["alpha_beta"; "beta_gamma"; "gamma_alpha"];
+  (* aggregate_math sub-keys *)
+  let am = get_subobj "aggregate_math" prov in
+  check (has_field "C_sigma_math" am) "AC5: aggregate_math has 'C_sigma_math'";
+  check (has_field "zero_component_present" am) "AC5: aggregate_math has 'zero_component_present'";
+  (* aggregate_numeric sub-keys *)
+  let an = get_subobj "aggregate_numeric" prov in
+  check (has_field "C_sigma_num" an) "AC5: aggregate_numeric has 'C_sigma_num'";
+  check (has_field "epsilon" an) "AC5: aggregate_numeric has 'epsilon'";
+  check (has_field "numeric_floor_applied" an) "AC5: aggregate_numeric has 'numeric_floor_applied'";
+  (* gauge_witness sub-keys *)
+  let gw = get_subobj "gauge_witness" prov in
+  List.iter (fun k ->
+    check (has_field k gw)
+      (Printf.sprintf "AC5: gauge_witness has '%s'" k)
+  ) ["w_gauge_ref"; "w_gauge_spread"; "tau_gauge_spread"; "canonical_remap_procedure"];
+  (* Verify canonical string values *)
+  (match prov with
+   | `Assoc fields ->
+     (match List.assoc_opt "discrepancy_symbol" fields with
+      | Some (`String s) -> check (s = "delta") "AC5: discrepancy_symbol = 'delta'"
+      | _ -> fail "AC5: discrepancy_symbol not a string");
+     (match List.assoc_opt "barrier_phi" fields with
+      | Some (`String s) ->
+        check (s = "delta/(1-delta)") "AC5: barrier_phi = 'delta/(1-delta)'"
+      | _ -> fail "AC5: barrier_phi not a string");
+     (match List.assoc_opt "coherence_link" fields with
+      | Some (`String s) ->
+        check (s = "barrier_exponential") "AC5: coherence_link = 'barrier_exponential'"
+      | _ -> fail "AC5: coherence_link not a string")
+   | _ -> fail "AC5: provenance not an object")
+
+(* ------------------------------------------------------------------ *)
 (* Runner *)
 
 let () =
-  Printf.printf "=== TSC coherence + OOD tests (AC1-AC4, AC7) ===\n%!";
+  Printf.printf "=== TSC coherence + OOD tests (AC1-AC4, AC5, AC7) ===\n%!";
   test_coherence_link ();
   test_l_link ();
   test_aggregate ();
   test_gauge_witness ();
+  test_provenance_v320_shape ();
   test_ood_guard ();
   Printf.printf "=== All coherence tests passed ===\n%!"

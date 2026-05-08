@@ -13,12 +13,52 @@ let evidence_to_yojson ev =
     ("reason", `String ev.evidence_reason);
   ]
 
+(** Build the v3.2.0 provenance sub-object for a report.
+    Accepts optional per-pair delta values when the LLM emits them (AC6);
+    falls back to null fields when only component scores are available. *)
+let provenance_v320
+    ?(delta_alpha_beta = None)
+    ?(delta_beta_gamma = None)
+    ?(delta_gamma_alpha = None)
+    ~s_alpha ~s_beta ~s_gamma
+    () =
+  let lambda = 1.0 in
+  let epsilon = 1e-5 in
+  let agg = Coherence.aggregate ~epsilon ~s_alpha ~s_beta ~s_gamma () in
+  let l_ab = Option.map (fun _ -> Lipschitz.l_link lambda) delta_alpha_beta in
+  let l_bg = Option.map (fun _ -> Lipschitz.l_link lambda) delta_beta_gamma in
+  let l_ga = Option.map (fun _ -> Lipschitz.l_link lambda) delta_gamma_alpha in
+  Coherence.provenance_json
+    ~l_link_alpha_beta:l_ab
+    ~l_link_beta_gamma:l_bg
+    ~l_link_gamma_alpha:l_ga
+    ~c_sigma_math:(Some agg.c_sigma_math)
+    ~zero_component_present:agg.zero_component_present
+    ~c_sigma_num:(Some agg.c_sigma_num)
+    ~epsilon:(Some epsilon)
+    ~numeric_floor_applied:agg.numeric_floor_applied
+    ()
+
 (** Generate machine-readable JSON report. *)
-let to_json ~result ~metadata ?(mode = "llm") () =
+let to_json ~result ~metadata ?(mode = "llm")
+    ?(delta_alpha_beta = None)
+    ?(delta_beta_gamma = None)
+    ?(delta_gamma_alpha = None)
+    () =
+  let prov = provenance_v320
+    ~delta_alpha_beta
+    ~delta_beta_gamma
+    ~delta_gamma_alpha
+    ~s_alpha:result.result_alpha
+    ~s_beta:result.result_beta
+    ~s_gamma:result.result_gamma
+    ()
+  in
   let json =
     `Assoc [
       ("target", `String result.result_target);
       ("mode", `String mode);
+      ("schema_version", `String "v3.2.0");
       ("alpha", `Float result.result_alpha);
       ("beta", `Float result.result_beta);
       ("gamma", `Float result.result_gamma);
@@ -39,6 +79,7 @@ let to_json ~result ~metadata ?(mode = "llm") () =
             ("fix", `String f.fix_description);
           ]
         ) result.result_next_fixes));
+      ("provenance_v320", prov);
       ("metadata", `Assoc [
         ("target", `String metadata.meta_target);
         ("file_hashes", `Assoc (List.map (fun (p, h) ->

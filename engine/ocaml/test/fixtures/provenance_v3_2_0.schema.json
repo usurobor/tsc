@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Canonical v3.2.0 provenance JSON schema — all fields from spec/tsc-oper.md §6.",
+  "type": "object",
+  "required": [
+    "discrepancy_symbol",
+    "discrepancy_range",
+    "coherence_link",
+    "barrier_phi",
+    "barrier_clip_eta_phi",
+    "endpoint_policy",
+    "energy_variable",
+    "link_lipschitz_constants",
+    "aggregate_math",
+    "aggregate_numeric",
+    "gauge_witness"
+  ],
+  "properties": {
+    "discrepancy_symbol":  { "type": "string" },
+    "discrepancy_range":   { "type": "string" },
+    "coherence_link":      { "type": "string" },
+    "barrier_phi":         { "type": "string" },
+    "barrier_clip_eta_phi":{ "type": ["number", "null"] },
+    "endpoint_policy":     { "type": "string" },
+    "energy_variable":     { "type": "string" },
+    "link_lipschitz_constants": {
+      "type": "object",
+      "required": ["alpha_beta", "beta_gamma", "gamma_alpha"],
+      "properties": {
+        "alpha_beta":  { "type": ["number", "null"] },
+        "beta_gamma":  { "type": ["number", "null"] },
+        "gamma_alpha": { "type": ["number", "null"] }
+      }
+    },
+    "aggregate_math": {
+      "type": "object",
+      "required": ["C_sigma_math", "zero_component_present"],
+      "properties": {
+        "C_sigma_math":          { "type": ["number", "null"] },
+        "zero_component_present":{ "type": "boolean" }
+      }
+    },
+    "aggregate_numeric": {
+      "type": "object",
+      "required": ["C_sigma_num", "epsilon", "numeric_floor_applied"],
+      "properties": {
+        "C_sigma_num":          { "type": ["number", "null"] },
+        "epsilon":              { "type": ["number", "null"] },
+        "numeric_floor_applied":{ "type": "boolean" }
+      }
+    },
+    "gauge_witness": {
+      "type": "object",
+      "required": ["w_gauge_ref", "w_gauge_spread", "tau_gauge_spread", "canonical_remap_procedure"],
+      "properties": {
+        "w_gauge_ref":               { "type": ["number", "null"] },
+        "w_gauge_spread":            { "type": ["number", "null"] },
+        "tau_gauge_spread":          { "type": ["number", "null"] },
+        "canonical_remap_procedure": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
