@@ -88,22 +88,37 @@ Yes. All implementation files compile (`dune build` passes). All 61 tests pass (
 | 6 Artifacts | `engine/ocaml/lib/`, `engine/ocaml/bin/main.ml`, `engine/ocaml/test/`, docs | ocaml, write | Steps 1,3–9 complete: bundle.ml, mechanical_scoring.ml, hybrid_scoring.ml, report.ml, main.ml, tests, docs |
 | 7 Self-coherence | this file | cdd | AC-by-AC evidence mapped above; 61 tests pass; dune build clean. |
 | 7a Pre-review | this file §Review-Readiness | cdd | Gate rows checked — see Review-Readiness section below. |
-| 8 Review | `.cdd/unreleased/25/beta-review.md` | review | β: change-request (F1 bare # in traceability) → β applied fix + approved; 61/61 pass |
+| 8 Review | `.cdd/unreleased/25/beta-review.md` | review | β R1: RC — F1 (bare `"#"` in `trace_kws`); F2 note (test count, AC6 claim). α fix round: commit 45b16bf. |
 | 9 Gate | pending | release | pending merge |
 | 10 Release | pending | release | pending merge |
 
-## Review-Readiness | round 2 | implementation SHA: bc9d301 + β F1 fix | branch CI: local build green (dune build + dune exec test/test_mechanical.exe — 61/61 pass) | approved by β
+## Fix Round — β R1
+
+| Finding | Action | Commit |
+|---------|--------|--------|
+| F1 (MUST FIX) — bare `"#"` in `trace_kws` (`mechanical_scoring.ml:588`) | Removed `"#"` from `trace_kws`; remaining keywords (`"closes #"`, `"fixes #"`, `"issue #"`, `"changelog"`) cover the intended patterns | 45b16bf |
+| F2 (NOTE) — self-coherence test count claimed 58, actual 61 | Corrected count to 61 throughout (`§Impact Graph`, `§Self-check`, `§CDD Trace`) | 45b16bf |
+| F2 (NOTE) — AC6 oracle claim overstated ("Schema validator against fixture") | Corrected to "inline field checks; fixture is reference documentation (not loaded programmatically)" | 45b16bf |
+
+Re-audit (post-patch, 2026-05-08):
+- `dune build` — clean, no warnings
+- `dune exec test/test_mechanical.exe` — 61/61 pass
+- F1 fix preserves test count: fixture files contain real traceability markers (`"closes #"`, `"changelog"`) matching remaining keywords; removing bare `"#"` eliminates the false-positive that all heading-bearing Markdown files matched
+
+---
+
+## Review-Readiness | round 2 | implementation SHA: 45b16bf | branch CI: local (dune build clean; dune exec test/test_mechanical.exe: 61/61 pass, 2026-05-08T00:00Z) | ready for β
 
 Pre-review gate (alpha/SKILL.md §2.6):
 
-1. `origin/cycle/25` rebased onto `origin/main` (56af43a) — branch created from that SHA; no new main commits since dispatch. Verified at 2026-05-08T00:00Z.
+1. `origin/cycle/25` rebased onto `origin/main` (56af43a) — verified at 2026-05-08T00:00Z; main HEAD still 56af43a.
 2. Self-coherence carries CDD Trace through step 7 — ✓
-3. Tests present: `engine/ocaml/test/test_mechanical.ml` — 61 assertions covering AC4, AC5, AC6, AC12. `dune exec test/test_mechanical.exe` → all pass.
+3. Tests present: `engine/ocaml/test/test_mechanical.ml` — 61 assertions covering AC4, AC5, AC6, AC12. `dune exec test/test_mechanical.exe` → 61/61 pass.
 4. Every AC has evidence — ✓ (see §ACs)
 5. Known debt explicit — ✓ (see §Debt)
-6. Schema/shape audit: mechanical_scoring.mli contract unchanged. `report.ml` `to_json` signature extended with optional `~mode` (backward-compat). Hybrid JSON shape validated by test.
+6. Schema/shape audit: `mechanical_scoring.mli` contract unchanged. `report.ml` `to_json` signature extended with optional `~mode` (backward-compat). Hybrid JSON shape validated by test.
 7. Peer enumeration: report callers — `run_llm`, `run_mechanical`, `run_hybrid` — all three audited and updated.
 8. Harness audit: no shell or CI harnesses generate report JSON. Not applicable.
-9. Post-patch re-audit: OCaml (dune build clean) + Markdown (docs reviewed against AC7). No other languages in diff.
+9. Post-patch re-audit: OCaml (`dune build` clean, 61/61 pass) + Markdown (docs verified against AC7). No other languages in diff.
 10. Branch CI: local build green. Remote CI state unknown — β should wait for green before merge.
 11. Git author email: `alpha@cdd.tsc` ✓ (verified via `git log -1 --format='%ae' HEAD`)
