@@ -278,6 +278,33 @@ let test_hybrid_preserves_both () =
 (* ------------------------------------------------------------------ *)
 (* Runner *)
 
+(* ------------------------------------------------------------------ *)
+(* AC8: Auto-mode fallback (Sub 2 AC11) *)
+
+let test_auto_mode_fallback () =
+  let saved = Sys.getenv_opt "LLM_API_KEY" in
+  let restore () =
+    match saved with
+    | Some v -> Unix.putenv "LLM_API_KEY" v
+    | None   -> Unix.putenv "LLM_API_KEY" ""
+  in
+  (* No credentials: credential check must return false *)
+  Unix.putenv "LLM_API_KEY" "";
+  check (not (Tsc_engine.Credentials.has_llm_credentials ()))
+    "AC8: empty LLM_API_KEY → no credentials (auto falls back to mechanical)";
+  (* With a non-empty key: credential check must return true *)
+  Unix.putenv "LLM_API_KEY" "test-key-abc";
+  check (Tsc_engine.Credentials.has_llm_credentials ())
+    "AC8: non-empty LLM_API_KEY → credentials present (auto takes hybrid path)";
+  restore ();
+  (* Mechanical scorer always returns Mechanical mode regardless of env *)
+  let r = Mechanical_scoring.score_files sample_files in
+  check (r.mode = `Mechanical)
+    "AC8: score_files always returns Mechanical mode (auto fallback path produces this)"
+
+(* ------------------------------------------------------------------ *)
+(* Runner *)
+
 let () =
   Printf.printf "=== TSC OCaml mechanical/hybrid tests ===\n%!";
   test_bundle_parity ();
@@ -287,4 +314,5 @@ let () =
   test_mechanical_json_schema ();
   test_hybrid_json_schema ();
   test_hybrid_preserves_both ();
+  test_auto_mode_fallback ();
   Printf.printf "=== All tests passed ===\n%!"

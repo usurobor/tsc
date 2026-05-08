@@ -1,6 +1,6 @@
 (test
  (name test_mechanical)
- (libraries tsc_engine))
+ (libraries tsc_engine unix))
 
 (test
  (name test_coherence)

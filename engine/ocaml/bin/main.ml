@@ -237,14 +237,6 @@ let parse_args () =
     cli_files       = List.rev !files }
 
 (* ------------------------------------------------------------------ *)
-(* Credential check for auto mode *)
-
-let has_llm_credentials () =
-  match Sys.getenv_opt "LLM_API_KEY" with
-  | Some v when String.length v > 0 -> true
-  | _ -> false
-
-(* ------------------------------------------------------------------ *)
 (* Bundle builders *)
 
 let build_bundle_from_target ~root ~registry_path ~target_name =
@@ -443,7 +435,7 @@ let () =
   (* Resolve effective mode (auto → mechanical or hybrid) *)
   let effective_mode = match args.cli_mode with
     | Auto ->
-      if has_llm_credentials () then begin
+      if Tsc_engine.Credentials.has_llm_credentials () then begin
         Printf.eprintf "Auto mode: credentials found — running hybrid.\n%!";
         Hybrid
       end else begin
