@@ -159,6 +159,31 @@ role: alpha
 | 7 Self-coherence | `.cdd/unreleased/24/self-coherence.md` | cdd | AC-by-AC check completed; self-check completed; debt declared. |
 | 7a Pre-review | `.cdd/unreleased/24/self-coherence.md` | cdd | Pre-review gate: see review-readiness section below. |
 
+## Fix round | β R1 → α R2 | 2026-05-08
+
+### Findings addressed
+
+| Finding | Commit | Notes |
+|---------|--------|-------|
+| F1 — `extract_deltas` not wired in `main.ml` | `036ee37` | `run_llm` now calls `Response_schema.extract_deltas j` after `validate_result` succeeds; the three `float option` values flow to `Report.to_json` via the existing labeled optional parameters. `validated_result` type widened to `(result * d_ab * d_bg * d_ga) option`. |
+| F2 — `gauge_witness` not called in `report.ml::provenance_v320` | `217ede5` | `provenance_v320` now constructs `c_sigma_fn` (geometric mean via `Coherence.aggregate`) and calls `Coherence.gauge_witness`; all four W2 fields (`w_gauge_ref`, `w_gauge_spread`, `tau_gauge_spread`, `canonical_remap_procedure`) passed to `provenance_json`. W2 signals are no longer null in real reports. |
+| F3 — SELF-MEASURE.md §3.3 `beta_preview` approximation | `d600086` | §3.3 simplified: LLM now instructed to set `beta = 0.0` as a placeholder; engine derives beta from per-pair δ values deterministically. `beta_preview ≈ exp(…)` formula removed entirely. |
+| F4 — `monotone_check` label shows Coh values under "delta=" | `0600608` | Format string updated to `"AC1: monotone — coh[i]=%g >= coh[i+1]=%g"`. The bound variables `a`/`b` are Coh values (output of `coherence_link`), not δ inputs. |
+
+### Opam file
+
+`engine/ocaml/tsc_engine.opam` working-directory drift discarded (`git checkout --`). No new external dependencies in this cycle; the opam edits were incidental dune-generated output.
+
+### Post-fix re-audit
+
+`dune runtest` re-run after all four commits: 69/69 assertions pass (AC1–AC5, AC7). No regressions.
+
+### AC6 update
+
+F1 closes the main.ml gap in AC6's integration path. The full end-to-end integration test (live provider call) remains deferred (debt item 4 — requires LLM_API_KEY).
+
+---
+
 ## Review-readiness | round 1 | implementation SHA: 23ee4f3 | ready for β
 
 **Pre-review gate (alpha/SKILL.md §2.6):**
@@ -176,3 +201,21 @@ role: alpha
 | 9 | Post-patch re-audit (OCaml only diff) | ✅ All tests re-run after each code commit |
 | 10 | Branch CI green | ✅ `dune exec ./test/test_coherence.exe` + `./test/test_mechanical.exe` both exit 0 at HEAD |
 | 11 | Author email `alpha@cdd.tsc` | ✅ verified via `git log -1 --format='%ae' HEAD` |
+
+## Review-readiness | round 2 | implementation SHA: 0600608 | ready for β
+
+**Pre-review gate (α R2 — post fix-round re-validation):**
+
+| Row | Check | Status |
+|-----|-------|--------|
+| 1 | `origin/cycle/24-v320-engine` rebased onto `origin/main` | ✅ main HEAD still 52d0387 at 2026-05-08T00:00Z; no rebase required |
+| 2 | `.cdd/unreleased/24/self-coherence.md` carries CDD Trace through step 7 | ✅ |
+| 3 | Tests present or explicit reason none apply | ✅ 69/69 assertions pass after all four fixes |
+| 4 | Every AC has evidence | ✅ AC6 integration path now closed via F1 (main.ml wires extract_deltas) |
+| 5 | Known debt explicit | ✅ §Debt items 1–5 unchanged; AC6 live-provider integration test remains deferred |
+| 6 | Schema/shape audit | ✅ `report.ml::to_json` call site updated to pass delta args; `provenance_v320` now emits live W2 values instead of null |
+| 7 | Peer enumeration | ✅ Only `main.ml` and `report.ml` call sites updated; no new consumers introduced |
+| 8 | Harness audit | ✅ No shell/CI/template writers for affected surfaces |
+| 9 | Post-patch re-audit (OCaml only diff) | ✅ `dune runtest` exits 0 at 0600608; all four fix commits re-tested |
+| 10 | Branch CI green | ✅ `dune runtest` exits 0 at 0600608 (local; no CI secrets required) |
+| 11 | Author email `alpha@cdd.tsc` | ✅ all four fix commits authored as `alpha@cdd.tsc` |
