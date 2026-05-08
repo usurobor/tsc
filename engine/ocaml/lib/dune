@@ -11,4 +11,7 @@
   report
   types
   mechanical_scoring
-  hybrid_scoring))
+  hybrid_scoring
+  coherence
+  lipschitz
+  ood))

@@ -1,3 +1,7 @@
 (test
  (name test_mechanical)
  (libraries tsc_engine))
+
+(test
+ (name test_coherence)
+ (libraries tsc_engine))
