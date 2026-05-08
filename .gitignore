@@ -10,3 +10,4 @@ coherence_report.json
 coherence_report.json
 .tsc/
 # .tsc/.env contains LLM credentials — never commit
+engine/ocaml/_build/
