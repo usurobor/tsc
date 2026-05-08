@@ -28,6 +28,15 @@ let provenance_v320
   let l_ab = Option.map (fun _ -> Lipschitz.l_link lambda) delta_alpha_beta in
   let l_bg = Option.map (fun _ -> Lipschitz.l_link lambda) delta_beta_gamma in
   let l_ga = Option.map (fun _ -> Lipschitz.l_link lambda) delta_gamma_alpha in
+  let c_sigma_fn sa sb sg =
+    let r = Coherence.aggregate ~epsilon ~s_alpha:sa ~s_beta:sb ~s_gamma:sg () in
+    r.c_sigma_math
+  in
+  let gw = Coherence.gauge_witness
+    ~labeled:(s_alpha, s_beta, s_gamma)
+    ~c_sigma_fn
+    ~tau_gauge_spread:0.05
+  in
   Coherence.provenance_json
     ~l_link_alpha_beta:l_ab
     ~l_link_beta_gamma:l_bg
@@ -37,6 +46,10 @@ let provenance_v320
     ~c_sigma_num:(Some agg.c_sigma_num)
     ~epsilon:(Some epsilon)
     ~numeric_floor_applied:agg.numeric_floor_applied
+    ~w_gauge_ref:(Some gw.w_gauge_ref)
+    ~w_gauge_spread:(Some gw.w_gauge_spread)
+    ~tau_gauge_spread:(Some gw.tau_gauge_spread)
+    ~canonical_remap_procedure:(Some gw.canonical_remap_procedure)
     ()
 
 (** Generate machine-readable JSON report. *)
