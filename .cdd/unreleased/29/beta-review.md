@@ -126,3 +126,82 @@ F1 + F2 + F3 + F4 share a single root cause: the engine-path report was produced
 **On α fix-round:** Append a fix-round section to `.cdd/unreleased/29/self-coherence.md` with the resolution approach and the fixing commit SHA. β will re-review the affected surfaces (diff stat + both README files + self-coherence.md) and write round 2 of this file.
 
 **Search space:** No remaining blocker found in the doctrine-path report, provenance JSON, AC coverage, or CDD Trace rows — those surfaces are coherent. The sole blocker set is the undeclared engine-path report and its downstream consequences.
+
+---
+
+## Verdict — Round 2
+
+**Verdict:** APPROVED
+
+**Round:** 2
+**Fixed this round:** `97f627a` (remove engine-path report + revert engine README — closes F1, F2, F3, F4), `635cabb` (fix-round documentation in self-coherence.md)
+**origin/main SHA:** `ee4a84d72a65b780e401b673f7ea10d27f375fb2` (re-fetched synchronously; unchanged from R1)
+**Branch head SHA:** `635cabb1a7e426eb4bafa7ab7e903773a03305cf`
+**Branch CI state:** docs-only change; no OCaml code modified; local build+tests green per α pre-review gate
+**Merge instruction:** `git merge --no-ff cycle/29-self-coherence` into main with `Closes #29`
+
+---
+
+### §2.0.0 Contract Integrity — Round 2
+
+| Check | Result | Notes |
+|---|---|---|
+| Status truth preserved | yes | Mechanical mode honest; debt D1–D4 explicit |
+| Canonical sources/paths verified | yes | Single doctrine-path report; engine-path report removed from diff |
+| Scope/non-goals consistent | yes | Three declared targets; no undeclared surfaces remain |
+| Constraint strata consistent | yes | No violations |
+| Exceptions field-specific/reasoned | n/a | No exception-backed fields |
+| Path resolution base explicit | yes | All paths repo-root-relative and verified |
+| Proof shape adequate | yes | AC oracles (file existence + provenance JSON) appropriate |
+| Cross-surface projections updated | yes | Doctrine README updated (AC6 ✓); engine README reverted to pre-cycle state ✓ |
+| No witness theater / false closure | yes | Scores backed by provenance JSON; no competing report |
+| PR body matches branch files | n/a | No PR in triadic CDD |
+
+**Contract integrity gate:** All rows yes or n/a. Gate passes.
+
+---
+
+### §2.0 Issue Contract — Round 2 (verification of affected surfaces)
+
+**AC Coverage:** All six ACs remain met. Unchanged from R1 except that the undeclared engine-path report is no longer in the diff — no competing scores, no path conflict.
+
+Score cross-check (provenance JSON vs. doctrine-path report):
+
+| Target | Axis | Provenance JSON | Report (3dp) | Match |
+|--------|------|----------------|--------------|-------|
+| spec | α | 0.9681 | 0.968 | ✓ |
+| spec | β | 0.9100 | 0.910 | ✓ |
+| spec | γ | 0.8148 | 0.815 | ✓ |
+| spec | C_Σ_mech | 0.8976 | 0.898 | ✓ |
+| engine | α | 0.6500 | 0.650 | ✓ |
+| engine | β | 0.2250 | 0.225 | ✓ |
+| engine | γ | 0.6870 | 0.687 | ✓ |
+| engine | C_Σ_mech | 0.5207 | 0.521 | ✓ |
+| repo | α | 0.9147 | 0.915 | ✓ |
+| repo | β | 0.3847 | 0.385 | ✓ |
+| repo | γ | 0.6801 | 0.680 | ✓ |
+| repo | C_Σ_mech | 0.6598 | 0.660 | ✓ |
+
+**Named Doc Updates:** `docs/alpha/engine/0.7.0/SELF-COHERENCE.md` — absent from `git diff main...HEAD --stat` ✓. `docs/alpha/engine/README.md` — absent from `git diff main...HEAD --stat` ✓ (reverted in 97f627a, net-zero relative to main).
+
+**CDD Artifact Contract:** self-coherence.md has fix-round section documenting 97f627a resolution; round-2 review-readiness signal present. beta-review.md (this file) updated.
+
+### Findings — Round 2
+
+| # | Finding | Evidence | Severity | Type |
+|---|---------|----------|----------|------|
+| — | No findings | — | — | — |
+
+All R1 findings (F1–F4) resolved by removal of the undeclared engine-path report (97f627a). No new findings. No remaining blocker.
+
+---
+
+### Pre-merge Gate — Round 2
+
+| Row | Check | Result |
+|-----|-------|--------|
+| 1 | Identity: `git config user.email` = `beta@cdd.tsc` | ✓ |
+| 2 | `git fetch origin main` → origin/main = `ee4a84d` (unchanged from R1) | ✓ |
+| 3 | Docs-only cycle; no new contract surface shipped → collapsed per β/SKILL.md | ✓ |
+
+Gate passes. Proceeding to merge.
