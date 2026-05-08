@@ -24,6 +24,7 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
+| 0.7.0 | A | A | A | A | L6 | Test migration: Python retired, 74-assertion OCaml suite, auto-mode fallback test, Credentials module. (#26, cycle: L6) |
 | 0.6.0 | B+ | B+ | A | B+ | L6 | Spec v3.2.0 engine: barrier transform φ, L_link case-split, math/num split, W2 gauge witness (ref+spread), provenance JSON skeleton, SELF-MEASURE.md δ-based protocol, OOD cutover guard. 69-assertion test suite. (#24, cycle: L6) |
 | 0.5.0 | A | A | A | A | L6 | Hybrid scoring: mechanical + llm + hybrid + auto modes. 12 structural signals, 61-assertion OCaml test suite, direct file input. Full CDD cycle (#25). |
 | 0.4.0 | C+ | B | C+ | C | L6 | Dotenv credential loading + VERSION as single source of truth + release scripts. Partial-protocol release: no CDD cycle, β review absent, post-release artifacts retroactive (#27). |
@@ -34,6 +35,33 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 | 0.1.0 | B | B+ | B | B- | L7 | First OCaml engine. Targets, provider transport, CI, self-measurement workflow. CI broken at tag time. |
 
 Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Removed — available in git history. Not scored — different system.
+
+---
+
+## 0.7.0 (2026-05-08)
+
+Test migration: Python retired, OCaml test suite complete. Full CDD cycle (#26, Sub 3 of #23).
+
+### Added
+- **`engine/ocaml/lib/credentials.ml`**: `Credentials` module — `has_llm_credentials : unit -> bool` extracted from `bin/main.ml` to enable hermetic testing of the auto-mode fallback branch.
+- **`engine/ocaml/test/test_mechanical.ml`** (extended): `test_auto_mode_fallback` added via `Unix.putenv`; completes AC4 surface 8. Total suite: 74 PASS lines.
+
+### Changed
+- **`engine/ocaml/lib/dune`**: `credentials` module added to library modules list.
+- **`engine/ocaml/bin/main.ml`**: mode-dispatch calls `Tsc_engine.Credentials.has_llm_credentials()`. Behavior identical.
+- **`engine/ocaml/test/dune`**: `unix` library added to test dependencies.
+
+### Removed
+- **`tests/conformance/`**: `test_consciousness.py`, `test_emergence.py`, `test_free_will.py`, `test_glider.py`, `test_random_soup.py` — Drop (Python-controller-coupled, no mechanical-scorer analogue).
+- **`tests/self/test_self_coherence.py`** — Rewrite (superseded by `test_coherence.ml` + `test_mechanical.ml`).
+- **`pyproject.toml`** — removed; no Python content remains.
+
+### Known debt
+- AC6 live-LLM integration test: carried from cycle #24.
+- Beta derivation from δ values: carried from cycle #24.
+- `alpha/SKILL.md` §2.6 caller-path trace patch (cnos repo): carried from cycle #24.
+- `CONTRIBUTING.md` / `.github/pull_request_template.md`: stale Python/pytest references; doc-cleanup MCI filed.
+- MCI freeze in effect: ≥3 issues at growing lag (#28, #29, #30, #31).
 
 ---
 
