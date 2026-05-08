@@ -144,13 +144,12 @@ Report δ ∈ [0, 1] for each pair. Use these thresholds:
 | 0.50–0.75 | Poor coherence, significant mismatch  |
 | 0.75–1.00 | Near-incoherent, fundamental mismatch |
 
-### 3.2 Component scores s_α, s_γ
+### 3.2 Component scores s_α, s_β, s_γ
 
 Also estimate:
 - **s_alpha** ∈ [0, 1]: pattern coherence score for the bundle as a whole (α axis stability under perturbation)
+- **s_beta** ∈ [0, 1]: relational coherence score (β axis cross-file fit)
 - **s_gamma** ∈ [0, 1]: process coherence score (γ axis temporal / evolution stability)
-
-The engine derives s_beta from the three pairwise Coh values.
 
 ### 3.3 Score mapping for top-level fields
 
@@ -158,11 +157,9 @@ Set the three top-level fields as:
 
 ```
 alpha = s_alpha
-beta  = 0.0   (placeholder; the engine derives beta from the per-pair δ values)
+beta  = s_beta
 gamma = s_gamma
 ```
-
-The engine derives `beta` from `delta_alpha_beta`, `delta_beta_gamma`, and `delta_gamma_alpha` deterministically. Do not compute Coh or any beta approximation yourself.
 
 ---
 

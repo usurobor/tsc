@@ -103,9 +103,10 @@ let get_float_opt key json =
     Returns Ok measure_result or Error string.
 
     v3.2.0: also accepts optional per-pair delta fields
-    (delta_alpha_beta, delta_beta_gamma, delta_gamma_alpha). When present,
-    the engine performs the barrier-transform chain deterministically
-    (coherence.ml) instead of treating the LLM output as Coh directly. *)
+    (delta_alpha_beta, delta_beta_gamma, delta_gamma_alpha) as provenance
+    data. The three top-level scores (alpha, beta, gamma) are LLM-provided
+    values in [0, 1]; the delta fields carry per-pair discrepancy estimates
+    used in provenance JSON. *)
 let validate_result json =
   let axis_evidence_obj =
     match json with
