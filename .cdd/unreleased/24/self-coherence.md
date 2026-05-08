@@ -158,3 +158,21 @@ role: alpha
 | 6 Artifacts | `engine/ocaml/lib/coherence.ml`, `lipschitz.ml`, `ood.ml`, `report.ml`, `response_schema.ml`; `engine/ocaml/test/test_coherence.ml`; `engine/ocaml/test/fixtures/provenance_v3_2_0.schema.json`; `runtime/SELF-MEASURE.md` | design, plan | Design: issue body serves as design artifact. Plan: implementation order AC1→AC2→AC3→AC4→AC5→AC6→AC7 per ACs ordering constraints. Tests before/alongside code. |
 | 7 Self-coherence | `.cdd/unreleased/24/self-coherence.md` | cdd | AC-by-AC check completed; self-check completed; debt declared. |
 | 7a Pre-review | `.cdd/unreleased/24/self-coherence.md` | cdd | Pre-review gate: see review-readiness section below. |
+
+## Review-readiness | round 1 | implementation SHA: 23ee4f3 | ready for β
+
+**Pre-review gate (alpha/SKILL.md §2.6):**
+
+| Row | Check | Status |
+|-----|-------|--------|
+| 1 | `origin/cycle/24-v320-engine` rebased onto `origin/main` | ✅ base SHA: 52d0387 (main HEAD at 2026-05-08) |
+| 2 | `.cdd/unreleased/24/self-coherence.md` carries CDD Trace through step 7 | ✅ |
+| 3 | Tests present or explicit reason none apply | ✅ `test_coherence.ml` (AC1–AC5, AC7, 69 assertions) + `test_mechanical.ml` (61 assertions), all pass |
+| 4 | Every AC has evidence | ✅ §ACs above maps each AC to module, function, and test assertion |
+| 5 | Known debt explicit | ✅ §Debt lists 5 items |
+| 6 | Schema/shape audit | ✅ `report.ml::to_json` backward-compatible (optional labeled params); `report.schema.json` unchanged shape |
+| 7 | Peer enumeration | ✅ New modules additive; no sibling consumer needs updating |
+| 8 | Harness audit | ✅ No shell/CI/template writers for provenance JSON schema |
+| 9 | Post-patch re-audit (OCaml only diff) | ✅ All tests re-run after each code commit |
+| 10 | Branch CI green | ✅ `dune exec ./test/test_coherence.exe` + `./test/test_mechanical.exe` both exit 0 at HEAD |
+| 11 | Author email `alpha@cdd.tsc` | ✅ verified via `git log -1 --format='%ae' HEAD` |
