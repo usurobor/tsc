@@ -1,0 +1,192 @@
+From 5066538a15582e5d56af1902bae777e973812fb0 Mon Sep 17 00:00:00 2001
+From: alpha <alpha@cdd.tsc>
+Date: Sat, 9 May 2026 02:44:43 +0000
+Subject: [PATCH 6/6] docs(cdd): cdd-iteration.md as canonical home for
+ self-iteration findings
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Adds a first-class artifact under .cdd/ for cdd-self-improvement
+findings surfaced by a cycle. The trigger mechanism (CDD.md §9.1)
+and the disposition vocabulary (patch-landed / next-MCA / no-patch)
+already exist; this patch adds the structured artifact where those
+findings live, plus an aggregator and a cross-repo trace for
+findings whose patch lands in a different repo than the source
+cycle.
+
+Three layers added under .cdd/:
+
+  .cdd/unreleased/{N}/cdd-iteration.md
+    per-cycle, conditionally required (only when triage produces
+    >=1 finding tagged cdd-skill-gap / cdd-protocol-gap /
+    cdd-tooling-gap / cdd-metric-gap), structured per-finding
+    records with source / class / trigger / disposition /
+    patch-or-issue link / affected cdd skill section
+
+  .cdd/iterations/INDEX.md
+    aggregator across all cycles that produced a cdd-iteration.md;
+    one row per such cycle (Cycle / Issue / Date / Findings counts /
+    Path); makes the cdd protocol's own learning rate measurable
+
+  .cdd/iterations/cross-repo/{target-repo}/{slug}/
+    bundle deliverables (patches, issue body, PR body, apply notes)
+    plus LINEAGE.md mapping each deliverable to source cycle(s) and
+    target repo PR; for findings whose patch lands cross-repo
+    (e.g. cnos-tsc supercycle finding cnos cdd skill gaps);
+    persists until target PR merges, then may be deleted
+
+Files modified:
+
+  cdd/CDD.md
+    - §Tracking canonical filename table: add cdd-iteration.md row
+    - §5.3a Artifact Location Matrix: add cdd-iteration, INDEX,
+      cross-repo rows
+    - §5.3b ownership matrix: add cdd-iteration.md and INDEX.md
+      ownership rows tied to gamma closure gate
+
+  cdd/post-release/SKILL.md
+    - new Step 5.6b 'Author cdd-iteration.md (when applicable)'
+      between existing 5.6a and 5.7
+    - per-finding shape, aggregator update procedure, cross-repo
+      trace procedure
+    - pre-publish gate gains a checklist row enforcing the artifact
+      when triage produces cdd-*-gap findings
+
+  cdd/gamma/SKILL.md
+    - §2.10 closure gate row 14 added: gamma cannot declare closure
+      without the artifact when applicable
+
+Motivation: the cnos-tsc supercycle (master usurobor/tsc#23,
+5 cycles closed) produced 5 distinct cdd-skill-gap findings that
+this very PR captures as patches 1-5. Reconstructing them required
+reading 5 separate gamma-closeout.md files — exactly the friction
+this artifact eliminates. The supercycle also exposed the cross-repo
+case: findings surface in tsc, patches land in cnos. Without the
+cross-repo trace structure, tsc's .cdd had no canonical home for
+the bundle (the prior pr-bundles/ at repo root violated the 'all
+artifacts under .cdd' principle).
+
+This is recursive coherence — the patch defines the structure that
+this very PR's cross-repo bundle uses.
+---
+ src/packages/cnos.cdd/skills/cdd/CDD.md       |  6 +++
+ .../cnos.cdd/skills/cdd/gamma/SKILL.md        |  1 +
+ .../cnos.cdd/skills/cdd/post-release/SKILL.md | 51 +++++++++++++++++++
+ 3 files changed, 58 insertions(+)
+
+diff --git a/src/packages/cnos.cdd/skills/cdd/CDD.md b/src/packages/cnos.cdd/skills/cdd/CDD.md
+index 8974a2f..3871b0b 100644
+--- a/src/packages/cnos.cdd/skills/cdd/CDD.md
++++ b/src/packages/cnos.cdd/skills/cdd/CDD.md
+@@ -166,6 +166,7 @@ GitHub Pull Requests are **not** part of the triadic protocol. PR creation, poll
+ | `alpha-closeout.md` | α | α close-out narrative (after merge) | cycle summary, findings α-side, friction log, observations and patterns, cycle-level engineering level reading; **factual observations only — no dispositions** (γ's job) |
+ | `beta-closeout.md` | β | β close-out narrative + merge evidence | review context, narrowing pattern across rounds, merge evidence (merge commit SHA, branch state), β-side findings; **factual observations only — no dispositions** |
+ | `gamma-closeout.md` | γ | γ close-out triage + cycle iteration | close-out triage table (every finding from α + β + PRA → disposition), §9.1 trigger assessment, cycle iteration section if any trigger fired, deferred outputs, next-MCA commitment |
++| `cdd-iteration.md` | γ | First-class artifact for cdd-self-improvement findings surfaced by this cycle | per-finding records: source, class (`cdd-skill-gap` / `cdd-protocol-gap` / `cdd-tooling-gap` / `cdd-metric-gap`), trigger (CDD.md §9.1 trigger N or "γ process-gap check"), disposition (patch-landed / next-MCA / no-patch), patch-or-issue link, affected cdd skill file/section. Conditionally required: written **only when** the close-out triage produces ≥1 finding with a `cdd-*-gap` class. Empty cycles produce no file (signal stays high). |
+ 
+ Roles may add additional files when the cycle warrants it (e.g. `alpha-design.md` if a separate design artifact lives in the cycle dir, `gamma-dispatch.md` if dispatch evidence is large enough to deserve its own file). The filename pattern is `{role}-{purpose}.md` (e.g. `alpha-closeout.md`) for role-owned content, and bare `{purpose}.md` (e.g. `self-coherence.md`) for cycle-shared content where the convention identifies the author.
+ 
+@@ -866,6 +867,9 @@ For release-scoped triadic cycles, every named artifact has exactly one canonica
+ | α close-out | `.cdd/unreleased/{N}/alpha-closeout.md` (in-version), moved to `.cdd/releases/{X.Y.Z}/{N}/alpha-closeout.md` at release | same | `.cdd/releases/{X.Y.Z}/alpha/CLOSE-OUT.md` (legacy aggregate form, pre-#283) is warn-only |
+ | β close-out | `.cdd/unreleased/{N}/beta-closeout.md` (in-version), moved to `.cdd/releases/{X.Y.Z}/{N}/beta-closeout.md` at release | same | `.cdd/releases/{X.Y.Z}/beta/CLOSE-OUT.md` (legacy aggregate form, pre-#283) is warn-only |
+ | γ close-out | `.cdd/unreleased/{N}/gamma-closeout.md` (in-version), moved to `.cdd/releases/{X.Y.Z}/{N}/gamma-closeout.md` at release | same | `.cdd/releases/{X.Y.Z}/gamma/CLOSE-OUT.md` (legacy aggregate form, pre-#283) is warn-only |
++| cdd-iteration (per-cycle) | `.cdd/unreleased/{N}/cdd-iteration.md` (in-version), moved to `.cdd/releases/{X.Y.Z}/{N}/cdd-iteration.md` at release | same | none — required when ≥1 cdd-`*`-gap finding exists |
++| cdd-iteration index | `.cdd/iterations/INDEX.md` (root, persistent) | same | none — required if any cycle has produced a `cdd-iteration.md`; γ updates with one row per such cycle at close |
++| cross-repo trace | `.cdd/iterations/cross-repo/{target-repo}/{slug}/` | same | for findings whose patch lands in a different repo than the source cycle — directory holds bundle deliverables (patches, issue body, PR body, apply notes) plus a `LINEAGE.md` mapping each deliverable to source cycle(s) and target repo PR. Persistent until target PR merges; may be deleted thereafter (LINEAGE.md is preserved in the target repo's `cdd-iteration.md`). |
+ | γ kata verdict (optional) | `.cdd/releases/{X.Y.Z}/gamma/KATA-VERDICT.md` when kata is available | same | warn-only when kata unavailable |
+ | CHANGELOG ledger row | `CHANGELOG.md` (Release Coherence Ledger) — must include Version, C_Σ, α, β, γ, **Level**, coherence note | same | none |
+ | RELEASE.md | `RELEASE.md` at repo root, included in the release commit | same | CI auto-generated body is not an acceptable substitute |
+@@ -891,6 +895,8 @@ Every required cycle artifact has one owner, one verification gate, and one cons
+ | `alpha-closeout.md` | α (re-dispatched after merge) | After β merge, via δ re-dispatch (§1.4 α step 10, §1.6a) | γ before PRA; γ closure gate | γ closure | γ closure gate blocks; γ requests δ to re-dispatch α |
+ | `beta-closeout.md` | β | Before β exits (same β session as merge) | γ before PRA; γ closure gate | γ closure | γ closure gate blocks; γ requests β re-dispatch |
+ | `gamma-closeout.md` | γ | After all closure gate rows pass (§gamma/SKILL.md §2.10) | δ before tag/release (implicit: tag requires γ closure declaration which is gamma-closeout.md) | δ tag/release | δ must not tag; γ has not declared closure |
++| `cdd-iteration.md` | γ | Same session as `gamma-closeout.md`; **only when** triage produces ≥1 finding tagged `cdd-skill-gap` / `cdd-protocol-gap` / `cdd-tooling-gap` / `cdd-metric-gap` | γ closure gate; aggregator update (`.cdd/iterations/INDEX.md`) | γ closure | γ closure gate blocks; if cdd-`*`-gap findings exist, the artifact must exist before closure |
++| `.cdd/iterations/INDEX.md` row | γ | Same session as `cdd-iteration.md` | γ closure gate | γ closure | γ closure gate blocks if `cdd-iteration.md` was written but INDEX.md was not updated |
+ | `RELEASE.md` | γ | Before requesting δ tag/release; committed to main in release commit | δ at release-boundary preflight | δ tag/release | δ must not tag; CI auto-generates sparse notes |
+ | `.cdd/releases/{X.Y.Z}/{N}/` | γ (at release, via `release/SKILL.md` §2.5a) | Before γ requests δ tag; included in release commit | γ closure gate row 12; δ preflight | δ tag/release | Stale unreleased dir; γ closure gate blocks until moved |
+ | POST-RELEASE-ASSESSMENT.md | γ | After β merge + close-outs | γ closure gate; δ at release-boundary preflight | γ closure | γ closure gate blocks |
+diff --git a/src/packages/cnos.cdd/skills/cdd/gamma/SKILL.md b/src/packages/cnos.cdd/skills/cdd/gamma/SKILL.md
+index afa3a66..f9acba9 100644
+--- a/src/packages/cnos.cdd/skills/cdd/gamma/SKILL.md
++++ b/src/packages/cnos.cdd/skills/cdd/gamma/SKILL.md
+@@ -456,6 +456,7 @@ Do not declare the cycle closed until all of the following are true:
+ 11. `RELEASE.md` is written and committed to main (§2.6)
+ 12. cycle directories moved from `.cdd/unreleased/{N}/` to `.cdd/releases/{X.Y.Z}/{N}/` and committed to main (§2.6)
+ 13. δ release-boundary preflight was requested and returned Proceed (§4.1a S10, `operator/SKILL.md` §3.4)
++14. if the close-out triage produced ≥1 finding tagged `cdd-skill-gap` / `cdd-protocol-gap` / `cdd-tooling-gap` / `cdd-metric-gap`, `.cdd/unreleased/{N}/cdd-iteration.md` exists with each finding structured per `post-release/SKILL.md` Step 5.6b, **and** `.cdd/iterations/INDEX.md` has a row for cycle N. If any finding shipped to a different repo, `.cdd/iterations/cross-repo/{target}/{slug}/` exists with bundle + `LINEAGE.md`. (Empty cycles — no `cdd-*-gap` findings — produce no file and skip this row.)
+ 
+ Then:
+ - write `.cdd/unreleased/{N}/gamma-closeout.md`. The γ close-out contains: cycle summary, close-out triage table, §9.1 trigger assessment, cycle iteration, skill gap candidate dispositions, deferred outputs, hub memory evidence, and next MCA. **`gamma-closeout.md` is the closure declaration artifact. δ must not tag/release until `gamma-closeout.md` exists on main.** This is the mechanical signal that γ has verified all closure gate rows. See `CDD.md` §5.3b ownership matrix row for `gamma-closeout.md`.
+diff --git a/src/packages/cnos.cdd/skills/cdd/post-release/SKILL.md b/src/packages/cnos.cdd/skills/cdd/post-release/SKILL.md
+index afb5b93..cb9fc3e 100644
+--- a/src/packages/cnos.cdd/skills/cdd/post-release/SKILL.md
++++ b/src/packages/cnos.cdd/skills/cdd/post-release/SKILL.md
+@@ -276,6 +276,56 @@ If no `CDD.md` §9.1 trigger fired, write either:
+ - `No §9.1 trigger fired`, or
+ - the independent γ process-gap result if step 13 still found something worth patching.
+ 
++### Step 5.6b: Author `cdd-iteration.md` (when applicable)
++
++When the close-out triage in `gamma-closeout.md` produces ≥1 finding tagged `cdd-skill-gap`, `cdd-protocol-gap`, `cdd-tooling-gap`, or `cdd-metric-gap`, γ writes a first-class artifact `.cdd/unreleased/{N}/cdd-iteration.md` extracting only those findings into a structured form. This is the canonical home for cdd-self-improvement findings; PRA §3 prose remains as narrative, but the structured record lives here.
++
++**Empty cycles produce no file.** If triage produces zero `cdd-*-gap` findings, no `cdd-iteration.md` is written — signal stays high.
++
++**Per-finding shape:**
++
++```markdown
++### F1: <title>
++
++- **Source:** α-closeout / β-review / γ-triage / PRA §3 / PRA §4b — name the artifact and section
++- **Class:** `cdd-skill-gap` | `cdd-protocol-gap` | `cdd-tooling-gap` | `cdd-metric-gap`
++- **Trigger:** §9.1 trigger N | "γ process-gap check" | "review pattern across cycles"
++- **Description:** one paragraph
++- **Root cause:** one paragraph
++- **Disposition:** `patch-landed` | `next-MCA` | `no-patch`
++
++If `patch-landed`:
++- **Patch:** `<commit-sha>` or `<file-path>`
++- **Affects:** `<cdd skill file or section>` (e.g. `cdd/review/SKILL.md` §3.13)
++- **Cross-repo:** `<target-repo>` PR `#NN` if patch landed in a different repo than this cycle (otherwise omit)
++
++If `next-MCA`:
++- **Issue filed:** `<repo>` `#NN`
++- **First AC:** ...
++
++If `no-patch`:
++- **Reason:** required justification per CDD §13a
++```
++
++**Aggregator update.** After writing `cdd-iteration.md`, γ updates `.cdd/iterations/INDEX.md` with one row:
++
++```markdown
++| Cycle | Issue | Date | Findings | Patches | MCAs | No-patch | Path |
++|-------|-------|------|----------|---------|------|----------|------|
++| {N}   | #N    | YYYY-MM-DD | M | P | A | Z | .cdd/releases/{X.Y.Z}/{N}/cdd-iteration.md |
++```
++
++For docs-only releases, the path uses the §2.5b form: `.cdd/releases/docs/{ISO-date}/{N}/cdd-iteration.md`.
++
++**Cross-repo trace.** If any finding's disposition is `patch-landed` with a `Cross-repo` target, γ also creates `.cdd/iterations/cross-repo/{target-repo}/{slug}/` containing:
++
++- the bundle deliverables (patch series, issue body, PR body, apply notes)
++- a `LINEAGE.md` mapping each deliverable to its source cycle(s) and the target repo's PR
++
++The cross-repo directory persists until the target PR merges; γ may delete it thereafter (the lineage is preserved in the target repo's own `cdd-iteration.md`).
++
++**Why this artifact exists.** Without `cdd-iteration.md`, cdd-self-improvement findings are buried in PRA §3 prose. They cannot be aggregated, the protocol cannot measure its own learning rate, and cross-repo work loses traceability. Making the artifact first-class closes cdd's self-iteration loop with the same discipline cdd applies to system-level cycles. Empty cycles produce no file — the cost is paid only when it carries signal.
++
+ ### Step 5.7: Production verification
+ 
+ After release, verify the change works in production — not just that CI passes. Design a concrete test that demonstrates the new capability (or blocked failure mode) in a real environment.
+@@ -345,6 +395,7 @@ Before committing the assessment, verify mechanically:
+ - [ ] §4 mechanical ratio: if >20% AND total findings ≥ 10, a process issue is **filed and referenced** (not just noted). Below 10 findings, note the ratio but no filing required.
+ - [ ] §4a CDD self-coherence: α/β/γ scored, weakest axis named, action stated (or "none" if all ≥3)
+ - [ ] If any `CDD.md` §9.1 trigger fired, §4b Cycle Iteration exists with trigger, root cause, disposition, and evidence.
++- [ ] If close-out triage produced ≥1 finding tagged `cdd-skill-gap` / `cdd-protocol-gap` / `cdd-tooling-gap` / `cdd-metric-gap`, `.cdd/unreleased/{N}/cdd-iteration.md` exists (Step 5.6b) **and** `.cdd/iterations/INDEX.md` has a new row for cycle N. If patch landed cross-repo, `.cdd/iterations/cross-repo/{target}/{slug}/` exists with `LINEAGE.md`.
+ - [ ] §3/§4 skill patches: if §3 identifies a recurring failure mode or skill gap, the patch is **in this commit** (not deferred) and synced across all affected surfaces: canonical source under `src/packages/`, package-visible loader entrypoint if affected, human-facing pointer/readme surfaces if they expose the changed rule.
+ - [ ] §5.7 has production verification scenario (or explicit deferral with commitment)
+ - [ ] §6 CDD Closeout trace present with rows for observe/assess/close steps (incl. step 13a if skill patches landed)
+-- 
+2.43.0
+
