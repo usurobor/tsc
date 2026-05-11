@@ -31,9 +31,9 @@ Fixes #(issue)
 **Test commands run:**
 
 ```bash
-pytest
-make lint
-make fmt
+dune build
+dune runtest
+dune fmt
 ```
 
 **New tests added:**
@@ -56,7 +56,7 @@ make fmt
 - [ ] I have made corresponding changes to the documentation
 - [ ] My changes generate no new warnings or errors
 - [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
+- [ ] New and existing unit tests pass locally with my changes (`dune runtest`)
 - [ ] Any dependent changes have been merged and published
 - [ ] I have updated CHANGELOG.md (if this is a significant change)
 
@@ -64,11 +64,11 @@ make fmt
 
 <!-- Complete this section if adding a new parser -->
 
-- [ ] Added parser to `reference/python/parsers/`
-- [ ] Implemented both predicate (`is_X`) and parser function (`X_parser`)
-- [ ] Registered in `parsers/__init__.py` PARSERS list
+- [ ] Added parser module under `engine/ocaml/lib/parsers/`
+- [ ] Implemented both predicate (`is_X`) and parser function
+- [ ] Registered in the parsers dispatch module
 - [ ] Added example file in `examples/`
-- [ ] Added conformance test in `tests/conformance/`
+- [ ] Added conformance test in `tests/ocaml/conformance/`
 - [ ] Updated QUICKSTART.md or relevant docs
 - [ ] Parser handles errors gracefully (fallback to stub if needed)
 - [ ] Parser is deterministic given same seed

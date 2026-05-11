@@ -20,17 +20,18 @@ Participation is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By contr
 
 ## Support Matrix
 
-- **Python**: 3.10, 3.11, 3.12
-- **OS**: Linux, macOS, Windows
-- **Package manager**: pip (editable installs supported)
-- **Tooling**: ruff ≥ 0.6, pytest ≥ 7.0
+- **OCaml**: 5.1+
+- **OS**: Linux, macOS (Windows via WSL)
+- **Package manager**: opam
+- **Build system**: dune ≥ 3.0
+- **Tooling**: ocamlformat, dune runtest
 
 ## How Can I Contribute?
 
 ### Reporting Bugs
 
 - Search existing [Issues](https://github.com/usurobor/tsc/issues) first
-- Include: steps to reproduce, expected vs actual behavior, environment (OS, Python version), and a minimal reproducible example
+- Include: steps to reproduce, expected vs actual behavior, environment (OS, OCaml/opam version), and a minimal reproducible example
 
 ### Suggesting Enhancements
 
@@ -57,62 +58,51 @@ We welcome:
    cd tsc
 ```
 
-2. **Install dev dependencies**
+2. **Install OCaml dependencies**
 
 ```bash
-   python3 -m pip install --upgrade pip
-   pip install -e ".[dev]"
+   cd engine/ocaml
+   opam install . --deps-only --with-test
 ```
 
-3. **Run tests & linters**
+3. **Build & run tests**
 
 ```bash
-   pytest
-   make lint    # or: ruff check .
-   make fmt     # or: ruff format .
-```
-
-**No-make fallbacks (all platforms):**
-
-```bash
-ruff format .
-ruff check .
-pytest
+   dune build
+   dune runtest
+   dune fmt        # format sources
 ```
 
 ## Coding Standards
 
-### Python Style
+### OCaml Style
 
-- Follow PEP 8
-- Use Python 3.10+ type hints: `X | None` instead of `Optional[X]`
-- Maximum line length: 100 characters
-- Use `ruff` for linting and formatting
+- Follow standard OCaml conventions; use `ocamlformat` (run `dune fmt`)
+- Prefer pure functions and immutable data
+- Keep modules small and focused; provide `.mli` interface files for public surfaces
 
 ### Code Organization
 
 - **Functional style preferred**: pure functions, immutable data structures
-- Use `@dataclass(frozen=True)` for immutable data
 - Keep functions small and focused
-- Avoid classes unless necessary
+- Use module interfaces (`.mli`) to constrain public API surface
+- Avoid mutable state unless necessary
 
-### Type Hints
+### Type Signatures
 
-```python
-# Good
-def parse_file(path: str, seed: int | None = None) -> ParsedInput:
-    ...
+```ocaml
+(* Good — explicit, narrow signature in .mli *)
+val parse_file : path:string -> seed:int option -> parsed_input
 
-# Avoid
-def parse_file(path, seed=None):
-    ...
+(* Avoid — implicit, no .mli *)
+let parse_file path seed = ...
 ```
 
-### Docstrings
+### Documentation
 
-- Document all public functions
-- Use NumPy-style docstrings for complex functions
+- Document public functions in `.mli` files using `(** ... *)`
 - Add inline comments for non-obvious logic
+- Use `odoc`-compatible markup where applicable
 
 ## Submitting Changes
 
@@ -138,17 +128,17 @@ Use `BREAKING CHANGE:` in commit footer for breaking API changes.
 
 ### Pull Request Process
 
-1. Ensure tests pass: `pytest`
-1. Run linting: `ruff check .`
-1. Format code: `ruff format .`
+1. Ensure tests pass: `dune runtest`
+1. Format code: `dune fmt`
+1. Verify build: `dune build`
 1. Update `CHANGELOG.md` for significant changes
 1. Push to your fork
 1. Create PR with clear description
 
 **PR Requirements:**
 
-- [ ] All tests pass
-- [ ] Code is linted and formatted
+- [ ] All tests pass (`dune runtest`)
+- [ ] Code is formatted (`dune fmt`)
 - [ ] New features have tests
 - [ ] Documentation updated (if applicable)
 - [ ] CI is green
@@ -158,26 +148,26 @@ Use `BREAKING CHANGE:` in commit footer for breaking API changes.
 
 ## Adding a New Parser
 
-See [QUICKSTART.md](QUICKSTART.md#5-add-support-for-your-data-format) for full guide.
+See [QUICKSTART.md](QUICKSTART.md) for full guide.
 
 **Quick checklist:**
 
-1. Create `reference/python/parsers/your_format.py`
+1. Create the parser module under `engine/ocaml/lib/parsers/`
 1. Implement:
-   - `is_your_format(path: str) -> bool` (predicate)
-   - `your_format_parser(path: str, seed: int | None) -> ParsedInput` (parser)
-1. Register in `reference/python/parsers/__init__.py`
+   - A predicate (`is_your_format : string -> bool`)
+   - A parser (`parse : path:string -> seed:int option -> parsed_input`)
+1. Register the parser in the parsers dispatch module
 1. Add example: `examples/your_format/`
-1. Add test: `tests/conformance/`
+1. Add test: `tests/ocaml/conformance/`
 1. Update docs
 
 **Parser requirements:**
 
 - Pure function (file I/O allowed)
-- Returns valid `ParsedInput`
+- Returns a valid `parsed_input`
 - Deterministic given `seed`
 - Graceful error handling
-- Full type hints + docstring
+- Documented in the `.mli` with type signature
 
 ## Security
 
@@ -185,7 +175,7 @@ See [QUICKSTART.md](QUICKSTART.md#5-add-support-for-your-data-format) for full g
 
 ## License
 
-- **Code** (`reference/`, `tests/`): Apache-2.0
+- **Code** (`engine/`, `tests/`): Apache-2.0
 - **Specifications** (`spec/`): CC BY 4.0
 - **Examples** (`examples/`): CC0 (Public Domain)
 
@@ -199,4 +189,4 @@ See [LICENSE](LICENSE) for full text.
 - Email: peter@lisovin.com
 - Check existing issues first
 
-Thank you for contributing to TSC! 🎉
+Thank you for contributing to TSC!
