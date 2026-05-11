@@ -182,13 +182,25 @@ Branch hygiene (operator-side; UI deletion):
 | 3 Bootstrap | this file | cdd | scaffold present |
 | 4 Gap | this §Gap | — | named seven deliverables + recursive-coherence requirement |
 | 5 Mode | this §Mode | cdd/issue | `design-and-build`; cycle-scope at-edge keep-whole with justification |
-| (steps 6–7a will be filled by α during implementation) | | | |
+| 6 Implement | seven AC commits 9ff9450, b29526e, 14ad74e, dd7bd8c, 8e303cf, 35bc685 + GitHub-side AC6 | cdd/alpha, cnos.eng/writing, cnos.eng/ocaml (light) | AC1 (D2) `targets/engine.tsc` _build exclusion → 9ff9450; AC3 contrib docs Python retirement → b29526e; AC4 §2.5b move of `.cdd/unreleased/{27,29}` → 14ad74e; AC2 (D3) `spec/tsc-oper.md §7.4` cross-target C_Σ canonical + v3.2.1 patch bump + glossary cross-ref + CHANGELOG row → dd7bd8c; AC5 CI libcurl fix (`libcurl4-openssl-dev` pre-install + ubuntu-22.04 pin) → 8e303cf; AC7 `.cdd/iterations/INDEX.md` + `cross-repo/` init → 35bc685; AC6 GitHub issues #6 + #22 closed via MCP `issue_write` with rationale comments citing cycles #29 and #25 respectively (no commit; GitHub-side only). |
+| 7 Self-coherence | this section append (friction log + trace fill + readiness signal) | cdd/alpha | review-ready against ACs 1–7; AC8 (this cycle's own close-out) is post-merge by definition (β + γ closure artifacts). |
+| 7a Pre-review gate | placeholder scan + `git log origin/main..HEAD` AC-per-commit verification | cdd/alpha | all six commit-bearing ACs accounted for; AC6 traces to MCP comment URLs in this trace row. Readiness commit follows separately. |
 
-## Review-readiness signal (placeholder; α will fill at fix-round R1)
+## Friction log
+
+- **Three ACs (1, 3, 4) were already committed before this dispatch session began.** The `cycle/32` branch was 3 commits ahead of origin/main and had an uncommitted v3.2.1 header edit to `spec/tsc-oper.md` (header + change-note line) but the §7.4 body was missing. Interpretation: a prior α/dispatch began AC2 and didn't finish. This session inherits a partial state. No rework needed — I added the §7.4 body and CHANGELOG row on top of the inherited header bump, and the per-AC commit boundary still holds for the four remaining ACs.
+- **D3 spec patch placement decision was clean.** Adding §7.4 inside §7 (Self-Application) reads naturally — cross-target aggregation IS a self-application concern, and §7.1–§7.3 already establish the per-target measurement. Placing it as a new top-level section would have wrenched the flow. Same-section addition with §7.4 number is strictly additive and matches the patch-bump justification.
+- **Version cross-reference scope was smaller than the dispatch suggested.** Only `spec/tsc-glossary.md`'s "Corresponds to:" line referenced `TSC Operational v3.2.0` literally; `spec/tsc-core.md` references "v3.2.0" only for its own header and uses "pre-v3.2.0" as a historical marker (no bump needed). One-line glossary update sufficed.
+- **CI fix is provisional confidence — local verification not possible.** Without GH Actions runner access, I cannot prove the libcurl4-openssl-dev pre-install resolves the 404 end-to-end. The fix is principled (depext satisfied before setup-ocaml runs depext resolution; ubuntu-22.04 pin removes the 24.04 package-rename risk surface) but β should re-check CI status on cycle/32 push. Marking CI state `provisional` in the readiness signal accordingly.
+- **AC7 cross-repo/ directory choice.** Per dispatch, I created `cross-repo/README.md` rather than `.gitkeep` — the README explains the layout convention (one subdir per upstream-repo cycle) so future contributors know what to put there. Either form satisfies Step 5.6b's placeholder requirement; README is more self-documenting.
+- **Smooth: per-AC commit discipline + signing-disabled identity worked clean.** Six commits, each scoped to one AC, all with `alpha@cdd.tsc` identity. No accidental cross-AC bleeds.
+- **Push blocked by sandbox proxy (HTTP 403).** `git push origin cycle/32` fails at the local-proxy → Cloudflare layer with 403 Forbidden on POST to `git-receive-pack`. The info-refs endpoint advertises the ref correctly; the proxy permits fetch but rejects push from this dispatch context. All commits exist locally (verified via `git log origin/main..HEAD`); β must either push from a context with credentials or the operator must publish the branch externally. **The implementation artifacts are complete and committed; only publication is blocked.** Recommend β verify the local branch state from the same dispatch context before grading, or operator-side `git push` to land commits 9ff9450 → 9e71ebc onto `origin/cycle/32`.
+
+## Review-readiness signal
 
 | Field | Value |
 |---|---|
 | Base SHA | 6b3ab08 (origin/main) |
-| Head SHA | (filled by α at review-readiness) |
-| Branch CI state | (filled — must be green or `provisional` with explicit reason) |
-| Ready for β | (filled by α: "ready for β review against ACs 1–8") |
+| Head SHA | 35bc685 (last implementation commit — AC7 `cdd: initialize .cdd/iterations/INDEX.md + cross-repo/ — AC7 #32`) |
+| Branch CI state | provisional — local CI verification not possible from dispatch context; libcurl fix is principled (libcurl4-openssl-dev depext pre-installed, ubuntu-22.04 pin) but β must confirm green run on cycle/32 push before merge. **Additionally: `git push origin cycle/32` is blocked by sandbox proxy (HTTP 403); commits exist locally at HEAD 9e71ebc but are not yet published. Operator-side push required before β can fetch.** |
+| Ready for β | ready for β review against ACs 1–7; AC8 is post-merge by definition (β's own closure artifacts). **Caveat:** β must obtain access to the local commits (operator publishes branch, or β runs in same dispatch context). |
