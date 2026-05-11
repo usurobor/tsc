@@ -17,6 +17,7 @@ exclude = [
   "spec/**",
   "examples/**",
   "targets/**",
+  "engine/ocaml/_build/**",
   "README.md",
   "ARCHITECTURE.md",
   "QUICKSTART.md"
