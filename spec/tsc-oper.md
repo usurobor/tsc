@@ -413,7 +413,7 @@ where `i` ranges over the `n` targets in scope.
 
 **Provenance:** When `C_Σ_cross` is published, the provenance bundle for the cross-target report MUST list the constituent targets (target id and scope) and their per-target `C_Σ_i^num` (and `C_Σ_i^math` flag where relevant) so the geometric mean is reproducible.
 
-**Self-application example.** A v3.2.0 self-coherence run that scores `spec`, `engine`, and `repo` targets reports three per-target `C_Σ_i` values and one `C_Σ_cross = (C_Σ_spec · C_Σ_engine · C_Σ_repo)^(1/3)` in the cross-target summary.
+**Self-application example.** A v3.2.x self-coherence run (Core-foundation series) that scores `spec`, `engine`, and `repo` targets reports three per-target `C_Σ_i` values and one `C_Σ_cross = (C_Σ_spec · C_Σ_engine · C_Σ_repo)^(1/3)` in the cross-target summary.
 
 ______________________________________________________________________
 
