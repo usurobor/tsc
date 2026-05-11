@@ -1,8 +1,10 @@
-# TSC Operational v3.2.0
+# TSC Operational v3.2.1
 
-**Version:** 3.2.0\
+**Version:** 3.2.1\
 **Status:** Normative\
 **Foundation:** TSC Core v3.2.0
+
+**Change from v3.2.0 (patch):** §7.4 added — canonicalizes the **cross-target aggregate** `C_Σ_cross` as the geometric mean of per-target C_Σ values for self-application across multiple target scopes (e.g. `spec`, `engine`, `repo`). Strictly additive; existing measurement and verdict logic unchanged.
 
 **Change from v3.1.0:** Verdict logic reads C_Σ^num for threshold comparison and treats `zero_component_present = true` as a strict FAIL on the coherence threshold (since C_Σ^math = 0). Provenance bundle adds barrier-transform fields (δ, D, φ specification, clip parameter) and aggregate-form fields (C_Σ^math indicator, C_Σ^num value). See §5, §6.
 
@@ -392,6 +394,27 @@ OOD stable
 
 **Reporting:** Self-coherence score published in docs/self-coherence-v3.0.1.md
 
+### 7.4 Cross-Target Aggregate
+
+Self-application of TSC routinely measures more than one target scope (e.g. `spec`, `engine`, `repo`). Each target is measured independently per §7.1–§7.3 and yields a per-target coherence aggregate `C_Σ_i` (numerical form, Core §5.2). The **cross-target aggregate** is the geometric mean of these per-target values:
+
+```
+C_Σ_cross = (∏_{i=1}^{n} C_Σ_i)^(1/n)
+```
+
+where `i` ranges over the `n` targets in scope.
+
+**Properties:**
+
+- **Same shape as per-target aggregate.** The per-target `C_Σ` is itself a geometric mean over `s_α, s_β, s_γ` (Core §5.2); the cross-target form generalizes that construction to the target axis. No new operator is introduced.
+- **Worst-component dominance.** A single low-scoring target pulls `C_Σ_cross` down disproportionately, matching the `min`-leaning behavior of the per-target aggregate over its components.
+- **Strict zero on math-degeneracy.** If any target reports `zero_component_present = true` (so its `C_Σ_i^math = 0`, Core §5.4), then `C_Σ_cross^math = 0`. The math/num split (Core §5.2, §5.4) propagates: a `C_Σ_cross^num` value computed from numerically floored per-target `C_Σ_i^num` values is reported separately and is not a substitute for the math-zero outcome.
+- **Verdict logic does not change.** §5 conditions apply per target; the cross-target aggregate is a reporting quantity, not a new threshold gate.
+
+**Provenance:** When `C_Σ_cross` is published, the provenance bundle for the cross-target report MUST list the constituent targets (target id and scope) and their per-target `C_Σ_i^num` (and `C_Σ_i^math` flag where relevant) so the geometric mean is reproducible.
+
+**Self-application example.** A v3.2.x self-coherence run (Core-foundation series) that scores `spec`, `engine`, and `repo` targets reports three per-target `C_Σ_i` values and one `C_Σ_cross = (C_Σ_spec · C_Σ_engine · C_Σ_repo)^(1/3)` in the cross-target summary.
+
 ______________________________________________________________________
 
 ## 8 · Release Criteria
@@ -462,4 +485,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**End — TSC Operational v3.2.0**
+**End — TSC Operational v3.2.1**

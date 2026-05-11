@@ -56,7 +56,7 @@ We maintain a security acknowledgments section in our release notes. If you'd li
 
 When using TSC:
 
-1. **Keep dependencies updated**: Run `pip install --upgrade tsc-framework` regularly
+1. **Keep dependencies updated**: Pull the latest tagged release and rebuild via `opam update && opam install . --deps-only && dune build` regularly
 1. **Validate input files**: TSC parsers execute file I/O; only parse files from trusted sources
 1. **Sandbox execution**: When parsing untrusted data, run TSC in isolated environments
 1. **Review parser code**: Custom parsers execute arbitrary Python; audit third-party parsers before use

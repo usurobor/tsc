@@ -4,6 +4,16 @@
 
 The spec lineage (C≡, TSC Core, TSC Operational, TSC Glossary, TSC Observation Dynamics) versions independently from the engine. Spec releases are theory work with no binary deployment; validation is mathematical reproduction and cross-spec consistency.
 
+### Spec v3.2.1 (2026-05-09) — Cross-Target Aggregate Canonicalization
+
+Coherence delta: docs-only patch · **Level:** L6
+
+`spec/tsc-oper.md` §7.4 added: canonicalizes the **cross-target aggregate** `C_Σ_cross = (∏_i C_Σ_i)^(1/n)` (geometric mean of per-target C_Σ values) for self-application across multiple target scopes. Strictly additive; existing measurement and verdict logic unchanged. Resolves cycle #29 D3 — the cross-target formula previously computed ad-hoc in self-coherence reports is now normative.
+
+**Affected:** `spec/tsc-oper.md` (§7.4 added; header v3.2.0 → v3.2.1; end-marker), `spec/tsc-glossary.md` (corresponds-to line bumped). `spec/tsc-core.md` unchanged.
+
+**See:** cycle #32 self-coherence (AC2 / D3 #29).
+
 ### Spec v3.2.0 (2026-05-08) — Barrier-Coherence Patch
 
 Coherence delta: C_Σ A- (`α A`, `β A`, `γ A-`) · **Level:** L7

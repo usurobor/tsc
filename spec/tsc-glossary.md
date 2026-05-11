@@ -2,7 +2,7 @@
 
 **Version:** v3.2.0 (Triadic Foundation + Measurement Framework + Barrier Transform)\
 **Status:** Informative (accessible terminology guide)\
-**Corresponds to:** C≡ v3.1.0, TSC Core v3.2.0, TSC Operational v3.2.0, TSC Observation Dynamics v1.0.13
+**Corresponds to:** C≡ v3.1.0, TSC Core v3.2.0, TSC Operational v3.2.1, TSC Observation Dynamics v1.0.13
 
 ______________________________________________________________________
 
