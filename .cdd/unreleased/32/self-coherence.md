@@ -198,9 +198,24 @@ Branch hygiene (operator-side; UI deletion):
 
 ## Review-readiness signal
 
-| Field | Value |
-|---|---|
-| Base SHA | 6b3ab08 (origin/main) |
-| Head SHA | 35bc685 (last implementation commit — AC7 `cdd: initialize .cdd/iterations/INDEX.md + cross-repo/ — AC7 #32`) |
-| Branch CI state | provisional — local CI verification not possible from dispatch context; libcurl fix is principled (libcurl4-openssl-dev depext pre-installed, ubuntu-22.04 pin) but β must confirm green run on cycle/32 push before merge. **Additionally: `git push origin cycle/32` is blocked by sandbox proxy (HTTP 403); commits exist locally at HEAD 35bc685 but are not yet published. Operator-side push required before β can fetch.** |
-| Ready for β | ready for β review against ACs 1–7; AC8 is post-merge by definition (β's own closure artifacts). **Caveat:** β must obtain access to the local commits (operator publishes branch, or β runs in same dispatch context). |
+| Field | Value (Round 1) | Value (Round 2 — post fix-round) |
+|---|---|---|
+| Base SHA | 6b3ab08 (origin/main) | 6b3ab08 (origin/main) — unchanged |
+| Head SHA | 35bc685 (last implementation commit — AC7 `cdd: initialize .cdd/iterations/INDEX.md + cross-repo/ — AC7 #32`) | e0725d1 (last fix commit — F2 `fix(spec): clarify v3.2.x example version`); fix-round commits stacked on top of the readiness-signal commit `1ca3b81` |
+| Branch CI state | provisional — local CI verification not possible from dispatch context; libcurl fix is principled (libcurl4-openssl-dev depext pre-installed, ubuntu-22.04 pin) but β must confirm green run on cycle/32 push before merge. **Additionally: `git push origin cycle/32` is blocked by sandbox proxy (HTTP 403); commits exist locally at HEAD 35bc685 but are not yet published. Operator-side push required before β can fetch.** | provisional unchanged — fix-round R2 commits are docs/spec-only (no CI-relevant code change); libcurl fix and ubuntu pin from R1 stand. Push to `cycle/32-impl-r2` (R1 push was blocked at 403; R2 uses a fresh branch name per dispatch). |
+| Ready for β | ready for β review against ACs 1–7; AC8 is post-merge by definition (β's own closure artifacts). **Caveat:** β must obtain access to the local commits (operator publishes branch, or β runs in same dispatch context). | **Round 2 — ready for β R2** after fix-round addresses F4 (C), F1 (B), F2 (A). F3 + F5 carry no action per β verdict-side observations. |
+
+## Fix-round R1 → R2
+
+Findings addressed:
+
+- **F4** (C, honest-claim 3.13a): stale SHA "9e71ebc" → correct head `35bc685` in §Friction log and §Review-readiness signal. Fix commit: `f386e86`.
+- **F1** (B, AC3 sweep gap): `SECURITY.md` line 59 `pip install --upgrade tsc-framework` retired; replaced with OCaml-equivalent `opam update && opam install . --deps-only && dune build`. Fix commit: `da70c9b`. Post-fix sweep `git grep -iE "pip install|pip3 install|pypi\.org|tsc-framework"` returns only `.cdd/releases/0.7.0/26/*`, `.cdd/unreleased/32/{beta-review,self-coherence}.md`, and `RELEASE.md` — all review-record / point-in-time release-note quotations of the finding text, not live instructions (F3 explicit no-action on `RELEASE.md`).
+- **F2** (A, cosmetic): `spec/tsc-oper.md:416` "A v3.2.0 self-coherence run" → "A v3.2.x self-coherence run (Core-foundation series)" — the C_Σ_cross canonicalization itself is the v3.2.1 patch landed in this cycle, so the example must reference the series, not the pre-canonicalization tip. Fix commit: `e0725d1`.
+- **F3** (A, verdict-side observation): no action — `RELEASE.md` and v0.7.0 PRA reference the doc-cleanup MCI as still-pending in their point-in-time frozen release-notes; per β verdict, correct as point-in-time.
+- **F5** (positive note): no action — per-AC commit discipline noted clean by β.
+
+Honest-claim verification (rule 3.13a): `git log --oneline origin/main..HEAD` (post fix-round) ends at `e0725d1` and the implementation head from R1 is `35bc685` — both SHAs cited above are real commits on this branch. Verified before publication.
+
+New head SHA (post-fix-round): `e0725d1`.
+Ready for β R2.
