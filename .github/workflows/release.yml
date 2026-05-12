@@ -3,7 +3,7 @@ name: release
 on:
   push:
     tags:
-      - 'v*'
+      - '[0-9]*'
 
 jobs:
   build-and-release:
@@ -22,7 +22,7 @@ jobs:
 
       - name: Gate — tag must match VERSION
         run: |
-          expected="v$(cat VERSION | tr -d '\n')"
+          expected="$(cat VERSION | tr -d '\n')"
           actual="${GITHUB_REF_NAME}"
           if [ "$expected" != "$actual" ]; then
             echo "::error::Tag $actual does not match VERSION ($expected)"
