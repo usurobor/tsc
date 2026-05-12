@@ -163,6 +163,64 @@ jobs:
             exit 1
           fi
 
+      # AC2 — Emit a markdown table to $GITHUB_STEP_SUMMARY so the PR
+      # check UI shows per-kata Verdict / C_Σ / Range / Status inline
+      # without click-through to the step log. Row schema must match
+      # the table in katas/README.md §Where to find kata results (AC5)
+      # exactly: | Kata | Verdict | C_Σ | Range | Status |.
+      #
+      # Implementation: parse each `.kata-results/<id>.json` with python3
+      # (preinstalled on ubuntu-22.04 runners; same dependency as
+      # tsc.yml::Display results). `kata_pass` from the JSON drives the
+      # Status emoji; `expected_verdict`, `c_sigma`, `score_range.min`,
+      # `score_range.max` drive the rest. Empty / unparseable JSON files
+      # render a single explicit "no result" row rather than failing the
+      # step (the kata-failure exit was already reported above).
+      - name: Emit kata step-summary table
+        if: always()
+        run: |
+          echo "## Kata Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          shopt -s nullglob
+          results=( .kata-results/*.json )
+          if [ ${#results[@]} -eq 0 ]; then
+            echo "_No kata results captured (see step log for the kata-run failure)._" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "| Kata | Verdict | C_Σ | Range | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          for f in "${results[@]}"; do
+            id=$(basename "$f" .json)
+            row=$(python3 - "$f" "$id" <<'PY'
+          import json, sys
+          path, kata_id = sys.argv[1], sys.argv[2]
+          try:
+              with open(path) as fh:
+                  data = json.load(fh)
+          except Exception as exc:
+              print(f"| {kata_id} | — | — | — | :warning: unparseable JSON ({exc.__class__.__name__}) |")
+              sys.exit(0)
+          verdict = data.get("expected_verdict", "—")
+          c_sigma = data.get("c_sigma")
+          rng = data.get("score_range") or {}
+          mn, mx = rng.get("min"), rng.get("max")
+          kata_pass = data.get("kata_pass")
+          c_str = f"{c_sigma:.2f}" if isinstance(c_sigma, (int, float)) else "—"
+          rng_str = (f"{mn:.2f}–{mx:.2f}"
+                     if isinstance(mn, (int, float)) and isinstance(mx, (int, float))
+                     else "—")
+          if kata_pass is True:
+              status = ":white_check_mark:"
+          elif kata_pass is False:
+              status = ":x:"
+          else:
+              status = "—"
+          print(f"| {kata_id} | {verdict} | {c_str} | {rng_str} | {status} |")
+          PY
+            )
+            echo "$row" >> "$GITHUB_STEP_SUMMARY"
+          done
+
       # AC1 — Upload per-kata result JSON as an artifact, 90-day retention.
       # `if: always()` so failed runs (the very case where post-mortem
       # JSON is most valuable) still upload. Naming follows tsc.yml's
