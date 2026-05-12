@@ -11,3 +11,4 @@ This index covers tsc-local cycles. Cross-repo iteration bundles (tsc-side artif
 | 33    | #33      | 2026-05-12 | 0               | 0       | 0       | 0        | .cdd/releases/docs/2026-05-12/33/cdd-iteration.md |
 | 36    | #36      | 2026-05-12 | 1 + 1 positive  | 1 (pending) | 0 | 1 (pre-named) | .cdd/releases/docs/2026-05-12/36/cdd-iteration.md |
 | 38    | #38      | 2026-05-12 | 2 + 3 positive  | 2 (amendments to in-flight) | 0 | 1 (pre-named) | .cdd/releases/docs/2026-05-12/38/cdd-iteration.md |
+| 34    | #34      | 2026-05-12 | 2 + 3 positive  | 2 (amendments to in-flight) | 0 | 1 (pre-named) | .cdd/releases/0.9.0/34/cdd-iteration.md |
