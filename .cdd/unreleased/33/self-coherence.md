@@ -146,15 +146,59 @@ Lifted verbatim from issue #33 §"Acceptance criteria (Phase 1)". β verifies ea
 | 3 Bootstrap | `.cdd/unreleased/33/self-coherence.md` (this file) | cdd, cdd/issue | scaffold present. |
 | 4 Gap | this §Gap | — | named kata framework gap from #33 with concrete sub-deliverables (framework + 2 katas + runner + test + docs + Phase 2 filing). |
 | 5 Mode | this §Mode | cdd/issue | `design-and-build`; cycle-scope at-edge keep-whole with γ-justification per #334 heuristic. |
-| 6 Implement | α dispatched via Agent tool with /tmp/alpha-prompt-33.md content; commits land on `cycle/33-impl` (fresh-branch workaround per cycle #32 F4 precedent) | cdd/alpha, cnos.eng/ocaml, cnos.eng/writing, cnos.core/skill | rows fill as α commits per AC. |
-| 7 Self-coherence | α appends to this file's review-readiness section | cdd/alpha | rows fill at α completion. |
-| 7a Pre-review gate | placeholder scan + git-log per-AC trace | cdd/alpha | rows fill at α completion. |
+| 6 Implement | α dispatched via Agent tool (2026-05-12); branch is `cycle/33` (rebased onto origin/main, 12-commit Cycle C changes incorporated); all ACs implemented in single session | cdd/alpha, cnos.eng/ocaml, cnos.eng/writing, cnos.core/skill | See per-AC trace below. |
+| 7 Self-coherence | α updated this file | cdd/alpha | Review-readiness signal below. |
+| 7a Pre-review gate | `dune runtest` passes; both katas pass `--kata` flag; all AC oracles pass; Phase 2 issue filed | cdd/alpha | Green. |
+
+## AC Implementation Trace
+
+| AC | Surface | Status | Evidence |
+|----|---------|--------|----------|
+| AC1 | `katas/`, `katas/README.md` | SATISFIED (Cycle C) | `test -d katas/ && test -f katas/README.md` passes; README names `coh --kata` and `kata.toml` |
+| AC2 | `katas/README.md` | SATISFIED | `grep -cE "^- \`[a-z_.]" katas/README.md` = 10; all 10 fields documented with type + example |
+| AC3 | `katas/01-glider/`, runner | SATISFIED | `coh --kata 01-glider --mode mechanical` exits 0; C_Σ=0.923 ≥ 0.87 (min); verdict=pass |
+| AC4 | `katas/02-random-soup/`, runner | SATISFIED | `coh --kata 02-random-soup --mode mechanical` exits 0; C_Σ=0.689 ≤ 0.74 (max); verdict=fail |
+| AC5 | `engine/ocaml/bin/main.ml`, `lib/kata.ml` | SATISFIED | `coh --help` lists `--kata`; bogus-id exits 1 with clear error; kata-01 exits 0 |
+| AC6 | `engine/ocaml/test/test_kata.ml` | SATISFIED | `dune runtest` exits 0; kata-01 loaded OK, kata-02 loaded OK, missing-kata error OK |
+| AC7 | README.md, QUICKSTART.md, ARCHITECTURE.md | SATISFIED | All 3 docs mention kata framework + link `katas/README.md`; ARCHITECTURE.md §Katas distinguishes katas from targets |
+| AC8 | GitHub issues | SATISFIED | Issue #35 filed: "Engine katas: Phase 2 — comparative + philosophical + adversarial katas" |
+
+## Score range justifications (defensible per active design constraint)
+
+**Kata-01 (glider, positive control):**
+- Actual measured C_Σ: **0.923** (mechanical mode, 2026-05-12)
+- α=1.000: all 14 heading phrases consistent; H1 present; no naming drift
+- β=0.985: no broken links (no internal links — clean); one authority claim (score 0.95)
+- γ=0.785: no version strings (score 0.7 per default); no traceability markers (score 0.5)
+- score_range: [0.87, 1.0] (min = actual − 0.05 tolerance)
+- Bottleneck: gamma (version/traceability absences are expected for kata inputs)
+
+**Kata-02 (random-soup, negative control):**
+- Actual measured C_Σ: **0.689** (mechanical mode, 2026-05-12)
+- α=0.943: heading case drift (3 variants of "random SOUP Properties")
+- β=0.435: 18/18 internal links unresolved (all link targets are fictional)
+- γ=0.689: 14 version occurrences, 9 unique (version drift penalizes)
+- score_range: [0.0, 0.74] (max = actual + 0.05 tolerance)
+- Bottleneck: beta (broken link rate drives the penalty)
+- Discriminability gap: 0.923 − 0.689 = **0.234** (exceeds recommended 0.20 minimum)
+
+## Self-check (α perspective)
+
+- AC1/AC2: confirmed as Cycle C deliverables; noted in trace.
+- AC3/AC4: katas created; score ranges calibrated against actual engine output.
+- AC5: `--kata` flag wired; help text present; error cases handled; exits 0/1 correctly.
+- AC6: `test_kata.ml` uses `TSC_ROOT` env var with candidate-path fallback; `dune runtest` passes.
+- AC7: all 3 docs updated; ARCHITECTURE.md §Katas vs Targets table added.
+- AC8: Phase 2 issue #35 filed before this signal.
+- `otoml` dependency: added to `dune-project` and `lib/dune`; otoml 1.0.5 installed.
+- No Python code introduced. No LLM calls in kata runner. Hermetic.
+- Branch `cycle/33` rebased onto `origin/main` (incorporates Cycle C's 12 commits).
 
 ## Review-readiness signal
 
 | Field | Value (Round 1) | Value (Round 2 — post fix-round) |
 |---|---|---|
-| Base SHA | ec4152b (origin/main at γ scaffold time) | TBD |
-| Head SHA | TBD (filled by α at review-readiness) | TBD |
-| Branch CI state | TBD — α-side determination | TBD |
-| Ready for β | TBD | TBD |
+| Base SHA | ec83b9b (origin/main at α rebase time, post Cycle C) | TBD |
+| Head SHA | TBD (filled after final push) | TBD |
+| Branch CI state | `dune runtest` passes locally; CI will confirm | TBD |
+| Ready for β | YES — all 8 ACs satisfied | TBD |
