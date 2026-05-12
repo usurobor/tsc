@@ -1,7 +1,7 @@
 (library
  (name tsc_engine)
  (public_name tsc_engine)
- (libraries digestif yojson)
+ (libraries digestif yojson otoml)
  (flags (:standard -w -16))
  (modules
   target_registry
@@ -15,4 +15,5 @@
   coherence
   lipschitz
   ood
-  credentials))
+  credentials
+  kata))
