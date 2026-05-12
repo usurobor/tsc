@@ -59,3 +59,63 @@ jobs:
             -- *.md **/*.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  spec-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required spec files present
+        run: |
+          missing=0
+          for f in spec/tsc-core.md spec/tsc-oper.md spec/tsc-glossary.md; do
+            if [ ! -f "$f" ]; then
+              echo "MISSING: $f"
+              missing=$((missing + 1))
+            else
+              echo "OK: $f"
+            fi
+          done
+          if [ $missing -gt 0 ]; then
+            echo "spec-validate: $missing required spec file(s) missing"
+            exit 1
+          fi
+          echo "spec-validate: all required spec files present"
+
+      - name: Link check (spec/*.md)
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: >-
+            --verbose
+            --no-progress
+            --accept 200..299,403,429
+            --exclude-path "CHANGELOG.md|LICENSE"
+            -- spec/*.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  kata-check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only --with-test -y
+
+      - name: Build engine (required for kata runner)
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+
+      - name: Run katas
+        run: bash scripts/run-katas.sh
