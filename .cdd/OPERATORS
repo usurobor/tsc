@@ -1,0 +1,6 @@
+# CDD Operator Registry
+# Columns: handle | identity-email | role-scopes-permitted | added-cycle
+#
+alpha    | alpha@tsc.cdd.cnos    | alpha               | 0
+beta     | beta@tsc.cdd.cnos     | beta                | 0
+gamma    | gamma@tsc.cdd.cnos    | gamma               | 0
