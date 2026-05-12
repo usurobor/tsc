@@ -101,7 +101,17 @@ band documented in self-coherence.md §AC3 oracle.
 
 ### AC3 — Build cache keeps warm runtime under 3 min
 
-- **Cache step** (lines 54–63):
+> **R2 note (2026-05-12):** the cache-step snippet below shows the
+> *R1* hashFiles arg list, which named `engine/ocaml/Makefile` (a
+> file that does not exist) and the repo-root `Makefile` (not the
+> engine build driver). β R1 finding B-2 caught this. The R2 fix
+> (commit `35033ec`) replaces the arg list with only files that
+> exist — see claims.md §Claim R2-1 for the corrected key. The
+> snippet here is preserved verbatim as an audit-trail record of
+> what shipped in R1; the **live** `.github/workflows/katas.yml`
+> is the authoritative key.
+
+- **Cache step** (R1 version — superseded; live file is post-R2):
   ```yaml
   - name: Cache OPAM + dune
     uses: actions/cache@v4
