@@ -160,4 +160,7 @@ CHANGELOG.md                        UPDATE 5 ledger rows with "(release-binary b
 
 ## Head SHA
 
-(α R1 readiness signal fills this)
+- α R1 head SHA (cycle/43-impl): `8b8f716` (closeout-and-claims commit; α R1 signal pending push)
+- AC6 amendment sibling-branch head SHA (cycle-43-proposal-amend): `3b376d5`
+
+α R1 disposition: AC1/AC2/AC3/AC6 shipped; AC4/AC5 deferred to sigma operator with documented justification in alpha-closeout.md §AC4 Operator-handoff.
