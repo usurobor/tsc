@@ -199,6 +199,6 @@ Lifted verbatim from issue #33 §"Acceptance criteria (Phase 1)". β verifies ea
 | Field | Value (Round 1) | Value (Round 2 — post fix-round) |
 |---|---|---|
 | Base SHA | ec83b9b (origin/main at α rebase time, post Cycle C) | TBD |
-| Head SHA | TBD (filled after final push) | TBD |
+| Head SHA | 9a5491c (pre-push; will update to remote SHA after push) | TBD |
 | Branch CI state | `dune runtest` passes locally; CI will confirm | TBD |
 | Ready for β | YES — all 8 ACs satisfied | TBD |
