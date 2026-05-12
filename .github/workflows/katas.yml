@@ -75,9 +75,21 @@ jobs:
         working-directory: engine/ocaml
         run: opam install . --deps-only -y
 
-      - name: Install engine (provides `coh` on PATH)
+      - name: Build engine
+        # Mirrors ci.yml::build — `dune build` produces the binary at
+        # engine/ocaml/_build/default/bin/main.exe.
+        #
+        # Earlier (post-#36-merge) the step here was `opam install . -y`
+        # to put `coh` on PATH. That step failed on the first main run
+        # with exit 31. Root cause: opam's package-mode build (`dune
+        # build -p name @install`) treats the extracted package source
+        # as its root, but the bin/dune `build_version.ml` rule depends
+        # on `../../../VERSION` which resolves to outside-the-package
+        # in opam's build sandbox. Switching to bare `dune build` in
+        # the engine working directory avoids the package-mode
+        # constraint; the kata loop invokes the binary by direct path.
         working-directory: engine/ocaml
-        run: opam install . -y
+        run: opam exec -- dune build
 
       # AC2 — auto-discovery. The glob `katas/*/` matches *directories only*,
       # so `katas/README.md` is skipped naturally. Each iteration uses the
@@ -86,18 +98,29 @@ jobs:
       # katas/README.md §Directory layout). No kata names are hard-coded
       # here — Phase 2 katas (#34) auto-attach when their directories land.
       #
-      # `set -e` (default for `run:`) means any non-zero `coh --kata` exit
-      # fails the step — AC1's "fail CI on any kata failure" invariant.
+      # Binary invocation: direct path to the dune build output rather
+      # than relying on `coh` being on PATH. Matches the canonical
+      # tsc.yml pattern (which uses `dune exec` but resolves the same
+      # binary). Direct-path is slightly less portable but avoids any
+      # dependency on opam-install vs dune-install state.
+      #
+      # `set -e` (default for `run:`) means any non-zero exit fails the
+      # step — AC1's "fail CI on any kata failure" invariant.
       - name: Run all katas (auto-discovered)
         run: |
           shopt -s nullglob
+          COH="engine/ocaml/_build/default/bin/main.exe"
+          if [ ! -x "$COH" ]; then
+            echo "::error::engine binary not found at $COH — Build engine step probably failed"
+            exit 1
+          fi
           ran=0
           failed=0
           for kata_dir in katas/*/; do
             [ -f "${kata_dir}kata.toml" ] || continue
             id=$(basename "$kata_dir")
             echo "::group::kata $id"
-            if opam exec -- coh --kata "$id" --mode mechanical; then
+            if "$COH" --kata "$id" --mode mechanical; then
               echo "kata $id: PASS"
               ran=$((ran + 1))
             else
