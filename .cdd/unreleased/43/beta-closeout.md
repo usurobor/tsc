@@ -47,4 +47,4 @@ Merge `cycle/43-impl` to main. γ post-merge F2 verification: apply AC6-style di
 
 ## β R1 final SHA
 
-To be filled by post-push commit.
+`7753821` (β R1 review commit on `cycle/43-impl`).

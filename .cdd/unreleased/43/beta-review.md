@@ -222,4 +222,4 @@ AC6 amendment lives on `cycle-43-proposal-amend` (off `proposals/cycle-36-follow
 
 ## β R1 final SHA
 
-To be filled after push to `cycle/43-impl`.
+`7753821` (β R1 review commit on `cycle/43-impl`).
