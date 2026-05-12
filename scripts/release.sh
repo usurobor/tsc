@@ -10,7 +10,7 @@
 #   3. Stamp manifests
 #   4. Check consistency
 #   5. Commit + push
-#   6. Tag (v-prefixed) + push tag
+#   6. Tag (bare version per cdd convention) + push tag
 #
 # Release workflow triggers on the tag push.
 
@@ -51,7 +51,7 @@ if [ "$LOCAL" != "$REMOTE" ]; then
   exit 1
 fi
 
-TAG="v$VERSION"
+TAG="$VERSION"
 if git tag -l "$TAG" | grep -q "$TAG"; then
   echo "ERROR: tag $TAG already exists."
   exit 1
