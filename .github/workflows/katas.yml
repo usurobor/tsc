@@ -1,11 +1,15 @@
 # katas.yml — engine kata regression gate
 #
-# INTERIM workflow (tsc cycle #36).
+# INTERIM workflow (tsc cycles #36 + #38).
 # This file is the v1 local implementation of the katas-in-CI gate.
 # It will be replaced by canonical templates landed by:
 #   - cnos #344 Cycle B (template authoring)
 #   - tsc cycle C-2 (template adoption)
-# Until then, this is the source of truth for kata CI.
+# Until then, this is the source of truth for kata CI. Both the
+# build-from-HEAD pre-merge gate (`run-katas`) AND the published-binary
+# validation job (`validate-published-binary`, added cycle #38 AC3+AC4)
+# will be replaced by canonical cnos #344 Cycle B templates once those
+# land.
 #
 # Surface contract:
 #   - Auto-discovers every directory under katas/ (no hard-coded kata names).
@@ -14,6 +18,9 @@
 #   - Caches OPAM + dune _build keyed on engine/ocaml/dune-project +
 #     engine/ocaml/tsc_engine.opam so dep / build-config changes
 #     invalidate cleanly.
+#   - Persists per-kata result JSON to `.kata-results/<id>.json` and
+#     uploads as an artifact (cycle #38 AC1); emits a markdown summary
+#     table to $GITHUB_STEP_SUMMARY (cycle #38 AC2).
 #
 # Consolidation note: this workflow replaces the previous `kata-check`
 # job that lived in ci.yml (removed in cycle #36 R2). That job ran the
@@ -104,28 +111,46 @@ jobs:
       # binary). Direct-path is slightly less portable but avoids any
       # dependency on opam-install vs dune-install state.
       #
-      # `set -e` (default for `run:`) means any non-zero exit fails the
-      # step — AC1's "fail CI on any kata failure" invariant.
+      # Per-kata result JSON capture (cycle #38 AC1): the engine's
+      # `run_kata` (engine/ocaml/bin/main.ml:516) emits its result JSON
+      # to *stdout* (Printf.printf), not via `--output`. The CLI
+      # `--output` flag exists but is only wired for --target / --files
+      # modes (main.ml:299/358/365/371/426). For kata mode we therefore
+      # capture stdout with `tee`. If/when the engine wires `--output`
+      # for kata mode, this loop can be simplified to pass the flag
+      # directly — see cycle #38 alpha-closeout for the follow-on issue.
+      #
+      # `set -e` is disabled inside the loop so a single failing kata
+      # does not short-circuit before the JSON is captured for the
+      # remaining katas. Aggregate pass/fail is enforced after the loop.
       - name: Run all katas (auto-discovered)
         run: |
+          set +e
           shopt -s nullglob
           COH="engine/ocaml/_build/default/bin/main.exe"
           if [ ! -x "$COH" ]; then
             echo "::error::engine binary not found at $COH — Build engine step probably failed"
             exit 1
           fi
+          mkdir -p .kata-results
           ran=0
           failed=0
           for kata_dir in katas/*/; do
             [ -f "${kata_dir}kata.toml" ] || continue
             id=$(basename "$kata_dir")
             echo "::group::kata $id"
-            if "$COH" --kata "$id" --mode mechanical; then
+            # Capture stdout JSON to .kata-results/<id>.json; stderr stays
+            # in the step log under the ::group:: markers. Exit code of
+            # the engine (not tee) determines pass/fail via PIPESTATUS.
+            "$COH" --kata "$id" --mode mechanical | tee ".kata-results/${id}.json"
+            rc=${PIPESTATUS[0]}
+            if [ "$rc" -eq 0 ]; then
               echo "kata $id: PASS"
               ran=$((ran + 1))
             else
-              echo "::error::kata $id: FAIL"
+              echo "::error::kata $id: FAIL (exit $rc)"
               failed=$((failed + 1))
+              ran=$((ran + 1))
             fi
             echo "::endgroup::"
           done
@@ -137,3 +162,16 @@ jobs:
           if [ "$failed" -gt 0 ]; then
             exit 1
           fi
+
+      # AC1 — Upload per-kata result JSON as an artifact, 90-day retention.
+      # `if: always()` so failed runs (the very case where post-mortem
+      # JSON is most valuable) still upload. Naming follows tsc.yml's
+      # `tsc-reports-${{ github.sha }}` convention.
+      - name: Upload kata results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kata-results-${{ github.sha }}
+          path: .kata-results/
+          retention-days: 90
+          if-no-files-found: ignore
