@@ -107,4 +107,16 @@ README.md                           α may add a CI status badge at top (optiona
 
 ## Head SHA
 
-(to be filled in α R1 readiness signal)
+α R1 head (post-push to `cycle/36-impl`): see final α commit below.
+
+Commits on `cycle/36-impl` (off γ scaffold `e7f3817`):
+
+| SHA (short) | Subject |
+|---|---|
+| `ecb270b` | ci(36): add katas regression workflow — AC1+AC2+AC3 |
+| `b8df57f` | docs(36): add katas CI status badge to katas/README.md |
+| `56571e0` | closeout(36): α R1 closeout + honest-claim manifest |
+| `(this commit)` | meta(36): record α R1 head SHAs in self-coherence |
+
+β will review against the head SHA of `cycle/36-impl` reported in
+α's readiness signal message (the SHA of this commit when pushed).
