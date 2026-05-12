@@ -126,7 +126,7 @@ README.md                           α may add a CI status badge at top (optiona
 
 ## Head SHA
 
-α R1 head (post-push to `cycle/36-impl`): see final α commit below.
+### α R1 head — `cycle/36-impl` (post-push)
 
 Commits on `cycle/36-impl` (off γ scaffold `e7f3817`):
 
@@ -135,7 +135,36 @@ Commits on `cycle/36-impl` (off γ scaffold `e7f3817`):
 | `ecb270b` | ci(36): add katas regression workflow — AC1+AC2+AC3 |
 | `b8df57f` | docs(36): add katas CI status badge to katas/README.md |
 | `56571e0` | closeout(36): α R1 closeout + honest-claim manifest |
-| `(this commit)` | meta(36): record α R1 head SHAs in self-coherence |
+| `5a105cb` | meta(36): record α R1 head SHAs in self-coherence |
 
-β will review against the head SHA of `cycle/36-impl` reported in
-α's readiness signal message (the SHA of this commit when pushed).
+β R1 reviewed against `5a105cb`; verdict RC with two B-findings,
+captured in `.cdd/unreleased/36/beta-review.md` (commit `c996abd`
+on `cycle/36-impl-review`).
+
+### α R2 head — `cycle/36-impl-r2` (post-push)
+
+R2 fix commits on `cycle/36-impl-r2` (off `c996abd` on
+`cycle/36-impl-review`):
+
+| SHA (short) | Subject |
+|---|---|
+| `2c7d4f8` | ci(36): remove kata-check job (consolidated into katas.yml) |
+| `35033ec` | ci(36): fix cache key to reference only files that exist |
+| `426f2b9` | docs(36): correct §Gap framing — kata-check existed; consolidate |
+| `dedbef5` | docs(36): update closeout + claims for R2 narrative |
+| `(this commit)` | meta(36): record α R2 head SHAs in self-coherence |
+
+R2 finding-to-commit map:
+- **B-1** (gap framing wrong; CI was already running katas) →
+  resolved by commits `2c7d4f8` (kata-check removal — Path A
+  consolidate per γ) + `426f2b9` (§Gap correction; original R1
+  framing preserved as audit trail).
+- **B-2** (cache key references nonexistent
+  `engine/ocaml/Makefile`) → resolved by commits `35033ec` (key
+  fix; replaced with `dune-project` + `tsc_engine.opam`, both
+  `ls`-verified) + `dedbef5` (closeout AC3 audit-trail note +
+  claims.md §R2 supersession of Claim 3).
+
+β R2 will review against the head SHA of `cycle/36-impl-r2`
+reported in α R2's readiness signal message (the SHA of this
+commit when pushed).
