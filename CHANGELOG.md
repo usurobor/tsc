@@ -34,7 +34,6 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
-| 0.7.1 | A | A | A | A | L6 | Test version for CHANGELOG gate validation (cycle #30) |
 | 0.7.0 | A | A | A | A | L6 | Test migration: Python retired, 74-assertion OCaml suite, auto-mode fallback test, Credentials module. (#26, cycle: L6) |
 | 0.6.0 | B+ | B+ | A | B+ | L6 | Spec v3.2.0 engine: barrier transform φ, L_link case-split, math/num split, W2 gauge witness (ref+spread), provenance JSON skeleton, SELF-MEASURE.md δ-based protocol, OOD cutover guard. 69-assertion test suite. (#24, cycle: L6) |
 | 0.5.0 | A | A | A | A | L6 | Hybrid scoring: mechanical + llm + hybrid + auto modes. 12 structural signals, 61-assertion OCaml test suite, direct file input. Full CDD cycle (#25). |
