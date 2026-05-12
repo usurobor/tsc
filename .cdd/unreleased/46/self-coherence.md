@@ -106,4 +106,16 @@ User confirmed bare-version convention. cdd's principle: versions are content; t
 
 ## Head SHA
 
-(α R1 readiness signal fills this)
+α R1 head: `f1b954e` (closeout commit — `closeout(46): α R1 closeout + honest-claim manifest`).
+
+Commit chain on `cycle/46-impl` from γ scaffold:
+
+| SHA | Subject |
+|---|---|
+| `559f127` | `cycle(46): γ scaffold — revert #43 AC3 (cdd convention is bare-version)` |
+| `4e6aff2` | `fix(release-script): revert TAG to bare version — AC1` |
+| `1d11729` | `fix(ci/release): trigger on bare-version tags — AC2` |
+| `015a11d` | `docs(release-script): header comment honesty — AC3` |
+| `e01d976` | `docs(43): post-merge addendum with γ-grade revision — AC4` |
+| `f1b954e` | `closeout(46): α R1 closeout + honest-claim manifest` |
+| (this commit) | `meta(46): record α R1 head SHA in self-coherence` |
