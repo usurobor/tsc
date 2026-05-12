@@ -65,6 +65,25 @@ fi
 echo "=== Release $TAG ==="
 echo ""
 
+# --- CHANGELOG ledger gate ---
+
+echo "Checking CHANGELOG Release Coherence Ledger for version $VERSION..."
+CHANGELOG="$REPO_ROOT/CHANGELOG.md"
+
+if ! grep -q "^| $VERSION |" "$CHANGELOG"; then
+  echo ""
+  echo "ERROR: CHANGELOG.md missing Release Coherence Ledger row for version $VERSION"
+  echo ""
+  echo "Required row format in the Release Coherence Ledger table:"
+  echo "| $VERSION | [C_Σ] | [α] | [β] | [γ] | [Level] | [Note] |"
+  echo ""
+  echo "Edit CHANGELOG.md and add the required row to the Release Coherence Ledger table,"
+  echo "then re-run this release script."
+  exit 1
+fi
+echo "✓ CHANGELOG ledger row found for version $VERSION"
+echo ""
+
 # --- Bump + stamp + check ---
 
 echo "$VERSION" > VERSION
