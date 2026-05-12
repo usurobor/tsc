@@ -1,11 +1,14 @@
 (test
  (name test_mechanical)
+ (modules test_mechanical)
  (libraries tsc_engine unix))
 
 (test
  (name test_coherence)
+ (modules test_coherence)
  (libraries tsc_engine))
 
 (test
  (name test_kata)
+ (modules test_kata)
  (libraries tsc_engine))

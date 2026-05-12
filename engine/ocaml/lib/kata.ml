@@ -3,7 +3,19 @@
     Each kata lives in [katas/<id>/kata.toml]. This module parses the manifest
     and exposes the configuration for the kata runner in [bin/main.ml].
 
-    Phase 1 scope: mechanical-mode only. No LLM calls. *)
+    Phase 1 scope: mechanical-mode only. No LLM calls.
+
+    Phase 2 (cycle #34) extension: [[components]] + [expected].ranking for
+    comparative katas. A kata with [components <> []] is scored once per
+    component; [ranking] asserts a per-component C_Σ ordering rather than a
+    single-bundle [score_range]. Phase 1 katas (no [[components]]) are
+    unaffected. *)
+
+(** A scoring component — a named sub-bundle used by comparative katas. *)
+type kata_component = {
+  comp_id    : string;       (* component id (must be unique within the kata) *)
+  comp_files : string list;  (* file paths relative to the kata directory *)
+}
 
 (** Kata configuration parsed from kata.toml *)
 type kata_config = {
@@ -15,6 +27,9 @@ type kata_config = {
   verdict     : string;
   score_min   : float;
   score_max   : float;
+  (* Phase 2 — empty for Phase 1 katas. *)
+  components  : kata_component list;
+  ranking     : string list;
 }
 
 (** Load a kata configuration from katas/<id>/kata.toml.
@@ -71,6 +86,42 @@ let load katas_dir id =
         | Some v -> v
         | None   -> 1.0
       in
+      (* Phase 2: [[components]] array of tables.
+
+         otoml stores `[[components]]` as a list of tables at key
+         ["components"]. We pull each entry's `id` (string) and `files`
+         (string array). Phase 1 katas omit this section, so we default
+         to []. *)
+      let components =
+        match Otoml.find_opt tbl (Otoml.get_array (fun x -> x)) ["components"] with
+        | None | Some [] -> []
+        | Some entries ->
+          List.filter_map (fun entry ->
+            match Otoml.get_opt Otoml.get_table entry with
+            | None -> None
+            | Some kvs ->
+              let lookup k = try Some (List.assoc k kvs) with Not_found -> None in
+              let id_opt =
+                match lookup "id" with
+                | Some v -> Otoml.get_opt Otoml.get_string v
+                | None -> None
+              in
+              let files_opt =
+                match lookup "files" with
+                | Some v ->
+                  Otoml.get_opt (Otoml.get_array Otoml.get_string) v
+                | None -> None
+              in
+              (match id_opt, files_opt with
+               | Some cid, Some cfiles -> Some { comp_id = cid; comp_files = cfiles }
+               | _ -> None)
+          ) entries
+      in
+      let ranking =
+        match Otoml.Helpers.find_strings_opt tbl ["expected"; "ranking"] with
+        | Some xs -> xs
+        | None    -> []
+      in
       Ok {
         id;
         difficulty  = get_int ["difficulty"];
@@ -80,5 +131,7 @@ let load katas_dir id =
         verdict;
         score_min;
         score_max;
+        components;
+        ranking;
       }
   end

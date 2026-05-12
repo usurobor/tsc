@@ -1,0 +1,33 @@
+id          = "05-adversarial"
+difficulty  = 4
+mode        = "mechanical"
+description = "Adversarial — multi-file input with high surface regularity but cross-file semantic contradictions; mechanical scorer correctly identifies it as incoherent"
+
+prerequisites = ["01-glider", "02-random-soup"]
+
+# Three sibling files that look canonical (same headings, version stamps, dense
+# cross-references, "supersedes" markers) but contradict each other
+# semantically — each declares itself "canonical" and the other two
+# "informative", and each picks a different transport (UDP / TCP / QUIC) for
+# the protocol's core invariant. The contradictions emerge ACROSS files; no
+# single file is internally inconsistent.
+
+[input]
+files = [
+  "input/spec-a.md",
+  "input/spec-b.md",
+  "input/spec-c.md",
+]
+
+[expected]
+verdict = "fail"
+
+[expected.score_range]
+# Observed c_sigma on cycle/34-impl HEAD: 0.7466
+# (α=0.969 β=0.470 γ=0.801; bottleneck = β cross-reference + source-of-truth
+# alignment caught the cross-file contradictions).
+# The kata passes when c_sigma <= max; max is set just above the observed
+# value to bracket it without being trivially permissive.
+min = 0.0
+max = 0.78
+bottleneck_axis = "beta"

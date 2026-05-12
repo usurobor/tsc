@@ -148,19 +148,31 @@ Katas are curated inputs with known expected outcomes. Use them to verify your
 engine installation or detect regressions after changes.
 
 ```bash
-# Positive control — well-structured document; should score C_Σ ≥ 0.87
+# Phase 1 — positive control (well-structured doc, C_Σ ≥ 0.87)
 coh --kata 01-glider --mode mechanical
 
-# Negative control — incoherent document; should score C_Σ ≤ 0.74
+# Phase 1 — negative control (incoherent doc, C_Σ ≤ 0.74)
 coh --kata 02-random-soup --mode mechanical
+
+# Phase 2 — comparative (verifies glider ranks above random-soup)
+coh --kata 03-comparative --mode mechanical
+
+# Phase 2 — cross-domain philosophical (mechanical mode; documents the
+# upper limit — mech scorer over-rates well-formatted prose)
+coh --kata 04-philosophical --mode mechanical
+
+# Phase 2 — multi-file adversarial (high surface regularity, contradictory
+# semantics; mech scorer should correctly fail)
+coh --kata 05-adversarial --mode mechanical
 
 # Run all katas via CI script
 bash scripts/run-katas.sh
 ```
 
-Both commands exit 0 when the engine correctly meets the kata's expected outcome,
+Each command exits 0 when the engine correctly meets the kata's expected outcome,
 non-zero otherwise. See [katas/README.md](katas/README.md) for the framework
-and `kata.toml` schema.
+and `kata.toml` schema (including the Phase 2 `[[components]]` / `ranking`
+extension exercised by kata-03).
 
 ## What's next
 

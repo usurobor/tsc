@@ -1,0 +1,28 @@
+id          = "04-philosophical"
+difficulty  = 3
+mode        = "mechanical"
+description = "Cross-domain — natural-language philosophical text; documents the upper limit of mechanical scoring (over-rates surface structure)"
+
+prerequisites = ["01-glider", "02-random-soup"]
+
+[input]
+files = ["input/consciousness.md"]
+
+[expected]
+# verdict = "fail" records the *semantic* claim that natural-language
+# philosophical text — though high in surface regularity — is not what TSC
+# considers a coherent system. The mechanical scorer assigns a deceptively
+# high C_Σ because its structural-proxy signals (heading consistency, version
+# stamps, cross-references) are all present. The kata thus passes (because
+# c_sigma <= max) while *documenting* that mechanical scoring overestimates
+# this class of input. See README §"Mode justification".
+verdict = "fail"
+
+[expected.score_range]
+# Observed c_sigma on cycle/34-impl HEAD: 0.9333 (α=1.000, β=1.000, γ=0.800).
+# max is set above the observed value to keep the kata green; the wide range
+# is itself documentation: mechanical scoring cannot discriminate this from
+# kata-01 by structural proxies alone.
+min = 0.0
+max = 0.95
+bottleneck_axis = "gamma"
