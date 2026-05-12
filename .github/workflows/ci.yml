@@ -94,28 +94,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  kata-check:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install system depexts (libcurl for ezcurl)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
-
-      - name: Set up OCaml
-        uses: ocaml/setup-ocaml@v3
-        with:
-          ocaml-compiler: "5.2"
-
-      - name: Install dependencies
-        working-directory: engine/ocaml
-        run: opam install . --deps-only --with-test -y
-
-      - name: Build engine (required for kata runner)
-        working-directory: engine/ocaml
-        run: opam exec -- dune build
-
-      - name: Run katas
-        run: bash scripts/run-katas.sh
+  # kata-check job removed in cycle #36 — consolidated into the dedicated
+  # `katas.yml` workflow which adds an OPAM + dune build cache and
+  # PR-only concurrency cancellation. See `.github/workflows/katas.yml`.

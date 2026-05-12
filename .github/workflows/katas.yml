@@ -1,0 +1,116 @@
+# katas.yml — engine kata regression gate
+#
+# INTERIM workflow (tsc cycle #36).
+# This file is the v1 local implementation of the katas-in-CI gate.
+# It will be replaced by canonical templates landed by:
+#   - cnos #344 Cycle B (template authoring)
+#   - tsc cycle C-2 (template adoption)
+# Until then, this is the source of truth for kata CI.
+#
+# Surface contract:
+#   - Auto-discovers every directory under katas/ (no hard-coded kata names).
+#   - Invokes `coh --kata <id> --mode mechanical` for each kata.
+#   - Fails the job on any non-zero exit from the kata runner.
+#   - Caches OPAM + dune _build keyed on engine/ocaml/dune-project +
+#     engine/ocaml/tsc_engine.opam so dep / build-config changes
+#     invalidate cleanly.
+#
+# Consolidation note: this workflow replaces the previous `kata-check`
+# job that lived in ci.yml (removed in cycle #36 R2). That job ran the
+# same `bash scripts/run-katas.sh` regression check on every push +
+# PR but had no OPAM/dune build cache (every run cold ~5–8 min) and
+# no concurrency control. Cycle #36 consolidates kata-running into
+# this dedicated workflow.
+
+name: katas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Per issue #36 open question 2: cancel superseded PR runs, never cancel main.
+concurrency:
+  group: katas-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  run-katas:
+    name: run-katas (auto-discovered)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system depexts (libcurl for ezcurl)
+        # Pre-install libcurl4-openssl-dev so opam-depext / setup-ocaml
+        # does not need to resolve the (occasionally 404ing) gnutls flavour.
+        # Mirrors ci.yml build job; see cycle #26 β observation, #32 AC5.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+
+      # AC3 — Build cache. Two-layer cache keyed on the engine's dune
+      # build/dep manifests so any dep or build-config change invalidates
+      # cleanly. OS dimension included so cache is not shared across
+      # runner images. Both `dune-project` (generate_opam_files true)
+      # and `tsc_engine.opam` (its generated output) move together but
+      # we hash both because either being edited directly is in scope.
+      - name: Cache OPAM + dune
+        id: cache-opam-dune
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.opam
+            engine/ocaml/_build
+          key: katas-${{ runner.os }}-ocaml-5.2-${{ hashFiles('engine/ocaml/dune-project', 'engine/ocaml/tsc_engine.opam') }}
+          restore-keys: |
+            katas-${{ runner.os }}-ocaml-5.2-
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+
+      - name: Install engine (provides `coh` on PATH)
+        working-directory: engine/ocaml
+        run: opam install . -y
+
+      # AC2 — auto-discovery. The glob `katas/*/` matches *directories only*,
+      # so `katas/README.md` is skipped naturally. Each iteration uses the
+      # directory basename as the kata id; this matches the kata.toml `id`
+      # field by convention (id == directory basename, asserted in
+      # katas/README.md §Directory layout). No kata names are hard-coded
+      # here — Phase 2 katas (#34) auto-attach when their directories land.
+      #
+      # `set -e` (default for `run:`) means any non-zero `coh --kata` exit
+      # fails the step — AC1's "fail CI on any kata failure" invariant.
+      - name: Run all katas (auto-discovered)
+        run: |
+          shopt -s nullglob
+          ran=0
+          failed=0
+          for kata_dir in katas/*/; do
+            [ -f "${kata_dir}kata.toml" ] || continue
+            id=$(basename "$kata_dir")
+            echo "::group::kata $id"
+            if opam exec -- coh --kata "$id" --mode mechanical; then
+              echo "kata $id: PASS"
+              ran=$((ran + 1))
+            else
+              echo "::error::kata $id: FAIL"
+              failed=$((failed + 1))
+            fi
+            echo "::endgroup::"
+          done
+          echo "katas: $ran ran, $failed failed"
+          if [ "$ran" -eq 0 ]; then
+            echo "::error::no katas discovered under katas/*/ — expected at least kata-01"
+            exit 1
+          fi
+          if [ "$failed" -gt 0 ]; then
+            exit 1
+          fi

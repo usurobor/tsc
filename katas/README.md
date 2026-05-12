@@ -1,5 +1,7 @@
 # Katas — tsc
 
+[![katas](https://github.com/usurobor/tsc/actions/workflows/katas.yml/badge.svg?branch=main)](https://github.com/usurobor/tsc/actions/workflows/katas.yml)
+
 This directory holds kata definitions for the tsc engine. Each kata lives in its own subdirectory with a `kata.toml` manifest.
 
 The kata runner (`coh --kata`) is provided by tsc #33 (kata framework issue). This directory and `scripts/run-katas.sh` are infrastructure for that runner — C.AC3 of cnos #344 Cycle C satisfies tsc #33 AC1/AC2 by providing the directory layout and CI wiring.
