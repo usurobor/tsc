@@ -36,6 +36,7 @@
 | §3.8 honest-grading rubric — CI-red cycle penalty | Implicit | This proposal §AC3 |
 | §9.1 avoidable-tooling-failure trigger — CI-red post-merge | Implicit | This proposal §AC3 |
 | Empirical anchor | tsc cycle #36 close-out | Shipped (`usurobor/tsc:.cdd/releases/docs/2026-05-12/36/gamma-closeout.md`) |
+| Empirical anchor (conclusion-vs-artifact gap) | tsc cycle #43 | Open — `release.yml` reported green on the workflow-list page for v0.5.0–v0.9.0 yet produced no Release object in any of the five cases |
 
 ## Source of truth
 
@@ -59,7 +60,7 @@
 | (d) MCA preconditions | not MCA — design fixed | n/a |
 | (e) Independent shippability | one cohesive verdict-rule + close-out-rule pair | no |
 
-**Decision:** keep whole. 5 ACs, mid-typical band.
+**Decision:** keep whole. 6 ACs, mid-typical band (was 5 pre-tsc-#43 refinement; tsc cycle #43 added AC6 "expected-artifact-produced").
 
 ## Scope
 
@@ -82,6 +83,8 @@
 4. **`cdd/release/SKILL.md` §3.8 amendment.** Cycles with red post-merge CI cap the γ axis grade at C (one band below current floor). Cycles that proceed to close-out without verifying CI cap the γ axis at B− (signal the discipline is operative).
 
 5. **`cdd/post-release/SKILL.md` §9.1 trigger amendment.** Red CI on the merge commit is named explicitly as an avoidable-tooling-failure trigger (analogous to v0.4.0's missing CHANGELOG row — both are mechanical gates that fired late).
+
+6. **§Verification — beyond workflow conclusion.** F2 verification (β AC1, γ AC2) requires checking the workflow conclusion AND the expected artifact's existence. Empirical anchor (tsc cycle #43): the `release.yml` workflow on tags `v0.5.0`–`v0.9.0` reported a green checkmark on the runs-list page (so conclusion-only polling sees "success") while the per-run detail page actually showed Failure exit-code 10 and no `Release` object was created in any of the five cases. The discrepancy between list-page and detail-page surfaces is itself one false-positive class; the deeper one is the gap between `conclusion=success` and `artifact-produced`. β and γ MUST, for each expected artifact named in the cycle's ACs (Release object, attached binary, deployed page, etc.), verify existence + identity (e.g., `mcp__github__get_release_by_tag` returning 200 + non-empty `assets`) after the workflow conclusion is observed. Conclusion-only polling is verified-but-vacuous when the conclusion is mediated by a UI surface that elides the failure.
 
 **Out of scope:**
 
@@ -130,6 +133,15 @@
 - *Invariant:* both artifacts present in the patch-landing cycle close-out.
 - *Surface:* patch-landing cycle's `beta-review.md` + `gamma-closeout.md`.
 
+**AC6 — Expected-artifact-produced check.** β AC1 and γ AC2 verification clauses each require, for every expected artifact named in the cycle's ACs, an existence + identity probe distinct from the workflow-conclusion poll.
+
+- *Invariant:* `cdd/review/SKILL.md` (β verdict-gate prose) and `cdd/gamma/SKILL.md` (γ post-merge verification prose) each name "expected-artifact-produced" as a check alongside "conclusion=success."
+- *Oracle:* `rg 'expected.artifact|artifact.produced' cnos:cdd/review/SKILL.md cnos:cdd/gamma/SKILL.md` returns ≥1 hit in each.
+- *Empirical anchor:* tsc cycle #43 — release.yml on five consecutive tags (v0.5.0–v0.9.0) showed green on the workflow-list page yet produced no Release object; the conclusion-only F2 check considered the cycle verified-green for five cycles in a row.
+- *Positive:* a future β reviewing a cycle that ships "a GitHub Release with binary X" probes `get_release_by_tag` (or equivalent) and finds the asset; absence → RC.
+- *Negative:* no soft prose ("β should also check the artifact") — the rule is mechanical and names the artifact-presence-probe call.
+- *Surface:* `cnos:cdd/review/SKILL.md` + `cnos:cdd/gamma/SKILL.md`.
+
 ## Proof plan
 
 1. Author rule additions per AC1–AC4.
@@ -161,3 +173,4 @@
 - cnos #331 patch 5 — §3.8 honest-grading rubric (modified by AC3)
 - `gh run list` — GitHub CLI docs (external)
 - `cnos:ROLES.md` — generic role pattern (this rule generalizes via cdw / future c-d-X)
+- tsc cycle #43 — empirical anchor for AC6 (workflow-list page green vs detail-page Failure + no Release object across v0.5.0–v0.9.0)
