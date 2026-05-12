@@ -5,3 +5,7 @@
 (test
  (name test_coherence)
  (libraries tsc_engine))
+
+(test
+ (name test_kata)
+ (libraries tsc_engine))
