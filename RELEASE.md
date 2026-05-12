@@ -2,13 +2,25 @@
 
 **Release:** TSC Engine v0.9.0 — Phase 2 kata progression (comparative + philosophical + adversarial)
 **Issue:** #34 — Engine katas: Phase 2
-**Branch merged:** cycle/34 → main (PENDING)
-**Merge commit:** (PENDING — γ fills at release-prep)
+**Branch merged:** cycle/34 → cycle/34-impl → cycle/34-impl-review → main
+**Merge commit:** filled by operator post-PR-merge
 **Date:** 2026-05-12
 
 ## Outcome
 
-Coherence delta: C_Σ (TBD by γ) (`α (TBD)`, `β (TBD)`, `γ (TBD)`) · **Level:** L6
+Coherence delta: C_Σ A− (`α A−`, `β A`, `γ A−`) · **Level:** L6
+
+α A− earned: 0 binding findings (0A, 0B), 4 C-severity advisories, all 5 ACs satisfied,
+calibration data documented in-kata.
+
+β A earned: independent peer-enumeration, rule 3.13 verbatim on all 5 honest-claim manifest
+claims, kata-04 verdict-semantics dug into and flagged as load-bearing (C-2), kata-05
+thin-margin acknowledged as intentional ("moving frontier"), Phase 1 backward-compat
+empirically verified.
+
+γ A− capped at §5.2 ceiling: F1+F2+F3 self-application all honored — peer-enumeration
+table at §Gap before scaffold; CI verified green before close-out; parent-session
+quiescent during α/β runs.
 
 Phase 2 of the kata progression. Extends the Phase 1 framework (positive +
 negative controls) with three new katas across three previously-uncovered
@@ -75,7 +87,17 @@ comparative katas; Phase 1 single-bundle katas continue to work unchanged.
 
 ## Review summary
 
-(TBD — β fills at R1 verdict.)
+β R1 verdict: **APPROVED** (0 A-severity, 0 B-severity, 4 C-severity advisories).
+
+C-1: alpha-closeout.md convention drift — α-R1 closeout content distributed across `claims.md` + `self-coherence.md §Head SHA` rather than a single `alpha-closeout.md`. Documented; not blocking.
+
+C-2: kata-04 `score_range.max=0.95` permissively wide given observed C_Σ = 0.9333 (~1.7% margin). Internally consistent (kata.toml comment + README explicitly document the wideness as itself the kata's load-bearing assertion). Consider tightening if the mechanical scorer learns to discriminate philosophical prose.
+
+C-3: kata-03's comparative branch emits `expected_verdict` field but the runner does not consult it for pass/fail — `ranking_correct` is the gate. Cosmetic; clarify in a future cycle.
+
+C-4: γ scaffold's CHANGELOG ledger-row format text referenced an 8-column "Rounds" variant that doesn't match the actual 7-column schema in CHANGELOG.md. α's row correctly matches the existing schema. γ scaffold text could be updated in a follow-on.
+
+1 review round. β additionally verified Phase 1 backward-compat by reproducing kata-01 (C_Σ = 0.9233) and kata-02 (C_Σ = 0.6888) baselines exactly.
 
 ## Process impact
 

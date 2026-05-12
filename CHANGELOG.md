@@ -34,7 +34,7 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
-| 0.9.0 | (TBD) | (TBD) | (TBD) | (TBD) | L6 | Phase 2 kata progression: comparative (kata-03) + philosophical (kata-04, mechanical-mode) + adversarial (kata-05, multi-file); kata runner gains [[components]]+ranking; +25 hermetic test assertions (146→171). (#34, cycle: L6) |
+| 0.9.0 | A- | A- | A | A- | L6 | Phase 2 kata progression: comparative (kata-03) + philosophical (kata-04, mechanical-mode) + adversarial (kata-05, multi-file); kata runner gains [[components]]+ranking; +25 hermetic test assertions (146→171). 1 round (β R1 APPROVED, 0A/0B/4C). (#34, cycle: L6) |
 | 0.8.0 | A | A | A | A- | L6 | Process enforcement: CHANGELOG release gate in scripts/release.sh. Prevents incomplete releases (v0.4.0 class). (#30, cycle: L6) |
 | 0.7.0 | A | A | A | A | L6 | Test migration: Python retired, 74-assertion OCaml suite, auto-mode fallback test, Credentials module. (#26, cycle: L6) |
 | 0.6.0 | B+ | B+ | A | B+ | L6 | Spec v3.2.0 engine: barrier transform φ, L_link case-split, math/num split, W2 gauge witness (ref+spread), provenance JSON skeleton, SELF-MEASURE.md δ-based protocol, OOD cutover guard. 69-assertion test suite. (#24, cycle: L6) |
