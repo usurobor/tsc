@@ -1,0 +1,16 @@
+id          = "02-random-soup"
+difficulty  = 1
+mode        = "mechanical"
+description = "Negative control — incoherent document with broken links, version drift, and heading inconsistency"
+
+prerequisites = []
+
+[input]
+files = ["input/random-soup.md"]
+
+[expected]
+verdict = "fail"
+
+[expected.score_range]
+min = 0.0
+max = 0.74

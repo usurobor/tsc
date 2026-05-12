@@ -56,6 +56,21 @@ bottleneck_axis = "coherence"    # optional; which axis limits the score
 | `[expected.score_range].max` | float | for fail | Maximum C_Σ score for a fail verdict |
 | `bottleneck_axis` | string | no | Axis that most limits the score; used for diagnostic output |
 
+### Field index (schema oracle)
+
+Quick reference for the 10 `kata.toml` fields, each with type and example:
+
+- `id` — string; example: `"01-glider"`. Unique kata identifier; matches directory name.
+- `difficulty` — integer 1–5; example: `1`. Ordering key; 1=basic, 5=advanced.
+- `prerequisites` — string[]; example: `["01-glider"]`. Kata IDs that must pass first.
+- `tests` — string[]; example: `["mechanical_basic", "threshold_discrimination"]`. Surfaces exercised.
+- `mode` — string; example: `"mechanical"`. Engine mode for this kata.
+- `description` — string; example: `"Positive control..."`. One-line purpose statement.
+- `input.files` — string[]; example: `["input/glider.md"]`. Input files relative to kata dir.
+- `expected.verdict` — string; example: `"pass"`. Expected outcome: `pass` or `fail`.
+- `expected.score_range` — object; example: `{ min = 0.87, max = 1.0 }`. C_Σ bounds.
+- `expected.bottleneck_axis` — string; example: `"gamma"`. Optional axis diagnostic.
+
 ## Runner invocation
 
 ```bash
