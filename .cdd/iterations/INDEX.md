@@ -8,3 +8,4 @@ This index covers tsc-local cycles. Cross-repo iteration bundles (tsc-side artif
 |-------|-------|------------|--------------------|---------|---------|----------|------|
 | 32    | #32   | 2026-05-09 | 4                  | 2       | 0       | 2        | .cdd/releases/docs/2026-05-09/32/cdd-iteration.md |
 | 344-c | cnos#344 | 2026-05-12 | 4               | 0       | 0       | 4        | .cdd/releases/docs/2026-05-12/344-c/cdd-iteration.md |
+| 33    | #33      | 2026-05-12 | 0               | 0       | 0       | 0        | .cdd/releases/docs/2026-05-12/33/cdd-iteration.md |
