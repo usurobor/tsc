@@ -198,4 +198,18 @@ After β APPROVED and merge to main:
 
 ## Head SHA
 
-(to be filled in α R1 readiness signal)
+α R1 head SHA: `1643569` (full: `1643569712cddb790be931fd857b4e67d394f8b9`).
+Branch `cycle/34-impl`. 8 commits since scaffold (`d9d144a`).
+
+Per-commit map (logical units):
+
+| # | SHA | Commit | AC |
+|---|---|---|---|
+| 1 | `9616fd2` | katas(34): add kata-03 comparative | AC1 |
+| 2 | `d7b4ea0` | engine(34): run_kata gains [[components]]+ranking support | AC1 |
+| 3 | `937987d` | katas(34): add kata-04 philosophical | AC2 |
+| 4 | `f6abcfb` | katas(34): add kata-05 adversarial | AC3 |
+| 5 | `b366f87` | test(34): hermetic tests for kata-03/04/05 | AC4 |
+| 6 | `75764ee` | docs(34): katas/README.md + QUICKSTART.md updates | AC5 |
+| 7 | `0cc2942` | release(34): bump VERSION + CHANGELOG + RELEASE.md | — |
+| 8 | `1643569` | closeout(34): α R1 closeout + honest-claim manifest | — |
