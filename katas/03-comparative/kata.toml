@@ -1,0 +1,27 @@
+id          = "03-comparative"
+difficulty  = 2
+mode        = "mechanical"
+description = "Comparative — ranks well-structured (glider) above incoherent (random-soup) by mechanical C_Σ"
+
+prerequisites = ["01-glider", "02-random-soup"]
+
+# Phase-2 kata.toml extension: [[components]] is an ordered list of named
+# sub-bundles. Each component is scored independently. When components is
+# non-empty, the runner's pass-criterion is [expected.ranking] (an ordered
+# list of component ids, highest C_Σ first) rather than a single-bundle
+# score range. Phase 1 single-component katas continue to use [input].files
+# unchanged.
+
+[[components]]
+id    = "glider"
+files = ["input/glider/glider.md"]
+
+[[components]]
+id    = "random-soup"
+files = ["input/random-soup/random-soup.md"]
+
+[expected]
+verdict = "pass"
+# Component ids ordered by expected C_Σ, highest first. The runner verifies
+# the actual ranking matches and emits ranking_correct in the result JSON.
+ranking = ["glider", "random-soup"]
