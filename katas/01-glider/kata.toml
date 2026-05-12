@@ -1,0 +1,16 @@
+id          = "01-glider"
+difficulty  = 1
+mode        = "mechanical"
+description = "Positive control — well-structured document with consistent terminology and explicit cross-references"
+
+prerequisites = []
+
+[input]
+files = ["input/glider.md"]
+
+[expected]
+verdict = "pass"
+
+[expected.score_range]
+min = 0.87
+max = 1.0

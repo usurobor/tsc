@@ -34,6 +34,33 @@ The target model lives in:
 - `targets/registry.tsc` — target registry
 - `targets/*.tsc` — target manifests
 
+## Katas
+
+Katas are pedagogical and regression inputs with declared expected outcomes.
+
+**Katas** differ from **targets** in purpose and audience:
+
+| | Targets | Katas |
+|---|---|---|
+| Purpose | Project-internal corpora (spec, engine, repo) | Pedagogical/regression inputs |
+| Location | `targets/` | `katas/` |
+| Audience | Continuous measurement of the project itself | New implementors; regression anchors |
+| Runner flag | `--target <name>` | `--kata <id>` |
+| Schema | `targets/*.tsc` (TOML manifests) | `katas/*/kata.toml` (TOML manifests) |
+| Expected outcome | None declared | `expected.verdict + expected.score_range` in `kata.toml` |
+
+Both targets and katas use the same engine bundle model and scoring pipeline.
+The difference is that katas carry declared expectations, enabling pass/fail
+verdicts against curated inputs.
+
+The kata framework is documented in [katas/README.md](katas/README.md).
+
+Kata runner invocation:
+
+```bash
+coh --kata 01-glider --mode mechanical   # exit 0 on match, 1 on mismatch
+```
+
 ## Verifier
 
 The verifier is the executable layer.
@@ -110,9 +137,14 @@ Python is retired as a live engine. OCaml is the canonical implementation.
   lib/mechanical_scoring  deterministic structural backend
   lib/hybrid_scoring      backend combiner (pure)
   lib/bundle              shared bundle model
-  bin/main.ml             CLI entrypoint (--mode, --files, --target)
+  lib/kata                kata manifest parser
+  bin/main.ml             CLI entrypoint (--mode, --files, --target, --kata)
 /runtime/                 scoring instruction (SELF-MEASURE.md)
-/targets/                 named target declarations
+/targets/                 named target declarations (project-internal corpora)
+/katas/                   kata framework (pedagogical/regression inputs)
+  README.md               framework docs + kata.toml schema
+  01-glider/              positive control kata
+  02-random-soup/         negative control kata
 /docs/                    documentation tree (α/β/γ)
 /examples/                runnable examples
 /tests/                   conformance and implementation tests

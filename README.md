@@ -8,6 +8,7 @@ See [docs/THESIS.md](docs/THESIS.md) for what TSC is.
 - `engine/ocaml/` — canonical implementation
 - `runtime/SELF-MEASURE.md` — canonical LLM scoring instruction
 - `targets/` — named target declarations
+- `katas/` — [kata framework](katas/README.md) (pedagogical/regression inputs with expected outcomes)
 - `docs/` — [documentation tree](docs/README.md) (operator manual, design, governance)
 - `examples/` — runnable examples
 - `tests/` — conformance and implementation tests
@@ -51,9 +52,23 @@ Direct file input (`--files <glob>`) works with any mode. Named targets (`--targ
 
 Start with `spec/c-equiv.md`, then `tsc-core.md`, `tsc-oper.md`, `tsc-observation-dynamics.md`, `tsc-glossary.md`. See the [doctrine bundle](docs/alpha/doctrine/) for reading order.
 
+## Kata framework
+
+Run the engine against curated inputs with known expected outcomes:
+
+```bash
+# Smoke-test: kata-01 is the positive control (should always pass)
+coh --kata 01-glider --mode mechanical
+
+# Negative control: kata-02 should score low (expected fail)
+coh --kata 02-random-soup --mode mechanical
+```
+
+See [katas/README.md](katas/README.md) for the framework, `kata.toml` schema, and how to add katas.
+
 ## Architecture
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for how theory, targets, and verifier fit together.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for how theory, targets, katas, and verifier fit together.
 
 ## Contributing
 

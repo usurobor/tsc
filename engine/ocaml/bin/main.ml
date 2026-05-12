@@ -183,6 +183,7 @@ type cli_args = {
   cli_root       : string;
   cli_output_dir : string;
   cli_files      : string list;  (* globs for direct file input *)
+  cli_kata       : string;       (* "" when not using --kata *)
 }
 
 let () =
@@ -199,9 +200,12 @@ let parse_args () =
   let root      = ref "." in
   let output_dir = ref ".tsc" in
   let files     = ref [] in
+  let kata      = ref "" in
   let specs = [
     ("--mode",        Arg.Set_string mode_s,
      "Scoring mode: mechanical | llm | hybrid | auto (default: auto)");
+    ("--kata",        Arg.Set_string kata,
+     "Run kata <id> from katas/ directory (e.g. --kata 01-glider)");
     ("--target",      Arg.Set_string target,
      "Named target (requires --registry)");
     ("--registry",    Arg.Set_string registry,
@@ -215,7 +219,7 @@ let parse_args () =
     ("--output",      Arg.Set_string output_dir,
      "Output directory for reports (default: .tsc)");
   ] in
-  let usage = "coh --mode <mode> [--target <name> | --files <glob>...] [options]" in
+  let usage = "coh --mode <mode> [--kata <id> | --target <name> | --files <glob>...] [options]" in
   Arg.parse specs (fun _ -> ()) usage;
   let mode = match parse_mode !mode_s with
     | Some m -> m
@@ -223,8 +227,8 @@ let parse_args () =
       Printf.eprintf "Error: unknown mode '%s'. Use mechanical | llm | hybrid | auto\n" !mode_s;
       exit 1
   in
-  if !target = "" && !files = [] then begin
-    Printf.eprintf "Error: provide --target <name> or --files <glob>\n";
+  if !kata = "" && !target = "" && !files = [] then begin
+    Printf.eprintf "Error: provide --kata <id>, --target <name>, or --files <glob>\n";
     Arg.usage specs usage;
     exit 1
   end;
@@ -234,7 +238,8 @@ let parse_args () =
     cli_instruction = !instruction;
     cli_root        = !root;
     cli_output_dir  = !output_dir;
-    cli_files       = List.rev !files }
+    cli_files       = List.rev !files;
+    cli_kata        = !kata }
 
 (* ------------------------------------------------------------------ *)
 (* Bundle builders *)
@@ -425,12 +430,119 @@ let run_hybrid ~args ~bundle ~ts =
   Printf.printf "Done. Hybrid report: %s\n" json_path
 
 (* ------------------------------------------------------------------ *)
+(* Kata runner *)
+
+(** Run a kata: load kata.toml, score input files, compare against expected. *)
+let run_kata ~root ~kata_id ~mode_override =
+  let katas_dir = Filename.concat root "katas" in
+  Printf.eprintf "Loading kata '%s'...\n%!" kata_id;
+  match Tsc_engine.Kata.load katas_dir kata_id with
+  | Error e ->
+    Printf.eprintf "Error: %s\n" e;
+    exit 1
+  | Ok kata ->
+    Printf.eprintf "Kata: %s (%s)\n%!" kata.Tsc_engine.Kata.id kata.description;
+    let kata_dir = Filename.concat katas_dir kata.id in
+    let abs_files = List.map (fun f -> Filename.concat kata_dir f) kata.input_files in
+    (* Load file contents *)
+    let file_pairs = List.filter_map (fun abs_path ->
+      (* Compute relative path for bundle (use path relative to root) *)
+      let rel_path =
+        let root_len = String.length root in
+        if String.length abs_path > root_len + 1
+           && String.sub abs_path 0 root_len = root
+        then String.sub abs_path (root_len + 1) (String.length abs_path - root_len - 1)
+        else abs_path
+      in
+      match read_file abs_path with
+      | Ok content -> Some (rel_path, content)
+      | Error msg ->
+        Printf.eprintf "Warning: skipping %s: %s\n%!" abs_path msg;
+        None
+    ) abs_files in
+    if file_pairs = [] then begin
+      Printf.eprintf "Error: kata '%s' has no readable input files\n" kata_id;
+      exit 1
+    end;
+    (* Determine effective mode *)
+    let eff_mode =
+      if mode_override <> "" then mode_override
+      else if kata.mode <> "" then kata.mode
+      else "mechanical"
+    in
+    (* Phase 1: mechanical-mode only *)
+    (match parse_mode eff_mode with
+     | Some (Llm | Hybrid | Auto) ->
+       Printf.eprintf "Error: kata mode '%s' requires LLM credentials; Phase 1 katas are mechanical-only\n" eff_mode;
+       exit 1
+     | None ->
+       Printf.eprintf "Error: unknown mode '%s'\n" eff_mode;
+       exit 1
+     | Some Mechanical -> ());
+    Printf.eprintf "Running mechanical scoring for kata '%s'...\n%!" kata_id;
+    let bundle = Bundle.build_bundle
+      ~target_name:("kata-" ^ kata_id)
+      ~target_kind:Tsc_engine.Types.Aggregate
+      ~files:file_pairs
+    in
+    let result = Mechanical_scoring.score_bundle bundle in
+    Printf.eprintf "%s\n%!" (Mechanical_scoring.summarize_result result);
+    (* Compare against kata expectations *)
+    let c_sigma = result.c_sigma in
+    let kata_pass =
+      match kata.verdict with
+      | "pass" ->
+        (* Pass: score must be within [min, max] *)
+        c_sigma >= kata.score_min && c_sigma <= kata.score_max
+      | "fail" ->
+        (* Fail: input expected to be incoherent; score should be <= max *)
+        c_sigma <= kata.score_max
+      | v ->
+        Printf.eprintf "Warning: unknown expected.verdict '%s'; treating as pass\n" v;
+        c_sigma >= kata.score_min && c_sigma <= kata.score_max
+    in
+    (* Emit result JSON *)
+    let result_json = `Assoc [
+      ("kata_id",        `String kata_id);
+      ("expected_verdict", `String kata.verdict);
+      ("c_sigma",        `Float c_sigma);
+      ("score_range",    `Assoc [
+        ("min", `Float kata.score_min);
+        ("max", `Float kata.score_max);
+      ]);
+      ("kata_pass",      `Bool kata_pass);
+      ("mechanical",     Mechanical_scoring.result_to_json result);
+    ] in
+    Printf.printf "%s\n" (Yojson.Safe.pretty_to_string result_json);
+    if kata_pass then begin
+      Printf.eprintf "KATA PASS: '%s' — c_sigma=%.4f within expected range [%.4f, %.4f] for verdict '%s'\n%!"
+        kata_id c_sigma kata.score_min kata.score_max kata.verdict;
+      exit 0
+    end else begin
+      Printf.eprintf "KATA FAIL: '%s' — c_sigma=%.4f outside expected range [%.4f, %.4f] for verdict '%s'\n%!"
+        kata_id c_sigma kata.score_min kata.score_max kata.verdict;
+      exit 1
+    end
+
+(* ------------------------------------------------------------------ *)
 (* Entrypoint *)
 
 let () =
   let args = parse_args () in
   let ts = timestamp () in
   let root = args.cli_root in
+
+  (* Kata mode: short-circuit before regular bundle path *)
+  if args.cli_kata <> "" then begin
+    let mode_override = match args.cli_mode with
+      | Auto -> ""  (* let kata.toml decide *)
+      | Mechanical -> "mechanical"
+      | Llm        -> "llm"
+      | Hybrid     -> "hybrid"
+    in
+    run_kata ~root ~kata_id:args.cli_kata ~mode_override
+    (* run_kata always calls exit; this line is unreachable *)
+  end;
 
   (* Resolve effective mode (auto → mechanical or hybrid) *)
   let effective_mode = match args.cli_mode with

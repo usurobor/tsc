@@ -23,4 +23,5 @@
   digestif
   yojson
   ezcurl
+  otoml
   (ppx_expect :with-test)))
