@@ -7,7 +7,13 @@ on:
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-latest
+    # Pinned to ubuntu-22.04 — mirrors ci.yml and the runtime under which
+    # v0.4.0 last published successfully. The floating `ubuntu-latest`
+    # promoted to ubuntu-24.04 between April and May 2026, after which
+    # ocaml/setup-ocaml@v3's depext apt-get install hits 404s for legacy
+    # package URLs (issue ocaml/setup-ocaml#677) and the workflow fails at
+    # exit code 10 in 30–45s, well short of a real build. See cycle #43.
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
 
