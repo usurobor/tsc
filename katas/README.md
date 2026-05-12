@@ -85,6 +85,15 @@ bash scripts/run-katas.sh
 
 The CI script (`scripts/run-katas.sh`) iterates all `katas/*/kata.toml` files, runs each kata, and exits non-zero if any kata fails. It exits 0 gracefully when no katas are defined.
 
+## Where to find kata results
+
+Two surfaces from `.github/workflows/katas.yml` (cycle #38):
+
+- **Per-run JSON artifact.** Every run uploads `.kata-results/<id>.json` (one file per kata; engine's full `--kata` output) as the artifact `kata-results-<sha>` (pre-merge build-from-HEAD job) or `kata-results-published-<tag>-<run_id>` (published-binary job). Retention: 90 days. Download via the run page's *Artifacts* panel or the `gh run download` CLI.
+- **Step-summary table.** Each run's *Summary* tab renders a markdown table with one row per kata: `| Kata | Verdict | C_Σ | Range | Status |`. Visible inline on PR check pages without click-through.
+
+The published-binary job (release / weekly cron / manual dispatch) writes the same row schema under a section titled with the release tag.
+
 ## Adding a new kata
 
 1. Create `katas/{kata-id}/kata.toml` using the schema above.
