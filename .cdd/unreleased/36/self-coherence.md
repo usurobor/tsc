@@ -12,7 +12,26 @@ dispatch_configuration: "§5.2 single-session δ-as-γ via Claude Code Agent too
 
 ## Gap
 
-Tsc shipped the kata progression in #33 (`katas/01-glider/`, `katas/02-random-soup/`, `engine/ocaml/lib/kata.ml`, `coh --kata <name>` flag, `scripts/run-katas.sh`) and the activation-skill adoption in 344-c (`.github/workflows/cdd-notify.yml` Telegram notifier + 6 activation marker files). What's missing: the workflow that **actually runs the katas on every push to main and on every PR**. Today the runner exists and the katas exist; CI exercises `dune runtest` (covers OCaml unit tests including `test_kata.ml` hermetic tests) but does not invoke `coh --kata` against the shipped kata content. A regression to the mechanical scorer that drops kata-01's `c_sigma` below `expected.score_range.min` would silently pass `dune runtest` and only surface on the next manual `bash scripts/run-katas.sh`. Issue #36 closes this gap with a `katas` job that auto-discovers every `katas/NN-*/` directory and runs `coh --kata <name>` against it, failing CI on any non-zero exit.
+> **R2 correction (2026-05-12):** the original gap framing below
+> was empirically false and has been superseded by the corrected
+> framing immediately following. β R1 finding B-1 caught this.
+> γ chose Path A (consolidate) for R2; this section documents
+> both the wrong original framing (struck through in spirit) and
+> the actual gap the cycle now closes.
+
+### Original (R1) framing — incorrect
+
+> Tsc shipped the kata progression in #33 (`katas/01-glider/`, `katas/02-random-soup/`, `engine/ocaml/lib/kata.ml`, `coh --kata <name>` flag, `scripts/run-katas.sh`) and the activation-skill adoption in 344-c. The R1 cycle scaffold asserted that "CI exercises `dune runtest` … but does not invoke `coh --kata` against the shipped kata content." This was false: `.github/workflows/ci.yml` has had a `kata-check` job since 344-c (commit `16f60ac`) that runs `bash scripts/run-katas.sh` on every push to `main` / `cycle/**` and on every PR, and that script invokes `coh --kata <id> --mode mechanical` against every `katas/*/kata.toml`.
+
+### Corrected (R2) framing — actual
+
+CI invokes katas via the `kata-check` job in `ci.yml` (added in 344-c) — but with no OPAM/dune build cache (every run cold ~5–8 min, since each push re-runs the full engine install), and with no concurrency control (superseded PR runs are not cancelled). Cycle #36 consolidates kata-running into a dedicated `katas.yml` workflow that adds:
+
+- An `actions/cache@v4` step caching `~/.opam` + `engine/ocaml/_build` keyed on `engine/ocaml/dune-project` + `engine/ocaml/tsc_engine.opam` hashes, so warm runs (cache hit) complete in <3 min (AC3).
+- A `concurrency` block that cancels superseded PR runs but never cancels main runs.
+- A forward-compatibility header citing cnos #344 Cycle B + tsc cycle C-2 as the canonical-template swap point.
+
+…and removes the duplicate `kata-check` job from `ci.yml` (R2 commit 1) so the repo ends up with exactly one workflow exercising the katas.
 
 ## Mode
 

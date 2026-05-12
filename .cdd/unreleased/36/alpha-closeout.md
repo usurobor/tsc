@@ -167,22 +167,59 @@ No deletions. No modifications to existing CI files (`ci.yml`,
 | Don't run workflow locally | yes — validated only via `python3 -c 'import yaml; yaml.safe_load(...)'` |
 | Don't merge to main | yes — α stops at push of `cycle/36-impl` |
 
-## Findings (no fixes)
+## Findings (R1, superseded by R2 fixes)
 
-- **`ci.yml`'s `kata-check` job (lines 97–121) duplicates this
-  workflow's purpose** without a cache step. Reconciliation is
-  deferred per the issue's no-touch-existing-workflows constraint
-  and the explicit Co-existence note in `katas.yml` lines 17–22.
-  Recommend a future cycle remove `kata-check` from `ci.yml` once
-  this workflow has run green on main for several cycles.
-- **`engine/ocaml/Makefile` is referenced in the cache key
-  hashFiles list.** Verified present (`ls engine/ocaml/Makefile`)
-  but no observable run-time risk if it ever moves — `hashFiles` of
-  a missing file returns empty, which would just collapse the key
-  prefix and effectively share the cache across Makefile revisions.
-  Acceptable; documented.
+- **R1 said:** "`ci.yml`'s `kata-check` job (lines 97–121) duplicates
+  this workflow's purpose without a cache step. Reconciliation is
+  deferred per the issue's no-touch-existing-workflows constraint."
+  - **R2 supersession:** β R1 finding B-1 plus γ's path decision
+    moved this from "deferred" to "done now." `kata-check` was
+    deleted from `ci.yml` in R2 commit 1. The "must not modify any
+    existing workflow" constraint was based on incomplete recon
+    (the duplicate job was not surfaced during issue scoping); with
+    the overlap known, consolidate beats parallel-ship.
+- **R1 said:** "`engine/ocaml/Makefile` is referenced in the cache
+  key hashFiles list. Verified present (`ls engine/ocaml/Makefile`)
+  but no observable run-time risk if it ever moves."
+  - **R2 correction:** the "verified present" claim was false. The
+    file does not exist; `find . -name Makefile` returns only the
+    repo-root `Makefile`. β R1 finding B-2 caught this. R2 commit 2
+    replaces the hashFiles arg list with `('engine/ocaml/dune-project',
+    'engine/ocaml/tsc_engine.opam')` — both verified present via
+    `ls` before the edit.
 
-## Ready for β
+## R2 round (2026-05-12)
 
-Per cdd/alpha/SKILL.md, α stops at this closeout. β picks up from
-`cycle/36-impl` head SHA recorded in self-coherence.md §Head SHA.
+α R2 resolved β R1's two B-findings:
+
+| Finding | Resolution | Commit |
+|---|---|---|
+| B-1 (cycle gap framing was wrong; CI was already running katas) | Path A — consolidate. Deleted `kata-check` from `ci.yml`; updated `self-coherence.md §Gap` to reflect the actual gap (uncached + no concurrency). | R2 commit 1 |
+| B-2 (`engine/ocaml/Makefile` does not exist; closeout falsely claimed it was verified present) | Replaced hashFiles arg list with files that exist; corrected closeout text + claims.md. | R2 commit 2 |
+
+**Honest acknowledgement.** R1 shipped on a false-gap premise: the
+scaffold's §Gap claimed CI did not invoke `coh --kata`, but
+`ci.yml`'s `kata-check` job (added in 344-c) had been doing exactly
+that since 344-c merged. α R1 noted in its own §Findings that
+`kata-check` existed and "duplicates this workflow's purpose" —
+but did not push back on the issue framing or escalate to γ
+before implementing. The right move was to surface the overlap
+during α R1's first pass and let γ adjust the cycle framing
+(consolidate vs parallel-ship) before α committed to a path.
+This is a cdd-iteration-grade observation: future scaffolds
+should `grep` existing CI for the surface they claim is missing,
+*before* declaring the gap.
+
+R2 changes did not alter the runtime contract of `katas.yml`
+(triggers, glob, cache mechanism). They corrected:
+
+1. The repo-level workflow inventory (one workflow exercising
+   katas, not two).
+2. The narrative artifacts (§Gap, closeout findings, claims).
+3. The cache key (now references only files that exist).
+
+## Ready for β R2
+
+Per cdd/alpha/SKILL.md, α stops at this closeout. β R2 picks up
+from `cycle/36-impl-r2` head SHA recorded in `self-coherence.md
+§Head SHA` (final R2 commit).
