@@ -432,7 +432,28 @@ let run_hybrid ~args ~bundle ~ts =
 (* ------------------------------------------------------------------ *)
 (* Kata runner *)
 
-(** Run a kata: load kata.toml, score input files, compare against expected. *)
+(** Read each [files] entry under [kata_dir] and return (rel_to_root, content)
+    pairs suitable for [Bundle.build_bundle]. Skips missing files with a
+    warning. *)
+let load_kata_files ~root ~kata_dir files =
+  let abs_files = List.map (fun f -> Filename.concat kata_dir f) files in
+  List.filter_map (fun abs_path ->
+    let rel_path =
+      let root_len = String.length root in
+      if String.length abs_path > root_len + 1
+         && String.sub abs_path 0 root_len = root
+      then String.sub abs_path (root_len + 1) (String.length abs_path - root_len - 1)
+      else abs_path
+    in
+    match read_file abs_path with
+    | Ok content -> Some (rel_path, content)
+    | Error msg ->
+      Printf.eprintf "Warning: skipping %s: %s\n%!" abs_path msg;
+      None
+  ) abs_files
+
+(** Run a kata: load kata.toml, score input files (or components), compare
+    against expected verdict/range/ranking. *)
 let run_kata ~root ~kata_id ~mode_override =
   let katas_dir = Filename.concat root "katas" in
   Printf.eprintf "Loading kata '%s'...\n%!" kata_id;
@@ -443,85 +464,132 @@ let run_kata ~root ~kata_id ~mode_override =
   | Ok kata ->
     Printf.eprintf "Kata: %s (%s)\n%!" kata.Tsc_engine.Kata.id kata.description;
     let kata_dir = Filename.concat katas_dir kata.id in
-    let abs_files = List.map (fun f -> Filename.concat kata_dir f) kata.input_files in
-    (* Load file contents *)
-    let file_pairs = List.filter_map (fun abs_path ->
-      (* Compute relative path for bundle (use path relative to root) *)
-      let rel_path =
-        let root_len = String.length root in
-        if String.length abs_path > root_len + 1
-           && String.sub abs_path 0 root_len = root
-        then String.sub abs_path (root_len + 1) (String.length abs_path - root_len - 1)
-        else abs_path
-      in
-      match read_file abs_path with
-      | Ok content -> Some (rel_path, content)
-      | Error msg ->
-        Printf.eprintf "Warning: skipping %s: %s\n%!" abs_path msg;
-        None
-    ) abs_files in
-    if file_pairs = [] then begin
-      Printf.eprintf "Error: kata '%s' has no readable input files\n" kata_id;
-      exit 1
-    end;
     (* Determine effective mode *)
     let eff_mode =
       if mode_override <> "" then mode_override
       else if kata.mode <> "" then kata.mode
       else "mechanical"
     in
-    (* Phase 1: mechanical-mode only *)
+    (* Phase 1 + 2: mechanical-mode only. LLM-mode katas (AC6) deferred. *)
     (match parse_mode eff_mode with
      | Some (Llm | Hybrid | Auto) ->
-       Printf.eprintf "Error: kata mode '%s' requires LLM credentials; Phase 1 katas are mechanical-only\n" eff_mode;
+       Printf.eprintf "Error: kata mode '%s' requires LLM credentials; Phase 1/2 katas are mechanical-only\n" eff_mode;
        exit 1
      | None ->
        Printf.eprintf "Error: unknown mode '%s'\n" eff_mode;
        exit 1
      | Some Mechanical -> ());
-    Printf.eprintf "Running mechanical scoring for kata '%s'...\n%!" kata_id;
-    let bundle = Bundle.build_bundle
-      ~target_name:("kata-" ^ kata_id)
-      ~target_kind:Tsc_engine.Types.Aggregate
-      ~files:file_pairs
-    in
-    let result = Mechanical_scoring.score_bundle bundle in
-    Printf.eprintf "%s\n%!" (Mechanical_scoring.summarize_result result);
-    (* Compare against kata expectations *)
-    let c_sigma = result.c_sigma in
-    let kata_pass =
-      match kata.verdict with
-      | "pass" ->
-        (* Pass: score must be within [min, max] *)
-        c_sigma >= kata.score_min && c_sigma <= kata.score_max
-      | "fail" ->
-        (* Fail: input expected to be incoherent; score should be <= max *)
-        c_sigma <= kata.score_max
-      | v ->
-        Printf.eprintf "Warning: unknown expected.verdict '%s'; treating as pass\n" v;
-        c_sigma >= kata.score_min && c_sigma <= kata.score_max
-    in
-    (* Emit result JSON *)
-    let result_json = `Assoc [
-      ("kata_id",        `String kata_id);
-      ("expected_verdict", `String kata.verdict);
-      ("c_sigma",        `Float c_sigma);
-      ("score_range",    `Assoc [
-        ("min", `Float kata.score_min);
-        ("max", `Float kata.score_max);
-      ]);
-      ("kata_pass",      `Bool kata_pass);
-      ("mechanical",     Mechanical_scoring.result_to_json result);
-    ] in
-    Printf.printf "%s\n" (Yojson.Safe.pretty_to_string result_json);
-    if kata_pass then begin
-      Printf.eprintf "KATA PASS: '%s' — c_sigma=%.4f within expected range [%.4f, %.4f] for verdict '%s'\n%!"
-        kata_id c_sigma kata.score_min kata.score_max kata.verdict;
-      exit 0
-    end else begin
-      Printf.eprintf "KATA FAIL: '%s' — c_sigma=%.4f outside expected range [%.4f, %.4f] for verdict '%s'\n%!"
-        kata_id c_sigma kata.score_min kata.score_max kata.verdict;
-      exit 1
+    (* Branch: comparative (components) vs single-bundle (Phase 1 katas).
+
+       A kata is comparative iff it declares [[components]]. Comparative
+       katas score each component separately and check [expected.ranking];
+       single-bundle katas score [input.files] as one bundle and check
+       [expected.verdict] + [expected.score_range]. *)
+    if kata.components <> [] then begin
+      Printf.eprintf "Running mechanical scoring for kata '%s' (comparative, %d components)...\n%!"
+        kata_id (List.length kata.components);
+      (* Score each component. *)
+      let scored : (string * float * Tsc_engine.Mechanical_scoring.result) list =
+        List.map (fun comp ->
+          let cid = comp.Tsc_engine.Kata.comp_id in
+          let file_pairs = load_kata_files ~root ~kata_dir comp.Tsc_engine.Kata.comp_files in
+          if file_pairs = [] then begin
+            Printf.eprintf "Error: kata '%s' component '%s' has no readable input files\n" kata_id cid;
+            exit 1
+          end;
+          let bundle = Bundle.build_bundle
+            ~target_name:(Printf.sprintf "kata-%s-%s" kata_id cid)
+            ~target_kind:Tsc_engine.Types.Aggregate
+            ~files:file_pairs
+          in
+          let r = Mechanical_scoring.score_bundle bundle in
+          Printf.eprintf "  component '%s': c_sigma=%.4f\n%!" cid r.c_sigma;
+          (cid, r.c_sigma, r)
+        ) kata.components
+      in
+      let actual_ranking =
+        scored
+        |> List.sort (fun (_, a, _) (_, b, _) -> compare b a)  (* high → low *)
+        |> List.map (fun (cid, _, _) -> cid)
+      in
+      let ranking_correct = (actual_ranking = kata.ranking) in
+      (* Emit result JSON *)
+      let components_json = `List (List.map (fun (cid, score, r) ->
+        `Assoc [
+          ("id",          `String cid);
+          ("c_sigma",     `Float score);
+          ("mechanical",  Mechanical_scoring.result_to_json r);
+        ]
+      ) scored) in
+      let result_json = `Assoc [
+        ("kata_id",          `String kata_id);
+        ("expected_verdict", `String kata.verdict);
+        ("expected_ranking", `List (List.map (fun s -> `String s) kata.ranking));
+        ("actual_ranking",   `List (List.map (fun s -> `String s) actual_ranking));
+        ("ranking_correct",  `Bool ranking_correct);
+        ("components",       components_json);
+      ] in
+      Printf.printf "%s\n" (Yojson.Safe.pretty_to_string result_json);
+      if ranking_correct then begin
+        Printf.eprintf "KATA PASS: '%s' — ranking %s matches expected\n%!"
+          kata_id (String.concat ">" actual_ranking);
+        exit 0
+      end else begin
+        Printf.eprintf "KATA FAIL: '%s' — ranking %s != expected %s\n%!"
+          kata_id (String.concat ">" actual_ranking) (String.concat ">" kata.ranking);
+        exit 1
+      end
+    end
+    else begin
+      let file_pairs = load_kata_files ~root ~kata_dir kata.input_files in
+      if file_pairs = [] then begin
+        Printf.eprintf "Error: kata '%s' has no readable input files\n" kata_id;
+        exit 1
+      end;
+      Printf.eprintf "Running mechanical scoring for kata '%s'...\n%!" kata_id;
+      let bundle = Bundle.build_bundle
+        ~target_name:("kata-" ^ kata_id)
+        ~target_kind:Tsc_engine.Types.Aggregate
+        ~files:file_pairs
+      in
+      let result = Mechanical_scoring.score_bundle bundle in
+      Printf.eprintf "%s\n%!" (Mechanical_scoring.summarize_result result);
+      (* Compare against kata expectations *)
+      let c_sigma = result.c_sigma in
+      let kata_pass =
+        match kata.verdict with
+        | "pass" ->
+          (* Pass: score must be within [min, max] *)
+          c_sigma >= kata.score_min && c_sigma <= kata.score_max
+        | "fail" ->
+          (* Fail: input expected to be incoherent; score should be <= max *)
+          c_sigma <= kata.score_max
+        | v ->
+          Printf.eprintf "Warning: unknown expected.verdict '%s'; treating as pass\n" v;
+          c_sigma >= kata.score_min && c_sigma <= kata.score_max
+      in
+      (* Emit result JSON *)
+      let result_json = `Assoc [
+        ("kata_id",        `String kata_id);
+        ("expected_verdict", `String kata.verdict);
+        ("c_sigma",        `Float c_sigma);
+        ("score_range",    `Assoc [
+          ("min", `Float kata.score_min);
+          ("max", `Float kata.score_max);
+        ]);
+        ("kata_pass",      `Bool kata_pass);
+        ("mechanical",     Mechanical_scoring.result_to_json result);
+      ] in
+      Printf.printf "%s\n" (Yojson.Safe.pretty_to_string result_json);
+      if kata_pass then begin
+        Printf.eprintf "KATA PASS: '%s' — c_sigma=%.4f within expected range [%.4f, %.4f] for verdict '%s'\n%!"
+          kata_id c_sigma kata.score_min kata.score_max kata.verdict;
+        exit 0
+      end else begin
+        Printf.eprintf "KATA FAIL: '%s' — c_sigma=%.4f outside expected range [%.4f, %.4f] for verdict '%s'\n%!"
+          kata_id c_sigma kata.score_min kata.score_max kata.verdict;
+        exit 1
+      end
     end
 
 (* ------------------------------------------------------------------ *)
