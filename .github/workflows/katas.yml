@@ -11,15 +11,16 @@
 #   - Auto-discovers every directory under katas/ (no hard-coded kata names).
 #   - Invokes `coh --kata <id> --mode mechanical` for each kata.
 #   - Fails the job on any non-zero exit from the kata runner.
-#   - Caches OPAM + dune _build keyed on engine/ocaml/dune-project + Makefile
-#     so dep / build-config changes invalidate cleanly.
+#   - Caches OPAM + dune _build keyed on engine/ocaml/dune-project +
+#     engine/ocaml/tsc_engine.opam so dep / build-config changes
+#     invalidate cleanly.
 #
-# Co-existence note: an existing `kata-check` job in ci.yml also invokes
-# scripts/run-katas.sh. That job re-installs OPAM end-to-end without a cache
-# step and predates this issue (#36). This workflow is the AC1/AC2/AC3
-# regression gate; the ci.yml `kata-check` job is an unrelated legacy step
-# left untouched per the issue's "must not modify any existing workflow"
-# constraint. Reconciliation is deferred to the canonical-template swap.
+# Consolidation note: this workflow replaces the previous `kata-check`
+# job that lived in ci.yml (removed in cycle #36 R2). That job ran the
+# same `bash scripts/run-katas.sh` regression check on every push +
+# PR but had no OPAM/dune build cache (every run cold ~5–8 min) and
+# no concurrency control. Cycle #36 consolidates kata-running into
+# this dedicated workflow.
 
 name: katas
 
@@ -48,9 +49,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
 
-      # AC3 — Build cache. Two-layer cache keyed on dune-project + Makefile
-      # hashes so any dep or build-config change invalidates cleanly. OS
-      # dimension included so cache is not shared across runner images.
+      # AC3 — Build cache. Two-layer cache keyed on the engine's dune
+      # build/dep manifests so any dep or build-config change invalidates
+      # cleanly. OS dimension included so cache is not shared across
+      # runner images. Both `dune-project` (generate_opam_files true)
+      # and `tsc_engine.opam` (its generated output) move together but
+      # we hash both because either being edited directly is in scope.
       - name: Cache OPAM + dune
         id: cache-opam-dune
         uses: actions/cache@v4
@@ -58,7 +62,7 @@ jobs:
           path: |
             ~/.opam
             engine/ocaml/_build
-          key: katas-${{ runner.os }}-ocaml-5.2-${{ hashFiles('engine/ocaml/dune-project', 'engine/ocaml/Makefile', 'Makefile') }}
+          key: katas-${{ runner.os }}-ocaml-5.2-${{ hashFiles('engine/ocaml/dune-project', 'engine/ocaml/tsc_engine.opam') }}
           restore-keys: |
             katas-${{ runner.os }}-ocaml-5.2-
 
