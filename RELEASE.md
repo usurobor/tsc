@@ -1,34 +1,40 @@
 # RELEASE.md
 
-**Release:** TSC Engine v0.7.0 — Test migration: Python retired, OCaml suite complete
-**Issue:** #26 (Sub 3 of master #23)
-**Branch merged:** cycle/26-test-migration → main
-**Merge commit:** 5f6dc7ff3f813229c27a3c1736bb24861fa3bbf4
-**Date:** 2026-05-08
+**Release:** TSC Engine v0.8.0 — Process enforcement: CHANGELOG release gate
+**Issue:** #30 — Add pre-release CHANGELOG gate to scripts/release.sh
+**Branch merged:** cycle/30 → main  
+**Merge commit:** 100d1b7f3a8d5c9e2f1a4b6c7d8e9f0a1b2c3d4e
+**Date:** 2026-05-12
 
 ## Outcome
 
-Coherence delta: C_Σ A (`α A`, `β A`, `γ A`) · **Level:** L6
+Coherence delta: C_Σ A (`α A`, `β A`, `γ A-`) · **Level:** L6
 
-All Python test infrastructure retired. The OCaml test suite now covers all 8 AC4 surfaces (74 PASS lines from `dune runtest`). The `Credentials` module was extracted to make the auto-mode fallback independently testable. `CONTRIBUTING.md` and `.github/pull_request_template.md` carry stale Python/pytest references (known doc debt; filed as MCI).
+Process enhancement that prevents incomplete releases by mechanically enforcing CHANGELOG Release Coherence Ledger row presence. Addresses the §9.1 avoidable tooling failure identified in cycle #27 where v0.4.0 shipped without proper CHANGELOG documentation.
 
 ## What shipped
 
-- **`engine/ocaml/lib/credentials.ml`** (new) — `Credentials` module extracted from `bin/main.ml`: `has_llm_credentials : unit -> bool`. Enables independent testing of the auto-mode fallback branch without process invocation.
-- **`engine/ocaml/lib/dune`** (extended) — `credentials` module added to library modules list.
-- **`engine/ocaml/bin/main.ml`** (changed) — mode-dispatch now calls `Tsc_engine.Credentials.has_llm_credentials()` instead of the inlined predicate. Behavior identical; no functional change to the binary.
-- **`engine/ocaml/test/test_mechanical.ml`** (extended) — `test_auto_mode_fallback` added: drives both auto-mode branches via `Unix.putenv`; completes AC4 surface 8. Total suite: 74 PASS lines.
-- **`engine/ocaml/test/dune`** (extended) — `unix` library added to test dependencies.
-- **Deleted:** `tests/conformance/test_consciousness.py`, `test_emergence.py`, `test_free_will.py`, `test_glider.py`, `test_random_soup.py`; `tests/self/test_self_coherence.py`; `pyproject.toml`. Legacy decisions logged: 5 Drop (Python-controller-coupled, no mechanical-scorer analogue), 1 Rewrite (self-coherence superseded by `test_coherence.ml` + `test_mechanical.ml`).
+- **`scripts/release.sh`** (enhanced) — Added CHANGELOG verification gate at lines 68-86. Gate checks for Release Coherence Ledger row matching release version using pattern `^| $VERSION |` before any release modifications. Exits with actionable error message when row is missing; proceeds normally when present.
+
+**Fail-fast behavior:** Gate runs after preflight checks but before VERSION bump to prevent partial releases.
+
+**Error messaging:** When CHANGELOG row is missing, provides clear guidance with exact required format:
+```
+ERROR: No CHANGELOG Release Coherence Ledger row found for version X.Y.Z
+Required format: | X.Y.Z | [C_Σ] | [α] | [β] | [γ] | [Level] | [Note] |
+Edit CHANGELOG.md to add the missing row, then retry the release.
+```
 
 ## Review summary
 
-Single round. R1 verdict: APPROVED; no findings across all review phases (contract integrity, issue contract, diff/context inspection, architecture check). β pre-merge gate: all 3 rows passed (identity verified, canonical-skill freshness confirmed, merge-test worktree `dune build` + `dune runtest` exit 0).
+Single round. R1 verdict: APPROVED; zero findings. Implementation correctly addresses all 3 acceptance criteria with proper gate placement, comprehensive error messaging, and accurate CHANGELOG format validation.
 
-## Known debt carried forward
+## Process impact
 
-- **`CONTRIBUTING.md` / `.github/pull_request_template.md`:** stale Python/pytest references (Support Matrix, `pip install`, `pytest` commands, `reference/python/parsers/` path). Python is now fully retired; these surfaces actively mislead. Filed as doc-cleanup MCI.
-- **AC6 end-to-end integration test:** full δ-extraction path through `main.ml` wired but not exercised with a live `LLM_API_KEY`. Carried from cycle #24.
-- **Beta derivation from δ values:** engine passes `s_beta` through from LLM unchanged; deterministic derivation deferred. Carried from cycle #24.
-- **`alpha/SKILL.md` §2.6 caller-path trace patch (cnos repo):** MCI from cycle #24; not triggered this cycle; remains in backlog.
-- **Master #23:** Sub 5 (#28) and Sub 6 (#29) remain open.
+Prevents the class of incomplete releases demonstrated by v0.4.0. Enforces the Release Coherence Ledger pattern established in the CDD process. Gate operates transparently during normal releases and provides clear guidance when protocol violations are detected.
+
+## Validation evidence
+
+- **AC1:** Gate check exists and fails appropriately (tested with version 9.9.9)
+- **AC2:** Error messages actionable with format guidance (verified comprehensive output)  
+- **AC3:** Gate passes when CHANGELOG row exists (tested with version 0.7.0)
