@@ -1,13 +1,30 @@
-# Cross-Repo Iteration Bundles
+# Cross-Repo Trace Bundles
 
-Per `cdd/post-release/SKILL.md` Step 5.6b. This directory holds tsc-side artifacts produced for cross-repo cycles (typically cnos cycles where tsc is the consumer/courier side).
+Each cross-repo coordination unit lives at:
 
-Layout (one subdir per cross-repo cycle):
+  .cdd/iterations/cross-repo/{target}/{slug}/
 
-```
-cross-repo/
-  <upstream-repo>-<cycle-N>/
-    <artifacts produced on the tsc side for that cycle>
-```
+Where:
+- {target}   — the target repository name (e.g., cnos, acme-api)
+- {slug}     — a short, lowercase, hyphen-separated descriptor of the coordination
+               (e.g., supercycle-v0.7.0, schema-migration-v2)
 
-Empty at initialization (cycle #32). Future cross-repo bundles will populate here; the top-level `../INDEX.md` cross-references them by row.
+## When to create a bundle
+
+Create a bundle when:
+- This repo's cycle produces deliverables that land in {target}
+- A cycle in this repo coordinates sequentially or in parallel with a cycle in {target}
+- A design decision in this repo has binding downstream effect on {target}
+
+## Bundle contents
+
+Each bundle directory contains:
+- README.md  — bundle purpose, originating and target cycles, current status
+- STATUS     — one of: open | converging | closed (updated as cycles complete)
+
+A bundle is closed when both the originating-repo cycle and the target-repo cycle
+have shipped close-outs and the STATUS file reads 'closed'.
+
+## Existing bundles
+
+(none — bundles will be added as cross-repo cycles occur)
