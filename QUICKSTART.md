@@ -142,8 +142,29 @@ Every report includes a `mode` field. Hybrid reports add `mechanical`, `llm`, an
 cat .tsc/tsc-spec-*.json | python3 -m json.tool   # pretty-print
 ```
 
+## 8. Run katas (smoke test / regression anchors)
+
+Katas are curated inputs with known expected outcomes. Use them to verify your
+engine installation or detect regressions after changes.
+
+```bash
+# Positive control — well-structured document; should score C_Σ ≥ 0.87
+coh --kata 01-glider --mode mechanical
+
+# Negative control — incoherent document; should score C_Σ ≤ 0.74
+coh --kata 02-random-soup --mode mechanical
+
+# Run all katas via CI script
+bash scripts/run-katas.sh
+```
+
+Both commands exit 0 when the engine correctly meets the kata's expected outcome,
+non-zero otherwise. See [katas/README.md](katas/README.md) for the framework
+and `kata.toml` schema.
+
 ## What's next
 
 - [Operator manual](docs/beta/guides/OPERATOR-MANUAL.md) — configuration, targets, troubleshooting
+- [Kata framework](katas/README.md) — pedagogical / regression inputs with known expected outcomes
 - [Theory](spec/) — the formal triadic coherence model
 - [Architecture](ARCHITECTURE.md) — how the engine works
