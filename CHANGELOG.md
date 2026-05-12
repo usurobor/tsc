@@ -34,6 +34,7 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
+| 0.9.0 | (TBD) | (TBD) | (TBD) | (TBD) | L6 | Phase 2 kata progression: comparative (kata-03) + philosophical (kata-04, mechanical-mode) + adversarial (kata-05, multi-file); kata runner gains [[components]]+ranking; +25 hermetic test assertions (146→171). (#34, cycle: L6) |
 | 0.8.0 | A | A | A | A- | L6 | Process enforcement: CHANGELOG release gate in scripts/release.sh. Prevents incomplete releases (v0.4.0 class). (#30, cycle: L6) |
 | 0.7.0 | A | A | A | A | L6 | Test migration: Python retired, 74-assertion OCaml suite, auto-mode fallback test, Credentials module. (#26, cycle: L6) |
 | 0.6.0 | B+ | B+ | A | B+ | L6 | Spec v3.2.0 engine: barrier transform φ, L_link case-split, math/num split, W2 gauge witness (ref+spread), provenance JSON skeleton, SELF-MEASURE.md δ-based protocol, OOD cutover guard. 69-assertion test suite. (#24, cycle: L6) |
@@ -46,6 +47,35 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 | 0.1.0 | B | B+ | B | B- | L7 | First OCaml engine. Targets, provider transport, CI, self-measurement workflow. CI broken at tag time. |
 
 Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Removed — available in git history. Not scored — different system.
+
+---
+
+## 0.9.0 (2026-05-12)
+
+Phase 2 kata progression. Engine kata runner gains `[[components]]` + `expected.ranking` support; three new katas (comparative, philosophical, adversarial) extend Phase 1's positive+negative-control framework into the comparative-ordering, cross-domain, and adversarial axes. Full CDD cycle (#34).
+
+### Added
+- **`katas/03-comparative/`** — comparative kata; bundles copies of kata-01 (glider) and kata-02 (random-soup) inputs as named `[[components]]`; asserts the mechanical scorer ranks glider above random-soup. Observed margin on cycle/34-impl HEAD: 0.9233 vs 0.6889 (≈0.234 gap).
+- **`katas/04-philosophical/`** — first cross-domain kata; input is `examples/philosophical/consciousness.md`; mode=mechanical (γ-decided at scaffold time per cycle #34 active design constraint); `verdict=fail` records the *semantic* claim while `score_range = {min=0.0, max=0.95}` brackets the observed mechanical C_Σ ≈ 0.9333 — the kata's purpose is to document the mechanical scorer's upper-limit behavior on well-formatted prose.
+- **`katas/05-adversarial/`** — multi-file adversarial kata; three sibling Quanton-spec files share identical surface structure (headings, version stamps, dense cross-references, "supersedes" language) but contradict each other on every load-bearing claim (transport, frame format, canonical authority). Observed C_Σ ≈ 0.7466 (α=0.969, β=0.470, γ=0.801; β catches the cross-file contradictions).
+- **`engine/ocaml/lib/kata.ml`** — `kata_component` type + `components` and `ranking` fields on `kata_config`; otoml parsing of `[[components]]` array-of-tables and `[expected].ranking` string array. Phase 1 single-bundle katas unaffected.
+- **`engine/ocaml/bin/main.ml::run_kata`** — comparative path: when `kata.components <> []`, scores each component as its own `Bundle.t`, sorts by C_Σ, asserts observed ranking matches `expected.ranking`; emits `expected_ranking` / `actual_ranking` / `ranking_correct` + per-component sub-results in the result JSON. Single-bundle path unchanged.
+- **`engine/ocaml/test/test_kata.ml`** — 25 new hermetic assertions covering kata-03 (components + ranking), kata-04 (mechanical mode + verdict=fail + README mode-justification claim), kata-05 (multi-file + verdict=fail + README adversarial-design claim); total suite 146 → 171 PASS lines.
+- **`katas/README.md`** — §"Current katas" table; `[[components]]` + `[expected].ranking` schema rows; §"Comparative katas (Phase 2)" describing the runner's branched pass-criterion.
+- **`QUICKSTART.md` §8** — smoke-test invocations for kata-03/04/05.
+
+### Changed
+- **`engine/ocaml/test/dune`** — explicit `(modules ...)` stanzas per test executable; required by dune ≥ 3.14 for multi-test files (no behavioral change; previously implicit module inference).
+- **`VERSION`** — `0.8.0` → `0.9.0`. Engine release ledger row added.
+
+### Deferred (AC6)
+- LLM-mode runner support. kata-04's mechanical-mode choice (γ-decided at scaffold) means AC6 (LLM-mode kata recognition with hermetic skip-on-no-credentials) is not exercised this cycle. Phase 3 follow-on.
+
+### Known debt
+- 0.8.0 CHANGELOG details section never landed (only the ledger row exists). Cycle #34 did not retroactively author it — scope-limited to its own deliverables.
+- AC6 (LLM-mode kata recognition) carried forward to Phase 3.
+- kata-04's score_range is intentionally wide (max=0.95) — itself a documented limit; tighten in a future cycle if the mechanical scorer learns to discriminate philosophical prose from engineering docs.
+- kata-05's `score_range.max=0.78` is a small margin above observed 0.7466; if mechanical-scorer α or γ refinements push C_Σ above 0.78, kata-05 fails until either the scorer improves further or the adversarial input is hardened (kata-05's documented "moving frontier" behavior, per issue #34 §Active design constraints).
 
 ---
 
