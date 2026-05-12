@@ -141,4 +141,7 @@ If any of F1/F2/F3 self-application fails, the cycle's cdd-iteration must record
 
 ## Head SHA
 
-(to be filled in α R1 readiness signal)
+- α R1 head: `ad8ab93` on branch `cycle/38-impl` (parent `83fd217` on `cycle/38`).
+  Commits (chronological): `d517de1` (AC1) → `074b54b` (AC2) → `422eb02` (AC3+AC4) → `c0e4329` (AC5) → `ad8ab93` (closeout+claims).
+  The α R1 head SHA recorded here is the closeout commit; the meta-commit that
+  records this line itself follows (`meta(38): record α R1 head SHA in self-coherence`).
