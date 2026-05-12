@@ -378,3 +378,219 @@ After α R2 pushes these fixes, β can re-verify in one round.
 - **Reviewed SHA:** `5a105cb`
 - **Verdict:** RC
 - **Round:** R1
+
+## β R2 — re-review
+
+Identity: `beta@tsc.cdd.cnos`. Reviewed SHA: `0f290d4` on
+`cycle/36-impl-r2`. R2 diff vs R1-review commit `c996abd` per
+`git diff c996abd 0f290d4 --stat`:
+
+```
+ .cdd/unreleased/36/alpha-closeout.md |  87 ++++++++++++++++-----
+ .cdd/unreleased/36/claims.md         | 152 +++++++++++++++++++++++++-
+ .cdd/unreleased/36/self-coherence.md |  58 +++++++++++--
+ .github/workflows/ci.yml             |  28 +------
+ .github/workflows/katas.yml          |  28 ++++---
+ 5 files changed, 290 insertions(+), 63 deletions(-)
+```
+
+Scope of the R2 diff is exactly the two B-findings + their
+narrative artifacts. No incidental surface drift.
+
+### B-1 resolution check
+
+R1 finding B-1: cycle shipped a parallel kata-CI surface while the
+scaffold §Gap claimed one was missing. γ chose Path A (consolidate).
+
+Evidence the consolidation landed:
+
+1. **`kata-check` job removed from `ci.yml`.** R2 commit
+   `2c7d4f8` deletes the job body and leaves a comment marker.
+   `python3 -c "import yaml; print(list(yaml.safe_load(open('.github/workflows/ci.yml'))['jobs'].keys()))"`
+   → `['build', 'linkcheck', 'spec-validate']`. No `kata-check`.
+
+2. **No `needs: kata-check` references remain.**
+   `grep -nE 'needs:.*kata-check' .github/workflows/` → no
+   matches, exit 1. No other job depended on it (none ever did
+   per the R1 ci.yml structure either).
+
+3. **`katas.yml` is the sole workflow exercising the katas.**
+   `grep -rEn 'coh --kata|scripts/run-katas\.sh' .github/workflows/`
+   returns four hits, all in `katas.yml` (line 12 docstring,
+   line 20 consolidation note, line 89 set-e comment, line 100
+   the actual invocation). Zero hits in `ci.yml`. Matches
+   claim R2-2 exactly.
+
+4. **§Gap framing corrected.** `self-coherence.md` lines 13–35
+   now have two subsections — "Original (R1) framing — incorrect"
+   preserving the false framing as audit trail, and "Corrected
+   (R2) framing — actual" naming the real gap (no cache, no
+   concurrency control). The R1 text is *preserved verbatim*,
+   not silently rewritten — this matches my R1 recommendation
+   and satisfies claim R2-3's falsification clause.
+
+5. **α closeout acknowledges the false-gap premise.** Closeout
+   §R2 round (lines 201–230) explicitly says "R1 shipped on a
+   false-gap premise" and identifies the iteration lesson
+   (future scaffolds should grep existing CI for the surface
+   they claim is missing before declaring the gap). This is
+   the right framing.
+
+B-1 **resolved.**
+
+### B-2 resolution check
+
+R1 finding B-2: `engine/ocaml/Makefile` (named in the cache
+key's `hashFiles` argument list) does not exist; closeout
+falsely claimed it was "verified present".
+
+Evidence the cache key is honest:
+
+1. **`hashFiles(...)` arg list no longer contains `Makefile`.**
+   Diff at `katas.yml` line 65:
+   - R1: `hashFiles('engine/ocaml/dune-project', 'engine/ocaml/Makefile', 'Makefile')`
+   - R2: `hashFiles('engine/ocaml/dune-project', 'engine/ocaml/tsc_engine.opam')`
+   Both surviving paths `ls`-verify present:
+   ```
+   $ ls engine/ocaml/dune-project engine/ocaml/tsc_engine.opam
+   engine/ocaml/dune-project
+   engine/ocaml/tsc_engine.opam
+   ```
+   `ls engine/ocaml/Makefile` → "No such file or directory"
+   (confirms absence; the key no longer references it).
+
+2. **`claims.md` §R2 round supersedes R1 Claim 3.** Lines
+   181–223 (Claim R2-1) restate the cache-key claim against
+   the new, existing files. R1 Claim 3 is preserved in
+   "R1 claims" with the front-matter rounds table marking it
+   "superseded-by-R2". Audit trail intact; no silent rewrite.
+
+3. **α closeout §AC3 carries an R2 marker preserving the R1
+   snippet.** Lines 104–113 add an explicit R2 callout note
+   above the verbatim R1 cache snippet, explaining that the
+   shown snippet documents what shipped in R1 and that the
+   live `katas.yml` is the authoritative source. This is the
+   cleanest pattern for honoring rule 3.13 + no-rewrite-history.
+
+4. **Why both `dune-project` and `tsc_engine.opam`?** α's
+   closeout + Claim R2-1 explain that `dune-project` declares
+   `generate_opam_files true` so `tsc_engine.opam` is its
+   generated dual; hashing both catches direct-edit of either.
+   Reasonable redundancy; no false-precision concern.
+
+B-2 **resolved.**
+
+### AC re-walk
+
+AC1 (triggers) and AC2 (auto-discovery glob): unchanged surface,
+no regression. The R2 diff against `katas.yml` only modified the
+comment block (lines 11–22) and the cache step's argument list
+(line 65) and its preceding comment (lines 52–57). Triggers
+block at lines 27–30 byte-identical; concurrency block at lines
+33–35 byte-identical; auto-discovery loop at lines 91–113
+byte-identical. AC1 + AC2 carry through from R1 unchanged.
+
+AC3 (cache): structurally still satisfied — the cache step still
+exists, still caches `~/.opam` + `engine/ocaml/_build`, and the
+new key composition `hashFiles('engine/ocaml/dune-project',
+'engine/ocaml/tsc_engine.opam')` is a strictly-better source-of-
+truth alignment than the R1 key (drops a phantom path and a non-
+build-driver). Restore-keys prefix unchanged. Empirical <3 min
+warm claim still verifiable post-merge by γ.
+
+Phase 3 rule 3.13 re-verification of the three R2 claims:
+
+- **Claim R2-1** (cache-key files exist): YES — `ls` on both
+  named files succeeds; `ls` on `engine/ocaml/Makefile` fails;
+  matches the falsification recipe in claims.md exactly.
+- **Claim R2-2** (one kata workflow): YES — `grep` recipe in
+  claims.md §Claim-R2-2 reproduces the asserted output
+  (matches only in `katas.yml`; ci.yml job list lacks
+  `kata-check`; no `needs:` references).
+- **Claim R2-3** (gap framing now matches CI state): YES — both
+  the R1 and R2 framing subsections are present in
+  `self-coherence.md §Gap` and the file documents the
+  supersession honestly. `grep -nE '^###? '
+  .cdd/unreleased/36/self-coherence.md` returns the two
+  required headings.
+
+### Residual audit-trail observations
+
+α R2 flagged two stale R1-era references that survived in
+narrative artifacts. I evaluated both.
+
+1. **`self-coherence.md` §Impact-graph line 79** still reads
+   "cache: opam + dune _build/ keyed on dune-project + Makefile".
+   §AC3 invariant on line 102 also still names `Makefile`.
+   These are the *γ-scaffold pre-R1 framings* — they describe
+   what γ predicted the implementation would look like, not
+   what shipped. Both sections (§Impact-graph + §ACs) are
+   preserved as-scaffolded because rewriting them would erase
+   γ's original scope hypothesis. The §Gap "Corrected (R2)
+   framing" section explicitly names the live key
+   (`dune-project` + `tsc_engine.opam`), and that section is
+   the load-bearing one for verdict purposes. **Acceptable
+   as-is** — does not rise to a C-finding; the audit trail
+   is more valuable than mechanical consistency.
+
+2. **`alpha-closeout.md` §Design-decision line 46** still reads
+   "keyed on `dune-project` + `Makefile` hashes" inside the
+   R1 design-decision narrative. The §AC3 walk later in the
+   file (lines 104–113) has the R2 marker preserving the R1
+   snippet and pointing to claims.md §R2-1 for the corrected
+   key. The R2 round table (lines 205–209) and the R2-narrative
+   section (lines 210–230) both name the corrected files
+   explicitly. A reader following the audit trail from top
+   to bottom sees the R1 framing first, then the R2 marker,
+   then the R2 round table — supersession is unambiguous.
+   **Acceptable as-is** — α's framing ("preserved per
+   no-rewrite-history") is correct.
+
+Verdict on residuals: no new finding. The cdd convention of
+preserving R1 narrative verbatim while bolting on R2 markers
+is exactly the pattern that lets a future reviewer (or γ
+running cdd-iteration) reconstruct what happened. Re-writing
+the §Impact-graph or §Design-decision narratives would erase
+the very signal cdd-iteration §Step-5.6b needs.
+
+### Verdict
+
+**APPROVED.**
+
+Both B-findings from R1 are cleanly resolved:
+
+- **B-1** resolved via Path A consolidation. `kata-check`
+  deleted from `ci.yml`; §Gap framing corrected with R1
+  text preserved as audit trail; α closeout explicitly
+  acknowledges the false-gap premise and names the
+  iteration lesson.
+- **B-2** resolved by replacing the `hashFiles` argument
+  list with `(engine/ocaml/dune-project,
+  engine/ocaml/tsc_engine.opam)` — both files `ls`-verify
+  present; the R1 cache snippet is preserved verbatim in
+  closeout §AC3 with an R2 marker; claims.md adds
+  R2-1 superseding R1 Claim 3.
+
+No new B-severity issue arose from the R2 changes. AC1, AC2,
+AC3 all still satisfied (no regression from R1 review's
+positive verdicts on AC1 + AC2 + structural satisfaction of
+AC3). Honest-claim manifest integrity is now clean across
+all three R2 claims (R2-1, R2-2, R2-3) per rule 3.13.
+
+The two residual R1-era references α flagged
+(self-coherence §Impact-graph, closeout §Design-decision)
+are acceptable per the no-rewrite-history convention; the
+load-bearing §Gap and §AC3-walk sections both carry R2
+markers pointing to the corrected key.
+
+Severity tally for R2: A: 0, B: 0, C: 0, note: 0.
+
+### Identity / branch / commit footer (R2)
+
+- **β identity:** `beta@tsc.cdd.cnos`
+- **Branch:** `cycle/36-impl-r2` (β R2 commits the review
+  document update + closeout stub directly on the cycle
+  branch per `cdd/beta/SKILL.md` convention)
+- **Reviewed SHA:** `0f290d4`
+- **Verdict:** APPROVED
+- **Round:** R2
