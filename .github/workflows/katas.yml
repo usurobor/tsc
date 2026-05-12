@@ -35,8 +35,27 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Cycle #38 AC3 — published-binary validation triggers.
+  # `release: published` fires once per GitHub Release publication
+  # (covers the v* tag-push flow handled by release.yml). The weekly
+  # cron catches infra drift (libcurl point release, runner image
+  # change, opam-repository state) independent of code-change cadence
+  # — issue #38 §Open question 2 recommendation: weekly Mon 06:00 UTC.
+  # `workflow_dispatch` lets operators trigger the published-binary
+  # job manually (e.g. after suspected infra regressions) without
+  # waiting for the next cron tick.
+  release:
+    types: [published]
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
 
 # Per issue #36 open question 2: cancel superseded PR runs, never cancel main.
+# Per cycle #38: release / schedule / workflow_dispatch runs target the
+# `validate-published-binary` job — they share this top-level concurrency
+# group with the pre-merge `run-katas` job, but in practice never collide
+# because their trigger sources never produce overlapping refs with PR /
+# push-to-main. Splitting concurrency per-job is unnecessary for v1.
 concurrency:
   group: katas-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -230,6 +249,191 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kata-results-${{ github.sha }}
+          path: .kata-results/
+          retention-days: 90
+          if-no-files-found: ignore
+
+  # Cycle #38 AC3 + AC4 — Published-binary kata validation.
+  #
+  # Purpose: confirm that the binary we *ship* to users (the
+  # `coh-linux-x64` artifact attached to the latest GitHub Release by
+  # release.yml line 41/48 via softprops/action-gh-release@v2) still
+  # passes every kata under today's runner / dep / infra conditions.
+  # This is distinct from `run-katas` above — that job rebuilds from
+  # HEAD on every PR and so only catches regressions introduced by
+  # code change. Infra drift (libcurl point release, runner image
+  # bump, opam-repository state) only surfaces when the *same* source
+  # is rebuilt under newer infra, or when the released binary is
+  # re-exercised. AC3 picks the latter — re-exercise the released
+  # binary directly.
+  #
+  # AC4 — mechanism: Path B (download `coh-linux-x64` from the latest
+  # GitHub Release). Justification (also recorded in alpha-closeout):
+  #
+  #   1. Release.yml at main `8e3094c` already publishes `coh-linux-x64`
+  #      reliably for every `v*` tag — no missing-artifact risk.
+  #   2. Path B exercises the *exact bytes users download*, which is
+  #      the only mechanism that can catch source-vs-artifact drift
+  #      (the whole motivation for AC3 per issue #38 §Problem). Path A
+  #      (build-from-tag) would silently re-run release.yml's build
+  #      under whatever opam state the validation runner happens to
+  #      pick up — that's a *different* binary than the one users have.
+  #   3. Path B is cheaper (no opam install + dune build — ~30s vs
+  #      ~3 min) so the weekly cron stays well under the runner-minute
+  #      budget even as the kata count grows.
+  #
+  # Failure handling: AC3 is *notify-only* for v1 (per §Open question 5
+  # recommendation). A non-zero kata exit fails this job, the workflow
+  # is visible-red on the Actions tab, but no release is blocked and
+  # no PR is gated. If reproducible drift is observed in practice,
+  # escalation to release-blocking is a follow-on cycle.
+  #
+  # This job is interim per the workflow's INTERIM header — it will
+  # be replaced by canonical cnos #344 Cycle B templates once those
+  # land.
+  validate-published-binary:
+    name: validate-published-binary (latest release)
+    # Only run on triggers that imply "we want to validate the published
+    # binary" — release publication, weekly cron, or manual dispatch.
+    # Pre-merge push/PR runs skip this job (their gate is `run-katas`).
+    if: github.event_name == 'release' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-22.04
+    permissions:
+      # `gh release download` needs contents:read; default GITHUB_TOKEN
+      # has it on public repos but we declare it explicitly to keep
+      # the surface auditable.
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # Path B — download the latest release's coh-linux-x64 asset.
+      # We pin to the release that *triggered* the run when available
+      # (release event provides `github.event.release.tag_name`) so a
+      # release event validates *that* release. For cron + manual
+      # dispatch, fall back to "latest" so the weekly check always
+      # exercises the most recently-published version.
+      - name: Download published coh-linux-x64
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Resolve which release tag to test.
+          tag="${{ github.event.release.tag_name || '' }}"
+          if [ -z "$tag" ]; then
+            # cron / workflow_dispatch path: resolve "latest" via gh.
+            tag=$(gh release view --json tagName --jq .tagName)
+          fi
+          echo "Validating released binary at tag: $tag"
+          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
+          gh release download "$tag" --pattern 'coh-linux-x64' --output coh-linux-x64
+          chmod +x coh-linux-x64
+          ./coh-linux-x64 --version
+
+      # Run the same auto-discovery loop as `run-katas` above, but
+      # against the downloaded binary. Capture JSON to .kata-results/
+      # so the same artifact-upload + step-summary surface applies.
+      #
+      # Note: kata directories themselves still come from this checkout
+      # (i.e. main's view of katas/). That's a deliberate choice — we
+      # want to test "does the *released* binary still solve today's
+      # kata corpus", not "does the released binary still solve the
+      # kata corpus from its own tag" (which would just retest what
+      # CI already tested at release time).
+      - name: Run all katas against published binary
+        run: |
+          set +e
+          shopt -s nullglob
+          COH="./coh-linux-x64"
+          if [ ! -x "$COH" ]; then
+            echo "::error::published binary not found at $COH"
+            exit 1
+          fi
+          mkdir -p .kata-results
+          ran=0
+          failed=0
+          for kata_dir in katas/*/; do
+            [ -f "${kata_dir}kata.toml" ] || continue
+            id=$(basename "$kata_dir")
+            echo "::group::kata $id"
+            "$COH" --kata "$id" --mode mechanical | tee ".kata-results/${id}.json"
+            rc=${PIPESTATUS[0]}
+            if [ "$rc" -eq 0 ]; then
+              echo "kata $id: PASS"
+              ran=$((ran + 1))
+            else
+              echo "::error::kata $id: FAIL (exit $rc) — against published binary $RELEASE_TAG"
+              failed=$((failed + 1))
+              ran=$((ran + 1))
+            fi
+            echo "::endgroup::"
+          done
+          echo "katas: $ran ran, $failed failed (binary=$RELEASE_TAG)"
+          if [ "$ran" -eq 0 ]; then
+            echo "::error::no katas discovered under katas/*/ — expected at least kata-01"
+            exit 1
+          fi
+          if [ "$failed" -gt 0 ]; then
+            exit 1
+          fi
+
+      # AC2 — step-summary table, mirrors the run-katas job's format
+      # exactly so consumers see the same row schema regardless of
+      # which job produced the artifact. Title differs so the two
+      # sections are visually distinguishable on a single run page.
+      - name: Emit kata step-summary table
+        if: always()
+        run: |
+          echo "## Kata Results — Published Binary ($RELEASE_TAG)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          shopt -s nullglob
+          results=( .kata-results/*.json )
+          if [ ${#results[@]} -eq 0 ]; then
+            echo "_No kata results captured (see step log for the kata-run failure)._" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "| Kata | Verdict | C_Σ | Range | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          for f in "${results[@]}"; do
+            id=$(basename "$f" .json)
+            row=$(python3 - "$f" "$id" <<'PY'
+          import json, sys
+          path, kata_id = sys.argv[1], sys.argv[2]
+          try:
+              with open(path) as fh:
+                  data = json.load(fh)
+          except Exception as exc:
+              print(f"| {kata_id} | — | — | — | :warning: unparseable JSON ({exc.__class__.__name__}) |")
+              sys.exit(0)
+          verdict = data.get("expected_verdict", "—")
+          c_sigma = data.get("c_sigma")
+          rng = data.get("score_range") or {}
+          mn, mx = rng.get("min"), rng.get("max")
+          kata_pass = data.get("kata_pass")
+          c_str = f"{c_sigma:.2f}" if isinstance(c_sigma, (int, float)) else "—"
+          rng_str = (f"{mn:.2f}–{mx:.2f}"
+                     if isinstance(mn, (int, float)) and isinstance(mx, (int, float))
+                     else "—")
+          if kata_pass is True:
+              status = ":white_check_mark:"
+          elif kata_pass is False:
+              status = ":x:"
+          else:
+              status = "—"
+          print(f"| {kata_id} | {verdict} | {c_str} | {rng_str} | {status} |")
+          PY
+            )
+            echo "$row" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      # Artifact name embeds the release tag (not the SHA) so historical
+      # artifacts are findable by version — the principal axis a human
+      # would search when investigating "did v0.8.0 ever fail kata-02
+      # under cron?".
+      - name: Upload kata results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kata-results-published-${{ env.RELEASE_TAG }}-${{ github.run_id }}
           path: .kata-results/
           retention-days: 90
           if-no-files-found: ignore
