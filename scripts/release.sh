@@ -51,7 +51,7 @@ if [ "$LOCAL" != "$REMOTE" ]; then
   exit 1
 fi
 
-TAG="$VERSION"
+TAG="v$VERSION"
 if git tag -l "$TAG" | grep -q "$TAG"; then
   echo "ERROR: tag $TAG already exists."
   exit 1
