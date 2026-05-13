@@ -12,3 +12,8 @@
  (name test_kata)
  (modules test_kata)
  (libraries tsc_engine))
+
+(test
+ (name test_ood)
+ (modules test_ood)
+ (libraries tsc_engine))
