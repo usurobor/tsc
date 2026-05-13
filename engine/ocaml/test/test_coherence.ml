@@ -195,18 +195,25 @@ let test_ood_guard () =
        "AC7: error message references reset/cutover/3.2"
    | Ok () ->
      fail "AC7: expected Error for v3.1.0 reference window, got Ok");
-  (* v3.2.0 reference window -> Ok *)
+  (* v3.2.0 reference window with canonical aggregate semantics -> Ok.
+     Per #52, the reference window must declare aggregate_semantics =
+     "canonical-v3.2-geometric-num" in addition to a v3.2.0 schema. *)
   let v32_window = `Assoc [
     ("schema_version", `String "v3.2.0");
+    ("aggregate_semantics", `String "canonical-v3.2-geometric-num");
     ("c_sigma_values", `List [`Float 0.82]);
   ] in
   (match Ood.check_schema_version v32_window with
-   | Ok () -> pass "AC7: v3.2.0 window -> Ok (compatible)"
+   | Ok () -> pass "AC7: v3.2.0 window + canonical sentinel -> Ok (compatible)"
    | Error msg -> fail (Printf.sprintf "AC7: v3.2.0 window unexpectedly failed: %s" msg));
-  (* v4.0.0 reference window -> Ok (newer than cutover) *)
-  let v40_window = `Assoc [("schema_version", `String "v4.0.0")] in
+  (* v4.0.0 reference window with canonical aggregate semantics
+     -> Ok (newer than cutover, sentinel present). *)
+  let v40_window = `Assoc [
+    ("schema_version", `String "v4.0.0");
+    ("aggregate_semantics", `String "canonical-v3.2-geometric-num");
+  ] in
   (match Ood.check_schema_version v40_window with
-   | Ok () -> pass "AC7: v4.0.0 window -> Ok (newer than cutover)"
+   | Ok () -> pass "AC7: v4.0.0 window + canonical sentinel -> Ok (newer than cutover)"
    | Error msg -> fail (Printf.sprintf "AC7: v4.0.0 window unexpectedly failed: %s" msg));
   (* Missing schema_version field -> Error *)
   let no_version = `Assoc [("data", `String "foo")] in
