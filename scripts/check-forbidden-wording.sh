@@ -73,6 +73,10 @@ is_excluded_path() {
     CHANGELOG.md)   return 0 ;;
     RELEASE.md)     return 0 ;;
     scripts/check-forbidden-wording.sh) return 0 ;;
+    # The CI workflow that invokes this check names the phrases it checks
+    # for in its job-comment header — that self-reference is documentation,
+    # not a new occurrence of the retired wording.
+    .github/workflows/ci.yml) return 0 ;;
     .cdd/*)         return 0 ;;
   esac
   # docs/{tier}/{bundle}/{X.Y.Z}/... — three or more X.Y[.Z] numeric segments
