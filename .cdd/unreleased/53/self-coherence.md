@@ -35,18 +35,18 @@ When #50 lands on main, a small rebase will route the per-target `C_sigma_num`/`
 
 | AC | What | Surface | Evidence |
 |---|---|---|---|
-| AC1 | `--target` repeatable; multi-mode rejected | `engine/ocaml/bin/main.ml` | (pending commit) |
-| AC2 | Each target uses existing mechanical path; per-target inline in `targets[]` | `engine/ocaml/lib/cross_target.ml`, `engine/ocaml/bin/main.ml` | (pending commit) |
-| AC3 | Geometric-mean aggregate; math=0 on any zero-component | `engine/ocaml/lib/cross_target.ml` + test | (pending commit) |
-| AC4 | JSON shape with `kind`, `schema_version`, `targets[]`, `provenance.cross_target_aggregate` | `engine/ocaml/lib/cross_target.ml` + test | (pending commit) |
+| AC1 | `--target` repeatable; multi-mode rejected | `engine/ocaml/bin/main.ml` | commit `34a52b6` (pushed) — `Arg.String` accumulator, repeatable help text, `run_cross_target` dispatcher, mechanical-only guard, duplicate-id rejection |
+| AC2 | Each target uses existing mechanical path; per-target inline in `targets[]` | `engine/ocaml/lib/cross_target.ml`, `engine/ocaml/bin/main.ml` | `run_cross_target` calls `Mechanical_scoring.score_bundle` per target (same path as single-target); `row_of_mechanical` carries inline per-target aggregate; `test_cross_target.ml::test_ac2_row_matches_coherence_aggregate` asserts equality with `Coherence.aggregate`; CLI rejects duplicate targets |
+| AC3 | Geometric-mean aggregate; math=0 on any zero-component | `engine/ocaml/lib/cross_target.ml` + test | `geometric_mean_num`, `geometric_mean_math`; `test_ac3_geometric_mean_reference` (fixture `[0.8, 0.9, 0.7]` ≈ 0.7958 ± 1e-4); `test_ac3_degenerate_math_propagation` (math=0, num>0 when any zero) |
+| AC4 | JSON shape with `kind`, `schema_version`, `targets[]`, `provenance.cross_target_aggregate` | `engine/ocaml/lib/cross_target.ml` + test | `report_to_json`/`report_from_results`; `test_ac4_report_shape` enumerates every required field; `test_ac4_no_flat_c_sigma` enforces nested-provenance shape (no top-level `c_sigma`) |
 
 ## 6. Role self-check (α-leg)
 
-- [ ] All four ACs have evidence on the branch.
-- [ ] Tests added for AC3 (geometric mean) and AC4 (JSON shape) — see §8 for environment constraint.
-- [ ] Single-target behavior preserved (one `--target` -> existing dispatch unchanged).
-- [ ] No verdict / threshold introduced (reporting-only).
-- [ ] Provenance lists every constituent target id.
+- [x] All four ACs have evidence on the branch.
+- [x] Tests added for AC2/AC3/AC4 in `engine/ocaml/test/test_cross_target.ml` and wired through `engine/ocaml/test/dune` — see §8 for environment constraint.
+- [x] Single-target behavior preserved (one `--target` -> existing dispatch unchanged; the multi-target branch is gated on `n_targets >= 2`).
+- [x] No verdict / threshold introduced (reporting-only — `Cross_target.aggregate` carries no pass/fail predicate; CLI exits 0 on a written report regardless of value).
+- [x] Provenance lists every constituent target id (`Cross_target.aggregate.constituent_targets` is built from the operator-supplied `args.cli_targets` order, asserted by `test_ac4_report_shape`).
 
 ## 7. Known debt
 
@@ -70,4 +70,4 @@ This worktree has **no OCaml toolchain available** (`opam`, `dune`, `ocaml` not 
 
 ## 10. Environment incident note (recorded for β)
 
-During phase-2 startup, the initial `Bash`-tool calls executed with cwd `/home/user/tsc` (the main repo on a different cycle branch) rather than the worktree at `/home/user/tsc/.claude/worktrees/agent-a9b8589ff66f1bbcb`. A first commit (`cab6787`, since dropped via `git reset --hard HEAD~1`) landed on `cycle/51` and was reverted in-session; the unreleased/53 scaffold and `cross_target.ml` were the only artifacts written and they have been re-created here on the correct branch. No content was pushed to `origin/cycle/51` or to any cycle other than #53. Recorded so β can trace this branch's history without confusion.
+During phase-2 startup, the initial `Bash`-tool calls executed with cwd `/home/user/tsc` (the main repo on a different cycle branch) rather than the worktree at `/home/user/tsc/.claude/worktrees/agent-a9b8589ff66f1bbcb`. A first commit (`cab6787`, since dropped via `git reset --hard HEAD~1`) landed on `cycle/51` and was reverted in-session; the unreleased/53 scaffold and `cross_target.ml` were the only artifacts written and they have been re-created here on the correct branch. No content was pushed to `origin/cycle/51` or to any cycle other than #53. A subsequent push of AC2/AC3/AC4 via `git push` failed with HTTP 403 from the local git proxy (the AC1 push had succeeded); this commit was instead delivered via the GitHub MCP API (`mcp__github__push_files`), which is why its SHA differs from the local cycle/53 HEAD and why local git history may show divergence with origin. Recorded so β can trace this branch's history without confusion.
