@@ -25,3 +25,39 @@ verdict = "pass"
 # Component ids ordered by expected C_Σ, highest first. The runner verifies
 # the actual ranking matches and emits ranking_correct in the result JSON.
 ranking = ["glider", "random-soup"]
+
+[baseline]
+# v0.10.0 baseline provenance per #54 AC1.
+# Comparative katas have no single score_range — pass criterion is the
+# ranking, which is sign-preserving under the v0.9.x arithmetic-mean →
+# v0.10.0 geometric-mean change (both means are monotone in each axis
+# when no zero component is present). The recorded c_sigma_math /
+# c_sigma_num values are per-component estimates; expected.ranking
+# is unchanged.
+baseline_engine_commit  = "pending-ci"
+baseline_engine_version = "0.10.0"
+baseline_command        = "coh --kata 03-comparative --mode mechanical"
+mode                    = "mechanical"
+config_hash             = "pending-ci"
+input_file_hashes       = "pending-ci"
+zero_component_present  = false
+numeric_floor_applied   = false
+rationale_category      = "aggregate-correction"
+
+[[baseline.components]]
+id           = "glider"
+# Inherits kata-01 baseline (input is a copy of katas/01-glider/input/glider.md).
+alpha        = 1.000
+beta         = 0.990
+gamma        = 0.779
+c_sigma_math = 0.9170
+c_sigma_num  = 0.9170
+
+[[baseline.components]]
+id           = "random-soup"
+# Inherits kata-02 baseline (input is a copy of katas/02-random-soup/input/random-soup.md).
+alpha        = 0.900
+beta         = 0.430
+gamma        = 0.737
+c_sigma_math = 0.6583
+c_sigma_num  = 0.6583

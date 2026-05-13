@@ -23,11 +23,40 @@ files = [
 verdict = "fail"
 
 [expected.score_range]
-# Observed c_sigma on cycle/34-impl HEAD: 0.7466
-# (α=0.969 β=0.470 γ=0.801; bottleneck = β cross-reference + source-of-truth
-# alignment caught the cross-file contradictions).
-# The kata passes when c_sigma <= max; max is set just above the observed
-# value to bracket it without being trivially permissive.
+# Pre-cutover (v0.9.x) arithmetic-mean reading: c_sigma = 0.7466
+# (α=0.969 β=0.470 γ=0.801; bottleneck β cross-reference +
+# source-of-truth alignment caught the cross-file contradictions).
+# Post-cutover (v0.10.0) canonical geometric reading:
+#   c_sigma_num = (0.969·0.470·0.801)^(1/3) ≈ 0.7145
+# max=0.78 is retained intentionally (rationale_category =
+# "frontier-tightening"): the kata's documented "moving frontier"
+# semantics. Tightening to 0.72 (ceil-2dp of 0.7145+0.001) would
+# remove the small forward-looking margin kata-05 deliberately
+# carries so that small α/γ refinements do not flip the verdict.
+# See [baseline] below.
 min = 0.0
 max = 0.78
 bottleneck_axis = "beta"
+
+[baseline]
+# v0.10.0 baseline provenance per #54 AC1.
+baseline_engine_commit  = "pending-ci"
+baseline_engine_version = "0.10.0"
+baseline_command        = "coh --kata 05-adversarial --mode mechanical"
+mode                    = "mechanical"
+config_hash             = "pending-ci"
+input_file_hashes       = "pending-ci"
+alpha                   = 0.969 # explicit reading, cycle/34-impl HEAD
+beta                    = 0.470 # explicit reading, cycle/34-impl HEAD
+gamma                   = 0.801 # explicit reading, cycle/34-impl HEAD
+c_sigma_math            = 0.7145 # = (0.969·0.470·0.801)^(1/3)
+c_sigma_num             = 0.7145 # equal to c_sigma_math when no zero component is present
+zero_component_present  = false
+numeric_floor_applied   = false
+rationale_category      = "frontier-tightening"
+# Rationale: per-axis triple is explicit; only the aggregate is
+# recomputed from arithmetic 0.7466 to geometric 0.7145. The max=0.78
+# margin is retained — kata-05 is the "moving frontier" kata; its
+# range is intentionally a small step above observed so that small
+# scorer refinements surface here first. Tightening to 0.72 would
+# collapse that early-warning property.
