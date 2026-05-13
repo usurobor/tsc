@@ -21,7 +21,6 @@
               provenance.cross_target_aggregate{
                 C_sigma_cross_num,
                 C_sigma_cross_math,
-                formula = "geometric_mean",
                 constituent_targets
               } } *)
 
@@ -201,9 +200,7 @@ let test_ac4_report_shape () =
   let cta = get_field "cross_target_aggregate" prov in
   List.iter (fun k -> assert_field k cta)
     ["C_sigma_cross_num"; "C_sigma_cross_math";
-     "formula"; "constituent_targets"];
-  check (get_string_field "formula" cta = "geometric_mean")
-    "AC4: provenance.cross_target_aggregate.formula = 'geometric_mean'";
+     "constituent_targets"];
   (match get_field "constituent_targets" cta with
    | `List ids ->
      let names = List.map (function

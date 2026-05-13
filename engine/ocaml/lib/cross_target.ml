@@ -139,7 +139,6 @@ let aggregate_to_json (a : aggregate) : Yojson.Safe.t =
   `Assoc [
     ("C_sigma_cross_num",   `Float  a.c_sigma_cross_num);
     ("C_sigma_cross_math",  `Float  a.c_sigma_cross_math);
-    ("formula",             `String "geometric_mean");
     ("constituent_targets", `List   (List.map (fun s -> `String s)
                                        a.constituent_targets));
   ]
