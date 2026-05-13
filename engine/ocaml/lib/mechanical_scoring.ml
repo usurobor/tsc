@@ -681,9 +681,8 @@ let score_gamma ~config files =
 (* ------------------------------------------------------------------ *)
 (* Top-level scoring *)
 
-(** Canonical aggregate epsilon — must match [Coherence.aggregate] default and
-    [report.ml]/[Report.provenance_v320]. *)
-let aggregate_epsilon = 1e-5
+(** Canonical aggregate epsilon — routes to [Coherence.epsilon_default]. *)
+let aggregate_epsilon = Coherence.epsilon_default
 
 (** Compute the canonical v3.2 aggregate from the three axis results.
     Routes through [Coherence.aggregate]; never computes an arithmetic mean.

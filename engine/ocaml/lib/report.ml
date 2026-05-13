@@ -27,14 +27,14 @@ let evidence_to_yojson ev =
 
     Accepts optional per-pair delta values when the LLM emits them;
     falls back to null fields when only component scores are available. *)
-let provenance_v320
+let provenance
     ?(delta_alpha_beta = None)
     ?(delta_beta_gamma = None)
     ?(delta_gamma_alpha = None)
     ~s_alpha ~s_beta ~s_gamma
     () =
   let lambda = 1.0 in
-  let epsilon = 1e-5 in
+  let epsilon = Coherence.epsilon_default in
   let agg = Coherence.aggregate ~epsilon ~s_alpha ~s_beta ~s_gamma () in
   let l_ab = Option.map (fun _ -> Lipschitz.l_link lambda) delta_alpha_beta in
   let l_bg = Option.map (fun _ -> Lipschitz.l_link lambda) delta_beta_gamma in
@@ -73,7 +73,7 @@ let to_json ~result ~metadata ?(mode = "llm")
     ?(delta_beta_gamma = None)
     ?(delta_gamma_alpha = None)
     () =
-  let prov = provenance_v320
+  let prov = provenance
     ~delta_alpha_beta
     ~delta_beta_gamma
     ~delta_gamma_alpha
@@ -128,7 +128,7 @@ let to_json ~result ~metadata ?(mode = "llm")
     arithmetic-mean line ("C_Σ = (α+β+γ)/3") has been removed. *)
 let to_text ~result ~metadata ?(mode = "llm") () =
   let agg = Coherence.aggregate
-    ~epsilon:1e-5
+    ~epsilon:Coherence.epsilon_default
     ~s_alpha:result.result_alpha
     ~s_beta:result.result_beta
     ~s_gamma:result.result_gamma

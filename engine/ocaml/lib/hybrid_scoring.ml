@@ -12,9 +12,8 @@ open Types
 
 type final_source = [ `Llm | `Mechanical | `Agreement ]
 
-(** Canonical aggregate epsilon — must match [Mechanical_scoring] and
-    [Report.provenance_v320]. *)
-let aggregate_epsilon = 1e-5
+(** Canonical aggregate epsilon — routes to [Coherence.epsilon_default]. *)
+let aggregate_epsilon = Coherence.epsilon_default
 
 type result = {
   hyb_target    : string;
