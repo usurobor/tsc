@@ -9,8 +9,17 @@
       auto        — hybrid when credentials are present, else mechanical
 
     Inputs:
-      --target <name> --registry <path>    named target (any mode)
-      --files <glob>  [--files <glob>...]  direct file input (mechanical / hybrid) *)
+      --target <name> --registry <path>    named target (any mode); repeatable
+      --files <glob>  [--files <glob>...]  direct file input (mechanical / hybrid)
+
+    Cross-target (Operational §7.4):
+      When [--target] is provided two or more times, the engine emits a
+      cross-target report (`kind = cross_target_report`) whose top-level
+      aggregate is the geometric mean of per-target [C_sigma_num] /
+      [C_sigma_math] values. This surface is mechanical-only for the
+      current cycle — supplying multiple targets with [--mode llm],
+      [--mode hybrid], or effective [auto] exits non-zero with an
+      explicit "mechanical-only" message. *)
 
 open Tsc_engine
 open Tsc_engine.Types
@@ -177,7 +186,7 @@ let parse_mode s =
 
 type cli_args = {
   cli_mode       : mode;
-  cli_target     : string;       (* "" when using --files *)
+  cli_targets    : string list;  (* [] when using --files; >= 2 = cross-target *)
   cli_registry   : string;
   cli_instruction: string;
   cli_root       : string;
@@ -194,7 +203,7 @@ let () =
 
 let parse_args () =
   let mode_s    = ref "auto" in
-  let target    = ref "" in
+  let targets   = ref [] in
   let registry  = ref "targets/registry.tsc" in
   let instruction = ref "runtime/SELF-MEASURE.md" in
   let root      = ref "." in
@@ -206,8 +215,9 @@ let parse_args () =
      "Scoring mode: mechanical | llm | hybrid | auto (default: auto)");
     ("--kata",        Arg.Set_string kata,
      "Run kata <id> from katas/ directory (e.g. --kata 01-glider)");
-    ("--target",      Arg.Set_string target,
-     "Named target (requires --registry)");
+    ("--target",      Arg.String (fun t -> targets := t :: !targets),
+     "Named target (requires --registry; repeatable — \
+      two or more triggers a mechanical cross-target report)");
     ("--registry",    Arg.Set_string registry,
      "Path to targets/registry.tsc");
     ("--files",       Arg.String (fun f -> files := f :: !files),
@@ -219,7 +229,10 @@ let parse_args () =
     ("--output",      Arg.Set_string output_dir,
      "Output directory for reports (default: .tsc)");
   ] in
-  let usage = "coh --mode <mode> [--kata <id> | --target <name> | --files <glob>...] [options]" in
+  let usage =
+    "coh --mode <mode> [--kata <id> | --target <name> [--target <name>...] | \
+     --files <glob>...] [options]"
+  in
   Arg.parse specs (fun _ -> ()) usage;
   let mode = match parse_mode !mode_s with
     | Some m -> m
@@ -227,13 +240,13 @@ let parse_args () =
       Printf.eprintf "Error: unknown mode '%s'. Use mechanical | llm | hybrid | auto\n" !mode_s;
       exit 1
   in
-  if !kata = "" && !target = "" && !files = [] then begin
+  if !kata = "" && !targets = [] && !files = [] then begin
     Printf.eprintf "Error: provide --kata <id>, --target <name>, or --files <glob>\n";
     Arg.usage specs usage;
     exit 1
   end;
   { cli_mode        = mode;
-    cli_target      = !target;
+    cli_targets     = List.rev !targets;
     cli_registry    = !registry;
     cli_instruction = !instruction;
     cli_root        = !root;
@@ -675,6 +688,57 @@ let run_kata ~root ~kata_id ~mode_override =
     end
 
 (* ------------------------------------------------------------------ *)
+(* Cross-target dispatch (Operational §7.4 / sub-issue #53) *)
+
+(** Reject duplicate target ids before any scoring work. *)
+let reject_duplicates (targets : string list) =
+  let seen = Hashtbl.create 8 in
+  let dups = ref [] in
+  List.iter (fun t ->
+    if Hashtbl.mem seen t then dups := t :: !dups
+    else Hashtbl.add seen t ()
+  ) targets;
+  match List.rev !dups with
+  | [] -> ()
+  | ds ->
+    Printf.eprintf
+      "Error: duplicate target id(s) in cross-target request: %s\n"
+      (String.concat ", " ds);
+    exit 1
+
+(** Multi-target cross-target run. Mechanical-only by AC1; the entry
+    point has already verified effective_mode = Mechanical. *)
+let run_cross_target ~args ~ts =
+  reject_duplicates args.cli_targets;
+  Printf.eprintf "Cross-target run: %d targets [%s]\n%!"
+    (List.length args.cli_targets)
+    (String.concat ", " args.cli_targets);
+  let registry_path = Filename.concat args.cli_root args.cli_registry in
+  let per_target_results =
+    List.map (fun target_name ->
+      let bundle =
+        build_bundle_from_target
+          ~root:args.cli_root
+          ~registry_path
+          ~target_name
+      in
+      let result = Mechanical_scoring.score_bundle bundle in
+      Printf.eprintf "  %s: %s\n%!"
+        target_name (Mechanical_scoring.summarize_result result);
+      (target_name, result)
+    ) args.cli_targets
+  in
+  let report_json =
+    Cross_target.report_from_results per_target_results
+  in
+  let json_path =
+    Filename.concat args.cli_output_dir
+      (Printf.sprintf "tsc-cross-target-%s.json" ts)
+  in
+  write_file json_path (Yojson.Safe.pretty_to_string report_json);
+  Printf.printf "Done. Cross-target report: %s\n" json_path
+
+(* ------------------------------------------------------------------ *)
 (* Entrypoint *)
 
 let () =
@@ -712,13 +776,42 @@ let () =
     | m -> m
   in
 
-  (* Build bundle from target or files *)
+  (* Cross-target (Operational §7.4): two or more --target flags.
+     Mechanical-only for this cycle; reject LLM / Hybrid explicitly. *)
+  let n_targets = List.length args.cli_targets in
+  if n_targets >= 2 then begin
+    (match effective_mode with
+     | Mechanical -> ()
+     | Llm | Hybrid ->
+       Printf.eprintf
+         "Error: cross-target is mechanical-only this cycle \
+          (received %d --target with --mode %s); \
+          use --mode mechanical or run each target separately.\n"
+         n_targets
+         (match args.cli_mode with
+          | Mechanical -> "mechanical"
+          | Llm -> "llm"
+          | Hybrid -> "hybrid"
+          | Auto -> "auto");
+       exit 1
+     | Auto -> assert false);
+    run_cross_target ~args ~ts;
+    exit 0
+  end;
+
+  (* Single-target / --files path — unchanged behavior. *)
+  let single_target =
+    match args.cli_targets with
+    | [t] -> t
+    | []  -> ""
+    | _   -> assert false  (* >=2 already handled *)
+  in
   let bundle =
-    if args.cli_target <> "" then
+    if single_target <> "" then
       build_bundle_from_target
         ~root
         ~registry_path:(Filename.concat root args.cli_registry)
-        ~target_name:args.cli_target
+        ~target_name:single_target
     else
       build_bundle_from_files ~root ~globs:args.cli_files
   in

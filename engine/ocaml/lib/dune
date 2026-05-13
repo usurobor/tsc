@@ -13,6 +13,7 @@
   mechanical_scoring
   hybrid_scoring
   coherence
+  cross_target
   lipschitz
   ood
   credentials
