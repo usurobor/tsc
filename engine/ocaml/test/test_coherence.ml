@@ -240,7 +240,7 @@ let get_subobj key = function
      | _ -> fail (Printf.sprintf "AC5: missing or non-object field '%s'" key))
   | _ -> fail "AC5: expected JSON object"
 
-let test_provenance_v320_shape () =
+let test_provenance_shape () =
   (* Build a provenance JSON via coherence.provenance_json (the canonical builder) *)
   let prov = Coherence.provenance_json
     ~l_link_alpha_beta:(Some 1.47)
@@ -314,6 +314,6 @@ let () =
   test_l_link ();
   test_aggregate ();
   test_gauge_witness ();
-  test_provenance_v320_shape ();
+  test_provenance_shape ();
   test_ood_guard ();
   Printf.printf "=== All coherence tests passed ===\n%!"

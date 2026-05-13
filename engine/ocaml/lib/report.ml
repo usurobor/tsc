@@ -1,7 +1,12 @@
 (** Report generation: validated result → machine + human reports.
 
     Pure module — returns report strings. Caller writes to disk.
-    Uses Yojson.Safe for structured JSON output. *)
+    Uses Yojson.Safe for structured JSON output.
+
+    v0.10.0 cutover: aggregate facts emitted only under [provenance]
+    (canonical v3.2 shape); flat top-level [c_sigma] removed. Text
+    reports render both canonical aggregate forms (C_Σ^math and
+    C_Σ^num); no arithmetic-mean headline. *)
 
 open Types
 
@@ -13,17 +18,23 @@ let evidence_to_yojson ev =
     ("reason", `String ev.evidence_reason);
   ]
 
-(** Build the v3.2.0 provenance sub-object for a report.
-    Accepts optional per-pair delta values when the LLM emits them (AC6);
+(** Build the canonical v3.2 provenance sub-object for an LLM/hybrid report.
+
+    Routes the headline aggregate through [Coherence.aggregate]; passes a
+    [c_sigma_fn] derived from the same helper to [Coherence.gauge_witness]
+    so the W2 fields are computed against the canonical aggregate, never
+    against an arithmetic surrogate.
+
+    Accepts optional per-pair delta values when the LLM emits them;
     falls back to null fields when only component scores are available. *)
-let provenance_v320
+let provenance
     ?(delta_alpha_beta = None)
     ?(delta_beta_gamma = None)
     ?(delta_gamma_alpha = None)
     ~s_alpha ~s_beta ~s_gamma
     () =
   let lambda = 1.0 in
-  let epsilon = 1e-5 in
+  let epsilon = Coherence.epsilon_default in
   let agg = Coherence.aggregate ~epsilon ~s_alpha ~s_beta ~s_gamma () in
   let l_ab = Option.map (fun _ -> Lipschitz.l_link lambda) delta_alpha_beta in
   let l_bg = Option.map (fun _ -> Lipschitz.l_link lambda) delta_beta_gamma in
@@ -52,13 +63,17 @@ let provenance_v320
     ~canonical_remap_procedure:(Some gw.canonical_remap_procedure)
     ()
 
-(** Generate machine-readable JSON report. *)
+(** Generate machine-readable JSON report.
+
+    Emits aggregate facts only under [provenance] (canonical v3.2 shape):
+    no top-level [c_sigma], [c_sigma_math], [c_sigma_num], [epsilon],
+    [zero_component_present], or [numeric_floor_applied]. *)
 let to_json ~result ~metadata ?(mode = "llm")
     ?(delta_alpha_beta = None)
     ?(delta_beta_gamma = None)
     ?(delta_gamma_alpha = None)
     () =
-  let prov = provenance_v320
+  let prov = provenance
     ~delta_alpha_beta
     ~delta_beta_gamma
     ~delta_gamma_alpha
@@ -92,7 +107,7 @@ let to_json ~result ~metadata ?(mode = "llm")
             ("fix", `String f.fix_description);
           ]
         ) result.result_next_fixes));
-      ("provenance_v320", prov);
+      ("provenance", prov);
       ("metadata", `Assoc [
         ("target", `String metadata.meta_target);
         ("file_hashes", `Assoc (List.map (fun (p, h) ->
@@ -106,10 +121,18 @@ let to_json ~result ~metadata ?(mode = "llm")
   in
   Yojson.Safe.pretty_to_string json
 
-(** Generate human-readable text report. *)
+(** Generate human-readable text report.
+
+    v0.10.0 cutover: renders both canonical aggregate forms
+    (C_Σ^math and C_Σ^num) from [Coherence.aggregate]; the v0.9.x
+    arithmetic-mean line ("C_Σ = (α+β+γ)/3") has been removed. *)
 let to_text ~result ~metadata ?(mode = "llm") () =
-  let c_sigma =
-    (result.result_alpha +. result.result_beta +. result.result_gamma) /. 3.0
+  let agg = Coherence.aggregate
+    ~epsilon:Coherence.epsilon_default
+    ~s_alpha:result.result_alpha
+    ~s_beta:result.result_beta
+    ~s_gamma:result.result_gamma
+    ()
   in
   let evidence_text name ev =
     Printf.sprintf "  %s:\n    positive: %s\n    negative: %s\n    reason: %s"
@@ -128,7 +151,8 @@ let to_text ~result ~metadata ?(mode = "llm") () =
      \  α = %.3f\n\
      \  β = %.3f\n\
      \  γ = %.3f\n\
-     \  C_Σ = %.3f\n\
+     \  C_Σ^math = %.3f\n\
+     \  C_Σ^num  = %.3f\n\
      \n\
      Bottleneck: %s\n\
      Confidence: %.3f\n\
@@ -158,7 +182,8 @@ let to_text ~result ~metadata ?(mode = "llm") () =
     result.result_alpha
     result.result_beta
     result.result_gamma
-    c_sigma
+    agg.c_sigma_math
+    agg.c_sigma_num
     result.result_bottleneck_axis
     result.result_confidence
     result.result_summary

@@ -56,21 +56,40 @@ type axis_result = {
 }
 (** Result for one axis. *)
 
+type aggregate = {
+  c_sigma_math : float;
+  c_sigma_num : float;
+  epsilon : float;
+  zero_component_present : bool;
+  numeric_floor_applied : bool;
+}
+(** Canonical v3.2 aggregate record sourced from [Coherence.aggregate].
+
+    [c_sigma_math] is the strict geometric mean (collapses to 0 on any
+    zero component).  [c_sigma_num] is the ε-floored geometric mean
+    (well-defined under degenerate inputs).  The two coincide when every
+    axis score is >= [epsilon].
+
+    No flat aggregate field is exposed in public JSON; aggregate facts
+    live only under the [provenance] sub-object emitted by
+    [result_to_json]. *)
+
 type result = {
   mode : [ `Mechanical ];
   target : string option;
   alpha : axis_result;
   beta : axis_result;
   gamma : axis_result;
-  c_sigma : float;
+  aggregate : aggregate;
   bottleneck_axis : axis;
   confidence : float;
   diagnostics : diagnostic list;
 }
 (** Full mechanical scoring result.
 
-    [c_sigma] is the aggregate score derived from [alpha], [beta], and
-    [gamma].
+    [aggregate] carries both canonical aggregate forms (math and num)
+    plus degeneracy flags; it is derived from [alpha], [beta], [gamma]
+    via [Coherence.aggregate].
 
     [confidence] expresses sufficiency of structural evidence, not
     semantic certainty. *)
@@ -80,8 +99,11 @@ type weights = {
   beta : float;
   gamma : float;
 }
-(** Top-level axis weights for c_sigma aggregation.
-    Normal expectation: equal weights. *)
+(** Per-axis weights for axis-internal signal scoring.
+
+    These weights are NOT applied to the cross-axis aggregate — the
+    canonical v3.2 aggregate is S3-invariant and uses an unweighted
+    geometric mean per [Coherence.aggregate]. *)
 
 type alpha_config = {
   terminology_consistency : float;
@@ -147,11 +169,16 @@ type comparison = {
   delta_alpha : float;
   delta_beta : float;
   delta_gamma : float;
-  delta_c_sigma : float;
+  delta_c_sigma_math : float;
+  delta_c_sigma_num : float;
   changed_bottleneck : bool;
   summary : string;
 }
-(** Structural comparison between two scored bundles. *)
+(** Structural comparison between two scored bundles.
+
+    Aggregate deltas are emitted under canonical form-suffixed names
+    ([delta_c_sigma_math] / [delta_c_sigma_num]); the unsuffixed
+    [delta_c_sigma] from v0.9.x has been removed (v0.10.0 cutover). *)
 
 val compare : ?config:config -> old_:Bundle.t -> new_:Bundle.t -> comparison
 (** Compare two bundles through the mechanical backend.

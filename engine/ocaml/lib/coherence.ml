@@ -32,6 +32,9 @@ let coherence_link ~lambda ~delta =
 (* ------------------------------------------------------------------ *)
 (* Aggregate forms *)
 
+(** Default epsilon for aggregate floor operation. *)
+let epsilon_default = 1e-5
+
 (** Result carrying both mathematical and numerical aggregate forms. *)
 type aggregate_result = {
   c_sigma_math           : float;
@@ -46,8 +49,8 @@ type aggregate_result = {
     C_Sigma^math = (s_alpha * s_beta * s_gamma)^(1/3)   [carries strict zero at endpoint]
     C_Sigma^num  = exp((1/3) * sum(ln(max(si, epsilon))))  [uses epsilon floor]
 
-    They coincide when all si >= epsilon (default epsilon = 1e-5). *)
-let aggregate ?(epsilon = 1e-5) ~s_alpha ~s_beta ~s_gamma () =
+    They coincide when all si >= epsilon (default epsilon = epsilon_default). *)
+let aggregate ?(epsilon = epsilon_default) ~s_alpha ~s_beta ~s_gamma () =
   let zero_present =
     s_alpha = 0.0 || s_beta = 0.0 || s_gamma = 0.0 in
   let floor_applied =

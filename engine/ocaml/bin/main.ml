@@ -584,8 +584,8 @@ let run_kata ~root ~kata_id ~mode_override =
             ~files:file_pairs
           in
           let r = Mechanical_scoring.score_bundle bundle in
-          Printf.eprintf "  component '%s': c_sigma=%.4f\n%!" cid r.c_sigma;
-          (cid, r.c_sigma, r)
+          Printf.eprintf "  component '%s': C_Σ^num=%.4f\n%!" cid r.aggregate.c_sigma_num;
+          (cid, r.aggregate.c_sigma_num, r)
         ) kata.components
       in
       let actual_ranking =
@@ -594,11 +594,11 @@ let run_kata ~root ~kata_id ~mode_override =
         |> List.map (fun (cid, _, _) -> cid)
       in
       let ranking_correct = (actual_ranking = kata.ranking) in
-      (* Emit result JSON *)
+      (* Emit result JSON — kata output uses canonical c_sigma_num for ranking. *)
       let components_json = `List (List.map (fun (cid, score, r) ->
         `Assoc [
           ("id",          `String cid);
-          ("c_sigma",     `Float score);
+          ("c_sigma_num", `Float score);
           ("mechanical",  Mechanical_scoring.result_to_json r);
         ]
       ) scored) in
@@ -635,25 +635,26 @@ let run_kata ~root ~kata_id ~mode_override =
       in
       let result = Mechanical_scoring.score_bundle bundle in
       Printf.eprintf "%s\n%!" (Mechanical_scoring.summarize_result result);
-      (* Compare against kata expectations *)
-      let c_sigma = result.c_sigma in
+      (* Compare against kata expectations — canonical c_sigma_num is the
+         range-checked aggregate (well-defined under degenerate inputs). *)
+      let c_sigma_num = result.aggregate.c_sigma_num in
       let kata_pass =
         match kata.verdict with
         | "pass" ->
           (* Pass: score must be within [min, max] *)
-          c_sigma >= kata.score_min && c_sigma <= kata.score_max
+          c_sigma_num >= kata.score_min && c_sigma_num <= kata.score_max
         | "fail" ->
           (* Fail: input expected to be incoherent; score should be <= max *)
-          c_sigma <= kata.score_max
+          c_sigma_num <= kata.score_max
         | v ->
           Printf.eprintf "Warning: unknown expected.verdict '%s'; treating as pass\n" v;
-          c_sigma >= kata.score_min && c_sigma <= kata.score_max
+          c_sigma_num >= kata.score_min && c_sigma_num <= kata.score_max
       in
-      (* Emit result JSON *)
+      (* Emit result JSON — kata output uses canonical c_sigma_num. *)
       let result_json = `Assoc [
         ("kata_id",        `String kata_id);
         ("expected_verdict", `String kata.verdict);
-        ("c_sigma",        `Float c_sigma);
+        ("c_sigma_num",    `Float c_sigma_num);
         ("score_range",    `Assoc [
           ("min", `Float kata.score_min);
           ("max", `Float kata.score_max);
@@ -663,12 +664,12 @@ let run_kata ~root ~kata_id ~mode_override =
       ] in
       Printf.printf "%s\n" (Yojson.Safe.pretty_to_string result_json);
       if kata_pass then begin
-        Printf.eprintf "KATA PASS: '%s' — c_sigma=%.4f within expected range [%.4f, %.4f] for verdict '%s'\n%!"
-          kata_id c_sigma kata.score_min kata.score_max kata.verdict;
+        Printf.eprintf "KATA PASS: '%s' — C_Σ^num=%.4f within expected range [%.4f, %.4f] for verdict '%s'\n%!"
+          kata_id c_sigma_num kata.score_min kata.score_max kata.verdict;
         exit 0
       end else begin
-        Printf.eprintf "KATA FAIL: '%s' — c_sigma=%.4f outside expected range [%.4f, %.4f] for verdict '%s'\n%!"
-          kata_id c_sigma kata.score_min kata.score_max kata.verdict;
+        Printf.eprintf "KATA FAIL: '%s' — C_Σ^num=%.4f outside expected range [%.4f, %.4f] for verdict '%s'\n%!"
+          kata_id c_sigma_num kata.score_min kata.score_max kata.verdict;
         exit 1
       end
     end
