@@ -80,8 +80,8 @@ Known debt — flagged in `RELEASE.md` and `CHANGELOG.md`:
 | Field | Value |
 |---|---|
 | Round | 1 |
-| Implementation SHA | `2242680` (`cycle(54): AC6 — target-registry smoke tests`) — the last AC-bearing commit before this readiness signal. Closeout self-coherence commit follows. |
-| Branch on `origin` | `cycle/54-fix` (operator-published mirror; `cycle/54` on `origin` is stuck at `0981855` due to session-bound 403 — see §Debt #2). β should poll `origin/cycle/54-fix`. |
+| Implementation SHA | `431293f` (`cycle(54): AC7 fix — exclude .github/workflows/ci.yml from forbidden-wording check`) — final α commit on the cycle; resolves the self-application defect found by the closeout sanity check. |
+| Branch on `origin` | `cycle/54-final` (operator-published mirror at α-final; intermediate mirrors at `cycle/54-impl` and `cycle/54-review` capture earlier checkpoints). `cycle/54` on `origin` is stuck at `0981855` due to session-bound 403 — see §Debt #2. β should poll `origin/cycle/54-final`. |
 | Branch CI | **Deferred** — no OCaml toolchain in dispatch sandbox. CI runs on the PR. |
 | Base | `origin/main` @ `3efde94`. No rebase required (no advance during this cycle). |
 | Pre-review gate | 8/8 ACs addressed; debt explicit (§Debt items 1–5); harness audit (kata.ml accepts unknown TOML sections); peer enumeration (AC2's six-doc set); polyglot re-audit (bash script parser smoke-tested in-shell; OCaml test reviewed against existing test idiom). |
