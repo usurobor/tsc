@@ -171,7 +171,11 @@ let validate_result json =
 (** Extract per-pair delta values from a v3.2.0 LLM response.
     Returns (delta_alpha_beta, delta_beta_gamma, delta_gamma_alpha) — each
     float option.  All fields are optional; absent means the LLM did not emit
-    them (pre-v3.2.0 response format). *)
+    them (pre-v3.2.0 response format).
+
+    This helper is kept for callers that tolerate absent delta (e.g. legacy
+    provenance back-fill). v3.2 strict validation goes through
+    {!validate_v32_deltas} instead. *)
 let extract_deltas json =
   match
     get_float_opt "delta_alpha_beta"  json,
@@ -180,3 +184,93 @@ let extract_deltas json =
   with
   | Ok d_ab, Ok d_bg, Ok d_ga -> Ok (d_ab, d_bg, d_ga)
   | Error e, _, _ | _, Error e, _ | _, _, Error e -> Error e
+
+(* ------------------------------------------------------------------ *)
+(* v3.2 strict delta validation (cycle/51 AC1)                        *)
+(* ------------------------------------------------------------------ *)
+
+(** Structured v3.2 delta validation error.
+    - [missing_fields]: required delta fields absent from the response.
+    - [invalid_fields]: present but non-numeric or out of [0, 1].
+      Each entry is (field_name, observed_value_as_string).
+
+    The error is always populated when at least one field is missing or
+    invalid; both lists may be non-empty simultaneously. *)
+type v32_validation_error = {
+  missing_fields : string list;
+  invalid_fields : (string * string) list;
+}
+
+let v32_required_delta_fields =
+  ["delta_alpha_beta"; "delta_beta_gamma"; "delta_gamma_alpha"]
+
+(** Classify a single required delta field as
+    - [`Missing]            absent from the object
+    - [`Invalid of string]  present but not a number, or out of [0, 1]
+    - [`Valid of float]     present, numeric, and in [0, 1]. *)
+let classify_v32_delta key = function
+  | `Assoc fields ->
+    (match List.assoc_opt key fields with
+     | None -> `Missing
+     | Some (`Float f) ->
+       if f >= 0.0 && f <= 1.0 then `Valid f
+       else `Invalid (Printf.sprintf "%.6g" f)
+     | Some (`Int i) ->
+       let f = Float.of_int i in
+       if f >= 0.0 && f <= 1.0 then `Valid f
+       else `Invalid (Printf.sprintf "%d" i)
+     | Some (`Bool b) -> `Invalid (if b then "true" else "false")
+     | Some `Null -> `Invalid "null"
+     | Some (`String s) -> `Invalid (Printf.sprintf "\"%s\"" s)
+     | Some other -> `Invalid (Yojson.Safe.to_string other))
+  | _ -> `Invalid "<not an object>"
+
+(** Strict v3.2 delta validation entry point.
+
+    Requires [delta_alpha_beta], [delta_beta_gamma], and [delta_gamma_alpha]
+    to all be present as numbers in [0, 1]. Returns
+    - [Ok (d_ab, d_bg, d_ga)] when all three are present and valid.
+    - [Error err] otherwise; [err.missing_fields] names every absent field,
+      and [err.invalid_fields] names every present-but-bad field together
+      with its observed value rendered as a string.
+
+    This function does not short-circuit: callers receive the full list of
+    offending fields so the validation-failure artifact can name them all
+    at once. *)
+let validate_v32_deltas json =
+  let missing = ref [] in
+  let invalid = ref [] in
+  let values  = ref [] in
+  List.iter (fun key ->
+    match classify_v32_delta key json with
+    | `Missing -> missing := key :: !missing
+    | `Invalid v -> invalid := (key, v) :: !invalid
+    | `Valid f -> values := (key, f) :: !values
+  ) v32_required_delta_fields;
+  if !missing = [] && !invalid = [] then
+    let lookup k = List.assoc k !values in
+    Ok (lookup "delta_alpha_beta",
+        lookup "delta_beta_gamma",
+        lookup "delta_gamma_alpha")
+  else
+    Error {
+      missing_fields = List.rev !missing;
+      invalid_fields = List.rev !invalid;
+    }
+
+(** Render a v3.2 delta validation error as a single-line human string.
+    Used for stderr; the durable artifact uses the structured shape. *)
+let format_v32_validation_error err =
+  let parts = ref [] in
+  if err.missing_fields <> [] then
+    parts :=
+      Printf.sprintf "missing required delta field(s): %s"
+        (String.concat ", " err.missing_fields) :: !parts;
+  if err.invalid_fields <> [] then
+    parts :=
+      Printf.sprintf "invalid delta field(s): %s"
+        (String.concat ", "
+           (List.map
+              (fun (k, v) -> Printf.sprintf "%s=%s (expected number in [0, 1])" k v)
+              err.invalid_fields)) :: !parts;
+  String.concat "; " (List.rev !parts)
