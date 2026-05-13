@@ -1,0 +1,10 @@
+# Wave STATUS — v0.10.0 canonical v3.2 scoring cutover
+# Format: one row per sub-issue.
+# Columns: sub | issue | state | branch | head | dispatched-at | reported-at | note
+# state vocabulary: pending | dispatched | scaffolded | implemented | review-ready | merged | closed | blocked
+
+S1 | 50 | pending     | cycle/50 | -        | -                    | -                    | -
+S2 | 51 | pending     | cycle/51 | -        | -                    | -                    | -
+S3 | 52 | pending     | cycle/52 | -        | -                    | -                    | -
+S4 | 53 | pending     | cycle/53 | -        | -                    | -                    | -
+S5 | 54 | held        | cycle/54 | -        | -                    | -                    | held until #50 merges
