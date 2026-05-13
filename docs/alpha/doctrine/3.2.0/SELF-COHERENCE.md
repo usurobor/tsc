@@ -1,5 +1,15 @@
 # Self-Coherence — v3.2.0
 
+> **ARCHIVAL — pre-v3.2 engine cutover.** This self-coherence run was
+> produced by engine v0.7.0, which computed the per-target `C_Σ` as the
+> arithmetic mean of α, β, γ. v0.10.0 cut the engine over to the
+> canonical v3.2 geometric aggregate (`c_sigma_math` / `c_sigma_num`,
+> spec/tsc-core.md §5). The per-target numbers below should not be
+> compared against post-cutover engine output; a fresh measurement is
+> required for any new self-coherence claim. The cross-target aggregate
+> formula (geometric mean of per-target `C_Σ_i`) is unchanged per
+> spec/tsc-oper.md §7.4.
+
 **Issue:** #29 (Sub 6 of #23)
 **Engine:** v0.7.0 (OCaml, implementing spec v3.2.0)
 **Mode:** mechanical (no LLM credentials present; hybrid deferred — see §Known Gaps)

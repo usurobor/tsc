@@ -121,20 +121,31 @@ Every report contains triadic scores:
 | **β** (relation) | Alignment between parts — do the pieces fit together? |
 | **γ** (process) | Evolution stability — does the system change consistently? |
 
-**C_Σ** is the aggregate: `(s_α · s_β · s_γ)^(1/3)`. A score ≥ 0.80 means the corpus holds together as one coherent system.
+**C_Σ** is the canonical v3.2 geometric aggregate (spec [tsc-core.md](spec/tsc-core.md) §5). Reports carry two forms:
 
-Every report includes a `mode` field. Hybrid reports add `mechanical`, `llm`, and `final` sub-objects:
+- `c_sigma_math = (s_α · s_β · s_γ)^(1/3)` — strict; collapses to 0 if any component is exactly 0 (`zero_component_present: true`).
+- `c_sigma_num  = exp((1/3) · Σ ln(max(sᵢ, ε)))` — ε-floored; used for thresholding (`numeric_floor_applied` flags when the floor was active).
+
+The two coincide whenever every component is ≥ ε. A `c_sigma_num ≥ 0.80` means the corpus holds together as one coherent system.
+
+Every report includes `mode` and `schema_version: "v3.2.0"`. Hybrid reports add `mechanical`, `llm`, and `final` sub-objects, and every report embeds the full canonical v3.2 `provenance` bundle (δ, φ, D, link-Lipschitz constants, gauge witness):
 
 ```json
 {
   "mode": "hybrid",
+  "schema_version": "v3.2.0",
   "alpha": 0.85,
   "beta": 0.78,
   "gamma": 0.72,
-  "c_sigma": 0.78,
-  "mechanical": { "alpha": 0.81, "evidence_kind": "structural-proxy", ... },
-  "llm":        { "alpha": 0.85, "evidence_kind": "semantic-judgment", ... },
-  "final":      { "source": "llm", "alpha": 0.85, ... }
+  "c_sigma_math": 0.781,
+  "c_sigma_num":  0.781,
+  "zero_component_present": false,
+  "numeric_floor_applied":  false,
+  "bottleneck_axis": "gamma",
+  "mechanical": { "alpha": 0.81, "c_sigma_num": 0.79, "evidence_kind": "structural-proxy", ... },
+  "llm":        { "alpha": 0.85, "c_sigma_num": 0.78, "evidence_kind": "semantic-judgment", ... },
+  "final":      { "source": "llm", "alpha": 0.85, "c_sigma_num": 0.78, ... },
+  "provenance": { "discrepancy_symbol": "delta", ... }
 }
 ```
 
@@ -148,10 +159,10 @@ Katas are curated inputs with known expected outcomes. Use them to verify your
 engine installation or detect regressions after changes.
 
 ```bash
-# Phase 1 — positive control (well-structured doc, C_Σ ≥ 0.87)
+# Phase 1 — positive control (well-structured doc, C_Σ^num ≥ 0.80)
 coh --kata 01-glider --mode mechanical
 
-# Phase 1 — negative control (incoherent doc, C_Σ ≤ 0.74)
+# Phase 1 — negative control (incoherent doc, C_Σ^num ≤ 0.74)
 coh --kata 02-random-soup --mode mechanical
 
 # Phase 2 — comparative (verifies glider ranks above random-soup)

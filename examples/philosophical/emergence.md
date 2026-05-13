@@ -77,7 +77,7 @@ tsc:
         - [9, 0.93, 0.86, 1]
   
   expected:
-    c_sigma: 0.88
+    c_sigma_num: 0.88
     tolerance: 0.05
     rationale: "Clear macro pattern driven by micro rules; minor slack from finite-size noise."
   

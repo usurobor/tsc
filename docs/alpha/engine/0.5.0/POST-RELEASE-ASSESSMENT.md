@@ -1,5 +1,11 @@
 # Post-Release Assessment — 0.5.0
 
+> **ARCHIVAL — pre-v3.2 scoring.** This assessment records the v0.5.0
+> release, in which `c_sigma` was the arithmetic mean of α, β, γ.
+> v0.10.0 cut the engine over to the canonical v3.2 geometric aggregate
+> (`c_sigma_math` / `c_sigma_num`). Historical instructions and example
+> JSON in this document reflect the pre-cutover shape.
+
 **Author:** γ
 **Date:** 2026-05-08
 **Issue:** #25 (Sub 2 of #23)

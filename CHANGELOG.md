@@ -34,6 +34,7 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
+| 0.10.0 | — | — | — | — | L7 | **Canonical v3.2 scoring cutover (breaking).** `C_Σ` is geometric everywhere (`c_sigma_math` + `c_sigma_num`); flat `c_sigma` field removed; report schema replaced; mechanical/hybrid/LLM all emit canonical `provenance`; kata thresholds re-baselined; `project.tsc` deleted; pre-v3.2 design docs annotated archival. See [RELEASE.md](RELEASE.md). |
 | 0.9.0 | A- | A- | A | A- | L6 | Phase 2 kata progression: comparative (kata-03) + philosophical (kata-04, mechanical-mode) + adversarial (kata-05, multi-file); kata runner gains [[components]]+ranking; +25 hermetic test assertions (146→171). 1 round (β R1 APPROVED, 0A/0B/4C). (#34, cycle: L6) |
 | 0.8.0 | A | A | A | A- | L6 | Process enforcement: CHANGELOG release gate in scripts/release.sh. Prevents incomplete releases (v0.4.0 class). (#30, cycle: L6) |
 | 0.7.0 | A | A | A | A | L6 | Test migration: Python retired, 74-assertion OCaml suite, auto-mode fallback test, Credentials module. (#26, cycle: L6) |
@@ -47,6 +48,85 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 | 0.1.0 | B | B+ | B | B- | L7 | First OCaml engine. Targets, provider transport, CI, self-measurement workflow. CI broken at tag time. |
 
 Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Removed — available in git history. Not scored — different system.
+
+---
+
+## 0.10.0 (2026-05-13) — canonical v3.2 scoring cutover
+
+Breaking release: the engine's headline-scoring path now uses the
+canonical v3.2 geometric aggregate (spec/tsc-core.md §5) everywhere.
+Arithmetic mean is gone from every surface. Report schema, kata
+thresholds, and docs are realigned. No compatibility shim was retained.
+
+### Breaking
+
+- **`C_Σ` is geometric everywhere.** Mechanical, hybrid, and LLM
+  pipelines all compute `c_sigma_math` (strict; zero-collapse at any
+  component = 0) and `c_sigma_num` (ε-floored numeric form) via
+  `Coherence.aggregate`. Reports carry both alongside
+  `zero_component_present` and `numeric_floor_applied`.
+- **Flat `c_sigma` field removed.** Not aliased, not shimmed. Consumers
+  read `c_sigma_num` for thresholding.
+- **`engine/ocaml/test/fixtures/report.schema.json` replaced.** Required:
+  `mode`, `schema_version`, `alpha`, `beta`, `gamma`, `c_sigma_math`,
+  `c_sigma_num`, `zero_component_present`, `numeric_floor_applied`,
+  `bottleneck_axis`, `provenance`. Hybrid sub-objects (`mechanical`,
+  `llm`, `final`) carry the same canonical aggregate shape.
+- **Provenance field renamed.** `provenance_v320` → `provenance`
+  (content unchanged; schema at
+  `engine/ocaml/test/fixtures/provenance_v3_2_0.schema.json`).
+- **`Mechanical_scoring.config.weights` removed.** Canonical aggregate
+  is unweighted geometric (S3-symmetric by construction). Intra-axis
+  signal weights are unchanged.
+- **`Mechanical_scoring.comparison` delta split.** `delta_c_sigma` →
+  `delta_c_sigma_num` + `delta_c_sigma_math`.
+- **Kata `expected.score_range` is over `c_sigma_num`.** kata-01 min
+  widened to 0.80 (was 0.87); kata-05 max widened to 0.80 (was 0.78).
+  Each `kata.toml` carries a cutover-rationale comment.
+- **`project.tsc` deleted.** It was declared superseded by the target
+  registry in v0.8.x; it is now removed, not retained.
+
+### Changed
+
+- `engine/ocaml/lib/mechanical_scoring.{ml,mli}` — `result_to_json`
+  emits the canonical v3.2 fields and an embedded `provenance` object
+  built from the W2 gauge witness over the canonical geometric
+  aggregate.
+- `engine/ocaml/lib/hybrid_scoring.ml` — rewritten end-to-end around
+  `aggregate_fields`; final, mechanical, and LLM sub-objects share one
+  aggregate shape; full v3.2 `provenance` attached to every hybrid
+  report.
+- `engine/ocaml/lib/report.ml` — `to_json` lifts `c_sigma_math`,
+  `c_sigma_num`, and the degeneracy flags to the top level; `to_text`
+  prints both forms with a degeneracy warning. Arithmetic mean removed
+  from the text report.
+- `engine/ocaml/bin/main.ml` — kata runner compares against
+  `c_sigma_num`; a `pass` verdict additionally fails strict math
+  degeneracy. Result JSON exposes both aggregate forms and the
+  degeneracy flags.
+- `engine/ocaml/test/test_mechanical.ml` — every schema assertion
+  rewritten; positively asserts the absence of flat `c_sigma`.
+- `docs/THESIS.md`, `QUICKSTART.md`, `ARCHITECTURE.md`,
+  `docs/beta/guides/OPERATOR-MANUAL.md`, `katas/README.md`, kata
+  READMEs — rewritten around the canonical aggregate.
+- `docs/design/0.5.0/DESIGN.md`,
+  `docs/alpha/engine/0.5.0/POST-RELEASE-ASSESSMENT.md`,
+  `docs/alpha/doctrine/3.2.0/SELF-COHERENCE.md` — annotated ARCHIVAL
+  with pointers to the current contract.
+- `examples/philosophical/free-will.md`,
+  `examples/philosophical/emergence.md` — embedded YAML expectations
+  use `c_sigma_num`.
+- `VERSION` 0.9.0 → 0.10.0; `engine/ocaml/dune-project`,
+  `engine/ocaml/tsc_engine.opam` follow.
+
+### Removed
+
+- `project.tsc`.
+- `Mechanical_scoring.config.weights`.
+- The flat `c_sigma` field everywhere it appeared (top-level and inside
+  hybrid `mechanical`, `llm`, `final` sub-objects).
+- The arithmetic mean from `Hybrid_scoring.combine`,
+  `Hybrid_scoring.llm_subobj`, and `Report.to_text`.
 
 ---
 

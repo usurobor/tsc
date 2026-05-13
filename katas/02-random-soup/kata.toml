@@ -11,6 +11,10 @@ files = ["input/random-soup.md"]
 [expected]
 verdict = "fail"
 
+# Range is over the canonical v3.2 numeric aggregate C_Σ^num
+# (geometric mean; spec/tsc-core.md §5). Geometric mean ≤ arithmetic
+# mean, so the negative-control upper bound carried over from the
+# pre-cutover arithmetic baseline still brackets a stricter fail.
 [expected.score_range]
 min = 0.0
 max = 0.74

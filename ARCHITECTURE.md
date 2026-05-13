@@ -98,21 +98,28 @@ The engine has one shared pipeline:
 
 ### Report schema
 
-Every report contains:
+Every report carries the canonical v3.2 fields:
 
 ```json
 {
   "mode": "mechanical | llm | hybrid",
+  "schema_version": "v3.2.0",
   "target": "spec | null",
-  "alpha": 0.0–1.0,
-  "beta":  0.0–1.0,
-  "gamma": 0.0–1.0,
-  "c_sigma": 0.0–1.0,
-  "bottleneck_axis": "alpha | beta | gamma"
+  "alpha": 0.0,
+  "beta":  0.0,
+  "gamma": 0.0,
+  "c_sigma_math": 0.0,
+  "c_sigma_num":  0.0,
+  "zero_component_present": false,
+  "numeric_floor_applied":  false,
+  "bottleneck_axis": "alpha | beta | gamma",
+  "provenance": { /* canonical v3.2 provenance bundle */ }
 }
 ```
 
-Hybrid reports add `mechanical`, `llm`, and `final` sub-objects. The schema fixture lives at `engine/ocaml/test/fixtures/report.schema.json`.
+`c_sigma_math` and `c_sigma_num` are the canonical geometric aggregates from spec [tsc-core.md](spec/tsc-core.md) §5. They coincide whenever every component is at least ε; otherwise `numeric_floor_applied` is true and `c_sigma_math` is dragged toward zero. `zero_component_present` is true when any component is exactly zero — in that case `c_sigma_math = 0` regardless of `c_sigma_num`.
+
+Hybrid reports add `mechanical`, `llm`, and `final` sub-objects, each carrying the same canonical aggregate fields. The schema fixtures live at `engine/ocaml/test/fixtures/report.schema.json` and `provenance_v3_2_0.schema.json`.
 
 The engine does not parse Markdown semantically. Files are raw text.
 

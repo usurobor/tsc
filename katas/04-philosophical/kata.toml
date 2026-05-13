@@ -12,17 +12,20 @@ files = ["input/consciousness.md"]
 # verdict = "fail" records the *semantic* claim that natural-language
 # philosophical text — though high in surface regularity — is not what TSC
 # considers a coherent system. The mechanical scorer assigns a deceptively
-# high C_Σ because its structural-proxy signals (heading consistency, version
-# stamps, cross-references) are all present. The kata thus passes (because
-# c_sigma <= max) while *documenting* that mechanical scoring overestimates
-# this class of input. See README §"Mode justification".
+# high C_Σ^num because its structural-proxy signals (heading consistency,
+# version stamps, cross-references) are all present. The kata thus passes
+# (because c_sigma_num <= max) while *documenting* that mechanical scoring
+# overestimates this class of input. See README §"Mode justification".
 verdict = "fail"
 
 [expected.score_range]
-# Observed c_sigma on cycle/34-impl HEAD: 0.9333 (α=1.000, β=1.000, γ=0.800).
-# max is set above the observed value to keep the kata green; the wide range
-# is itself documentation: mechanical scoring cannot discriminate this from
-# kata-01 by structural proxies alone.
+# Range is over the canonical v3.2 numeric aggregate C_Σ^num
+# (geometric mean; spec/tsc-core.md §5).
+# Pre-cutover arithmetic observation: 0.9333 (α=1.000, β=1.000, γ=0.800).
+# Canonical C_Σ^num at the same component scores ≈ 0.928. max is held at
+# 0.95 above the canonical observation to keep the kata green; the wide
+# range is itself documentation that mechanical scoring cannot
+# discriminate this class from kata-01 by structural proxies alone.
 min = 0.0
 max = 0.95
 bottleneck_axis = "gamma"

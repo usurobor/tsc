@@ -185,16 +185,21 @@ The engine writes two files per run:
 
 ### Scoring thresholds
 
-`C_Σ = (α · β · γ)^(1/3)`
+The canonical v3.2 aggregate is the geometric mean (spec [tsc-core.md](../../../spec/tsc-core.md) §5). Reports carry two forms:
 
-| Grade | Range |
-|-------|-------|
-| A | >= 0.90 |
-| B | >= 0.80 |
-| C | >= 0.70 |
-| F | < 0.70 |
+- `c_sigma_math = (α · β · γ)^(1/3)` — strict mathematical form; collapses to 0 when any component is 0 (`zero_component_present: true`).
+- `c_sigma_num  = exp((1/3) · Σ ln(max(sᵢ, ε)))` — ε-floored numerical form; this is the threshold-comparison value per spec/tsc-oper.md §5. `numeric_floor_applied` flags when ε truncated a component.
 
-The geometric mean naturally penalizes imbalance — one collapsed axis drags `C_Σ` disproportionately. The report names the lowest-scoring axis as the bottleneck.
+Grade against `c_sigma_num`; a `zero_component_present: true` result is a strict FAIL irrespective of the numerical value.
+
+| Grade | Range (over `c_sigma_num`) |
+|-------|----------------------------|
+| A     | >= 0.90 |
+| B     | >= 0.80 |
+| C     | >= 0.70 |
+| F     | < 0.70  *or* `zero_component_present: true` |
+
+The geometric mean penalizes imbalance — one collapsed axis drags the composite disproportionately. The report names the lowest-scoring axis as the bottleneck.
 
 ---
 

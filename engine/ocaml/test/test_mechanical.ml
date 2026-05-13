@@ -126,14 +126,20 @@ let test_mechanical_determinism () =
     "AC5: determinism — beta score stable across two runs";
   check (r1.gamma.score = r2.gamma.score)
     "AC5: determinism — gamma score stable across two runs";
-  check (r1.c_sigma = r2.c_sigma)
-    "AC5: determinism — c_sigma stable across two runs";
+  check (r1.c_sigma_num = r2.c_sigma_num)
+    "AC5: determinism — c_sigma_num stable across two runs";
+  check (r1.c_sigma_math = r2.c_sigma_math)
+    "AC5: determinism — c_sigma_math stable across two runs";
+  check (r1.zero_component_present = r2.zero_component_present)
+    "AC5: determinism — zero_component_present stable across two runs";
+  check (r1.numeric_floor_applied = r2.numeric_floor_applied)
+    "AC5: determinism — numeric_floor_applied stable across two runs";
   check (r1.bottleneck_axis = r2.bottleneck_axis)
     "AC5: determinism — bottleneck_axis stable across two runs";
   (* Same config → same result *)
   let r3 = Mechanical_scoring.score_files
     ~config:Mechanical_scoring.default_config sample_files in
-  check (r1.c_sigma = r3.c_sigma)
+  check (r1.c_sigma_num = r3.c_sigma_num)
     "AC5: determinism — explicit default_config = implicit default"
 
 (* ------------------------------------------------------------------ *)
@@ -145,8 +151,15 @@ let test_score_ranges () =
   check (in_range r.alpha.score)   "AC5: alpha score in [0,1]";
   check (in_range r.beta.score)    "AC5: beta score in [0,1]";
   check (in_range r.gamma.score)   "AC5: gamma score in [0,1]";
-  check (in_range r.c_sigma)       "AC5: c_sigma in [0,1]";
+  check (in_range r.c_sigma_math)  "AC5: c_sigma_math in [0,1]";
+  check (in_range r.c_sigma_num)   "AC5: c_sigma_num  in [0,1]";
   check (in_range r.confidence)    "AC5: confidence in [0,1]";
+  (* Canonical invariant: when no component is exactly zero, math == num
+     within tolerance whenever every component is >= epsilon. *)
+  let min_score = Float.min (Float.min r.alpha.score r.beta.score) r.gamma.score in
+  if min_score >= r.epsilon then
+    check (abs_float (r.c_sigma_math -. r.c_sigma_num) < 1e-10)
+      "AC5: c_sigma_math == c_sigma_num when min component >= epsilon";
   List.iter (fun (sig_ : Mechanical_scoring.signal) ->
     check (in_range sig_.score)
       (Printf.sprintf "AC5: signal '%s' score in [0,1]" sig_.code)
@@ -160,7 +173,8 @@ let test_empty_bundle () =
   check (r.mode = `Mechanical) "AC5: empty bundle mode = Mechanical";
   check (r.confidence = 0.0)   "AC5: empty bundle confidence = 0.0";
   let in_range x = x >= 0.0 && x <= 1.0 in
-  check (in_range r.c_sigma)   "AC5: empty bundle c_sigma in [0,1]"
+  check (in_range r.c_sigma_math) "AC5: empty bundle c_sigma_math in [0,1]";
+  check (in_range r.c_sigma_num)  "AC5: empty bundle c_sigma_num  in [0,1]"
 
 (* ------------------------------------------------------------------ *)
 (* AC6: JSON schema shape for mechanical report *)
@@ -168,24 +182,37 @@ let test_empty_bundle () =
 let test_mechanical_json_schema () =
   let r = Mechanical_scoring.score_files sample_files in
   let json = Mechanical_scoring.result_to_json r in
-  (* Required fields per report.schema.json *)
-  check (has_field "mode"            json) "AC6: mechanical JSON has 'mode'";
-  check (has_field "alpha"           json) "AC6: mechanical JSON has 'alpha'";
-  check (has_field "beta"            json) "AC6: mechanical JSON has 'beta'";
-  check (has_field "gamma"           json) "AC6: mechanical JSON has 'gamma'";
-  check (has_field "c_sigma"         json) "AC6: mechanical JSON has 'c_sigma'";
-  check (has_field "bottleneck_axis" json) "AC6: mechanical JSON has 'bottleneck_axis'";
-  check (has_field "evidence_kind"   json) "AC6: mechanical JSON has 'evidence_kind'";
-  check (has_field "confidence"      json) "AC6: mechanical JSON has 'confidence'";
+  (* Required fields per canonical v3.2 report.schema.json *)
+  check (has_field "mode"                   json) "AC6: mechanical JSON has 'mode'";
+  check (has_field "schema_version"         json) "AC6: mechanical JSON has 'schema_version'";
+  check (has_field "alpha"                  json) "AC6: mechanical JSON has 'alpha'";
+  check (has_field "beta"                   json) "AC6: mechanical JSON has 'beta'";
+  check (has_field "gamma"                  json) "AC6: mechanical JSON has 'gamma'";
+  check (has_field "c_sigma_math"           json) "AC6: mechanical JSON has 'c_sigma_math'";
+  check (has_field "c_sigma_num"            json) "AC6: mechanical JSON has 'c_sigma_num'";
+  check (has_field "zero_component_present" json) "AC6: mechanical JSON has 'zero_component_present'";
+  check (has_field "numeric_floor_applied"  json) "AC6: mechanical JSON has 'numeric_floor_applied'";
+  check (has_field "bottleneck_axis"        json) "AC6: mechanical JSON has 'bottleneck_axis'";
+  check (has_field "evidence_kind"          json) "AC6: mechanical JSON has 'evidence_kind'";
+  check (has_field "confidence"             json) "AC6: mechanical JSON has 'confidence'";
+  check (has_field "provenance"             json) "AC6: mechanical JSON has 'provenance'";
+  (* The flat c_sigma field is removed under the canonical cutover. *)
+  check (not (has_field "c_sigma"           json))
+    "AC6: mechanical JSON has no flat 'c_sigma' (canonical v3.2 cutover)";
   (* Values *)
   let mode = get_string "mode" json in
   check (mode = "mechanical") "AC6: mode field = 'mechanical'";
+  let sv = get_string "schema_version" json in
+  check (String.length sv >= 4 && String.sub sv 0 4 = "v3.2")
+    "AC6: schema_version starts with v3.2";
   let ev = get_string "evidence_kind" json in
   check (ev = "structural-proxy") "AC6: evidence_kind = 'structural-proxy'";
   let alpha = get_float "alpha" json in
   check (alpha >= 0.0 && alpha <= 1.0) "AC6: alpha in [0,1]";
-  let cs = get_float "c_sigma" json in
-  check (cs >= 0.0 && cs <= 1.0) "AC6: c_sigma in [0,1]";
+  let csm = get_float "c_sigma_math" json in
+  check (csm >= 0.0 && csm <= 1.0) "AC6: c_sigma_math in [0,1]";
+  let csn = get_float "c_sigma_num" json in
+  check (csn >= 0.0 && csn <= 1.0) "AC6: c_sigma_num  in [0,1]";
   let bn = get_string "bottleneck_axis" json in
   check (bn = "alpha" || bn = "beta" || bn = "gamma")
     "AC6: bottleneck_axis ∈ {alpha,beta,gamma}"
@@ -212,19 +239,26 @@ let test_hybrid_json_schema () =
   let mech_result = Mechanical_scoring.score_files sample_files in
   let hybrid = Hybrid_scoring.combine ~target:"test" mech_result llm_result in
   let json = Hybrid_scoring.to_json hybrid in
-  (* Required top-level fields *)
-  check (has_field "mode"            json) "AC6: hybrid JSON has 'mode'";
-  check (has_field "alpha"           json) "AC6: hybrid JSON has 'alpha'";
-  check (has_field "beta"            json) "AC6: hybrid JSON has 'beta'";
-  check (has_field "gamma"           json) "AC6: hybrid JSON has 'gamma'";
-  check (has_field "c_sigma"         json) "AC6: hybrid JSON has 'c_sigma'";
-  check (has_field "bottleneck_axis" json) "AC6: hybrid JSON has 'bottleneck_axis'";
-  check (has_field "mechanical"      json) "AC6: hybrid JSON has 'mechanical' sub-object";
-  check (has_field "llm"             json) "AC6: hybrid JSON has 'llm' sub-object";
-  check (has_field "final"           json) "AC6: hybrid JSON has 'final' sub-object";
+  (* Required top-level fields per canonical v3.2 schema *)
+  check (has_field "mode"                   json) "AC6: hybrid JSON has 'mode'";
+  check (has_field "schema_version"         json) "AC6: hybrid JSON has 'schema_version'";
+  check (has_field "alpha"                  json) "AC6: hybrid JSON has 'alpha'";
+  check (has_field "beta"                   json) "AC6: hybrid JSON has 'beta'";
+  check (has_field "gamma"                  json) "AC6: hybrid JSON has 'gamma'";
+  check (has_field "c_sigma_math"           json) "AC6: hybrid JSON has 'c_sigma_math'";
+  check (has_field "c_sigma_num"            json) "AC6: hybrid JSON has 'c_sigma_num'";
+  check (has_field "zero_component_present" json) "AC6: hybrid JSON has 'zero_component_present'";
+  check (has_field "numeric_floor_applied"  json) "AC6: hybrid JSON has 'numeric_floor_applied'";
+  check (has_field "bottleneck_axis"        json) "AC6: hybrid JSON has 'bottleneck_axis'";
+  check (has_field "mechanical"             json) "AC6: hybrid JSON has 'mechanical' sub-object";
+  check (has_field "llm"                    json) "AC6: hybrid JSON has 'llm' sub-object";
+  check (has_field "final"                  json) "AC6: hybrid JSON has 'final' sub-object";
+  check (has_field "provenance"             json) "AC6: hybrid JSON has 'provenance'";
+  check (not (has_field "c_sigma"           json))
+    "AC6: hybrid JSON has no flat 'c_sigma' (canonical v3.2 cutover)";
   let mode = get_string "mode" json in
   check (mode = "hybrid") "AC6: hybrid mode = 'hybrid'";
-  (* final sub-object has source *)
+  (* final sub-object carries canonical aggregate fields *)
   let final_obj = match json with
     | `Assoc fields ->
       (match List.assoc_opt "final" fields with
@@ -232,11 +266,14 @@ let test_hybrid_json_schema () =
        | None -> fail "missing 'final'")
     | _ -> fail "expected object"
   in
-  check (has_field "source"  final_obj) "AC6: final has 'source'";
-  check (has_field "alpha"   final_obj) "AC6: final has 'alpha'";
-  check (has_field "beta"    final_obj) "AC6: final has 'beta'";
-  check (has_field "gamma"   final_obj) "AC6: final has 'gamma'";
-  check (has_field "c_sigma" final_obj) "AC6: final has 'c_sigma'";
+  check (has_field "source"                  final_obj) "AC6: final has 'source'";
+  check (has_field "alpha"                   final_obj) "AC6: final has 'alpha'";
+  check (has_field "beta"                    final_obj) "AC6: final has 'beta'";
+  check (has_field "gamma"                   final_obj) "AC6: final has 'gamma'";
+  check (has_field "c_sigma_math"            final_obj) "AC6: final has 'c_sigma_math'";
+  check (has_field "c_sigma_num"             final_obj) "AC6: final has 'c_sigma_num'";
+  check (has_field "zero_component_present"  final_obj) "AC6: final has 'zero_component_present'";
+  check (has_field "numeric_floor_applied"   final_obj) "AC6: final has 'numeric_floor_applied'";
   let src = get_string "source" final_obj in
   check (src = "llm" || src = "mechanical" || src = "agreement")
     "AC6: final.source ∈ {llm, mechanical, agreement}"
@@ -266,10 +303,14 @@ let test_hybrid_preserves_both () =
   in
   let mech_obj = get_subobj "mechanical" in
   let llm_obj  = get_subobj "llm" in
-  check (has_field "alpha" mech_obj && has_field "c_sigma" mech_obj)
-    "AC12: mechanical sub-object preserved with alpha and c_sigma";
-  check (has_field "alpha" llm_obj  && has_field "c_sigma" llm_obj)
-    "AC12: llm sub-object preserved with alpha and c_sigma";
+  check (has_field "alpha" mech_obj
+         && has_field "c_sigma_math" mech_obj
+         && has_field "c_sigma_num"  mech_obj)
+    "AC12: mechanical sub-object preserved with alpha and canonical c_sigma_math/num";
+  check (has_field "alpha" llm_obj
+         && has_field "c_sigma_math" llm_obj
+         && has_field "c_sigma_num"  llm_obj)
+    "AC12: llm sub-object preserved with alpha and canonical c_sigma_math/num";
   let mech_ev = get_string "evidence_kind" mech_obj in
   let llm_ev  = get_string "evidence_kind" llm_obj  in
   check (mech_ev = "structural-proxy")   "AC12: mechanical evidence_kind = structural-proxy";

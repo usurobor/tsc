@@ -48,8 +48,8 @@ files = ["input/file.txt"]  # input file paths relative to kata directory
 verdict       = "pass"           # "pass" | "fail"
 
 [expected.score_range]
-min = 0.7                        # minimum C_Σ score (for pass verdicts)
-max = 0.4                        # maximum C_Σ score (for fail verdicts)
+min = 0.7                        # minimum C_Σ^num (for pass verdicts)
+max = 0.4                        # maximum C_Σ^num (for fail verdicts)
 
 bottleneck_axis = "coherence"    # optional; which axis limits the score
 
@@ -68,7 +68,7 @@ files = ["input/random-soup/random-soup.md"]
 
 [expected]
 verdict = "pass"
-# Component ids ordered by expected C_Σ, highest first. Comparative-kata
+# Component ids ordered by expected C_Σ^num, highest first. Comparative-kata
 # pass-criterion = (observed-ranking == ranking). The runner emits
 # ranking_correct: true/false in the result JSON.
 ranking = ["glider", "random-soup"]
@@ -88,9 +88,9 @@ ranking = ["glider", "random-soup"]
 | `[[components]].id` | string | yes inside component | Component identifier (referenced from `[expected].ranking`) |
 | `[[components]].files` | string[] | yes inside component | Component input file paths relative to the kata directory |
 | `[expected].verdict` | string | yes | Expected outcome: `"pass"` or `"fail"` |
-| `[expected].ranking` | string[] | for comparative katas | Component ids ordered highest C_Σ first; runner asserts observed ranking matches |
-| `[expected.score_range].min` | float | for pass | Minimum acceptable C_Σ score (0.0–1.0) |
-| `[expected.score_range].max` | float | for fail | Maximum C_Σ score for a fail verdict |
+| `[expected].ranking` | string[] | for comparative katas | Component ids ordered highest C_Σ^num first; runner asserts observed ranking matches |
+| `[expected.score_range].min` | float | for pass | Minimum acceptable C_Σ^num score (0.0–1.0) |
+| `[expected.score_range].max` | float | for fail | Maximum C_Σ^num score for a fail verdict |
 | `bottleneck_axis` | string | no | Axis that most limits the score; used for diagnostic output |
 
 ### Comparative katas (Phase 2)
@@ -98,8 +98,8 @@ ranking = ["glider", "random-soup"]
 A kata is *comparative* iff its `kata.toml` declares one or more
 `[[components]]` entries. The runner switches behavior:
 
-- **Single-bundle (Phase 1):** scores `[input].files` as one bundle; pass-criterion is `c_sigma` within `[expected.score_range]` (modulated by `verdict`).
-- **Comparative (Phase 2):** scores each `[[components]]` entry as its own bundle; pass-criterion is the *observed ranking* of per-component C_Σ matching `[expected].ranking` (highest → lowest). The runner emits `ranking_correct: bool` in the result JSON in place of `kata_pass`.
+- **Single-bundle (Phase 1):** scores `[input].files` as one bundle; pass-criterion is `c_sigma_num` within `[expected.score_range]` (modulated by `verdict`). A result with `zero_component_present: true` is a strict FAIL irrespective of the numerical value.
+- **Comparative (Phase 2):** scores each `[[components]]` entry as its own bundle; pass-criterion is the *observed ranking* of per-component `c_sigma_num` matching `[expected].ranking` (highest → lowest). The runner emits `ranking_correct: bool` in the result JSON in place of `kata_pass`.
 
 Single-bundle katas (`01-glider`, `02-random-soup`, `04-philosophical`, `05-adversarial`) omit `[[components]]` and use the Phase 1 path. Only `03-comparative` uses the new comparative path in cycle #34.
 
@@ -116,8 +116,8 @@ Quick reference for the `kata.toml` fields, each with type and example:
 - `input.files` — string[]; example: `["input/glider.md"]`. Input files relative to kata dir (single-bundle katas).
 - `components` — array of tables; example: `[{ id = "glider", files = ["input/glider/glider.md"] }, ...]`. Per-component sub-bundles for comparative katas (Phase 2; see §"Comparative katas").
 - `expected.verdict` — string; example: `"pass"`. Expected outcome: `pass` or `fail`.
-- `expected.ranking` — string[]; example: `["glider", "random-soup"]`. Comparative-kata ranking, highest C_Σ first (Phase 2).
-- `expected.score_range` — object; example: `{ min = 0.87, max = 1.0 }`. C_Σ bounds (single-bundle katas).
+- `expected.ranking` — string[]; example: `["glider", "random-soup"]`. Comparative-kata ranking, highest C_Σ^num first (Phase 2).
+- `expected.score_range` — object; example: `{ min = 0.80, max = 1.0 }`. C_Σ^num bounds (single-bundle katas).
 - `expected.bottleneck_axis` — string; example: `"gamma"`. Optional axis diagnostic.
 
 ## Runner invocation
@@ -137,7 +137,7 @@ The CI script (`scripts/run-katas.sh`) iterates all `katas/*/kata.toml` files, r
 Two surfaces from `.github/workflows/katas.yml` (cycle #38):
 
 - **Per-run JSON artifact.** Every run uploads `.kata-results/<id>.json` (one file per kata; engine's full `--kata` output) as the artifact `kata-results-<sha>` (pre-merge build-from-HEAD job) or `kata-results-published-<tag>-<run_id>` (published-binary job). Retention: 90 days. Download via the run page's *Artifacts* panel or the `gh run download` CLI.
-- **Step-summary table.** Each run's *Summary* tab renders a markdown table with one row per kata: `| Kata | Verdict | C_Σ | Range | Status |`. Visible inline on PR check pages without click-through.
+- **Step-summary table.** Each run's *Summary* tab renders a markdown table with one row per kata: `| Kata | Verdict | C_Σ^num | Range | Status |`. Visible inline on PR check pages without click-through.
 
 The published-binary job (release / weekly cron / manual dispatch) writes the same row schema under a section titled with the release tag.
 

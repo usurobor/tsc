@@ -61,8 +61,11 @@ let () =
       "kata-01: id = 01-glider";
     check (k.verdict = "pass")
       "kata-01: expected.verdict = pass";
-    check (k.score_min >= 0.80 && k.score_min <= 0.92)
-      (Printf.sprintf "kata-01: score_min = %.4f (expected in [0.80, 0.92])" k.score_min);
+    (* Range is over canonical C_Σ^num (geometric mean; spec/tsc-core.md §5).
+       Positive-control min was widened from the pre-cutover arithmetic
+       baseline of 0.87 because geometric ≤ arithmetic. *)
+    check (k.score_min >= 0.75 && k.score_min <= 0.92)
+      (Printf.sprintf "kata-01: score_min = %.4f (expected in [0.75, 0.92])" k.score_min);
     check (k.score_max = 1.0)
       (Printf.sprintf "kata-01: score_max = %.4f (expected 1.0)" k.score_max);
     check (k.input_files <> [])

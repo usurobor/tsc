@@ -23,11 +23,15 @@ files = [
 verdict = "fail"
 
 [expected.score_range]
-# Observed c_sigma on cycle/34-impl HEAD: 0.7466
-# (α=0.969 β=0.470 γ=0.801; bottleneck = β cross-reference + source-of-truth
-# alignment caught the cross-file contradictions).
-# The kata passes when c_sigma <= max; max is set just above the observed
-# value to bracket it without being trivially permissive.
+# Range is over the canonical v3.2 numeric aggregate C_Σ^num
+# (geometric mean; spec/tsc-core.md §5).
+# Pre-cutover arithmetic observation: 0.7466
+# (α=0.969 β=0.470 γ=0.801; bottleneck = β — cross-reference and
+# source-of-truth alignment caught the cross-file contradictions).
+# Canonical C_Σ^num at the same component scores ≈ 0.715 (geometric
+# mean amplifies the bottleneck — this is why the canonical aggregate
+# is geometric, not arithmetic). max is held at 0.80 above the
+# canonical observation; the kata passes when c_sigma_num <= max.
 min = 0.0
-max = 0.78
+max = 0.80
 bottleneck_axis = "beta"

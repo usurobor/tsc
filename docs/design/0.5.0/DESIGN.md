@@ -1,5 +1,14 @@
 # Design: hybrid scoring architecture for TSC
 
+> **ARCHIVAL — pre-v3.2 scoring.** This document describes the v0.5.0
+> design where the cross-axis aggregate was the arithmetic mean and the
+> report shape carried a flat `c_sigma` field. v0.10.0 cut the engine
+> over to the canonical v3.2 geometric aggregate (`c_sigma_math` /
+> `c_sigma_num`, `zero_component_present`, `numeric_floor_applied`,
+> `provenance`). For the current report contract see
+> [ARCHITECTURE.md](../../../ARCHITECTURE.md) §"Report schema" and
+> [spec/tsc-core.md](../../../spec/tsc-core.md) §5.
+
 **Issue:** #22
 **Version:** 0.5.0
 **Mode:** MCA

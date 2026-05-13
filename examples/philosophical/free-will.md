@@ -72,7 +72,7 @@ tsc:
         - [c8, 0.40, 0.60, B, B]
   
   expected:
-    c_sigma: 0.76
+    c_sigma_num: 0.76
     tolerance: 0.07
     rationale: "Strong reasons-responsiveness with small, principled replay flips near ties."
   

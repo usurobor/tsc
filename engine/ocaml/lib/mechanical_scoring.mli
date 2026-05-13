@@ -62,26 +62,30 @@ type result = {
   alpha : axis_result;
   beta : axis_result;
   gamma : axis_result;
-  c_sigma : float;
+  c_sigma_math : float;
+  c_sigma_num : float;
+  epsilon : float;
+  zero_component_present : bool;
+  numeric_floor_applied : bool;
   bottleneck_axis : axis;
   confidence : float;
   diagnostics : diagnostic list;
 }
 (** Full mechanical scoring result.
 
-    [c_sigma] is the aggregate score derived from [alpha], [beta], and
-    [gamma].
+    Canonical v3.2 aggregate: the cross-axis composite is the geometric
+    mean of [alpha.score], [beta.score], [gamma.score]. Spec
+    [spec/tsc-core.md] §5 defines two forms which coincide whenever
+    every component is at least [epsilon]:
+
+    - [c_sigma_math]: strict geometric mean; collapses to 0 if any
+      component is exactly 0 ([zero_component_present = true]).
+    - [c_sigma_num]: epsilon-floored numeric form used for thresholding,
+      bootstrap CI, and OOD comparison; [numeric_floor_applied] is true
+      when at least one component fell below [epsilon].
 
     [confidence] expresses sufficiency of structural evidence, not
     semantic certainty. *)
-
-type weights = {
-  alpha : float;
-  beta : float;
-  gamma : float;
-}
-(** Top-level axis weights for c_sigma aggregation.
-    Normal expectation: equal weights. *)
 
 type alpha_config = {
   terminology_consistency : float;
@@ -108,14 +112,20 @@ type gamma_config = {
 (** Weights for structural gamma signals. *)
 
 type config = {
-  weights : weights;
   alpha : alpha_config;
   beta : beta_config;
   gamma : gamma_config;
+  epsilon : float;
   min_confidence_files : int;
   max_excerpt_chars : int;
 }
 (** Mechanical scoring configuration.
+
+    Cross-axis aggregation is the canonical v3.2 geometric mean — it
+    takes no weights (it is S3-symmetric over α/β/γ by construction).
+    Intra-axis signal weights are configured per axis.
+
+    [epsilon] is the numeric floor used in the [c_sigma_num] form.
 
     [min_confidence_files] controls when confidence should be reduced
     due to a very small bundle.
@@ -147,11 +157,16 @@ type comparison = {
   delta_alpha : float;
   delta_beta : float;
   delta_gamma : float;
-  delta_c_sigma : float;
+  delta_c_sigma_num : float;
+  delta_c_sigma_math : float;
   changed_bottleneck : bool;
   summary : string;
 }
-(** Structural comparison between two scored bundles. *)
+(** Structural comparison between two scored bundles.
+
+    [delta_c_sigma_num] is the canonical comparison signal (numeric
+    aggregate, per spec/tsc-oper.md §5). [delta_c_sigma_math] reports
+    the strict geometric-mean delta and is informational. *)
 
 val compare : ?config:config -> old_:Bundle.t -> new_:Bundle.t -> comparison
 (** Compare two bundles through the mechanical backend.

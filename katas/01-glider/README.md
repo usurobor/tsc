@@ -40,15 +40,14 @@ This is expected for a kata input file — it is not a versioned release artifac
 # Run this kata (from repo root)
 coh --kata 01-glider --mode mechanical
 
-# Expected output: exit 0, JSON with c_sigma >= 0.87 and verdict = "pass"
+# Expected output: exit 0, JSON with c_sigma_num >= 0.80 and verdict = "pass"
 ```
 
 ## Score Range Justification
 
-The `expected.score_range` in `kata.toml` is set to `[0.87, 1.0]`. Justification:
+The `expected.score_range` in `kata.toml` is set to `[0.80, 1.0]` against the canonical v3.2 numeric aggregate `C_Σ^num` (geometric mean; spec/tsc-core.md §5). Justification:
 
-- The actual measured C_Σ is **0.923** under mechanical mode (calibrated on 2026-05-12).
-- The tolerance is ±0.05 on the lower bound, giving `min = 0.87`.
+- The pre-cutover arithmetic measurement was **0.923**. The canonical geometric aggregate is ≤ the arithmetic mean by AM–GM, so the threshold band is widened downward.
 - The upper bound is 1.0 (unconstrained — a higher score is always acceptable).
 - The bottleneck axis is **gamma** (version surface consistency signals default to
   penalized values when absent). This is expected for a kata input.

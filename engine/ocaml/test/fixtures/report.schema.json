@@ -1,53 +1,76 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "Canonical TSC report schema — all modes must satisfy required fields.",
+  "description": "Canonical v3.2 TSC report schema. Cross-axis aggregation is the geometric mean; the report carries both c_sigma_math (strict zero collapse) and c_sigma_num (epsilon-floored numeric form) per spec/tsc-core.md §5.",
   "type": "object",
-  "required": ["mode", "alpha", "beta", "gamma", "c_sigma", "bottleneck_axis"],
+  "required": [
+    "mode",
+    "schema_version",
+    "alpha",
+    "beta",
+    "gamma",
+    "c_sigma_math",
+    "c_sigma_num",
+    "zero_component_present",
+    "numeric_floor_applied",
+    "bottleneck_axis",
+    "provenance"
+  ],
   "properties": {
-    "target": { "type": ["string", "null"] },
-    "mode": {
-      "type": "string",
-      "enum": ["mechanical", "llm", "hybrid"]
-    },
-    "alpha":          { "type": "number", "minimum": 0.0, "maximum": 1.0 },
-    "beta":           { "type": "number", "minimum": 0.0, "maximum": 1.0 },
-    "gamma":          { "type": "number", "minimum": 0.0, "maximum": 1.0 },
-    "c_sigma":        { "type": "number", "minimum": 0.0, "maximum": 1.0 },
-    "bottleneck_axis":{ "type": "string", "enum": ["alpha", "beta", "gamma"] },
+    "target":                 { "type": ["string", "null"] },
+    "mode":                   { "type": "string", "enum": ["mechanical", "llm", "hybrid"] },
+    "schema_version":         { "type": "string", "pattern": "^v3\\.2\\." },
+    "alpha":                  { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "beta":                   { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "gamma":                  { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "c_sigma_math":           { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "c_sigma_num":            { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "zero_component_present": { "type": "boolean" },
+    "numeric_floor_applied":  { "type": "boolean" },
+    "bottleneck_axis":        { "type": "string", "enum": ["alpha", "beta", "gamma"] },
+    "provenance":             { "$ref": "provenance_v3_2_0.schema.json" },
     "mechanical": {
       "type": "object",
       "description": "Present in hybrid mode only.",
-      "required": ["alpha", "beta", "gamma", "c_sigma", "evidence_kind"],
+      "required": ["alpha", "beta", "gamma", "c_sigma_math", "c_sigma_num", "zero_component_present", "numeric_floor_applied", "evidence_kind"],
       "properties": {
-        "alpha":        { "type": "number" },
-        "beta":         { "type": "number" },
-        "gamma":        { "type": "number" },
-        "c_sigma":      { "type": "number" },
-        "evidence_kind":{ "type": "string", "enum": ["structural-proxy"] }
+        "alpha":                  { "type": "number" },
+        "beta":                   { "type": "number" },
+        "gamma":                  { "type": "number" },
+        "c_sigma_math":           { "type": "number" },
+        "c_sigma_num":            { "type": "number" },
+        "zero_component_present": { "type": "boolean" },
+        "numeric_floor_applied":  { "type": "boolean" },
+        "evidence_kind":          { "type": "string", "enum": ["structural-proxy"] }
       }
     },
     "llm": {
       "type": "object",
       "description": "Present in hybrid mode only.",
-      "required": ["alpha", "beta", "gamma", "c_sigma", "evidence_kind"],
+      "required": ["alpha", "beta", "gamma", "c_sigma_math", "c_sigma_num", "zero_component_present", "numeric_floor_applied", "evidence_kind"],
       "properties": {
-        "alpha":        { "type": "number" },
-        "beta":         { "type": "number" },
-        "gamma":        { "type": "number" },
-        "c_sigma":      { "type": "number" },
-        "evidence_kind":{ "type": "string", "enum": ["semantic-judgment"] }
+        "alpha":                  { "type": "number" },
+        "beta":                   { "type": "number" },
+        "gamma":                  { "type": "number" },
+        "c_sigma_math":           { "type": "number" },
+        "c_sigma_num":            { "type": "number" },
+        "zero_component_present": { "type": "boolean" },
+        "numeric_floor_applied":  { "type": "boolean" },
+        "evidence_kind":          { "type": "string", "enum": ["semantic-judgment"] }
       }
     },
     "final": {
       "type": "object",
       "description": "Present in hybrid mode only.",
-      "required": ["source", "alpha", "beta", "gamma", "c_sigma"],
+      "required": ["source", "alpha", "beta", "gamma", "c_sigma_math", "c_sigma_num", "zero_component_present", "numeric_floor_applied"],
       "properties": {
-        "source": { "type": "string", "enum": ["llm", "mechanical", "agreement"] },
-        "alpha":  { "type": "number" },
-        "beta":   { "type": "number" },
-        "gamma":  { "type": "number" },
-        "c_sigma":{ "type": "number" }
+        "source":                 { "type": "string", "enum": ["llm", "mechanical", "agreement"] },
+        "alpha":                  { "type": "number" },
+        "beta":                   { "type": "number" },
+        "gamma":                  { "type": "number" },
+        "c_sigma_math":           { "type": "number" },
+        "c_sigma_num":            { "type": "number" },
+        "zero_component_present": { "type": "boolean" },
+        "numeric_floor_applied":  { "type": "boolean" }
       }
     }
   }

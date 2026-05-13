@@ -11,6 +11,11 @@ files = ["input/glider.md"]
 [expected]
 verdict = "pass"
 
+# Range is over the canonical v3.2 numeric aggregate C_Σ^num
+# (geometric mean over s_α, s_β, s_γ; spec/tsc-core.md §5).
+# Geometric mean ≤ arithmetic mean, so positive-control bands are
+# widened downward from the pre-cutover arithmetic baseline (0.87) to
+# bracket the canonical value with margin.
 [expected.score_range]
-min = 0.87
+min = 0.80
 max = 1.0

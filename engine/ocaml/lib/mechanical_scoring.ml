@@ -38,21 +38,19 @@ type axis_result = {
 }
 
 type result = {
-  mode            : [ `Mechanical ];
-  target          : string option;
-  alpha           : axis_result;
-  beta            : axis_result;
-  gamma           : axis_result;
-  c_sigma         : float;
-  bottleneck_axis : axis;
-  confidence      : float;
-  diagnostics     : diagnostic list;
-}
-
-type weights = {
-  alpha : float;
-  beta  : float;
-  gamma : float;
+  mode                   : [ `Mechanical ];
+  target                 : string option;
+  alpha                  : axis_result;
+  beta                   : axis_result;
+  gamma                  : axis_result;
+  c_sigma_math           : float;
+  c_sigma_num            : float;
+  epsilon                : float;
+  zero_component_present : bool;
+  numeric_floor_applied  : bool;
+  bottleneck_axis        : axis;
+  confidence             : float;
+  diagnostics            : diagnostic list;
 }
 
 type alpha_config = {
@@ -77,30 +75,30 @@ type gamma_config = {
 }
 
 type config = {
-  weights             : weights;
-  alpha               : alpha_config;
-  beta                : beta_config;
-  gamma               : gamma_config;
-  min_confidence_files: int;
-  max_excerpt_chars   : int;
+  alpha                : alpha_config;
+  beta                 : beta_config;
+  gamma                : gamma_config;
+  epsilon              : float;
+  min_confidence_files : int;
+  max_excerpt_chars    : int;
 }
 
 type comparison = {
-  old_result        : result;
-  new_result        : result;
-  delta_alpha       : float;
-  delta_beta        : float;
-  delta_gamma       : float;
-  delta_c_sigma     : float;
-  changed_bottleneck: bool;
-  summary           : string;
+  old_result          : result;
+  new_result          : result;
+  delta_alpha         : float;
+  delta_beta          : float;
+  delta_gamma         : float;
+  delta_c_sigma_num   : float;
+  delta_c_sigma_math  : float;
+  changed_bottleneck  : bool;
+  summary             : string;
 }
 
 (* ------------------------------------------------------------------ *)
 (* Default configuration *)
 
 let default_config : config = {
-  weights = ({ alpha = 1.0; beta = 1.0; gamma = 1.0 } : weights);
   alpha = {
     terminology_consistency      = 0.40;
     repeated_structure           = 0.25;
@@ -119,6 +117,7 @@ let default_config : config = {
     traceability_presence           = 0.25;
     authority_evolution_consistency = 0.15;
   };
+  epsilon              = 1e-5;
   min_confidence_files = 3;
   max_excerpt_chars    = 200;
 }
@@ -670,12 +669,12 @@ let score_gamma ~config files =
 (* ------------------------------------------------------------------ *)
 (* Top-level scoring *)
 
-let compute_c_sigma ~config (a : axis_result) (b : axis_result) (g : axis_result) =
-  weighted_avg [
-    (config.weights.alpha, a.score);
-    (config.weights.beta,  b.score);
-    (config.weights.gamma, g.score);
-  ]
+(** Canonical v3.2 aggregate: geometric mean over s_α, s_β, s_γ.
+    Produces both C_Σ^math (strict zero collapse) and C_Σ^num (ε-floored). *)
+let compute_aggregate ~config (a : axis_result) (b : axis_result) (g : axis_result) =
+  Coherence.aggregate
+    ~epsilon:config.epsilon
+    ~s_alpha:a.score ~s_beta:b.score ~s_gamma:g.score ()
 
 let compute_bottleneck (a : axis_result) (b : axis_result) (g : axis_result) =
   if a.score <= b.score && a.score <= g.score then `Alpha
@@ -691,15 +690,20 @@ let score_files ?(config = default_config) (files : Bundle.file list) =
   let a = score_alpha ~config files in
   let b = score_beta  ~config files in
   let g = score_gamma ~config files in
-  ({ mode            = `Mechanical;
-     target          = None;
-     alpha           = a;
-     beta            = b;
-     gamma           = g;
-     c_sigma         = compute_c_sigma ~config a b g;
-     bottleneck_axis = compute_bottleneck a b g;
-     confidence      = compute_confidence ~config files;
-     diagnostics     = [] } : result)
+  let agg = compute_aggregate ~config a b g in
+  ({ mode                   = `Mechanical;
+     target                 = None;
+     alpha                  = a;
+     beta                   = b;
+     gamma                  = g;
+     c_sigma_math           = agg.Coherence.c_sigma_math;
+     c_sigma_num            = agg.Coherence.c_sigma_num;
+     epsilon                = agg.Coherence.epsilon;
+     zero_component_present = agg.Coherence.zero_component_present;
+     numeric_floor_applied  = agg.Coherence.numeric_floor_applied;
+     bottleneck_axis        = compute_bottleneck a b g;
+     confidence             = compute_confidence ~config files;
+     diagnostics            = [] } : result)
 
 let score_bundle ?(config = default_config) (bundle : Bundle.t) =
   let r = score_files ~config bundle.bundle_files in
@@ -708,18 +712,22 @@ let score_bundle ?(config = default_config) (bundle : Bundle.t) =
 let compare ?(config = default_config) ~old_ ~new_ =
   let old_result = score_bundle ~config old_ in
   let new_result = score_bundle ~config new_ in
-  let da = new_result.alpha.score -. old_result.alpha.score in
-  let db = new_result.beta.score  -. old_result.beta.score  in
-  let dg = new_result.gamma.score -. old_result.gamma.score in
-  let dc = new_result.c_sigma     -. old_result.c_sigma      in
+  let da  = new_result.alpha.score   -. old_result.alpha.score   in
+  let db  = new_result.beta.score    -. old_result.beta.score    in
+  let dg  = new_result.gamma.score   -. old_result.gamma.score   in
+  let dcn = new_result.c_sigma_num   -. old_result.c_sigma_num   in
+  let dcm = new_result.c_sigma_math  -. old_result.c_sigma_math  in
   { old_result;
     new_result;
     delta_alpha        = da;
     delta_beta         = db;
     delta_gamma        = dg;
-    delta_c_sigma      = dc;
+    delta_c_sigma_num  = dcn;
+    delta_c_sigma_math = dcm;
     changed_bottleneck = old_result.bottleneck_axis <> new_result.bottleneck_axis;
-    summary            = Printf.sprintf "Δα=%.3f Δβ=%.3f Δγ=%.3f ΔC_Σ=%.3f" da db dg dc }
+    summary            =
+      Printf.sprintf "Δα=%.3f Δβ=%.3f Δγ=%.3f ΔC_Σ^num=%.3f ΔC_Σ^math=%.3f"
+        da db dg dcn dcm }
 
 (* ------------------------------------------------------------------ *)
 (* JSON serialization *)
@@ -754,22 +762,51 @@ let diagnostic_to_json (d : diagnostic) =
     ("paths",   `List (List.map (fun p -> `String p) d.paths));
   ]
 
+(** Canonical v3.2 provenance object for a mechanical result. *)
+let provenance_json (r : result) =
+  let c_sigma_fn sa sb sg =
+    let agg = Coherence.aggregate ~epsilon:r.epsilon
+      ~s_alpha:sa ~s_beta:sb ~s_gamma:sg () in
+    agg.Coherence.c_sigma_math
+  in
+  let gw = Coherence.gauge_witness
+    ~labeled:(r.alpha.score, r.beta.score, r.gamma.score)
+    ~c_sigma_fn
+    ~tau_gauge_spread:0.05
+  in
+  Coherence.provenance_json
+    ~c_sigma_math:(Some r.c_sigma_math)
+    ~zero_component_present:r.zero_component_present
+    ~c_sigma_num:(Some r.c_sigma_num)
+    ~epsilon:(Some r.epsilon)
+    ~numeric_floor_applied:r.numeric_floor_applied
+    ~w_gauge_ref:(Some gw.w_gauge_ref)
+    ~w_gauge_spread:(Some gw.w_gauge_spread)
+    ~tau_gauge_spread:(Some gw.tau_gauge_spread)
+    ~canonical_remap_procedure:(Some gw.canonical_remap_procedure)
+    ()
+
 let result_to_json (r : result) =
   `Assoc [
-    ("mode",            `String "mechanical");
-    ("target",          (match r.target with None -> `Null | Some t -> `String t));
-    ("alpha",           `Float r.alpha.score);
-    ("beta",            `Float r.beta.score);
-    ("gamma",           `Float r.gamma.score);
-    ("c_sigma",         `Float r.c_sigma);
-    ("bottleneck_axis", `String (axis_str r.bottleneck_axis));
-    ("confidence",      `Float r.confidence);
-    ("evidence_kind",   `String "structural-proxy");
+    ("mode",                   `String "mechanical");
+    ("schema_version",         `String "v3.2.0");
+    ("target",                 (match r.target with None -> `Null | Some t -> `String t));
+    ("alpha",                  `Float r.alpha.score);
+    ("beta",                   `Float r.beta.score);
+    ("gamma",                  `Float r.gamma.score);
+    ("c_sigma_math",           `Float r.c_sigma_math);
+    ("c_sigma_num",            `Float r.c_sigma_num);
+    ("zero_component_present", `Bool  r.zero_component_present);
+    ("numeric_floor_applied",  `Bool  r.numeric_floor_applied);
+    ("bottleneck_axis",        `String (axis_str r.bottleneck_axis));
+    ("confidence",             `Float r.confidence);
+    ("evidence_kind",          `String "structural-proxy");
     ("axis_detail", `Assoc [
       ("alpha", axis_result_to_json r.alpha);
       ("beta",  axis_result_to_json r.beta);
       ("gamma", axis_result_to_json r.gamma);
     ]);
+    ("provenance", provenance_json r);
     ("diagnostics", `List (List.map diagnostic_to_json r.diagnostics));
   ]
 
@@ -780,7 +817,8 @@ let comparison_to_json (c : comparison) =
     ("delta_alpha",        `Float c.delta_alpha);
     ("delta_beta",         `Float c.delta_beta);
     ("delta_gamma",        `Float c.delta_gamma);
-    ("delta_c_sigma",      `Float c.delta_c_sigma);
+    ("delta_c_sigma_num",  `Float c.delta_c_sigma_num);
+    ("delta_c_sigma_math", `Float c.delta_c_sigma_math);
     ("changed_bottleneck", `Bool  c.changed_bottleneck);
     ("summary",            `String c.summary);
   ]
@@ -790,6 +828,6 @@ let summarize_signal (s : signal) =
 
 let summarize_result (r : result) =
   Printf.sprintf
-    "mechanical: α=%.3f β=%.3f γ=%.3f C_Σ=%.3f bottleneck=%s confidence=%.2f"
+    "mechanical: α=%.3f β=%.3f γ=%.3f C_Σ^num=%.3f C_Σ^math=%.3f bottleneck=%s confidence=%.2f"
     r.alpha.score r.beta.score r.gamma.score
-    r.c_sigma (axis_str r.bottleneck_axis) r.confidence
+    r.c_sigma_num r.c_sigma_math (axis_str r.bottleneck_axis) r.confidence
