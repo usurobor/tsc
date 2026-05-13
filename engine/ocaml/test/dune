@@ -12,3 +12,8 @@
  (name test_kata)
  (modules test_kata)
  (libraries tsc_engine))
+
+(test
+ (name test_response_schema)
+ (modules test_response_schema)
+ (libraries tsc_engine))

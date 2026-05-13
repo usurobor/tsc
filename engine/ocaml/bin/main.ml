@@ -289,6 +289,48 @@ let build_bundle_from_files ~root ~globs =
     ~files
 
 (* ------------------------------------------------------------------ *)
+(* v3.2 validation-failure artifact (cycle/51 AC2)                     *)
+(*
+   When --mode llm / --mode hybrid receives a provider response that
+   parses as JSON but fails strict v3.2 delta validation, this helper
+   writes a durable diagnostic artifact and exits non-zero. The raw
+   provider response must already have been written to disk by the
+   caller. No coherence report is rendered. There is no mechanical
+   fallback (AC3). *)
+
+let write_validation_failure_artifact
+    ~output_dir
+    ~target
+    ~ts
+    ~(err : Response_schema.v32_validation_error) =
+  let missing_json =
+    `List (List.map (fun s -> `String s) err.missing_fields)
+  in
+  let invalid_json =
+    `List (List.map (fun (k, v) ->
+      `Assoc [
+        ("field", `String k);
+        ("observed_value", `String v);
+        ("expected_range", `String "[0, 1]");
+      ]
+    ) err.invalid_fields)
+  in
+  let artifact = `Assoc [
+    ("kind",                    `String "validation_failure");
+    ("schema",                  `String "tsc-llm-response/v3.2");
+    ("status",                  `String "error");
+    ("missing_required_fields", missing_json);
+    ("invalid_fields",          invalid_json);
+    ("message",                 `String "v3.2 LLM response failed required pairwise discrepancy validation; coherence report not rendered.");
+  ] in
+  let path =
+    Filename.concat output_dir
+      (Printf.sprintf "tsc-%s-%s-validation-failure.json" target ts)
+  in
+  write_file path (Yojson.Safe.pretty_to_string artifact);
+  path
+
+(* ------------------------------------------------------------------ *)
 (* Mode execution *)
 
 let run_mechanical ~args ~bundle ~ts =
@@ -327,24 +369,13 @@ let run_llm ~args ~bundle ~ts =
     | Ok r -> r
   in
   Printf.eprintf "Validating response...\n%!";
-  let validated_result =
-    match Response_schema.parse_json raw_response with
-    | Error e ->
-      Printf.eprintf "Error: response is not valid JSON: %s\n" e;
-      None
-    | Ok j ->
-      match Response_schema.validate_result j with
-      | Error e ->
-        Printf.eprintf "Warning: response did not pass schema validation: %s\n" e;
-        None
-      | Ok r ->
-        Printf.eprintf "Response validated.\n%!";
-        let (d_ab, d_bg, d_ga) = match Response_schema.extract_deltas j with
-          | Ok triple -> triple
-          | Error _ -> (None, None, None)
-        in
-        Some (r, d_ab, d_bg, d_ga)
+  (* Raw response is always preserved on disk, regardless of validation
+     outcome.  No post-response mechanical fallback (cycle/51 AC3). *)
+  let raw_path =
+    Filename.concat args.cli_output_dir
+      (Printf.sprintf "tsc-%s-%s-raw.txt" bundle.bundle_target_name ts)
   in
+  write_file raw_path raw_response;
   let metadata : run_metadata = {
     meta_target = bundle.bundle_target_name;
     meta_file_hashes =
@@ -354,30 +385,52 @@ let run_llm ~args ~bundle ~ts =
     meta_model    = config.provider_model;
     meta_timestamp = ts;
   } in
-  let raw_path =
-    Filename.concat args.cli_output_dir
-      (Printf.sprintf "tsc-%s-%s-raw.txt" bundle.bundle_target_name ts)
-  in
-  write_file raw_path raw_response;
-  (match validated_result with
-   | Some (result, d_ab, d_bg, d_ga) ->
-     let json_path =
-       Filename.concat args.cli_output_dir
-         (Printf.sprintf "tsc-%s-%s.json" bundle.bundle_target_name ts)
-     in
-     write_file json_path (Report.to_json ~result ~metadata ~mode:"llm"
-       ~delta_alpha_beta:d_ab ~delta_beta_gamma:d_bg ~delta_gamma_alpha:d_ga ());
-     let text_path =
-       Filename.concat args.cli_output_dir
-         (Printf.sprintf "tsc-%s-%s.txt" bundle.bundle_target_name ts)
-     in
-     write_file text_path (Report.to_text ~result ~metadata ~mode:"llm" ());
-     Printf.printf "Done. LLM reports:\n  %s\n  %s\n  %s\n"
-       raw_path json_path text_path
-   | None ->
-     Printf.printf "Done. Raw response: %s\n\
-                    Structured reports not generated (validation failed).\n"
-       raw_path)
+  match Response_schema.parse_json raw_response with
+  | Error e ->
+    Printf.eprintf "Error: response is not valid JSON: %s\n" e;
+    Printf.eprintf "Raw response preserved at %s\n" raw_path;
+    exit 1
+  | Ok j ->
+    (match Response_schema.validate_result j with
+     | Error e ->
+       Printf.eprintf "Error: response did not pass schema validation: %s\n" e;
+       Printf.eprintf "Raw response preserved at %s\n" raw_path;
+       exit 1
+     | Ok result ->
+       (* Strict v3.2 delta validation (cycle/51 AC1/AC2): required
+          delta fields must all be present and in [0, 1]. *)
+       (match Response_schema.validate_v32_deltas j with
+        | Error err ->
+          Printf.eprintf
+            "Error: v3.2 LLM response failed required delta validation: %s\n"
+            (Response_schema.format_v32_validation_error err);
+          let artifact_path =
+            write_validation_failure_artifact
+              ~output_dir:args.cli_output_dir
+              ~target:bundle.bundle_target_name
+              ~ts
+              ~err
+          in
+          Printf.eprintf "Raw response preserved at %s\n" raw_path;
+          Printf.eprintf "Validation failure artifact: %s\n" artifact_path;
+          exit 1
+        | Ok (d_ab, d_bg, d_ga) ->
+          Printf.eprintf "Response validated.\n%!";
+          let json_path =
+            Filename.concat args.cli_output_dir
+              (Printf.sprintf "tsc-%s-%s.json" bundle.bundle_target_name ts)
+          in
+          write_file json_path (Report.to_json ~result ~metadata ~mode:"llm"
+            ~delta_alpha_beta:(Some d_ab)
+            ~delta_beta_gamma:(Some d_bg)
+            ~delta_gamma_alpha:(Some d_ga) ());
+          let text_path =
+            Filename.concat args.cli_output_dir
+              (Printf.sprintf "tsc-%s-%s.txt" bundle.bundle_target_name ts)
+          in
+          write_file text_path (Report.to_text ~result ~metadata ~mode:"llm" ());
+          Printf.printf "Done. LLM reports:\n  %s\n  %s\n  %s\n"
+            raw_path json_path text_path))
 
 let run_hybrid ~args ~bundle ~ts =
   Printf.eprintf "Running hybrid scoring (mechanical + LLM)...\n%!";
@@ -407,17 +460,45 @@ let run_hybrid ~args ~bundle ~ts =
     | Ok r -> r
   in
   Printf.eprintf "Validating LLM response...\n%!";
+  (* Raw response is always preserved on disk, regardless of validation
+     outcome.  No post-response mechanical fallback (cycle/51 AC3). *)
+  let raw_path =
+    Filename.concat args.cli_output_dir
+      (Printf.sprintf "tsc-%s-%s-raw.txt" bundle.bundle_target_name ts)
+  in
+  write_file raw_path raw_response;
   let llm_result =
     match Response_schema.parse_json raw_response with
     | Error e ->
       Printf.eprintf "Error: LLM response is not valid JSON: %s\n" e;
+      Printf.eprintf "Raw response preserved at %s\n" raw_path;
       exit 1
     | Ok j ->
       match Response_schema.validate_result j with
       | Error e ->
         Printf.eprintf "Error: LLM response failed schema validation: %s\n" e;
+        Printf.eprintf "Raw response preserved at %s\n" raw_path;
         exit 1
-      | Ok r -> r
+      | Ok r ->
+        (* Strict v3.2 delta validation (cycle/51 AC1/AC2). *)
+        (match Response_schema.validate_v32_deltas j with
+         | Error err ->
+           Printf.eprintf
+             "Error: v3.2 LLM response failed required delta validation: %s\n"
+             (Response_schema.format_v32_validation_error err);
+           let artifact_path =
+             write_validation_failure_artifact
+               ~output_dir:args.cli_output_dir
+               ~target:bundle.bundle_target_name
+               ~ts
+               ~err
+           in
+           Printf.eprintf "Raw response preserved at %s\n" raw_path;
+           Printf.eprintf "Validation failure artifact: %s\n" artifact_path;
+           Printf.eprintf
+             "Hybrid report not rendered (no post-response mechanical fallback).\n";
+           exit 1
+         | Ok _ -> r)
   in
   let hybrid =
     Hybrid_scoring.combine ~target:bundle.bundle_target_name mech_result llm_result
@@ -427,7 +508,7 @@ let run_hybrid ~args ~bundle ~ts =
       (Printf.sprintf "tsc-%s-%s.json" bundle.bundle_target_name ts)
   in
   write_file json_path (Yojson.Safe.pretty_to_string (Hybrid_scoring.to_json hybrid));
-  Printf.printf "Done. Hybrid report: %s\n" json_path
+  Printf.printf "Done. Hybrid reports:\n  %s\n  %s\n" raw_path json_path
 
 (* ------------------------------------------------------------------ *)
 (* Kata runner *)
@@ -612,7 +693,12 @@ let () =
     (* run_kata always calls exit; this line is unreachable *)
   end;
 
-  (* Resolve effective mode (auto → mechanical or hybrid) *)
+  (* Resolve effective mode (auto -> mechanical or hybrid).
+
+     cycle/51 AC3 invariant: auto-mode mechanical selection is
+     PRE-PROVIDER ONLY.  Once we enter run_llm / run_hybrid below and
+     issue a provider call, any post-response failure is terminal and
+     never falls back to mechanical scoring. *)
   let effective_mode = match args.cli_mode with
     | Auto ->
       if Tsc_engine.Credentials.has_llm_credentials () then begin
