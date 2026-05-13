@@ -1,10 +1,16 @@
 # Wave STATUS — v0.10.0 canonical v3.2 scoring cutover
 # Format: one row per sub-issue.
-# Columns: sub | issue | state | branch | head | dispatched-at | reported-at | note
+# Columns: sub | issue | state | landing-branch | head | reported-at | note
 # state vocabulary: pending | dispatched | scaffolded | implemented | review-ready | merged | closed | blocked
 
-S1 | 50 | pending     | cycle/50 | -        | -                    | -                    | -
-S2 | 51 | pending     | cycle/51 | -        | -                    | -                    | -
-S3 | 52 | pending     | cycle/52 | -        | -                    | -                    | -
-S4 | 53 | pending     | cycle/53 | -        | -                    | -                    | -
-S5 | 54 | held        | cycle/54 | -        | -                    | -                    | held until #50 merges
+S1 | 50 | review-ready | cycle/50-closeout | d54cdb5 | 2026-05-13T17:00Z | γ pushed to fallback after proxy 403 on cycle/50; cycle/50 has scaffold only
+S2 | 51 | review-ready | cycle/51-impl     | d5f7a83 | 2026-05-13T17:00Z | δ-recovered push after proxy 403 on cycle/51; cycle/51 has scaffold only
+S3 | 52 | review-ready | cycle/52-impl     | 5a68950 | 2026-05-13T17:00Z | δ-recovered push after proxy 403 on cycle/52; cycle/52 has scaffold only
+S4 | 53 | review-ready | cycle/53          | bc2fd6a | 2026-05-13T17:00Z | γ pushed natively; canonical branch
+S5 | 54 | held         | cycle/54          | -       | -                   | held until #50 merges to main
+
+# Notes
+# - Wave 1 dispatch hit a session-bound git proxy auth wall: only the session that first pushed a cycle branch may push further commits to it. Recovery pattern: push to `cycle/{N}-impl` (or agent-chosen fallback) from a session that holds owner auth. δ recovered S2/S3; γ@S1 self-recovered to `cycle/50-closeout`.
+# - β review should target the landing-branch column for each sub. Once β merges via PR, the cycle/{N} scaffold branches and the cycle/{N}-impl/closeout branches become history.
+# - cycle/52-redo on origin is a δ mis-push from an earlier confused branch state; it carries S2's content under the wrong name. Canonical S2 landing is cycle/51-impl. The stale branch could not be deleted via push (proxy blocks delete).
+# - All four subs carry "OCaml toolchain unavailable in dispatch sandbox" as known debt; β/CI runs `dune build && dune runtest`.
