@@ -103,14 +103,20 @@ Every report contains:
 ```json
 {
   "mode": "mechanical | llm | hybrid",
+  "schema_version": "v3.2.0",
   "target": "spec | null",
   "alpha": 0.0–1.0,
   "beta":  0.0–1.0,
   "gamma": 0.0–1.0,
-  "c_sigma": 0.0–1.0,
-  "bottleneck_axis": "alpha | beta | gamma"
+  "bottleneck_axis": "alpha | beta | gamma",
+  "provenance": {
+    "aggregate_math":    { "C_sigma_math": 0.0–1.0, "zero_component_present": "bool" },
+    "aggregate_numeric": { "C_sigma_num": 0.0–1.0, "epsilon": 1e-5, "numeric_floor_applied": "bool" }
+  }
 }
 ```
+
+Aggregate facts live under `provenance`. There is no flat top-level `c_sigma` — readers consult `provenance.aggregate_numeric.C_sigma_num` for the verdict-bearing aggregate and `provenance.aggregate_math.C_sigma_math` for the strict mathematical aggregate (zero when any component is exactly zero). The two coincide when every component is at or above `ε`.
 
 Hybrid reports add `mechanical`, `llm`, and `final` sub-objects. The schema fixture lives at `engine/ocaml/test/fixtures/report.schema.json`.
 

@@ -3,8 +3,9 @@
 ## Intent
 
 This kata is the **positive control** for TSC mechanical coherence measurement.
-A correct implementation must score `input/glider.md` **at or above C_Σ = 0.87** in
-mechanical mode. If this kata fails, there is likely a regression in the mechanical
+A correct implementation must score `input/glider.md` **at or above
+`C_sigma_num = 0.87`** in mechanical mode (`provenance.aggregate_numeric.C_sigma_num`
+in the report). If this kata fails, there is likely a regression in the mechanical
 scoring pipeline.
 
 ## What It Tests
@@ -28,7 +29,7 @@ scoring pipeline.
 | Target-file fit (β) | H1 title words match filename | ~1.0 |
 | Version surface consistency (γ) | Minimal, non-conflicting version strings | ~0.7 |
 
-**C_Σ = (α · β · γ)^(1/3) ≈ 0.92** (actual score determined at calibration time).
+**`C_sigma_num` = (α · β · γ)^(1/3) ≈ 0.92** (actual score determined at calibration time; `C_sigma_math` is identical when no component is zero).
 
 The gamma axis score is below 1.0 because the document has no version strings
 (γ defaults to 0.7 for that signal) and no traceability markers (γ defaults to 0.5).
@@ -40,15 +41,22 @@ This is expected for a kata input file — it is not a versioned release artifac
 # Run this kata (from repo root)
 coh --kata 01-glider --mode mechanical
 
-# Expected output: exit 0, JSON with c_sigma >= 0.87 and verdict = "pass"
+# Expected output: exit 0, JSON with provenance.aggregate_numeric.C_sigma_num >= 0.87
+# and verdict = "pass"
 ```
 
 ## Score Range Justification
 
-The `expected.score_range` in `kata.toml` is set to `[0.87, 1.0]`. Justification:
+The `expected.score_range` in `kata.toml` is set to `[0.87, 1.0]` against
+`provenance.aggregate_numeric.C_sigma_num` (geometric, canonical v3.2). Justification:
 
-- The actual measured C_Σ is **0.923** under mechanical mode (calibrated on 2026-05-12).
-- The tolerance is ±0.05 on the lower bound, giving `min = 0.87`.
+- The cycle/34-impl HEAD measurement recorded an arithmetic-mean reading of
+  **0.923**. Under the v0.10.0 canonical-v3.2 cutover (#49 / #50), the
+  corresponding geometric `C_sigma_num` is **≈ 0.917** on the inferred
+  triple (α ≈ 1.000, β ≈ 0.990, γ ≈ 0.779 from README signal narrative).
+- The 0.87 floor brackets the geometric estimate with margin; tightening
+  is deferred until the v0.10.0 first CI run records the canonical triple
+  explicitly. See `kata.toml [baseline]` and #54 §Known debt.
 - The upper bound is 1.0 (unconstrained — a higher score is always acceptable).
 - The bottleneck axis is **gamma** (version surface consistency signals default to
   penalized values when absent). This is expected for a kata input.
@@ -57,7 +65,7 @@ The `expected.score_range` in `kata.toml` is set to `[0.87, 1.0]`. Justification
 
 Kata-01 (this kata) is the positive control. Kata-02 (`katas/02-random-soup/`) is
 the negative control. Together they test whether the engine correctly discriminates
-between structured and unstructured input. The gap should be ≥ 0.2 C_Σ units.
+between structured and unstructured input. The gap should be ≥ 0.2 `C_sigma_num` units.
 
 ## See Also
 

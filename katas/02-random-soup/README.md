@@ -3,8 +3,9 @@
 ## Intent
 
 This kata is the **negative control** for TSC mechanical coherence measurement.
-A correct implementation must score `input/random-soup.md` **at or below C_Σ = 0.74**
-in mechanical mode. The kata "passes" (exit 0) when the engine correctly assigns a
+A correct implementation must score `input/random-soup.md` **at or below
+`C_sigma_num = 0.74`** in mechanical mode (`provenance.aggregate_numeric.C_sigma_num`
+in the report). The kata "passes" (exit 0) when the engine correctly assigns a
 low coherence score to this deliberately incoherent document.
 
 If this kata fails — i.e., the engine scores the random soup document above 0.74 — it
@@ -29,7 +30,7 @@ between structured and unstructured input.
 | Version drift | Multiple conflicting X.Y.Z strings | γ penalized |
 | Heading case drift | Same concept named with different casing | α slight penalty |
 
-**C_Σ ≈ 0.69** (actual score determined at calibration time).
+**`C_sigma_num` ≈ 0.66** (geometric, canonical v3.2; v0.9.x arithmetic mean reading was 0.69 — the same triple under the v0.10.0 cutover formula yields the lower value).
 
 The beta axis is the primary bottleneck: the document contains many internal links
 that do not resolve within the single-file bundle. The mechanical scorer counts
@@ -41,30 +42,38 @@ broken link rate and penalizes accordingly.
 # Run this kata (from repo root)
 coh --kata 02-random-soup --mode mechanical
 
-# Expected output: exit 0, JSON with c_sigma <= 0.74 and verdict = "fail"
+# Expected output: exit 0, JSON with provenance.aggregate_numeric.C_sigma_num <= 0.74
+# and verdict = "fail".
 # The runner exits 0 when the kata expectation is met (i.e., the document
 # correctly scores in the "fail" range, confirming threshold discrimination).
 ```
 
 ## Score Range Justification
 
-The `expected.score_range` in `kata.toml` is set to `[0.0, 0.74]`. Justification:
+The `expected.score_range` in `kata.toml` is set to `[0.0, 0.74]` against
+`provenance.aggregate_numeric.C_sigma_num` (geometric, canonical v3.2). Justification:
 
-- The actual measured C_Σ is **0.689** under mechanical mode (calibrated 2026-05-12).
-- The tolerance is +0.05 on the upper bound, giving `max = 0.74`.
+- The cycle/34-impl HEAD calibration recorded an arithmetic-mean reading of
+  **0.689**. Under the v0.10.0 canonical-v3.2 cutover, the corresponding
+  geometric `C_sigma_num` is **≈ 0.658** on the inferred triple
+  (α ≈ 0.900, β ≈ 0.430, γ ≈ 0.737 from README signal narrative).
+- The 0.74 ceiling brackets the geometric estimate with margin; tightening
+  is deferred until the v0.10.0 first CI run records the canonical triple
+  explicitly. See `kata.toml [baseline]` and #54 §Known debt.
 - The lower bound is 0.0 (unconstrained — a lower score is always acceptable).
 - The bottleneck axis is **beta** (broken link resolution rate drives the penalty).
 
-The gap between kata-01 (0.923) and kata-02 (0.689) is **0.234 C_Σ units**, which
-exceeds the recommended minimum discriminability gap of 0.20.
+The gap between kata-01 (≈ 0.917) and kata-02 (≈ 0.658) is **≈ 0.259
+`C_sigma_num` units** (geometric, canonical v3.2), which exceeds the recommended
+minimum discriminability gap of 0.20.
 
 ## Kata Pass/Fail Semantics for Negative Controls
 
 For `expected.verdict = "fail"` katas, the runner logic is inverted:
 
-- The kata **passes** (exit 0) when `c_sigma <= score_range.max`.
+- The kata **passes** (exit 0) when `C_sigma_num <= score_range.max`.
   This means the engine correctly identified the document as incoherent.
-- The kata **fails** (exit 1) when `c_sigma > score_range.max`.
+- The kata **fails** (exit 1) when `C_sigma_num > score_range.max`.
   This means the engine incorrectly scored the incoherent document as coherent —
   a threshold discrimination regression.
 

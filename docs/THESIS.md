@@ -36,7 +36,12 @@ The theory lives in `spec/`. The engine lives in `engine/ocaml/`. The scoring in
 The composite score is the geometric mean:
 
 ```
-C_Σ = (α · β · γ)^(1/3)
+C_Σ^math = (α · β · γ)^(1/3)
+C_Σ^num  = (max(α, ε) · max(β, ε) · max(γ, ε))^(1/3)
 ```
 
-One zero collapses everything. This is intentional — coherence is not an average.
+`C_Σ^math` is the mathematical aggregate — one zero component collapses it to zero. This is intentional: coherence is not an average.
+
+`C_Σ^num` is the numerical aggregate used for reporting and verdicts. It floors each component at `ε = 10⁻⁵` so the score stays well-defined when a component is exactly zero. The two aggregates coincide whenever every component is at or above `ε`.
+
+Both forms are emitted under `provenance.aggregate_math` and `provenance.aggregate_numeric` in every report (canonical v3.2 shape). There is no flat top-level `c_sigma` — readers consult provenance for the aggregate facts and the per-axis values for the bottleneck.

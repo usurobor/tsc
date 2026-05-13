@@ -185,16 +185,21 @@ The engine writes two files per run:
 
 ### Scoring thresholds
 
-`C_Σ = (α · β · γ)^(1/3)`
+The aggregate is the geometric mean of the three axes. Two canonical forms are emitted under `provenance`:
 
-| Grade | Range |
-|-------|-------|
+- `provenance.aggregate_math.C_sigma_math = (α · β · γ)^(1/3)` — strict mathematical aggregate; zero whenever any component is zero.
+- `provenance.aggregate_numeric.C_sigma_num = (max(α, ε) · max(β, ε) · max(γ, ε))^(1/3)` — verdict-bearing numerical aggregate; floors components at `ε = 10⁻⁵` so the score stays well-defined at the boundary. Equals `C_sigma_math` whenever every component is at or above `ε`.
+
+There is no flat top-level `c_sigma` field — readers consult `provenance` for the aggregate facts.
+
+| Grade | `C_sigma_num` range |
+|-------|--------------------|
 | A | >= 0.90 |
 | B | >= 0.80 |
 | C | >= 0.70 |
 | F | < 0.70 |
 
-The geometric mean naturally penalizes imbalance — one collapsed axis drags `C_Σ` disproportionately. The report names the lowest-scoring axis as the bottleneck.
+The geometric mean naturally penalizes imbalance — one collapsed axis drags the aggregate disproportionately. The report names the lowest-scoring axis as the bottleneck.
 
 ---
 

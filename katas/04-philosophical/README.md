@@ -17,7 +17,8 @@ whether the underlying argument is semantically coherent.
 coh --kata 04-philosophical --mode mechanical
 ```
 
-Exits 0 when the mechanical C_Σ falls within `expected.score_range`; non-zero
+Exits 0 when the mechanical `provenance.aggregate_numeric.C_sigma_num`
+(geometric, canonical v3.2) falls within `expected.score_range`; non-zero
 otherwise.
 
 ## Input
@@ -38,11 +39,13 @@ directly). The rationale:
 1. **Documents a real limitation.** TSC's mechanical scorer claims to be
    useful across domains (issue #34 §Problem). kata-04's purpose is to
    *exercise that claim* on natural-language input and produce a record of
-   what the mechanical scorer actually says about it — observed C_Σ ≈ 0.933,
-   which is in the same band as kata-01 (the well-structured cellular-
-   automata glider, C_Σ ≈ 0.923). The kata thus *surfaces* the limit: the
-   mechanical scorer cannot, on a single file, discriminate "well-structured
-   philosophy" from "well-structured engineering doc."
+   what the mechanical scorer actually says about it — observed
+   `C_sigma_num` ≈ 0.928 (geometric, canonical v3.2; the v0.9.x arithmetic
+   reading was 0.933). This is in the same band as kata-01 (the
+   well-structured cellular-automata glider, `C_sigma_num` ≈ 0.917). The
+   kata thus *surfaces* the limit: the mechanical scorer cannot, on a
+   single file, discriminate "well-structured philosophy" from
+   "well-structured engineering doc."
 2. **Hermetic-by-default is a project-wide constraint** (Phase 1 design;
    `katas/README.md`; cycle #34 §Active design constraints). LLM-mode katas
    require credentials and are not runnable in CI without secrets. Cycle #34
@@ -59,20 +62,25 @@ directly). The rationale:
    The numerical `score_range` brackets the *mechanical* observation, which
    disagrees. The disagreement is the lesson.
 
-## Observed C_Σ (calibration)
+## Observed score (calibration)
 
 On `cycle/34-impl` HEAD:
 
-- **C_Σ = 0.9333** (α=1.000, β=1.000, γ=0.800)
+- α=1.000, β=1.000, γ=0.800
+- Pre-cutover arithmetic-mean reading: **c_sigma = 0.9333**
+- Post-cutover canonical reading: **`C_sigma_num` = (1.0·1.0·0.8)^(1/3) ≈ 0.9283** (geometric)
 - bottleneck: γ (version-surface inconsistency from the example's "v2.1.1" /
   "v2.0.0" / "v3.2.0" cross-references)
 
-The `expected.score_range` is `{min=0.0, max=0.95}`. The wide range is
-intentional — it is itself documentation that mechanical scoring cannot
-discriminate this input from a well-structured engineering doc. If a future
-mechanical-scorer refinement narrows that gap (lowers the score for
+The `expected.score_range` is `{min=0.0, max=0.95}` against `C_sigma_num`. The
+wide range is intentional — it is itself documentation that mechanical scoring
+cannot discriminate this input from a well-structured engineering doc. If a
+future mechanical-scorer refinement narrows that gap (lowers the score for
 natural-language argumentation), the range should be tightened in the same
-cycle.
+cycle. The v0.10.0 cutover did not change this kata's range — the arithmetic
+→ geometric shift only moves the reading from 0.9333 to 0.9283, well inside
+the existing band. See `kata.toml [baseline]` (`rationale_category =
+"frontier-tightening"`).
 
 ## Why this kata matters
 
