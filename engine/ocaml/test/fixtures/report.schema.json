@@ -1,8 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "Canonical TSC report schema — all modes must satisfy required fields.",
+  "description": "Canonical v3.2 TSC report schema. Aggregate facts live ONLY under provenance.aggregate_math and provenance.aggregate_numeric. No flat top-level c_sigma (or related) fields are permitted at any level — this is the v0.10.0 canonical-v3.2 cutover.",
   "type": "object",
-  "required": ["mode", "alpha", "beta", "gamma", "c_sigma", "bottleneck_axis"],
+  "required": ["mode", "alpha", "beta", "gamma", "bottleneck_axis", "provenance"],
+  "not": {
+    "anyOf": [
+      { "required": ["c_sigma"] },
+      { "required": ["c_sigma_math"] },
+      { "required": ["c_sigma_num"] },
+      { "required": ["zero_component_present"] },
+      { "required": ["numeric_floor_applied"] },
+      { "required": ["epsilon"] }
+    ]
+  },
   "properties": {
     "target": { "type": ["string", "null"] },
     "mode": {
@@ -12,42 +22,105 @@
     "alpha":          { "type": "number", "minimum": 0.0, "maximum": 1.0 },
     "beta":           { "type": "number", "minimum": 0.0, "maximum": 1.0 },
     "gamma":          { "type": "number", "minimum": 0.0, "maximum": 1.0 },
-    "c_sigma":        { "type": "number", "minimum": 0.0, "maximum": 1.0 },
     "bottleneck_axis":{ "type": "string", "enum": ["alpha", "beta", "gamma"] },
+    "provenance": {
+      "type": "object",
+      "description": "Canonical v3.2 provenance object. Aggregate facts live here, not at the top level.",
+      "required": [
+        "discrepancy_symbol",
+        "discrepancy_range",
+        "coherence_link",
+        "barrier_phi",
+        "barrier_clip_eta_phi",
+        "endpoint_policy",
+        "energy_variable",
+        "link_lipschitz_constants",
+        "aggregate_math",
+        "aggregate_numeric",
+        "gauge_witness"
+      ],
+      "properties": {
+        "aggregate_math": {
+          "type": "object",
+          "required": ["C_sigma_math", "zero_component_present"],
+          "properties": {
+            "C_sigma_math":          { "type": ["number", "null"] },
+            "zero_component_present":{ "type": "boolean" }
+          }
+        },
+        "aggregate_numeric": {
+          "type": "object",
+          "required": ["C_sigma_num", "epsilon", "numeric_floor_applied"],
+          "properties": {
+            "C_sigma_num":          { "type": ["number", "null"] },
+            "epsilon":              { "type": ["number", "null"] },
+            "numeric_floor_applied":{ "type": "boolean" }
+          }
+        },
+        "gauge_witness": {
+          "type": "object",
+          "required": ["w_gauge_ref", "w_gauge_spread", "tau_gauge_spread", "canonical_remap_procedure"],
+          "properties": {
+            "w_gauge_ref":               { "type": ["number", "null"] },
+            "w_gauge_spread":            { "type": ["number", "null"] },
+            "tau_gauge_spread":          { "type": ["number", "null"] },
+            "canonical_remap_procedure": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
     "mechanical": {
       "type": "object",
-      "description": "Present in hybrid mode only.",
-      "required": ["alpha", "beta", "gamma", "c_sigma", "evidence_kind"],
+      "description": "Present in hybrid mode only. Sub-object carries aggregate facts only under nested provenance — never as flat c_sigma.",
+      "required": ["alpha", "beta", "gamma", "evidence_kind", "provenance"],
+      "not": {
+        "anyOf": [
+          { "required": ["c_sigma"] },
+          { "required": ["c_sigma_math"] },
+          { "required": ["c_sigma_num"] }
+        ]
+      },
       "properties": {
         "alpha":        { "type": "number" },
         "beta":         { "type": "number" },
         "gamma":        { "type": "number" },
-        "c_sigma":      { "type": "number" },
         "evidence_kind":{ "type": "string", "enum": ["structural-proxy"] }
       }
     },
     "llm": {
       "type": "object",
-      "description": "Present in hybrid mode only.",
-      "required": ["alpha", "beta", "gamma", "c_sigma", "evidence_kind"],
+      "description": "Present in hybrid mode only. Same flat-c_sigma ban as mechanical sub-object.",
+      "required": ["alpha", "beta", "gamma", "evidence_kind", "provenance"],
+      "not": {
+        "anyOf": [
+          { "required": ["c_sigma"] },
+          { "required": ["c_sigma_math"] },
+          { "required": ["c_sigma_num"] }
+        ]
+      },
       "properties": {
         "alpha":        { "type": "number" },
         "beta":         { "type": "number" },
         "gamma":        { "type": "number" },
-        "c_sigma":      { "type": "number" },
         "evidence_kind":{ "type": "string", "enum": ["semantic-judgment"] }
       }
     },
     "final": {
       "type": "object",
-      "description": "Present in hybrid mode only.",
-      "required": ["source", "alpha", "beta", "gamma", "c_sigma"],
+      "description": "Present in hybrid mode only. Selection record; aggregate facts live in top-level provenance, not here.",
+      "required": ["source", "alpha", "beta", "gamma"],
+      "not": {
+        "anyOf": [
+          { "required": ["c_sigma"] },
+          { "required": ["c_sigma_math"] },
+          { "required": ["c_sigma_num"] }
+        ]
+      },
       "properties": {
         "source": { "type": "string", "enum": ["llm", "mechanical", "agreement"] },
         "alpha":  { "type": "number" },
         "beta":   { "type": "number" },
-        "gamma":  { "type": "number" },
-        "c_sigma":{ "type": "number" }
+        "gamma":  { "type": "number" }
       }
     }
   }
