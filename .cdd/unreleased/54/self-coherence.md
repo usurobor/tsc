@@ -1,5 +1,5 @@
-<!-- sections: [Gap, Skills, ACs, Self-check, Debt, CDD-Trace, Review-readiness, Fix-round-1] -->
-<!-- completed: [Gap, Skills, ACs, Self-check, Debt, CDD-Trace, Review-readiness, Fix-round-1] -->
+<!-- sections: [Gap, Skills, ACs, Self-check, Debt, CDD-Trace, Review-readiness, Fix-round-1, Fix-round-2] -->
+<!-- completed: [Gap, Skills, ACs, Self-check, Debt, CDD-Trace, Review-readiness, Fix-round-1, Fix-round-2] -->
 
 # α self-coherence — cycle/54 (S5 cutover cleanup)
 
@@ -138,3 +138,71 @@ Diff stat: 1 file changed, 39 insertions(+), 39 deletions(-) — pure shape, no 
 | Base | `origin/main` @ `3efde94` (unchanged from R1) |
 | Toolchain | still no OCaml in sandbox; fix derived by interface reading + convention parity with `test_cross_target.ml` |
 | Signal | **Ready for β R2.** Expect CI green; if any further drift surfaces, repeat fix-round under R2. |
+
+## Fix-round-2
+
+**Round:** 2 (post-R1 CI fix)
+**Trigger:** PR #59 build job still FAILED at R1 HEAD `d6a48b2` (build job 75935989276 + run-katas job 75936016926 both failure). The δ-at-gate operator inspected the actual CI log and named three literal failures that R1 had mis-diagnosed as "not present in this cycle's diff."
+**Toolchain status:** still no OCaml/`dune`/`opam` in the dispatch sandbox; fixes derived by reading the v0.10.0 OCaml interface surface (`mechanical_scoring.mli`, `coherence.ml`, `cross_target.ml`) on `cycle/54-closeout` against the failing test files.
+
+### Honest acknowledgment — R1 mis-diagnosis
+
+R1's drift section (§Fix-round-1 above) dismissed all three operator-named symptoms as "speculative" — concretely:
+
+> The δ-at-gate report named three speculative symptoms (`c_sigma`, `comparison_to_json`, `w21`); auditing each against the v0.10.0 engine surface on `main`: [...] not present in this cycle's diff [...] No arity mismatch [...] does not appear anywhere
+
+**Two of the three were real, literal failures present on `cycle/54-closeout` at `d6a48b2`** (and, as it happens, also on `origin/main` — but the wave operator's task is making `cycle/54-closeout` green, not main). R1's grep failed because:
+
+- For `c_sigma`: R1 ran `git diff origin/main..HEAD -- 'engine/ocaml/**/*.ml'` and saw only `test_target_registry.ml` had changed. R1 then reasoned "the literal failure can't be in unchanged files." That reasoning was wrong — *unchanged files can fail to compile against changed interface contracts*. The v0.10.0 canonical-v3.2 cutover in `cycle/50` (commit `93c662c`) had replaced flat `c_sigma : float` with `aggregate : Mechanical_scoring.aggregate` on `Mechanical_scoring.result`; `test_cross_target.ml` line 64 (added in `cycle/53`) constructed a `result` literal with the *pre-cutover* `c_sigma = ...` form. The compile error was latent on main and propagated unchanged through cycle/54.
+- For `comparison_to_json` / `compare`: R1 read the `.mli` and noted `comparison_to_json` is monomorphic (`comparison -> Yojson.Safe.t`). True — but R1 missed that the upstream call `Mechanical_scoring.compare ~old_:... ~new_:...` is the partial-application site: `compare` has signature `?config:config -> old_:Bundle.t -> new_:Bundle.t -> comparison`, which without a unit terminator returns a *function value* (still expecting `?config` or a positional argument), not a `comparison`. Passing that function value to `comparison_to_json` fails type-check at the *next* line. R1 grep'd for `comparison_to_json` arity but the actual symptom is one line earlier.
+- For `w21`: R1's R1 fix (commit `7a23890`) had already removed the `fail (...); []` sequences that would have triggered warning 21. So this third symptom from the brief was indeed resolved by R1 — the brief listed it as "may still be present despite your R1 grammar fix," and verification by exhaustive grep confirms no remaining `; <expr>` sequences after `fail` calls, no naked non-unit expressions in statement position.
+
+**The lesson:** when an operator-named symptom is reported, audit by *interface contract* (does the literal call/access type-check against the current `.mli`?), not by *file-diff* (the failing site may be in a file untouched this cycle).
+
+### Drift diagnosis — the three failures
+
+**F1: `engine/ocaml/test/test_cross_target.ml` line 64** — record literal uses pre-cutover field name.
+- Construct: `let mk_result ~target ~alpha ~beta ~gamma : Mechanical_scoring.result = { ...; c_sigma = (alpha +. beta +. gamma) /. 3.0; ... }`
+- Canonical `Mechanical_scoring.result` (per `engine/ocaml/lib/mechanical_scoring.mli` lines 77–96 on `cycle/54-closeout`) has no `c_sigma : float` field. It has `aggregate : Mechanical_scoring.aggregate`, where `aggregate` carries `c_sigma_math`, `c_sigma_num`, `epsilon`, `zero_component_present`, `numeric_floor_applied`.
+- Symptom: `Error: This record contains the field c_sigma which does not belong to type Mechanical_scoring.result` (or "no field labeled c_sigma").
+
+**F2: `engine/ocaml/test/test_mechanical.ml` line 432–433** — partial-application call site.
+- Construct: `let cmp = Mechanical_scoring.compare ~old_:bundle_a ~new_:bundle_b in let json = Mechanical_scoring.comparison_to_json cmp in`
+- `compare` is declared `val compare : ?config:config -> old_:Bundle.t -> new_:Bundle.t -> comparison` with no unit terminator. With all labeled arguments supplied but the optional `?config` not bound, OCaml does not collapse to the return type — `cmp` is a function value `?config:config -> comparison` (effectively), not a `comparison`.
+- Symptom: `Error: This expression has type ?config:config -> comparison but an expression was expected of type comparison` at the `comparison_to_json cmp` call.
+
+**F3: `engine/ocaml/test/test_target_registry.ml`** — warning 21 candidate site (per brief's precaution).
+- After R1's removal of `fail (...); []` sequences, all `match`-arm `fail` calls return `'a` and unify with the other branches' types. Exhaustive grep on `cycle/54-closeout @ d6a48b2` confirms no remaining `; <expr>` sequences after `fail` calls; the runner at lines 254–260 is a sequence of `unit`-returning `Printf.printf` and test-function calls. No w21 candidate present.
+- This third failure was already resolved by R1 commit `7a23890`. R2 verified by re-grep — no fix needed.
+
+### Fixes applied — commits `09842e5` (F1) and `2ab45c2` (F2)
+
+**F1 fix (`09842e5`):** Construct `aggregate` via `Coherence.aggregate ~epsilon:Coherence.epsilon_default ~s_alpha ~s_beta ~s_gamma ()` (same path `Cross_target.row_of_mechanical` uses internally) and assign it to the `aggregate` field. The synthetic fixture now produces a valid `Mechanical_scoring.result` with the canonical aggregate sub-record. No test-oracle change: `Cross_target.row_of_mechanical` re-derives the aggregate from `r.alpha/beta/gamma.score` regardless of `r.aggregate`, so AC2/AC3/AC4 oracles are preserved bit-for-bit.
+
+**F2 fix (`2ab45c2`):** Pass `~config:Mechanical_scoring.default_config` explicitly at the `compare` call site. This binds the optional argument, collapsing the call to its return type `comparison`. Behavior unchanged because `default_config` is the same value the optional would default to internally; the AC3 oracle (form-suffixed delta field names + value parity) is preserved bit-for-bit. The brief offered two alternative fixes (explicit `~config` or `()` terminator); since the current `.mli` has no unit terminator, the first alternative was applied.
+
+**F3 fix:** None required — R1 commit `7a23890` already removed the warning-21 candidates. R2 re-verified by `grep -nE 'fail \(.*\)$|fail "[^"]*"$' engine/ocaml/test/test_target_registry.ml` followed by line-by-line type-flow trace; no remaining naked non-unit expressions in statement position.
+
+Diff stat: 2 files changed, 15 insertions(+), 2 deletions(-) — pure call-site shape, no logic added or removed.
+
+### Verification
+
+- **Local `dune build` / `dune runtest`:** still deferred (no toolchain — see Toolchain status above). Fix verified by reading the canonical `.mli` against the failing call sites.
+- **CI on push of `2ab45c2`:** PR #59 workflow re-ran at 2026-05-14T07:08:40Z. Both critical jobs **succeeded**:
+  - `build` (job `75944432772`): **success** at 07:11:05Z (workflow run `25847006258`)
+  - `run-katas (auto-discovered)` (job `75944432816`): **success** at 07:10:43Z (workflow run `25847006266`)
+- All other PR jobs (`forbidden-wording`, `linkcheck`, `spec-validate`): **success**.
+
+### Final SHA + branch
+
+| Field | Value |
+|---|---|
+| Round | 2 (fix-round) |
+| Drifts fixed | (F1) `c_sigma` → `aggregate` sub-record in `test_cross_target.ml` line 64; (F2) explicit `~config:default_config` to terminate partial application in `test_mechanical.ml` line 432 |
+| Fix SHAs | `09842e5` (F1), `2ab45c2` (F2, current HEAD) |
+| Branch | `cycle/54-closeout` (proxy push succeeded for both; no fallback branch needed) |
+| Base | `origin/main` @ `3efde94` (unchanged since R1) |
+| Toolchain | still no OCaml in sandbox; fixes derived by `.mli` reading against canonical engine interfaces |
+| CI verdict | **GREEN** on `2ab45c2` (`build` + `run-katas` + all non-deferred jobs success) |
+| R1 disclosure | R1's "speculative symptoms" framing was wrong; two of three operator-named failures (F1, F2) were literal type errors on cycle/54-closeout HEAD `d6a48b2`. R1's grep was too narrow (used file-diff filter instead of interface-contract audit). Recorded plainly above per dispatch instruction. |
+| Signal | **Ready for β R2 (CI-green prereq met).** |
