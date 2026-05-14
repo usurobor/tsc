@@ -56,12 +56,21 @@ let mk_axis_result axis score : Mechanical_scoring.axis_result =
     unresolved_ambiguity  = [] }
 
 let mk_result ~target ~alpha ~beta ~gamma : Mechanical_scoring.result =
+  let agg =
+    Coherence.aggregate
+      ~epsilon:Coherence.epsilon_default
+      ~s_alpha:alpha ~s_beta:beta ~s_gamma:gamma ()
+  in
   { mode            = `Mechanical;
     target          = Some target;
     alpha           = mk_axis_result `Alpha alpha;
     beta            = mk_axis_result `Beta  beta;
     gamma           = mk_axis_result `Gamma gamma;
-    c_sigma         = (alpha +. beta +. gamma) /. 3.0;
+    aggregate       = { c_sigma_math           = agg.c_sigma_math;
+                        c_sigma_num            = agg.c_sigma_num;
+                        epsilon                = agg.epsilon;
+                        zero_component_present = agg.zero_component_present;
+                        numeric_floor_applied  = agg.numeric_floor_applied };
     bottleneck_axis = `Alpha;
     confidence      = 1.0;
     diagnostics     = [] }
