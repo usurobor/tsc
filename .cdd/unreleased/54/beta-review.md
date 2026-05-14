@@ -1,5 +1,5 @@
-<!-- sections: [Verdict, Contract Integrity, Issue Contract, Architecture Check, Honest-claim Verification, Findings, CI Status, Artifact Completeness, Notes] -->
-<!-- completed: [Verdict, Contract Integrity, Issue Contract, Architecture Check, Honest-claim Verification, Findings, CI Status, Artifact Completeness, Notes] -->
+<!-- sections: [Verdict, Contract Integrity, Issue Contract, Architecture Check, Honest-claim Verification, Findings, CI Status, Artifact Completeness, Notes, Round 2] -->
+<!-- completed: [Verdict, Contract Integrity, Issue Contract, Architecture Check, Honest-claim Verification, Findings, CI Status, Artifact Completeness, Notes, Round 2] -->
 
 # β review — cycle/54 (S5: cutover cleanup)
 
@@ -154,3 +154,41 @@ This level of pre-review honest-claim discipline made the β review fast.
 3. **AC7 self-application** — α found the defect at `431293f` before β review. Workflow file now excluded; re-run at HEAD exits 0.
 
 **Merge instruction (rule 3.11):** open PR from `cycle/54-closeout` → `main` with `Closes #54` in the merge commit body. `main` is branch-protected; β does not direct-push. Operator merges via PR after CI green confirms AC6 / AC8 runtime invariants.
+
+## Round 2
+
+**Verdict:** APPROVED
+
+**Round:** 2 (focused re-review after α fix-round R2)
+**Fixed this round:** `09842e5` + `2ab45c2` + `2c8dee7` close prior B-severity `ci-status: defer to CI run` finding from R1.
+**Review SHA:** `2c8dee7` (`cycle(54): fix-r2: self-coherence — append Fix-round-2 section`); fix-bearing OCaml commit is `2ab45c2`.
+**Branch:** `cycle/54-closeout` @ `2c8dee7`
+**Base:** `origin/main` @ `3efde94` (unchanged from R1)
+**Branch CI state:** **GREEN** on fix-bearing commit `2ab45c2` — `build` success (07:11:05Z), `run-katas (auto-discovered)` success (07:10:43Z), `forbidden-wording` / `linkcheck` / `spec-validate` all success. HEAD `2c8dee7` is doc-only OCaml-identical to `2ab45c2`; non-OCaml jobs already green on HEAD, `build` in-flight at review time (not a blocker — same OCaml tree as `2ab45c2`).
+**Merge instruction:** merge PR #59 (`cycle/54-closeout` → `main`) via GitHub UI with `Closes #54` in the merge commit. `main` is branch-protected; β does not direct-push.
+
+### §2.1.x Fix-round verification
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| V1 | Fix-round addresses the three named failures | ✅ | F1 (`09842e5`): single localized 11-line edit in `engine/ocaml/test/test_cross_target.ml` replaces bare `c_sigma = ...` with `aggregate = { ... }` sub-record constructed via `Coherence.aggregate ~epsilon ~s_alpha ~s_beta ~s_gamma ()`. F2 (`2ab45c2`): single 6-line edit in `engine/ocaml/test/test_mechanical.ml` adds `~config:Mechanical_scoring.default_config` to terminate the `compare` partial application. F3: re-verified — exhaustive grep of `test_target_registry.ml` shows every `fail (Printf.sprintf ...)` is a bare statement, no surviving `; []` regressions; α R1's `7a23890` had already resolved warning-21 candidates. |
+| V2 | Rule 3.10 CI-green gate satisfied | ✅ | Reclassifies R1's deferred B-severity `ci-status: defer to CI run` to satisfied. `mcp__github__pull_request_read get_check_runs pullNumber=59` confirms `build` + `run-katas (auto-discovered)` success on `2ab45c2`. HEAD `2c8dee7` non-OCaml jobs already success; OCaml `build` in-flight, expected green (OCaml-identical tree). |
+| V3 | α R1 mis-diagnosis disclosed honestly | ✅ | Self-coherence §Fix-round-2 carries an "Honest acknowledgment — R1 mis-diagnosis" subsection naming the wrong inference ("unchanged files can fail to compile against changed interface contracts") and recording the lesson ("audit by interface contract, not by file-diff"). PR #59 comment by α R2 (id 4448525705) restates the disclosure publicly: "R1's drift section ... dismissed the operator's three named symptoms as 'speculative' ... Two of the three named failures (F1, F2) were in fact literal type errors." |
+| V4 | Frozen snapshots untouched in fix-round | ✅ | `git diff 4d293ff..HEAD -- 'docs/alpha/doctrine/3.2.0/' 'docs/alpha/engine/0.5.0/' 'docs/design/0.5.0/'` is empty (0 lines). Broader diff confirms fix-round touched only test files + `.cdd/unreleased/54/`. CDD §5.6 honored throughout the fix-round. |
+| V5 | Release artifacts consistent at 0.10.0 | ✅ | `VERSION` = `0.10.0`; `engine/ocaml/dune-project` = `(version 0.10.0)`; `engine/ocaml/tsc_engine.opam` = `version: "0.10.0"`. Unchanged from R1 — paranoia check passes. |
+
+**Scope discipline check:** `git diff --stat 4d293ff..HEAD` shows 5 files touched — `.cdd/unreleased/54/beta-review.md` (R1 artifact already-present, unchanged in fix-round), `.cdd/unreleased/54/self-coherence.md` (α R2 disclosure append), `engine/ocaml/test/test_cross_target.ml` (F1), `engine/ocaml/test/test_mechanical.ml` (F2), `engine/ocaml/test/test_target_registry.ml` (R1 `7a23890` already-merged grammar fix, no new R2 changes). `git diff 4d293ff..HEAD -- engine/ocaml/lib/` is empty: **no production code modified in the fix-round**. α stayed inside the test-alignment authority.
+
+### Findings (R2)
+
+| # | Finding | Evidence | Severity | Type |
+|---|---|---|---|---|
+
+(empty — zero R2 findings; R1's sole B-severity `ci-status: defer to CI run` is now satisfied by V2)
+
+### Notes
+
+- **R1 mis-diagnosis is a cdd-iteration data point, not a β-blocker.** Per rule 3.12, the R2 result is what matters for the verdict against α's work; the mis-diagnosis itself is a reviewer-skill-gap class observation for γ's cdd-iteration capture. The lesson α recorded ("audit by interface contract, not by file-diff") generalizes — when a δ-at-gate operator names literal failures, the first move is type-checking each call/access against the current `.mli`, not narrowing scope by `git diff`. Worth surfacing in `cdd-iteration` as a fix-round R1 anti-pattern.
+- **R1 deferred-CI verdict was correctly calibrated.** β R1 classified the CI-green gate as B-severity `ci-status: defer to CI run` rather than blocking — given the dispatch sandbox had no OCaml toolchain, that was the right call. The deferred finding closed cleanly once CI ran and the fix-round resolved the surfaced drifts. The CDD review protocol's "defer to CI" escape hatch worked as designed.
+- **α R2 fix discipline is exemplary.** Each fix is the minimal localized change at the literal failure site; commit messages cite the canonical `.mli`, the cycle/50 cutover commit that introduced the contract drift, and explicit disclosure of R1's diagnostic error. No collateral refactoring; no production code touched. AC oracles preserved bit-for-bit per α's commit-message claims.
+- **Operator δ-at-gate triage was load-bearing.** The operator's CI-log inspection at HEAD `d6a48b2` named two literal type errors (F1, F2) that R1's narrower grep had dismissed. Without that triage, the fix-round would have stalled. This validates the δ-at-gate role pattern for catching reviewer scope errors.
