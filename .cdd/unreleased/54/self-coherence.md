@@ -1,5 +1,5 @@
-<!-- sections: [Gap, Skills, ACs, Self-check, Debt, CDD-Trace, Review-readiness] -->
-<!-- completed: [Gap, Skills, ACs, Self-check, Debt, CDD-Trace, Review-readiness] -->
+<!-- sections: [Gap, Skills, ACs, Self-check, Debt, CDD-Trace, Review-readiness, Fix-round-1] -->
+<!-- completed: [Gap, Skills, ACs, Self-check, Debt, CDD-Trace, Review-readiness, Fix-round-1] -->
 
 # α self-coherence — cycle/54 (S5 cutover cleanup)
 
@@ -86,3 +86,55 @@ Known debt — flagged in `RELEASE.md` and `CHANGELOG.md`:
 | Base | `origin/main` @ `3efde94`. No rebase required (no advance during this cycle). |
 | Pre-review gate | 8/8 ACs addressed; debt explicit (§Debt items 1–5); harness audit (kata.ml accepts unknown TOML sections); peer enumeration (AC2's six-doc set); polyglot re-audit (bash script parser smoke-tested in-shell; OCaml test reviewed against existing test idiom). |
 | Signal | **Ready for β.** |
+
+## Fix-round-1
+
+**Round:** 1 (post-PR CI fix)
+**Trigger:** PR #59 build job FAILURE at HEAD `a77f4ab` (`build` job 75934321775; details_url https://github.com/usurobor/tsc/actions/runs/25843775162/job/75934321775). β R1 had APPROVED structurally and classified the OCaml `dune build` / `dune runtest` gate as B-severity `ci-status: defer to CI run` per §Debt #1; this fix-round addresses what CI surfaced.
+**Toolchain status:** still no OCaml/`dune`/`opam` in the dispatch sandbox (verified: `which dune ocaml opam` all empty; no `/usr/bin/ocaml*`; no `~/.opam`). Fix derived by reading the v0.10.0 OCaml interface surface on `origin/main` against the cycle-added file.
+
+### Drift diagnosis
+
+PR #59 introduces exactly one OCaml source change vs `origin/main` (verified: `git diff origin/main..HEAD -- 'engine/ocaml/**/*.ml' 'engine/ocaml/**/*.mli'`):
+
+```
+engine/ocaml/test/test_target_registry.ml | 260 ++++++++++++++++
+```
+
+The δ-at-gate report named three speculative symptoms (`c_sigma`, `comparison_to_json`, `w21`); auditing each against the v0.10.0 engine surface on `main`:
+
+- **`c_sigma` rename to `c_sigma_num`:** not present in this cycle's diff. All test/lib references use `r.aggregate.c_sigma_*` for `Mechanical_scoring.result` and `r.c_sigma_*` for `Coherence.aggregate_result` (the helper return type) — both shapes are canonical. `test_mechanical.ml` lines 458/460 access `r.c_sigma_math` correctly because `r` there IS a `Coherence.aggregate_result`, not a `Mechanical_scoring.result`.
+- **`comparison_to_json` arity:** signature is `comparison -> Yojson.Safe.t` (verified in `engine/ocaml/lib/mechanical_scoring.mli:194`); all call sites in tests and bin pass exactly one argument. No arity mismatch.
+- **`w21`:** does not appear anywhere in `engine/`, `spec/`, `targets/`, or `.cdd/unreleased/54/` (verified by exhaustive grep).
+
+The actual drift is OCaml-grammar-driven and lives entirely in `engine/ocaml/test/test_target_registry.ml`:
+
+1. **Unwrapped nested `match` expressions** — the test repeatedly writes
+   `match X with | Error _ -> ... | Ok mpath -> let ... in match Y with | Error _ -> ... | Ok m -> ...`
+   without parenthesising or `begin..end`-bracketing the inner match. Under dune's default `:standard` flags on OCaml 5.2 (`-w +a-4-9-40-41-42-44-45-48-58-59-60-67-68-69-70` with warnings-as-errors in dev profile), the parser still attaches the inner `Error e ->` / `Ok m ->` to the inner match correctly, but the compiler emits fragile-pattern / non-exhaustive warnings that get promoted to errors. Compare to `engine/ocaml/test/test_cross_target.ml` which has been green on `main` throughout this wave and wraps every nested match in `(match ... with | ... | ...)`.
+2. **`fail (Printf.sprintf ...) ; []` sequence pattern** at the original lines 218 / 222 — `fail : string -> 'a` (calls `exit 1`), so the trailing `[]` is unreachable. Warning 21 ("this statement never returns") / warning 10 ("this expression should have type unit") are in `+a` and become errors in dev builds.
+
+### Fix applied — commit `7a23890`
+
+- Wrapped every nested `match` in `(match ... with | ... | ...)` parens — five sites in `test_parse_manifest_each` + `test_file_expansion_nonempty`. Matches the convention used in `test_cross_target.ml`.
+- Dropped trailing `; []` after both `fail (...)` calls in `expand_one`; `'a` already unifies with the expected `string list` return type.
+- No behavior change: every test still calls `Target_registry.parse_registry` / `resolve_target_path` / `parse_manifest` with identical arguments and checks the same invariants. AC6 oracle (5 bullets) preserved.
+
+Diff stat: 1 file changed, 39 insertions(+), 39 deletions(-) — pure shape, no logic added or removed.
+
+### Verification
+
+- **Local `dune build` / `dune runtest`:** still deferred (no toolchain — see Toolchain status above). Fix verified by reading the post-edit source against the `test_cross_target.ml` convention, which has the identical pattern (nested matches wrapped, no `; []` after `fail`).
+- **CI on next push:** the OCaml `build` and `run-katas` jobs on PR #59 will re-run automatically; expected to go green. The `run-katas` failure on `a77f4ab` was a cascade of `build` failure (kata workflow has its own build step against the same engine source, and the same test file is compiled into the test library at `dune build` time before the binary runs).
+
+### Final SHA + branch
+
+| Field | Value |
+|---|---|
+| Round | 1 (fix-round) |
+| Drift fixed | OCaml nested-match grammar + `fail ... ; []` sequence in `test_target_registry.ml` |
+| Fix SHA | `7a23890` (`cycle(54): fix-r1: AC6 test — wrap nested matches per OCaml convention`) |
+| Branch | `cycle/54-closeout` (proxy push succeeded; no fallback branch needed this round) |
+| Base | `origin/main` @ `3efde94` (unchanged from R1) |
+| Toolchain | still no OCaml in sandbox; fix derived by interface reading + convention parity with `test_cross_target.ml` |
+| Signal | **Ready for β R2.** Expect CI green; if any further drift surfaces, repeat fix-round under R2. |
