@@ -429,7 +429,11 @@ let test_comparison_delta_rename () =
     ~target_name:"b" ~target_kind:Aggregate
     ~files:[("alpha.md", sample_content_a); ("beta.md", sample_content_b)]
   in
-  let cmp = Mechanical_scoring.compare ~old_:bundle_a ~new_:bundle_b in
+  let cmp =
+    Mechanical_scoring.compare
+      ~config:Mechanical_scoring.default_config
+      ~old_:bundle_a ~new_:bundle_b
+  in
   let json = Mechanical_scoring.comparison_to_json cmp in
   (* AC3 positive: form-suffixed delta fields are present. *)
   check (has_field "delta_c_sigma_num" json)
