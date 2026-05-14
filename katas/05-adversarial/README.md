@@ -14,7 +14,8 @@ each other on every load-bearing claim.
 coh --kata 05-adversarial --mode mechanical
 ```
 
-Exits 0 when the mechanical C_Σ falls at or below `expected.score_range.max`
+Exits 0 when the mechanical `provenance.aggregate_numeric.C_sigma_num`
+(geometric, canonical v3.2) falls at or below `expected.score_range.max`
 (i.e., the mechanical scorer correctly identifies the input as adversarially
 incoherent); non-zero otherwise.
 
@@ -51,22 +52,28 @@ the kata is designed to surface.
   that disagree about *what* was superseded.
 
 The kata's expected behavior: the mechanical scorer correctly reports the β
-bottleneck and produces a C_Σ at or below `expected.score_range.max`. If the
-mechanical scorer is ever refined such that it cannot detect this case (β
-score rises, C_Σ exceeds max), this kata fails — and that failure is the
-useful signal: the scorer's adversarial-robustness needs attention.
+bottleneck and produces a `C_sigma_num` at or below `expected.score_range.max`.
+If the mechanical scorer is ever refined such that it cannot detect this case
+(β score rises, `C_sigma_num` exceeds max), this kata fails — and that failure
+is the useful signal: the scorer's adversarial-robustness needs attention.
 
-## Observed C_Σ (calibration)
+## Observed score (calibration)
 
 On `cycle/34-impl` HEAD:
 
-- **C_Σ = 0.7466** (α=0.969, β=0.470, γ=0.801)
+- α=0.969, β=0.470, γ=0.801
+- Pre-cutover arithmetic-mean reading: **c_sigma = 0.7466**
+- Post-cutover canonical reading: **`C_sigma_num` = (0.969·0.470·0.801)^(1/3) ≈ 0.7145** (geometric)
 - bottleneck: β (cross-reference consistency + source-of-truth alignment)
 
-`expected.score_range = {min=0.0, max=0.78}` — bracketed just above the
-observed value to keep the kata green without being trivially permissive.
-The kata passes when c_sigma ≤ 0.78. If the scorer's β refinements push
-the C_Σ below 0.5, the upper bound should be tightened to match.
+`expected.score_range = {min=0.0, max=0.78}` against `C_sigma_num` — bracketed
+above the observed value to keep the kata green and to preserve a small
+forward-looking margin (kata-05 is the documented "moving frontier" kata; its
+range is intentionally a step above observed so that small scorer refinements
+surface here first). The kata passes when `C_sigma_num ≤ 0.78`. If the scorer's
+β refinements push `C_sigma_num` below 0.5, the upper bound should be tightened
+to match. See `kata.toml [baseline]` (`rationale_category =
+"frontier-tightening"`).
 
 ## Why this kata matters
 

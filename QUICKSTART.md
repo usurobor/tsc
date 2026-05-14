@@ -121,25 +121,43 @@ Every report contains triadic scores:
 | **β** (relation) | Alignment between parts — do the pieces fit together? |
 | **γ** (process) | Evolution stability — does the system change consistently? |
 
-**C_Σ** is the aggregate: `(s_α · s_β · s_γ)^(1/3)`. A score ≥ 0.80 means the corpus holds together as one coherent system.
+**C_Σ** is the aggregate, computed as the geometric mean of the three axes. Reports emit two canonical forms under `provenance`:
+
+- `provenance.aggregate_math.C_sigma_math = (s_α · s_β · s_γ)^(1/3)` — the mathematical aggregate; zero if any component is zero.
+- `provenance.aggregate_numeric.C_sigma_num = (max(s_α, ε) · max(s_β, ε) · max(s_γ, ε))^(1/3)` — the numerical aggregate used for verdicts; floors each component at `ε = 10⁻⁵`. Equals `C_sigma_math` whenever every component is at or above `ε`.
+
+There is no flat top-level `c_sigma` field — the aggregate facts live only under `provenance`. A `C_sigma_num ≥ 0.80` is the rough "holds together as one coherent system" band.
 
 Every report includes a `mode` field. Hybrid reports add `mechanical`, `llm`, and `final` sub-objects:
 
 ```json
 {
   "mode": "hybrid",
+  "schema_version": "v3.2.0",
   "alpha": 0.85,
-  "beta": 0.78,
+  "beta":  0.78,
   "gamma": 0.72,
-  "c_sigma": 0.78,
-  "mechanical": { "alpha": 0.81, "evidence_kind": "structural-proxy", ... },
-  "llm":        { "alpha": 0.85, "evidence_kind": "semantic-judgment", ... },
-  "final":      { "source": "llm", "alpha": 0.85, ... }
+  "bottleneck_axis": "gamma",
+  "provenance": {
+    "aggregate_math":    { "C_sigma_math": 0.7807, "zero_component_present": false },
+    "aggregate_numeric": { "C_sigma_num":  0.7807, "epsilon": 1e-5, "numeric_floor_applied": false }
+  },
+  "mechanical": { "alpha": 0.81, "evidence_kind": "structural-proxy", "...": "..." },
+  "llm":        { "alpha": 0.85, "evidence_kind": "semantic-judgment", "...": "..." },
+  "final":      { "source": "llm", "alpha": 0.85, "...": "..." }
 }
 ```
 
+Read the aggregate from `provenance.aggregate_numeric.C_sigma_num`:
+
 ```bash
-cat .tsc/tsc-spec-*.json | python3 -m json.tool   # pretty-print
+cat .tsc/tsc-spec-*.json | python3 -c 'import json,sys; r=json.load(sys.stdin); print(r["provenance"]["aggregate_numeric"]["C_sigma_num"])'
+```
+
+Pretty-print a full report:
+
+```bash
+cat .tsc/tsc-spec-*.json | python3 -m json.tool
 ```
 
 ## 8. Run katas (smoke test / regression anchors)
@@ -148,10 +166,10 @@ Katas are curated inputs with known expected outcomes. Use them to verify your
 engine installation or detect regressions after changes.
 
 ```bash
-# Phase 1 — positive control (well-structured doc, C_Σ ≥ 0.87)
+# Phase 1 — positive control (well-structured doc, C_sigma_num ≥ 0.87)
 coh --kata 01-glider --mode mechanical
 
-# Phase 1 — negative control (incoherent doc, C_Σ ≤ 0.74)
+# Phase 1 — negative control (incoherent doc, C_sigma_num ≤ 0.74)
 coh --kata 02-random-soup --mode mechanical
 
 # Phase 2 — comparative (verifies glider ranks above random-soup)

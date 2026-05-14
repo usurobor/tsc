@@ -34,6 +34,7 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
+| 0.10.0 | A- | A- | A- | A- | L7 | Canonical v3.2 scoring cutover wave (#49). Geometric `C_Σ^math` / `C_Σ^num` replaces flat arithmetic `c_sigma`; report schema emits aggregate facts only under `provenance.aggregate_math` / `provenance.aggregate_numeric`. OOD detector for `aggregate_semantics` (#52). Strict v3.2 LLM δ validation (#51). Cross-target §7.4 report surface (#53). Cleanup pass (this row): kata baselines re-scaled; active docs rewritten; `project.tsc` removed; target-registry smoke tests; forbidden-wording CI rule. **Migration:** pre-v0.10.0 reports quoted arithmetic mean `(α+β+γ)/3`; v0.10.0 reports quote geometric `(α·β·γ)^(1/3)` — historical reports are not directly comparable. See `RELEASE.md`. (#49 master; subs #50, #51, #52, #53, #54) |
 | 0.9.0 | A- | A- | A | A- | L6 | Phase 2 kata progression: comparative (kata-03) + philosophical (kata-04, mechanical-mode) + adversarial (kata-05, multi-file); kata runner gains [[components]]+ranking; +25 hermetic test assertions (146→171). 1 round (β R1 APPROVED, 0A/0B/4C). (#34, cycle: L6) |
 | 0.8.0 | A | A | A | A- | L6 | Process enforcement: CHANGELOG release gate in scripts/release.sh. Prevents incomplete releases (v0.4.0 class). (#30, cycle: L6) |
 | 0.7.0 | A | A | A | A | L6 | Test migration: Python retired, 74-assertion OCaml suite, auto-mode fallback test, Credentials module. (#26, cycle: L6) |
@@ -47,6 +48,44 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 | 0.1.0 | B | B+ | B | B- | L7 | First OCaml engine. Targets, provider transport, CI, self-measurement workflow. CI broken at tag time. |
 
 Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Removed — available in git history. Not scored — different system.
+
+---
+
+## 0.10.0 (2026-05-13)
+
+Canonical v3.2 scoring cutover wave. Master #49 with four predecessor cycles (#50, #51, #52, #53) and one cleanup cycle (#54 — this entry). Aggregates emitted as geometric `C_Σ^math` and `C_Σ^num` under `provenance`; the flat top-level `c_sigma` field is removed.
+
+### Migration note (pre-v0.10.0 comparability)
+
+Pre-v0.10.0 reports — and any frozen report quoted in `docs/{tier}/{bundle}/{X.Y.Z}/` snapshot directories — quoted the arithmetic-mean aggregate `c_sigma = (α + β + γ) / 3`. v0.10.0 reports quote the geometric aggregate `C_sigma_num = (max(α, ε) · max(β, ε) · max(γ, ε))^(1/3)` (with `ε = 10⁻⁵`) under `provenance.aggregate_numeric`, and the strict mathematical aggregate `C_sigma_math = (α · β · γ)^(1/3)` under `provenance.aggregate_math`.
+
+The two aggregates disagree by a few percentage points on well-balanced triples (e.g. arithmetic 0.9333 vs geometric 0.9283 for kata-04's `α=1.0, β=1.0, γ=0.8`) and by larger amounts on imbalanced ones (e.g. arithmetic 0.689 vs geometric 0.658 for kata-02's inferred `α=0.9, β=0.43, γ=0.737`). Pre-cutover numbers in frozen reports are **not directly comparable** to post-cutover output. Frozen snapshots are intentionally left unedited (CDD §5.6); the comparability limit is documented here and once more in `RELEASE.md`. Historical-report migration is out of scope for this wave (see #54 §Out of scope).
+
+### Added
+- **Geometric aggregate forms** (`engine/ocaml/lib/coherence.ml`, `lib/report.ml`): `C_sigma_math` and `C_sigma_num` emitted under `provenance.aggregate_math` and `provenance.aggregate_numeric` (#50). The flat top-level `c_sigma` field is removed from JSON reports.
+- **OOD `aggregate_semantics` detector** (`engine/ocaml/lib/ood.ml`): refuses pre-cutover arithmetic-mean reports at ingest time (#52).
+- **Strict v3.2 LLM δ validation** (`engine/ocaml/lib/response_schema.ml`): rejects responses missing the per-pair δ values required by the canonical-v3.2 transformation chain (#51).
+- **Cross-target §7.4 report surface** (`engine/ocaml/lib/cross_target.ml`, `lib/report.ml`): canonicalizes the multi-target aggregate `C_Σ_cross = (∏ C_Σ_i)^(1/n)` per `spec/tsc-oper.md` §7.4 (#53).
+- **Kata baseline blocks** (`katas/*/kata.toml`): each kata now records a `[baseline]` block (or per-component baselines for kata-03) with the v0.10.0 canonical-aggregate provenance — `baseline_engine_commit`, `baseline_engine_version`, `baseline_command`, `mode`, `config_hash`, `input_file_hashes`, α, β, γ, `c_sigma_math`, `c_sigma_num`, `zero_component_present`, `numeric_floor_applied`, `rationale_category` (#54 AC1).
+- **Target-registry smoke tests** (`engine/ocaml/test/test_target_registry.ml`): parse `targets/registry.tsc`, resolve `spec`/`engine`/`repo` paths, parse each manifest, and assert non-empty bundle expansion for each (#54 AC6).
+- **Forbidden-wording CI rule** (`scripts/check-forbidden-wording.sh` + CI wiring): forward-only check that rejects newly-added `"Operational acceptance"`, `"Operationally accepted"`, `"self-coherence ACCEPT"`, `"release criteria satisfied"` outside frozen / archive paths (#54 AC7).
+
+### Changed
+- **Active docs rewritten** (`docs/THESIS.md`, root `QUICKSTART.md`, root `ARCHITECTURE.md`, `docs/beta/guides/OPERATOR-MANUAL.md`, `katas/README.md`, `katas/*/README.md`): describe geometric `C_Σ^math` / `C_Σ^num`; JSON examples reference `provenance.aggregate_math` / `provenance.aggregate_numeric`; arithmetic-mean headline language removed (#54 AC2).
+- **`VERSION`, `engine/ocaml/dune-project`, `engine/ocaml/tsc_engine.opam`**: 0.9.0 → 0.10.0 (#54 AC8).
+- **`RELEASE.md`**: rewritten as v0.10.0 release notes describing the canonical-v3.2-cutover end-to-end (#54 AC8).
+
+### Removed
+- **`project.tsc`** at repo root: superseded by `targets/registry.tsc` since v0.1.0; retained until now for reference, removed in this cycle (#54 AC3).
+
+### Frozen-snapshot policy
+- Per CDD §5.6, only markdown-link and backtick-path repairs are permitted to frozen version snapshots. AC4 of #54 verified that the three named files (`docs/alpha/doctrine/3.2.0/SELF-COHERENCE.md`, `docs/alpha/engine/0.5.0/POST-RELEASE-ASSESSMENT.md`, `docs/design/0.5.0/DESIGN.md`) carry no v0.10.0 archival banner text — no edits applied. The migration note above is the active-surface record; frozen content remains untouched.
+
+### Known debt
+- Kata-01 / kata-02 / kata-03 baselines use *inferred* (α, β, γ) triples from cycle-34 README signal narrative (the cycle-34 calibration recorded only the arithmetic-mean aggregate, not the per-axis triple, for these katas). The `[baseline]` blocks mark `baseline_engine_commit = "pending-ci"`; the first v0.10.0 CI run records canonical readings, and a future cycle tightens `expected.score_range` accordingly.
+- Kata-04 / kata-05 carry `rationale_category = "frontier-tightening"` — their `score_range.max` is deliberately wider than the geometric `c_sigma_num + 0.001` ceiling, retaining documented "moving frontier" margin.
+- Pre-v0.10.0 frozen reports are not migrated; the comparability limit is the migration note's job.
+- OCaml toolchain absent in α's dispatch sandbox; `dune build` / `dune runtest` deferred to CI on the PR.
 
 ---
 

@@ -27,3 +27,8 @@
  (name test_cross_target)
  (modules test_cross_target)
  (libraries tsc_engine))
+
+(test
+ (name test_target_registry)
+ (modules test_target_registry)
+ (libraries tsc_engine))

@@ -48,10 +48,21 @@ files = ["input/file.txt"]  # input file paths relative to kata directory
 verdict       = "pass"           # "pass" | "fail"
 
 [expected.score_range]
-min = 0.7                        # minimum C_Σ score (for pass verdicts)
-max = 0.4                        # maximum C_Σ score (for fail verdicts)
+# Bounds apply to provenance.aggregate_numeric.C_sigma_num (geometric,
+# canonical v3.2 — see katas/*/kata.toml [baseline] for v0.10.0 cutover
+# provenance). There is no flat c_sigma field.
+min = 0.7                        # minimum C_sigma_num (for pass verdicts)
+max = 0.4                        # maximum C_sigma_num (for fail verdicts)
 
 bottleneck_axis = "coherence"    # optional; which axis limits the score
+
+# v0.10.0 (cycle #54) extension — per-kata baseline provenance.
+# Each kata records a [baseline] block (or per-component baselines for
+# comparative katas) with: baseline_engine_commit, baseline_engine_version,
+# baseline_command, mode, config_hash, input_file_hashes, α, β, γ,
+# c_sigma_math, c_sigma_num, zero_component_present, numeric_floor_applied,
+# rationale_category. See any of katas/*/kata.toml for the schema in use.
+# This block is informational only — the runner does not consult it.
 
 # Phase 2 (cycle #34) extension — comparative katas.
 # A kata with [[components]] is scored once per component. The pass-criterion
@@ -88,18 +99,19 @@ ranking = ["glider", "random-soup"]
 | `[[components]].id` | string | yes inside component | Component identifier (referenced from `[expected].ranking`) |
 | `[[components]].files` | string[] | yes inside component | Component input file paths relative to the kata directory |
 | `[expected].verdict` | string | yes | Expected outcome: `"pass"` or `"fail"` |
-| `[expected].ranking` | string[] | for comparative katas | Component ids ordered highest C_Σ first; runner asserts observed ranking matches |
-| `[expected.score_range].min` | float | for pass | Minimum acceptable C_Σ score (0.0–1.0) |
-| `[expected.score_range].max` | float | for fail | Maximum C_Σ score for a fail verdict |
+| `[expected].ranking` | string[] | for comparative katas | Component ids ordered highest `C_sigma_num` first; runner asserts observed ranking matches |
+| `[expected.score_range].min` | float | for pass | Minimum acceptable `C_sigma_num` (0.0–1.0; geometric, canonical v3.2) |
+| `[expected.score_range].max` | float | for fail | Maximum `C_sigma_num` for a fail verdict (0.0–1.0; geometric) |
 | `bottleneck_axis` | string | no | Axis that most limits the score; used for diagnostic output |
+| `[baseline]` | table | no | v0.10.0 (cycle #54) baseline provenance block — `baseline_engine_commit`, `baseline_engine_version`, `baseline_command`, `mode`, `config_hash`, `input_file_hashes`, α, β, γ, `c_sigma_math`, `c_sigma_num`, `zero_component_present`, `numeric_floor_applied`, `rationale_category` (`aggregate-correction`/`scorer-improvement`/`frontier-tightening`). Informational; runner does not consult it. |
 
 ### Comparative katas (Phase 2)
 
 A kata is *comparative* iff its `kata.toml` declares one or more
 `[[components]]` entries. The runner switches behavior:
 
-- **Single-bundle (Phase 1):** scores `[input].files` as one bundle; pass-criterion is `c_sigma` within `[expected.score_range]` (modulated by `verdict`).
-- **Comparative (Phase 2):** scores each `[[components]]` entry as its own bundle; pass-criterion is the *observed ranking* of per-component C_Σ matching `[expected].ranking` (highest → lowest). The runner emits `ranking_correct: bool` in the result JSON in place of `kata_pass`.
+- **Single-bundle (Phase 1):** scores `[input].files` as one bundle; pass-criterion is `provenance.aggregate_numeric.C_sigma_num` within `[expected.score_range]` (modulated by `verdict`).
+- **Comparative (Phase 2):** scores each `[[components]]` entry as its own bundle; pass-criterion is the *observed ranking* of per-component `C_sigma_num` matching `[expected].ranking` (highest → lowest). The runner emits `ranking_correct: bool` in the result JSON in place of `kata_pass`.
 
 Single-bundle katas (`01-glider`, `02-random-soup`, `04-philosophical`, `05-adversarial`) omit `[[components]]` and use the Phase 1 path. Only `03-comparative` uses the new comparative path in cycle #34.
 

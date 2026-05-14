@@ -97,3 +97,31 @@ jobs:
   # kata-check job removed in cycle #36 — consolidated into the dedicated
   # `katas.yml` workflow which adds an OPAM + dune build cache and
   # PR-only concurrency cancellation. See `.github/workflows/katas.yml`.
+
+  forbidden-wording:
+    # v0.10.0 cutover (#54 AC7): forward-only check that rejects newly-added
+    # `"Operational acceptance"`, `"Operationally accepted"`,
+    # `"self-coherence ACCEPT"`, `"release criteria satisfied"` outside
+    # frozen-snapshot (`docs/{tier}/{bundle}/{X.Y.Z}/`) and archive
+    # (`docs/archive/`) paths. Historical occurrences in excluded paths
+    # do not fail the job — the check compares against the merge base /
+    # main branch and only inspects newly-added lines.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch enough history so the base ref is resolvable. The script
+          # defaults to `origin/main`; PR runs need its tip in the local repo.
+          fetch-depth: 0
+
+      - name: Forbidden-wording (forward-only)
+        run: |
+          set -e
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
+          else
+            # Push runs (including `cycle/**`): compare against origin/main.
+            base="origin/main"
+          fi
+          echo "Base ref: $base"
+          bash scripts/check-forbidden-wording.sh "$base"

@@ -19,10 +19,39 @@ files = ["input/consciousness.md"]
 verdict = "fail"
 
 [expected.score_range]
-# Observed c_sigma on cycle/34-impl HEAD: 0.9333 (α=1.000, β=1.000, γ=0.800).
-# max is set above the observed value to keep the kata green; the wide range
-# is itself documentation: mechanical scoring cannot discriminate this from
-# kata-01 by structural proxies alone.
+# Pre-cutover (v0.9.x) arithmetic-mean reading: c_sigma = 0.9333.
+# Post-cutover (v0.10.0) canonical geometric reading:
+#   c_sigma_num = (α·β·γ)^(1/3) = (1.000·1.000·0.800)^(1/3) ≈ 0.9283
+# max=0.95 is retained intentionally (rationale_category =
+# "frontier-tightening"): the wide range is itself the load-bearing
+# claim — mechanical scoring cannot discriminate this from kata-01 by
+# structural proxies alone. Tighten in a future cycle once the
+# mechanical scorer learns to discriminate philosophical prose from
+# engineering docs. See [baseline] below.
 min = 0.0
 max = 0.95
 bottleneck_axis = "gamma"
+
+[baseline]
+# v0.10.0 baseline provenance per #54 AC1.
+baseline_engine_commit  = "pending-ci"
+baseline_engine_version = "0.10.0"
+baseline_command        = "coh --kata 04-philosophical --mode mechanical"
+mode                    = "mechanical"
+config_hash             = "pending-ci"
+input_file_hashes       = "pending-ci"
+alpha                   = 1.000  # explicit reading, cycle/34-impl HEAD
+beta                    = 1.000  # explicit reading, cycle/34-impl HEAD
+gamma                   = 0.800  # explicit reading, cycle/34-impl HEAD
+c_sigma_math            = 0.9283 # = (1.0·1.0·0.8)^(1/3)
+c_sigma_num             = 0.9283 # equal to c_sigma_math when no zero component is present
+zero_component_present  = false
+numeric_floor_applied   = false
+rationale_category      = "frontier-tightening"
+# Rationale: max=0.95 (vs computed-and-margin 0.93) is retained because
+# the wideness itself is the kata's load-bearing documentation: the
+# mechanical scorer's inability to discriminate philosophical prose
+# from engineering docs IS the lesson kata-04 records. Per-axis
+# scores (α=1.000, β=1.000, γ=0.800) are explicit cycle/34 calibration
+# readings — only the aggregate is recomputed from arithmetic to
+# geometric mean.
