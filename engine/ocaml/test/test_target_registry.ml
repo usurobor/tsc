@@ -183,23 +183,23 @@ let test_parse_manifest_each () =
   | Error e -> fail (Printf.sprintf "parse_registry: %s" e)
   | Ok reg ->
     List.iter (fun name ->
-      match Target_registry.resolve_target_path reg name with
-      | Error e -> fail (Printf.sprintf "resolve %s: %s" name e)
-      | Ok mpath ->
-        let mc = read_file (Filename.concat root mpath) in
-        match Target_registry.parse_manifest mc with
-        | Error e -> fail (Printf.sprintf "parse_manifest %s: %s" name e)
-        | Ok m ->
-          let nonempty =
-            m.manifest_include <> [] || m.manifest_include_targets <> []
-          in
-          check nonempty
-            (Printf.sprintf
-               "AC6.4: %s manifest has non-empty include or include_targets \
-                (got %d include, %d include_targets)"
-               name
-               (List.length m.manifest_include)
-               (List.length m.manifest_include_targets))
+      (match Target_registry.resolve_target_path reg name with
+       | Error e -> fail (Printf.sprintf "resolve %s: %s" name e)
+       | Ok mpath ->
+         let mc = read_file (Filename.concat root mpath) in
+         (match Target_registry.parse_manifest mc with
+          | Error e -> fail (Printf.sprintf "parse_manifest %s: %s" name e)
+          | Ok m ->
+            let nonempty =
+              m.manifest_include <> [] || m.manifest_include_targets <> []
+            in
+            check nonempty
+              (Printf.sprintf
+                 "AC6.4: %s manifest has non-empty include or include_targets \
+                  (got %d include, %d include_targets)"
+                 name
+                 (List.length m.manifest_include)
+                 (List.length m.manifest_include_targets))))
     ) ["spec"; "engine"; "repo"]
 
 (* AC6 bullet 5: file expansion produces > 0 files for each target
@@ -215,31 +215,31 @@ let test_file_expansion_nonempty () =
   | Ok reg ->
     let expand_one name =
       match Target_registry.resolve_target_path reg name with
-      | Error e -> fail (Printf.sprintf "resolve %s: %s" name e); []
+      | Error e -> fail (Printf.sprintf "resolve %s: %s" name e)
       | Ok mpath ->
         let mc = read_file (Filename.concat root mpath) in
-        match Target_registry.parse_manifest mc with
-        | Error e -> fail (Printf.sprintf "parse_manifest %s: %s" name e); []
-        | Ok m ->
-          let own = expand_manifest_paths ~root m in
-          let nested =
-            List.concat_map (fun nested_name ->
-              match Target_registry.resolve_target_path reg nested_name with
-              | Error _ -> []
-              | Ok npath ->
-                match Target_registry.parse_manifest
-                        (read_file (Filename.concat root npath)) with
+        (match Target_registry.parse_manifest mc with
+         | Error e -> fail (Printf.sprintf "parse_manifest %s: %s" name e)
+         | Ok m ->
+           let own = expand_manifest_paths ~root m in
+           let nested =
+             List.concat_map (fun nested_name ->
+               (match Target_registry.resolve_target_path reg nested_name with
                 | Error _ -> []
-                | Ok nm -> expand_manifest_paths ~root nm
-            ) m.manifest_include_targets
-          in
-          (* Dedup like main.ml does. *)
-          let all = own @ nested in
-          let seen = Hashtbl.create 64 in
-          List.filter (fun p ->
-            if Hashtbl.mem seen p then false
-            else (Hashtbl.add seen p (); true)
-          ) all
+                | Ok npath ->
+                  (match Target_registry.parse_manifest
+                           (read_file (Filename.concat root npath)) with
+                   | Error _ -> []
+                   | Ok nm -> expand_manifest_paths ~root nm))
+             ) m.manifest_include_targets
+           in
+           (* Dedup like main.ml does. *)
+           let all = own @ nested in
+           let seen = Hashtbl.create 64 in
+           List.filter (fun p ->
+             if Hashtbl.mem seen p then false
+             else (Hashtbl.add seen p (); true)
+           ) all)
     in
     List.iter (fun name ->
       let files = expand_one name in
