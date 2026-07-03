@@ -128,10 +128,13 @@ jobs:
             validating your output, and rejects the response if any required
             delta field is missing or out of range.
           WITNESS_PROMPT
+          # 50 turns: the repo bundle's emitted prompt runs to hundreds of
+          # files, and the Read tool pages large files — 16 turns starved the
+          # repo witness mid-read (run 3).
           claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
             --settings "$RUNNER_TEMP/witness-settings.json" \
             --permission-mode acceptEdits \
-            --max-turns 16
+            --max-turns 50
 
       - name: Validate and ingest witness response (spec)
         if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
@@ -203,10 +206,13 @@ jobs:
             validating your output, and rejects the response if any required
             delta field is missing or out of range.
           WITNESS_PROMPT
+          # 50 turns: the repo bundle's emitted prompt runs to hundreds of
+          # files, and the Read tool pages large files — 16 turns starved the
+          # repo witness mid-read (run 3).
           claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
             --settings "$RUNNER_TEMP/witness-settings.json" \
             --permission-mode acceptEdits \
-            --max-turns 16
+            --max-turns 50
 
       - name: Validate and ingest witness response (engine)
         if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
@@ -278,10 +284,13 @@ jobs:
             validating your output, and rejects the response if any required
             delta field is missing or out of range.
           WITNESS_PROMPT
+          # 50 turns: the repo bundle's emitted prompt runs to hundreds of
+          # files, and the Read tool pages large files — 16 turns starved the
+          # repo witness mid-read (run 3).
           claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
             --settings "$RUNNER_TEMP/witness-settings.json" \
             --permission-mode acceptEdits \
-            --max-turns 16
+            --max-turns 50
 
       - name: Validate and ingest witness response (repo)
         if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}

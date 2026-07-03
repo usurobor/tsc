@@ -279,10 +279,13 @@ def cli_witness_run(prompt_text):
 {ind}cat > "$RUNNER_TEMP/witness-prompt.md" <<'WITNESS_PROMPT'
 {prompt_block}
 {ind}WITNESS_PROMPT
+{ind}# 50 turns: the repo bundle's emitted prompt runs to hundreds of
+{ind}# files, and the Read tool pages large files — 16 turns starved the
+{ind}# repo witness mid-read (run 3).
 {ind}claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \\
 {ind}  --settings "$RUNNER_TEMP/witness-settings.json" \\
 {ind}  --permission-mode acceptEdits \\
-{ind}  --max-turns 16"""
+{ind}  --max-turns 50"""
 
 build_steps = """      - uses: actions/checkout@v4
 

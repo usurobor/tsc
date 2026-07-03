@@ -11,7 +11,7 @@ ______________________________________________________________________
 
 ## 0 · Scope
 
-TSC measures dimensional consistency across three evaluators: α (sequential), β (structural), γ (generative).
+TSC measures dimensional consistency across three evaluators: α (pattern), β (relation), γ (process).
 
 **Claims:**
 
