@@ -1,0 +1,10 @@
+{
+  "anchor_id": "hx-02",
+  "kind": "fail",
+  "score_band": [
+    0.0,
+    0.78
+  ],
+  "loss": "0 if band[0] <= score <= band[1] else min(|score-band[0]|,|score-band[1]|)",
+  "salt": "f75a639a7a6a"
+}

@@ -2,7 +2,8 @@
 
 **Version:** v3.2.0\
 **Status:** Normative\
-**Foundation:** C≡ v3.1.0 (Term Algebra)
+**Foundation:** C≡ v3.1.0 (Term Algebra)\
+**Changelog:** `CHANGELOG.md` § Spec releases
 
 **Change from v3.1.0:** Pairwise coherence is now computed via a **barrier transform** φ on a normalized discrepancy δ ∈ [0,1], producing an unbounded **discrepancy energy** D ∈ [0,∞]. The aggregate C_Σ is split into a mathematical form C_Σ^math (carrying the strict Degeneracy Axiom) and a numerical form C_Σ^num (used for bootstrap, OOD, and verdict comparison). Sensitivity λ no longer sets a coherence floor. See §3.2, §5.
 
@@ -10,7 +11,7 @@ ______________________________________________________________________
 
 ## 0 · Scope
 
-TSC measures dimensional consistency across three evaluators: α (sequential), β (structural), γ (generative).
+TSC measures dimensional consistency across three evaluators: α (pattern), β (relation), γ (process).
 
 **Claims:**
 

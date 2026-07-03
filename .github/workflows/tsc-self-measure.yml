@@ -1,0 +1,290 @@
+# DO NOT EDIT. Rendered by `scripts/render-self-measure.sh` from:
+#   source: skills/self-measure/SKILL.md
+# Schema:  tsc.self-measure.v1 (schemas/skill.cue #SelfMeasure)
+#
+# Authority split: the skill owns the measurement contract (targets,
+# modes, LLM delegation + constraints); this renderer owns substrate
+# encoding (triggers / permissions / action versions / secret-name
+# bindings / step layout). Edit the skill, re-render, commit both.
+
+name: tsc-self-measure
+
+on:
+  pull_request:
+    paths:
+      - 'spec/**'
+      - 'engine/ocaml/**'
+      - 'targets/**'
+      - 'runtime/**'
+      - 'skills/**'
+  # Measure on every branch: a measurement surface that only reads main
+  # never sees the work while it can still be repaired. Firing on this
+  # workflow's own file makes installation itself the first measurement
+  # (same self-installation pattern as the ledger workflow).
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'spec/**'
+      - 'engine/ocaml/**'
+      - 'targets/**'
+      - 'runtime/**'
+      - 'skills/**'
+      - '.github/workflows/tsc-self-measure.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Fully mechanical: deterministic structural scoring. No credentials,
+  # no gate, no LLM. skills/self-measure/SKILL.md section 3.
+  mechanical:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+
+      - name: Self-measure (mechanical, all targets + cross-target)
+        run: |
+          export PATH="$PWD/engine/ocaml/_build/default/bin:$PATH"
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --mode mechanical --output .tsc/self
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Self-measurement (mechanical)" >> $GITHUB_STEP_SUMMARY
+          for f in .tsc/self/*.json; do
+            [ -f "$f" ] || continue
+            echo "### $(basename "$f")" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            python3 -m json.tool "$f" >> $GITHUB_STEP_SUMMARY 2>/dev/null || cat "$f" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsc-self-mechanical-${{ github.sha }}
+          path: .tsc/self/**
+          # .tsc/self is under a dot-directory; without this the
+          # default (include-hidden-files: false) uploads nothing.
+          include-hidden-files: true
+          retention-days: 90
+          # A missing mechanical report is a failure, not an ignorable
+          # condition — this job is the always-on measurement surface.
+          if-no-files-found: error
+
+  # Gate: the witness is enabled by the PRESENCE of the CLAUDE_CODE_OAUTH_TOKEN
+  # secret — no separate toggle to drift out of sync with it. Secrets
+  # cannot appear in job-level `if:` conditions, so a one-step job
+  # projects presence into an output. Its log states the decision either
+  # way (skills/self-measure/SKILL.md section 6).
+  witness-gate:
+    runs-on: ubuntu-22.04
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check witness credential
+        id: check
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "${CLAUDE_CODE_OAUTH_TOKEN}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "witness: CLAUDE_CODE_OAUTH_TOKEN present — llm-witness runs"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "witness: CLAUDE_CODE_OAUTH_TOKEN not configured — llm-witness unavailable (mechanical job still runs)"
+          fi
+
+  # LLM witness: the single delegated cognitive step, run per target via
+  # the Claude CLI when the credential exists. The engine emits the exact
+  # prompt, the model estimates deltas/components/evidence, the engine
+  # validates and renders the hybrid report.
+  # skills/self-measure/SKILL.md sections 4-5.
+  llm-witness:
+    needs: witness-gate
+    if: ${{ needs.witness-gate.outputs.enabled == 'true' }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [spec, engine, repo]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+
+      - name: Emit witness prompt (deterministic)
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --emit-prompt ${{ matrix.target }} --output .tsc/self
+
+      - name: Estimate deltas and evidence (LLM witness — Claude CLI, k=3 samples)
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          npm install -g @anthropic-ai/claude-code@2.1.199
+          # The secret slot is named for the OAuth token, but route by shape:
+          # an sk-ant-api key belongs in ANTHROPIC_API_KEY. Never printed.
+          if [ "${CLAUDE_CODE_OAUTH_TOKEN#sk-ant-api}" != "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
+            unset CLAUDE_CODE_OAUTH_TOKEN
+          fi
+          # Allow rules in both spellings (relative to cwd and filesystem-
+          # absolute) — the settings file lives in RUNNER_TEMP, and rule-path
+          # resolution has already denied the workspace write once. The
+          # acceptEdits permission mode is the load-bearing grant: file writes
+          # inside the workspace auto-accept, everything else stays denied,
+          # and the engine funnel enforces content and target downstream.
+          cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
+          {
+            "permissions": {
+              "allow": [
+                "Read(.tsc/self/prompt/**)",
+                "Write(.tsc/self/response/**)",
+                "Read(//${PWD#/}/.tsc/self/prompt/**)",
+                "Write(//${PWD#/}/.tsc/self/response/**)"
+              ]
+            }
+          }
+          SETTINGS
+          cat > "$RUNNER_TEMP/witness-prompt.md" <<'WITNESS_PROMPT'
+          You are the LLM witness step of TSC self-measurement, rendered from
+          skills/self-measure/SKILL.md. Your entire task:
+
+          1. Read the file .tsc/self/prompt/${{ matrix.target }}.md. It contains the
+             canonical scoring instruction (runtime/SELF-MEASURE.md) followed
+             by the ${{ matrix.target }} target bundle. Follow that instruction exactly.
+          2. Write your answer — the single JSON object the instruction
+             requires, with no markdown fences and no prose around it — to
+             .tsc/self/response/${{ matrix.target }}.json.
+
+          Constraints (your tool permissions also enforce them):
+          - Do not read any file other than .tsc/self/prompt/${{ matrix.target }}.md.
+          - Do not write any file other than .tsc/self/response/${{ matrix.target }}.json.
+          - Do not compute Coh or C_sigma values; report the delta and
+            component estimates the instruction asks for. The engine applies
+            the barrier transform and aggregation deterministically after
+            validating your output, and rejects the response if any required
+            delta field is missing or out of range.
+          WITNESS_PROMPT
+          # 50 turns: the repo bundle's emitted prompt runs to hundreds of
+          # files, and the Read tool pages large files — 16 turns starved the
+          # repo witness mid-read (run 3).
+          RESP=".tsc/self/response/${{ matrix.target }}.json"; BASE="${RESP%.json}"
+          for i in $(seq 1 3); do
+            claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
+              --settings "$RUNNER_TEMP/witness-settings.json" \
+              --permission-mode acceptEdits \
+              --max-turns 50 || true
+            if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
+          done
+          # The first sample is the adjudicated response; all samples feed
+          # the consistency spread.
+          if [ -f "$BASE.r1.json" ]; then cp "$BASE.r1.json" "$RESP"; fi
+          ls -l "$(dirname "$RESP")" || true
+
+      - name: Validate and ingest witness response (deterministic)
+        env:
+          LLM_PROVIDER: claude-cli
+          LLM_MODEL: claude-code-cli@2.1.199
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --ingest ${{ matrix.target }} --output .tsc/self
+
+      # Consistency protocol, LLM arm (cm-of-cms skill section 3): every
+      # extra sample is validated through the same witness funnel; the
+      # spread of the validated samples maps through the barrier. The
+      # result is a STANDING gate, not a publishing gate — a failing
+      # spread never blocks the report, it scopes its standing.
+      - name: Witness consistency (k=3 spread) and standing scope
+        if: always()
+        run: |
+          T="${{ matrix.target }}"
+          BASE=".tsc/self/response/$T"
+          COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+          valid=""
+          for r in "$BASE".r*.json; do
+            [ -f "$r" ] || continue
+            if "$COH" --mode hybrid --target "$T" \
+                 --registry targets/registry.tsc --instruction runtime/SELF-MEASURE.md \
+                 --root . --llm-response "$r" --output ".tsc/self/validate" >/dev/null 2>&1; then
+              valid="$valid $r"
+            fi
+          done
+          n=$(echo $valid | wc -w)
+          coh_c="0"
+          if [ "$n" -ge 2 ]; then
+            COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
+            coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            cp ".tsc/cm/consistency/$T.llm.json" ".tsc/self/consistency-$T.json" 2>/dev/null || true
+          fi
+          gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= 0.9 else 'failed')" "$coh_c")
+          python3 -c "import json,sys; json.dump({'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': 0.9, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}, open('.tsc/self/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
+          echo "consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)"
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Self-measurement (hybrid, ${{ matrix.target }})" >> $GITHUB_STEP_SUMMARY
+          for f in .tsc/self/*.json; do
+            [ -f "$f" ] || continue
+            echo "### $(basename "$f")" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            python3 -m json.tool "$f" >> $GITHUB_STEP_SUMMARY 2>/dev/null || cat "$f" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsc-self-llm-${{ matrix.target }}-${{ github.sha }}
+          # Reports, witness responses, and validation-failure artifacts —
+          # but never the emitted prompts (full bundle text).
+          path: |
+            .tsc/self/**
+            !.tsc/self/prompt/**
+          # .tsc/self is under a dot-directory; without this the
+          # default (include-hidden-files: false) uploads nothing.
+          include-hidden-files: true
+          retention-days: 90
+          # If the witness ran, something durable must exist (report or
+          # validation-failure artifact + raw response).
+          if-no-files-found: error

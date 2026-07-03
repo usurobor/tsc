@@ -1,0 +1,14 @@
+{
+  "anchor_id": "hx-02",
+  "challenger": "path-gamer",
+  "scorer_sha256": "a913ecf04bd3ee6b30c3babba6f9c7ecf7735cf078034d55e664d0d33f07ffa8",
+  "score": 0.99,
+  "score_band": [
+    0.0,
+    0.78
+  ],
+  "hit": false,
+  "loss": 0.21,
+  "standing_scope": "house-authored-blind-heldout",
+  "note": "commit-reveal proves ordering (unmemorizability); the label is house judgment \u2014 external-blind-heldout requires a non-house anchor author"
+}

@@ -14,3 +14,9 @@ manifest = "targets/engine.tsc"
 
 [target.repo]
 manifest = "targets/repo.tsc"
+
+[target.methodology]
+manifest = "targets/methodology.tsc"
+
+[target.cm-of-cms]
+manifest = "targets/cm-of-cms.tsc"

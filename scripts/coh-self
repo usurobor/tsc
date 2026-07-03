@@ -1,0 +1,116 @@
+#!/bin/sh
+# DO NOT EDIT. Rendered by `scripts/render-self-measure.sh` from:
+#   source: skills/self-measure/SKILL.md
+# Schema:  tsc.self-measure.v1 (schemas/skill.cue #SelfMeasure)
+#
+# Authority split: the skill owns the measurement contract (targets,
+# modes, LLM delegation + constraints); this renderer owns substrate
+# encoding (triggers / permissions / action versions / secret-name
+# bindings / step layout). Edit the skill, re-render, commit both.
+#
+# coh-self — TSC self-measurement command (invoked as `coh self`).
+#
+# Usage:
+#   coh-self [--mode mechanical|llm|hybrid|auto] [--require-llm]
+#             [--output DIR] [--root DIR]
+#   coh-self --emit-prompt <target> [--output DIR] [--root DIR]
+#   coh-self --ingest <target> [--output DIR] [--root DIR]
+#
+# Default run: measure each named target (spec, engine, repo) in the given
+# mode (default: auto — hybrid when LLM credentials are present,
+# mechanical otherwise; every report's `mode` field states which backend
+# produced it). --require-llm forces the semantic path: it refuses to run
+# at all when no LLM credentials are configured, instead of degrading to
+# mechanical. --emit-prompt / --ingest are the two deterministic halves of
+# the external witness route (skills/self-measure/SKILL.md section 5).
+set -eu
+
+TARGETS="spec engine repo"
+REGISTRY="targets/registry.tsc"
+INSTRUCTION="runtime/SELF-MEASURE.md"
+OUTPUT=".tsc/self"
+MODE="auto"
+ROOT="."
+EMIT=""
+INGEST=""
+REQUIRE_LLM=0
+
+usage() { sed -n '/^# Usage:/,/^set -eu/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; }
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --mode)        MODE="$2"; shift 2 ;;
+    --require-llm) REQUIRE_LLM=1; shift ;;
+    --output)      OUTPUT="$2"; shift 2 ;;
+    --root)        ROOT="$2"; shift 2 ;;
+    --emit-prompt) EMIT="$2"; shift 2 ;;
+    --ingest)      INGEST="$2"; shift 2 ;;
+    -h|--help)     usage; exit 0 ;;
+    *) echo "coh-self: unknown argument: $1" >&2; usage >&2; exit 1 ;;
+  esac
+done
+
+if [ "$REQUIRE_LLM" = 1 ]; then
+  # Loud refusal, never a silent mechanical downgrade.
+  if [ -z "${LLM_API_KEY:-}" ]; then
+    echo "coh-self: --require-llm but no LLM credentials configured" >&2
+    echo "  set LLM_PROVIDER / LLM_MODEL / LLM_API_KEY (or use the CI witness route)" >&2
+    exit 2
+  fi
+  case "$MODE" in
+    mechanical)
+      echo "coh-self: --require-llm conflicts with --mode mechanical" >&2
+      exit 2 ;;
+    auto) MODE="hybrid" ;;
+  esac
+fi
+
+# Resolve the engine binary: COH_BIN override, sibling of this script,
+# PATH, then the in-repo dune build output.
+resolve_coh() {
+  if [ -n "${COH_BIN:-}" ]; then echo "$COH_BIN"; return; fi
+  self_dir=$(dirname "$0")
+  if [ -x "$self_dir/coh" ]; then echo "$self_dir/coh"; return; fi
+  if command -v coh >/dev/null 2>&1; then echo "coh"; return; fi
+  build="$ROOT/engine/ocaml/_build/default/bin/main.exe"
+  if [ -x "$build" ]; then echo "$build"; return; fi
+  echo "coh-self: cannot find the coh engine binary (set COH_BIN, install coh, or dune build)" >&2
+  exit 2
+}
+COH=$(resolve_coh)
+
+run() { echo "+ $*" >&2; "$@"; }
+
+if [ -n "$EMIT" ]; then
+  mkdir -p "$OUTPUT/prompt"
+  run "$COH" --target "$EMIT" \
+    --registry "$REGISTRY" --instruction "$INSTRUCTION" --root "$ROOT" \
+    --emit-prompt "$OUTPUT/prompt/$EMIT.md"
+  exit 0
+fi
+
+if [ -n "$INGEST" ]; then
+  resp="$OUTPUT/response/$INGEST.json"
+  [ -f "$resp" ] || { echo "coh-self: witness response not found: $resp" >&2; exit 2; }
+  run "$COH" --mode hybrid --target "$INGEST" \
+    --registry "$REGISTRY" --instruction "$INSTRUCTION" --root "$ROOT" \
+    --llm-response "$resp" --output "$OUTPUT"
+  exit 0
+fi
+
+status=0
+for t in $TARGETS; do
+  run "$COH" --mode "$MODE" --target "$t" \
+    --registry "$REGISTRY" --instruction "$INSTRUCTION" --root "$ROOT" \
+    --output "$OUTPUT" || status=1
+done
+
+# Cross-target aggregate (spec/tsc-oper.md section 7.4) is mechanical-only.
+run "$COH" --mode mechanical --target spec --target engine --target repo \
+  --registry "$REGISTRY" --instruction "$INSTRUCTION" --root "$ROOT" \
+  --output "$OUTPUT" || status=1
+
+echo "self-measurement reports in $OUTPUT/ (requested mode: $MODE;" \
+     "each report's 'mode' field states the backend that produced it;" \
+     "cross-target is always mechanical)"
+exit $status

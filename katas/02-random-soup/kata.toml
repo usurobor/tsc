@@ -30,11 +30,11 @@ baseline_command        = "coh --kata 02-random-soup --mode mechanical"
 mode                    = "mechanical"
 config_hash             = "pending-ci"
 input_file_hashes       = "pending-ci"
-alpha                   = 0.900   # README signal narrative, cycle/34-impl
-beta                    = 0.430   # README signal table (broken-link rate), cycle/34-impl
-gamma                   = 0.737   # back-solved from arithmetic c_sigma 0.689; subject to CI re-baseline
-c_sigma_math            = 0.6583  # = (α·β·γ)^(1/3); analytical estimate
-c_sigma_num             = 0.6583  # equal to c_sigma_math when no zero component is present
+alpha                   = 0.9429  # instrument-validity pass HEAD
+beta                    = 0.4500  # instrument-validity pass HEAD
+gamma                   = 0.6961  # instrument-validity pass HEAD
+c_sigma_math            = 0.6659  # = (α·β·γ)^(1/3)
+c_sigma_num             = 0.6659  # equal to c_sigma_math when no zero component is present
 zero_component_present  = false
 numeric_floor_applied   = false
 rationale_category      = "aggregate-correction"

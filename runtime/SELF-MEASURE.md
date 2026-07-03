@@ -1,4 +1,4 @@
-# Self-Measure v3.2.0
+# Self-Measure v3.2.2
 
 You are evaluating a TSC target bundle.
 
@@ -100,6 +100,27 @@ For `engine`, prioritize:
 - stable boundaries
 - whether the implementation matches the declared target model
 
+Judge implementation coherence to the standard of the strongest
+engineering practice the bundle itself declares — not to a lenient
+average. Concretely, for a typed functional codebase:
+
+- **types carry the invariants** — invalid states hard to express;
+  variants and signatures used so the compiler catches drift; interface
+  files agreeing with what modules actually expose
+- **effects bounded** — pure computation separated from I/O; the pure
+  core testable without the runtime; side effects at the edges
+- **one source of truth per rule** — a formula, constant, or contract
+  defined once and routed through, never re-derived in a second place
+- **proof discipline** — tests pinning declared behavior including the
+  refusal paths; regression anchors for the scoring surface; documented
+  change discipline
+- **boundary honesty** — comments and docs claiming exactly what the
+  code does; a stale claim in a doc comment is relational evidence, not
+  a style nit
+
+Low marks here are axis evidence like any other (pattern discipline →
+α, claim/implementation fit → β, change discipline → γ), cited to files.
+
 ### 2.3 `repo`
 For `repo`, prioritize:
 - cross-layer alignment
@@ -110,7 +131,7 @@ Do not punish `repo` only because one layer is unfinished if the bundle already 
 
 ---
 
-## 3. Scoring rules — v3.2.0 protocol
+## 3. Scoring rules — v3.2.2 protocol
 
 **Do not output Coh (coherence) values directly. Output normalized discrepancy δ values in [0,1] per pair.**
 
@@ -150,6 +171,47 @@ Also estimate:
 - **s_alpha** ∈ [0, 1]: pattern coherence score for the bundle as a whole (α axis stability under perturbation)
 - **s_beta** ∈ [0, 1]: relational coherence score (β axis cross-file fit)
 - **s_gamma** ∈ [0, 1]: process coherence score (γ axis temporal / evolution stability)
+
+**Count first** (v3.2.1, retained): for each axis, enumerate your
+findings as a list of DEFECTS (contradictions, broken references,
+drift, unowned change paths), each with its severity: *cosmetic* (a
+reader is never misled), *isolated* (a reader of one section is
+misled; ≤ 2 sites), or *systemic* (repeated pattern, or a load-bearing
+claim contradicted). List every enumerated defect in `axis_evidence`
+with its severity — the enumeration is part of the record, not a
+private step.
+
+**Map continuously, guided by the bands** (v3.2.2): use this table as
+INTERPRETATION, not quantization — report any value in the range that
+your enumerated list supports:
+
+| Range | Condition |
+|-------|-----------|
+| 0.90–1.00 | no defects found after an explicit search |
+| 0.80–0.90 | cosmetic defects only |
+| 0.70–0.80 | 1–2 isolated defects, bounded scope |
+| 0.50–0.70 | 3+ isolated defects, or 1 systemic defect |
+| 0.30–0.50 | multiple systemic defects |
+| 0.00–0.30 | pervasive: the axis's descriptions do not cohere |
+
+Likewise report δ as a continuous value read against the §3.1 table.
+
+**Refutation record (v3.2.1 → v3.2.2).** v3.2.1 required snapping to
+band midpoints (0.95/0.85/0.75/0.60/0.40/0.20; δ row midpoints). The
+k=3 consistency measurement refuted it: spread WIDENED on all three
+targets (spec Coh_consistency 0.815→0.618, engine 0.873→0.618, repo
+0.754→0.513; the 0.325 spreads are exactly two-row snaps). The
+variance is in FINDING defects, not in mapping them — quantization
+chunked the disagreement instead of reducing it. The enumeration
+discipline and confidence rubric are retained; the snap is withdrawn.
+Reducing finding-variance (a per-axis defect checklist) is the next
+protocol experiment, versioned when it lands.
+
+**Confidence rubric**: 0.9 — you read every file and your findings are
+all directly cited; 0.75 — some claims reference material outside the
+bundle and could not be verified; 0.6 — a substantial fraction of the
+bundle is outside what you could verify; below 0.5 — say why in
+`unresolved_ambiguity`.
 
 ### 3.3 Score mapping for top-level fields
 

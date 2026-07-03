@@ -14,6 +14,14 @@
     - preserve evidence for each score
     - return stable results for identical input bundle + config
 
+    Signal scope: document-structure signals — headings, links, authority
+    claims, filename fit — measure the bundle's DOCUMENTS (.md files)
+    only; a markdown-shaped substring inside a source-code string literal
+    is not a cross-reference. Corpus-level signals (version surfaces,
+    generated-file markers, deprecation language, traceability markers)
+    scan every file. Links normalize relative to their source document
+    before resolution.
+
     Mechanical scoring is a structural backend. It is useful for:
     - local iteration
     - CI

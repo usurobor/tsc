@@ -25,14 +25,38 @@ A target is an explicit declaration of what TSC measures.
 
 Current target surfaces are:
 
-- `spec`
-- `engine`
-- `repo`
+- `spec` — the theory
+- `engine` — the verifier
+- `repo` — the aggregate repository surface
+- `methodology` — the 1st coherence methodology (self-measurement) as a
+  measurable corpus
+- `cm-of-cms` — the 0th coherence methodology (the CM of CMs) as a
+  measurable corpus
 
 The target model lives in:
 
 - `targets/registry.tsc` — target registry
 - `targets/*.tsc` — target manifests
+
+## Methodologies
+
+Measurement procedures are declared as typed skills (`skills/*/SKILL.md`,
+frontmatter validated by `schemas/skill.cue`) and rendered into their
+executable surfaces — the declaration is the authority, the rendered
+command and workflows carry DO-NOT-EDIT headers, and CI enforces
+byte-identity:
+
+- `skills/self-measure/` — the 1st methodology: how this repo measures
+  itself (rendered into `scripts/coh-self` and two workflows).
+- `skills/cm-of-cms/` — the 0th methodology: how methodologies
+  themselves are measured — consistency protocol, admissibility with a
+  five-attacker matrix, and held-out commit-reveal anchors (`heldout/`,
+  `scripts/cm-heldout.sh`) whose standing scope states exactly what its
+  anchor provenance earns.
+
+Generated measurement state lands under `.tsc/` and is never canonical;
+the one tracked exception is `.tsc/COHERENCE.md`, the per-release
+coherence ledger.
 
 ## Katas
 
@@ -86,7 +110,7 @@ The engine has one shared pipeline:
 | `hybrid` | Both backends; `hybrid_scoring.ml` combines results | Required |
 | `auto` | Resolves to `hybrid` when credentials present, else `mechanical` | Optional |
 
-**Mechanical mode** scores structural coherence proxies for α, β, γ across twelve signals. It does not call an LLM, perform network I/O, or parse Markdown into a semantic AST. Determinism guarantee: identical bundle + config → identical result.
+**Mechanical mode** scores structural coherence proxies for α, β, γ across twelve signals. Document-structure signals (headings, links, authority claims, filename fit) measure the bundle's Markdown documents; corpus-level signals (versions, generated markers, deprecation language, traceability) scan every file. Links normalize relative to their source document, and anchored links must name a real heading in their target. It does not call an LLM, perform network I/O, or parse Markdown into a semantic AST. Determinism guarantee: identical bundle + config → identical result.
 
 **LLM mode** sends the bundle to the configured provider using the instruction in `runtime/SELF-MEASURE.md`. This is the semantic scoring path.
 
@@ -122,6 +146,29 @@ Hybrid reports add `mechanical`, `llm`, and `final` sub-objects. The schema fixt
 
 The engine does not parse Markdown semantically. Files are raw text.
 
+## Self-measurement
+
+TSC turned on itself is a declared, rendered surface — not ad-hoc CI glue.
+
+- **Declaration:** `skills/self-measure/SKILL.md`. Frontmatter is the typed
+  machine contract (`schemas/skill.cue`, `#SelfMeasure`); the body is the
+  human-readable authority on which steps are mechanical and exactly what
+  cognitive work the LLM witness performs, under what constraints.
+- **Renderer:** `scripts/render-self-measure.sh` materializes the skill
+  into `scripts/coh-self` (the command `coh self` dispatches to) and
+  `.github/workflows/tsc-self-measure.yml`. Both carry DO-NOT-EDIT headers;
+  CI re-renders and fails on drift.
+- **Split:** every step is mechanical except one — estimating the pairwise
+  discrepancies δ, component scores, and cited evidence per
+  `runtime/SELF-MEASURE.md`. The engine emits the exact prompt
+  (`--emit-prompt`), validates the witness response, and ingests it
+  (`--llm-response`) — so in CI the witness runs as a tool-restricted
+  Claude CLI step with no raw API key, and the engine keeps authority over
+  validation, the barrier transform, and aggregation.
+- **Proof:** `scripts/ci/self-measure-smoke.sh` exercises the mechanical
+  run and both halves of the witness route (including the refusal path)
+  on every CI run, credential-free.
+
 ## Generated state
 
 Generated measurement output belongs in `.tsc/`.
@@ -144,9 +191,14 @@ Python is retired as a live engine. OCaml is the canonical implementation.
   lib/hybrid_scoring      backend combiner (pure)
   lib/bundle              shared bundle model
   lib/kata                kata manifest parser
-  bin/main.ml             CLI entrypoint (--mode, --files, --target, --kata)
+  bin/main.ml             CLI entrypoint (--mode, --files, --target, --kata,
+                          --emit-prompt, --llm-response; `coh self` dispatch)
 /runtime/                 scoring instruction (SELF-MEASURE.md)
 /targets/                 named target declarations (project-internal corpora)
+/skills/                  typed skill modules
+  self-measure/SKILL.md   self-measurement declaration (renders coh-self + workflow)
+/schemas/                 CUE schemas for skill frontmatter (+ fixtures)
+/scripts/coh-self         RENDERED self-measurement command (do not edit)
 /katas/                   kata framework (pedagogical/regression inputs)
   README.md               framework docs + kata.toml schema
   01-glider/              positive control kata

@@ -3,12 +3,14 @@ Formal Specification of Observer Construction, Verification, Epistemic Refinemen
 
 Version: v1.0.13
 Status: Proposed Extension Specification
+Status consequence: verdict-bearing measurement (Core §5, Operational §5) does not depend on this extension; engines MAY implement its witnesses (the canonical engine emits the W2 gauge witness in provenance). Promotion to Normative follows the spec-release process (`CHANGELOG.md` § Spec releases).
 Artifact: Specification
+Changelog: `CHANGELOG.md` § Spec releases
 
 Normative dependencies:
     C≡ v3.1.0
     TSC Core v3.2.0
-    TSC Operational v3.2.0
+    TSC Operational v3.2.1
 
 Compatibility note for v3.2.0 dependency uplift:
     TSC Core v3.2.0 introduces the Barrier-Coherence Link
@@ -48,6 +50,21 @@ It adds:
     empirical grounding records for budget entries,
     a grounding witness for budget ledgers,
     and a ban on ungrounded inflation in relation derivation.
+
+## 1a. Correspondence to the core triad
+
+This extension's vocabulary refines the core pattern language rather
+than replacing it. Read: a **CalibrationBasis** types the *evidence
+class* behind an inflation magnitude — an α-side discipline (the
+pattern of a budget entry is only as stable as its evidence class); a
+**GroundingRecord** binds a budget entry to cited evidence — a β-side
+obligation (the entry and its justification must describe one
+measurement); the **GroundingCertificate** over a ledger is a γ-side
+witness (the budget survives change only if every entry's grounding
+does). The v1.0.12 base this file extends is superseded in place by
+this version — its inherited definitions are restated here wherever
+they are load-bearing, and `CHANGELOG.md` § Spec releases carries the
+lineage.
 
 ## 2. Change Log
 ### From v1.0.12

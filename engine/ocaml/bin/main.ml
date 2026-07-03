@@ -12,6 +12,22 @@
       --target <name> --registry <path>    named target (any mode); repeatable
       --files <glob>  [--files <glob>...]  direct file input (mechanical / hybrid)
 
+    Self-measurement (skills/self-measure/SKILL.md):
+      coh self [...]           dispatches to the rendered [coh-self] command
+                               (git-style external subcommand; the procedure
+                               is declared by the skill, not by this binary)
+
+    External provider route (skills/self-measure/SKILL.md §LLM contract):
+      --emit-prompt <path>     write the exact LLM prompt (instruction +
+                               target metadata + file bundle) to <path> and
+                               exit; no provider call is made
+      --llm-response <path>    in llm / hybrid modes, read the provider
+                               response from <path> instead of calling the
+                               provider over HTTP. Validation is identical
+                               to the HTTP route (strict v3.2 delta
+                               validation; failure = no report, no
+                               mechanical fallback)
+
     Cross-target (Operational §7.4):
       When [--target] is provided two or more times, the engine emits a
       cross-target report (`kind = cross_target_report`) whose top-level
@@ -54,7 +70,13 @@ let write_file path content =
 (* ------------------------------------------------------------------ *)
 (* Utility: glob expansion *)
 
-(** Expand a glob pattern into matching file paths relative to root. *)
+(** Expand a glob pattern into matching file paths relative to root.
+
+    Approximation, not full glob semantics: a pattern is matched by the
+    literal prefix before its first '*' and the literal suffix after its
+    last '*'. Sufficient for the manifest shapes used in targets/
+    (`dir/**` and `dir/**/*.ext`); a pattern like `a/*/b.md` would also
+    match deeper paths. *)
 let expand_glob ~root pattern =
   let is_glob s = String.contains s '*' in
   if not (is_glob pattern) then begin
@@ -164,10 +186,13 @@ let resolve_direct_files ~root globs =
 (* ------------------------------------------------------------------ *)
 (* Timestamp *)
 
+(* The timestamp lands in report FILENAMES, so it uses ISO-8601 basic
+   time (no colons): a colon in a file name is rejected by NTFS-safe
+   tooling — GitHub artifact upload refuses the whole report set. *)
 let timestamp () =
   let t = Unix.gettimeofday () in
   let tm = Unix.gmtime t in
-  Printf.sprintf "%04d-%02d-%02dT%02d:%02d:%02dZ"
+  Printf.sprintf "%04d-%02d-%02dT%02d%02d%02dZ"
     (tm.Unix.tm_year + 1900) (tm.Unix.tm_mon + 1) tm.Unix.tm_mday
     tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
 
@@ -193,12 +218,42 @@ type cli_args = {
   cli_output_dir : string;
   cli_files      : string list;  (* globs for direct file input *)
   cli_kata       : string;       (* "" when not using --kata *)
+  cli_emit_prompt  : string;     (* "" when not emitting the LLM prompt *)
+  cli_llm_response : string;     (* "" when using the HTTP provider route *)
 }
 
 let () =
   if Array.length Sys.argv = 2 && Sys.argv.(1) = "--version" then begin
     Printf.printf "coh %s (%s)\n" Build_version.version Build_commit.commit;
     exit 0
+  end
+
+(* `coh self` — git-style external-subcommand dispatch.
+
+   The self-measurement procedure is declared by
+   skills/self-measure/SKILL.md and rendered into the [coh-self]
+   executable by scripts/render-self-measure.sh. The engine stays
+   generic (measure any target); the skill owns what "self" means.
+   Resolution order: sibling of this binary, then PATH. *)
+let () =
+  if Array.length Sys.argv >= 2 && Sys.argv.(1) = "self" then begin
+    let rest = Array.sub Sys.argv 2 (Array.length Sys.argv - 2) in
+    let argv cmd = Array.append [| cmd |] rest in
+    let sibling =
+      Filename.concat (Filename.dirname Sys.executable_name) "coh-self"
+    in
+    (try
+       if Sys.file_exists sibling then Unix.execv sibling (argv sibling)
+       else Unix.execvp "coh-self" (argv "coh-self")
+     with Unix.Unix_error _ ->
+       Printf.eprintf
+         "coh self: cannot find 'coh-self' (sibling of %s or on PATH).\n\
+          The self-measurement command is rendered from \
+          skills/self-measure/SKILL.md;\n\
+          run scripts/render-self-measure.sh and install scripts/coh-self \
+          next to coh.\n"
+         Sys.executable_name;
+       exit 127)
   end
 
 let parse_args () =
@@ -210,6 +265,8 @@ let parse_args () =
   let output_dir = ref ".tsc" in
   let files     = ref [] in
   let kata      = ref "" in
+  let emit_prompt  = ref "" in
+  let llm_response = ref "" in
   let specs = [
     ("--mode",        Arg.Set_string mode_s,
      "Scoring mode: mechanical | llm | hybrid | auto (default: auto)");
@@ -228,9 +285,15 @@ let parse_args () =
      "Repository root directory (default: .)");
     ("--output",      Arg.Set_string output_dir,
      "Output directory for reports (default: .tsc)");
+    ("--emit-prompt", Arg.Set_string emit_prompt,
+     "Write the exact LLM prompt for the resolved bundle to <path> and \
+      exit (no provider call)");
+    ("--llm-response", Arg.Set_string llm_response,
+     "Read the LLM response from <path> instead of calling the provider \
+      (llm / hybrid modes; external provider route)");
   ] in
   let usage =
-    "coh --mode <mode> [--kata <id> | --target <name> [--target <name>...] | \
+    "coh [self] --mode <mode> [--kata <id> | --target <name> [--target <name>...] | \
      --files <glob>...] [options]"
   in
   Arg.parse specs (fun _ -> ()) usage;
@@ -245,6 +308,14 @@ let parse_args () =
     Arg.usage specs usage;
     exit 1
   end;
+  if !emit_prompt <> "" && !llm_response <> "" then begin
+    Printf.eprintf "Error: --emit-prompt and --llm-response are mutually exclusive\n";
+    exit 1
+  end;
+  if !llm_response <> "" && parse_mode !mode_s = Some Mechanical then begin
+    Printf.eprintf "Error: --llm-response requires --mode llm or --mode hybrid\n";
+    exit 1
+  end;
   { cli_mode        = mode;
     cli_targets     = List.rev !targets;
     cli_registry    = !registry;
@@ -252,7 +323,9 @@ let parse_args () =
     cli_root        = !root;
     cli_output_dir  = !output_dir;
     cli_files       = List.rev !files;
-    cli_kata        = !kata }
+    cli_kata        = !kata;
+    cli_emit_prompt  = !emit_prompt;
+    cli_llm_response = !llm_response }
 
 (* ------------------------------------------------------------------ *)
 (* Bundle builders *)
@@ -302,22 +375,22 @@ let build_bundle_from_files ~root ~globs =
     ~files
 
 (* ------------------------------------------------------------------ *)
-(* v3.2 validation-failure artifact (cycle/51 AC2)                     *)
+(* Witness validation-failure artifact (cycle/51 AC2; review round 2)  *)
 (*
-   When --mode llm / --mode hybrid receives a provider response that
-   parses as JSON but fails strict v3.2 delta validation, this helper
-   writes a durable diagnostic artifact and exits non-zero. The raw
-   provider response must already have been written to disk by the
-   caller. No coherence report is rendered. There is no mechanical
-   fallback (AC3). *)
+   Every refused witness response — parse failure, base-schema failure,
+   prohibited computed-coherence fields, target mismatch, or strict v3.2
+   delta failure — funnels through this one writer. The raw provider
+   response must already have been written to disk by the caller. No
+   coherence report is rendered. There is no mechanical fallback (AC3). *)
 
 let write_validation_failure_artifact
     ~output_dir
     ~target
     ~ts
-    ~(err : Response_schema.v32_validation_error) =
+    ~raw_path
+    ~(wf : Response_schema.witness_failure) =
   let missing_json =
-    `List (List.map (fun s -> `String s) err.missing_fields)
+    `List (List.map (fun s -> `String s) wf.wf_missing_fields)
   in
   let invalid_json =
     `List (List.map (fun (k, v) ->
@@ -326,15 +399,19 @@ let write_validation_failure_artifact
         ("observed_value", `String v);
         ("expected_range", `String "[0, 1]");
       ]
-    ) err.invalid_fields)
+    ) wf.wf_invalid_fields)
   in
   let artifact = `Assoc [
     ("kind",                    `String "validation_failure");
     ("schema",                  `String "tsc-llm-response/v3.2");
     ("status",                  `String "error");
+    ("target",                  `String target);
+    ("stage",                   `String (Response_schema.witness_stage_to_string wf.wf_stage));
+    ("errors",                  `List (List.map (fun e -> `String e) wf.wf_errors));
     ("missing_required_fields", missing_json);
     ("invalid_fields",          invalid_json);
-    ("message",                 `String "v3.2 LLM response failed required pairwise discrepancy validation; coherence report not rendered.");
+    ("raw_response_path",       `String raw_path);
+    ("message",                 `String "witness response failed validation; coherence report not rendered (no mechanical fallback).");
   ] in
   let path =
     Filename.concat output_dir
@@ -343,8 +420,79 @@ let write_validation_failure_artifact
   write_file path (Yojson.Safe.pretty_to_string artifact);
   path
 
+(** Validate a raw witness response; on any failure, write the durable
+    validation-failure artifact and exit non-zero. Shared by run_llm and
+    run_hybrid so no refusal path can diverge between modes. *)
+let validate_witness_or_exit ~args ~bundle ~ts ~raw_path raw_response =
+  let expected_target = bundle.bundle_target_name in
+  match
+    Response_schema.validate_witness_response ~expected_target raw_response
+  with
+  | Ok (result, deltas) ->
+    Printf.eprintf "Response validated.\n%!";
+    (result, deltas)
+  | Error wf ->
+    Printf.eprintf "Error: witness response failed validation: %s\n"
+      (Response_schema.format_witness_failure wf);
+    let artifact_path =
+      write_validation_failure_artifact
+        ~output_dir:args.cli_output_dir
+        ~target:bundle.bundle_target_name
+        ~ts
+        ~raw_path
+        ~wf
+    in
+    Printf.eprintf "Raw response preserved at %s\n" raw_path;
+    Printf.eprintf "Validation failure artifact: %s\n" artifact_path;
+    Printf.eprintf "No coherence report rendered (no mechanical fallback).\n";
+    exit 1
+
 (* ------------------------------------------------------------------ *)
 (* Mode execution *)
+
+(** Obtain the raw LLM response plus (provider, model) labels.
+
+    Two routes (skills/self-measure/SKILL.md §LLM contract):
+    - HTTP route (default): engine calls the configured provider.
+    - External route (--llm-response): the response was produced out of
+      band (e.g. by the Claude CLI step of the rendered self-measurement
+      workflow); the engine reads it from disk. Provider/model labels
+      come from LLM_PROVIDER / LLM_MODEL when set, else "external".
+
+    Both routes feed the identical validation pipeline downstream. *)
+let obtain_llm_response ~args ~system_msg ~user_msg =
+  if args.cli_llm_response <> "" then begin
+    Printf.eprintf "Reading LLM response from %s (external provider route)...\n%!"
+      args.cli_llm_response;
+    let raw =
+      match read_file args.cli_llm_response with
+      | Error e -> Printf.eprintf "Error: %s\n" e; exit 1
+      | Ok r -> r
+    in
+    let getenv_label name =
+      match Sys.getenv_opt name with
+      | Some v when String.trim v <> "" -> v
+      | _ -> "external"
+    in
+    (raw, getenv_label "LLM_PROVIDER", getenv_label "LLM_MODEL")
+  end else begin
+    let env_file = Filename.concat args.cli_root ".tsc/.env" in
+    let n = Dotenv.load env_file in
+    if n > 0 then Printf.eprintf "Loaded %d variable(s) from %s\n%!" n env_file;
+    Printf.eprintf "Loading provider configuration...\n%!";
+    let config =
+      match Provider.config_from_env () with
+      | Error e -> Printf.eprintf "Error: %s\n" e; exit 1
+      | Ok c -> c
+    in
+    Printf.eprintf "Calling %s/%s...\n%!" config.provider_name config.provider_model;
+    let raw =
+      match Provider.call_provider ~config ~system_message:system_msg ~user_message:user_msg with
+      | Error e -> Printf.eprintf "Error calling provider: %s\n" e; exit 1
+      | Ok r -> r
+    in
+    (raw, config.provider_name, config.provider_model)
+  end
 
 let run_mechanical ~args ~bundle ~ts =
   Printf.eprintf "Running mechanical scoring...\n%!";
@@ -366,20 +514,8 @@ let run_llm ~args ~bundle ~ts =
   in
   let system_msg = Prompt.build_system_message ~instruction in
   let user_msg   = Prompt.build_user_message   ~bundle in
-  let env_file   = Filename.concat args.cli_root ".tsc/.env" in
-  let n = Dotenv.load env_file in
-  if n > 0 then Printf.eprintf "Loaded %d variable(s) from %s\n%!" n env_file;
-  Printf.eprintf "Loading provider configuration...\n%!";
-  let config =
-    match Provider.config_from_env () with
-    | Error e -> Printf.eprintf "Error: %s\n" e; exit 1
-    | Ok c -> c
-  in
-  Printf.eprintf "Calling %s/%s...\n%!" config.provider_name config.provider_model;
-  let raw_response =
-    match Provider.call_provider ~config ~system_message:system_msg ~user_message:user_msg with
-    | Error e -> Printf.eprintf "Error calling provider: %s\n" e; exit 1
-    | Ok r -> r
+  let raw_response, provider_name, provider_model =
+    obtain_llm_response ~args ~system_msg ~user_msg
   in
   Printf.eprintf "Validating response...\n%!";
   (* Raw response is always preserved on disk, regardless of validation
@@ -393,57 +529,32 @@ let run_llm ~args ~bundle ~ts =
     meta_target = bundle.bundle_target_name;
     meta_file_hashes =
       List.map (fun f -> (f.file_path, f.file_hash)) bundle.bundle_files;
-    meta_prompt_version = "SELF-MEASURE/1.0";
-    meta_provider = config.provider_name;
-    meta_model    = config.provider_model;
+    meta_prompt_version = "SELF-MEASURE/3.2.2";
+    meta_provider = provider_name;
+    meta_model    = provider_model;
     meta_timestamp = ts;
   } in
-  match Response_schema.parse_json raw_response with
-  | Error e ->
-    Printf.eprintf "Error: response is not valid JSON: %s\n" e;
-    Printf.eprintf "Raw response preserved at %s\n" raw_path;
-    exit 1
-  | Ok j ->
-    (match Response_schema.validate_result j with
-     | Error e ->
-       Printf.eprintf "Error: response did not pass schema validation: %s\n" e;
-       Printf.eprintf "Raw response preserved at %s\n" raw_path;
-       exit 1
-     | Ok result ->
-       (* Strict v3.2 delta validation (cycle/51 AC1/AC2): required
-          delta fields must all be present and in [0, 1]. *)
-       (match Response_schema.validate_v32_deltas j with
-        | Error err ->
-          Printf.eprintf
-            "Error: v3.2 LLM response failed required delta validation: %s\n"
-            (Response_schema.format_v32_validation_error err);
-          let artifact_path =
-            write_validation_failure_artifact
-              ~output_dir:args.cli_output_dir
-              ~target:bundle.bundle_target_name
-              ~ts
-              ~err
-          in
-          Printf.eprintf "Raw response preserved at %s\n" raw_path;
-          Printf.eprintf "Validation failure artifact: %s\n" artifact_path;
-          exit 1
-        | Ok (d_ab, d_bg, d_ga) ->
-          Printf.eprintf "Response validated.\n%!";
-          let json_path =
-            Filename.concat args.cli_output_dir
-              (Printf.sprintf "tsc-%s-%s.json" bundle.bundle_target_name ts)
-          in
-          write_file json_path (Report.to_json ~result ~metadata ~mode:"llm"
-            ~delta_alpha_beta:(Some d_ab)
-            ~delta_beta_gamma:(Some d_bg)
-            ~delta_gamma_alpha:(Some d_ga) ());
-          let text_path =
-            Filename.concat args.cli_output_dir
-              (Printf.sprintf "tsc-%s-%s.txt" bundle.bundle_target_name ts)
-          in
-          write_file text_path (Report.to_text ~result ~metadata ~mode:"llm" ());
-          Printf.printf "Done. LLM reports:\n  %s\n  %s\n  %s\n"
-            raw_path json_path text_path))
+  (* Witness-validation funnel: every refusal stage (parse, base schema,
+     prohibited fields, target mismatch, v3.2 delta) writes the same
+     validation-failure artifact and exits (cycle/51 AC1/AC2/AC3). *)
+  let result, (d_ab, d_bg, d_ga) =
+    validate_witness_or_exit ~args ~bundle ~ts ~raw_path raw_response
+  in
+  let json_path =
+    Filename.concat args.cli_output_dir
+      (Printf.sprintf "tsc-%s-%s.json" bundle.bundle_target_name ts)
+  in
+  write_file json_path (Report.to_json ~result ~metadata ~mode:"llm"
+    ~delta_alpha_beta:(Some d_ab)
+    ~delta_beta_gamma:(Some d_bg)
+    ~delta_gamma_alpha:(Some d_ga) ());
+  let text_path =
+    Filename.concat args.cli_output_dir
+      (Printf.sprintf "tsc-%s-%s.txt" bundle.bundle_target_name ts)
+  in
+  write_file text_path (Report.to_text ~result ~metadata ~mode:"llm" ());
+  Printf.printf "Done. LLM reports:\n  %s\n  %s\n  %s\n"
+    raw_path json_path text_path
 
 let run_hybrid ~args ~bundle ~ts =
   Printf.eprintf "Running hybrid scoring (mechanical + LLM)...\n%!";
@@ -457,20 +568,8 @@ let run_hybrid ~args ~bundle ~ts =
   in
   let system_msg = Prompt.build_system_message ~instruction in
   let user_msg   = Prompt.build_user_message   ~bundle in
-  let env_file   = Filename.concat args.cli_root ".tsc/.env" in
-  let n = Dotenv.load env_file in
-  if n > 0 then Printf.eprintf "Loaded %d variable(s) from %s\n%!" n env_file;
-  Printf.eprintf "Loading provider configuration...\n%!";
-  let config =
-    match Provider.config_from_env () with
-    | Error e -> Printf.eprintf "Error: %s\n" e; exit 1
-    | Ok c -> c
-  in
-  Printf.eprintf "Calling %s/%s...\n%!" config.provider_name config.provider_model;
-  let raw_response =
-    match Provider.call_provider ~config ~system_message:system_msg ~user_message:user_msg with
-    | Error e -> Printf.eprintf "Error calling provider: %s\n" e; exit 1
-    | Ok r -> r
+  let raw_response, _provider_name, _provider_model =
+    obtain_llm_response ~args ~system_msg ~user_msg
   in
   Printf.eprintf "Validating LLM response...\n%!";
   (* Raw response is always preserved on disk, regardless of validation
@@ -480,38 +579,10 @@ let run_hybrid ~args ~bundle ~ts =
       (Printf.sprintf "tsc-%s-%s-raw.txt" bundle.bundle_target_name ts)
   in
   write_file raw_path raw_response;
-  let llm_result =
-    match Response_schema.parse_json raw_response with
-    | Error e ->
-      Printf.eprintf "Error: LLM response is not valid JSON: %s\n" e;
-      Printf.eprintf "Raw response preserved at %s\n" raw_path;
-      exit 1
-    | Ok j ->
-      match Response_schema.validate_result j with
-      | Error e ->
-        Printf.eprintf "Error: LLM response failed schema validation: %s\n" e;
-        Printf.eprintf "Raw response preserved at %s\n" raw_path;
-        exit 1
-      | Ok r ->
-        (* Strict v3.2 delta validation (cycle/51 AC1/AC2). *)
-        (match Response_schema.validate_v32_deltas j with
-         | Error err ->
-           Printf.eprintf
-             "Error: v3.2 LLM response failed required delta validation: %s\n"
-             (Response_schema.format_v32_validation_error err);
-           let artifact_path =
-             write_validation_failure_artifact
-               ~output_dir:args.cli_output_dir
-               ~target:bundle.bundle_target_name
-               ~ts
-               ~err
-           in
-           Printf.eprintf "Raw response preserved at %s\n" raw_path;
-           Printf.eprintf "Validation failure artifact: %s\n" artifact_path;
-           Printf.eprintf
-             "Hybrid report not rendered (no post-response mechanical fallback).\n";
-           exit 1
-         | Ok _ -> r)
+  (* Same witness-validation funnel as run_llm — the refusal contract
+     cannot diverge between modes (cycle/51 AC1/AC2/AC3). *)
+  let llm_result, _deltas =
+    validate_witness_or_exit ~args ~bundle ~ts ~raw_path raw_response
   in
   let hybrid =
     Hybrid_scoring.combine ~target:bundle.bundle_target_name mech_result llm_result
@@ -766,7 +837,13 @@ let () =
      never falls back to mechanical scoring. *)
   let effective_mode = match args.cli_mode with
     | Auto ->
-      if Tsc_engine.Credentials.has_llm_credentials () then begin
+      if args.cli_llm_response <> "" then begin
+        (* External provider route: a pre-produced response stands in
+           for credentials — auto resolves to hybrid. *)
+        Printf.eprintf "Auto mode: --llm-response supplied — running hybrid.\n%!";
+        Hybrid
+      end
+      else if Tsc_engine.Credentials.has_llm_credentials () then begin
         Printf.eprintf "Auto mode: credentials found — running hybrid.\n%!";
         Hybrid
       end else begin
@@ -779,6 +856,12 @@ let () =
   (* Cross-target (Operational §7.4): two or more --target flags.
      Mechanical-only for this cycle; reject LLM / Hybrid explicitly. *)
   let n_targets = List.length args.cli_targets in
+  if n_targets >= 2 && (args.cli_emit_prompt <> "" || args.cli_llm_response <> "") then begin
+    Printf.eprintf
+      "Error: --emit-prompt / --llm-response take a single --target \
+       (cross-target is mechanical-only); run each target separately.\n";
+    exit 1
+  end;
   if n_targets >= 2 then begin
     (match effective_mode with
      | Mechanical -> ()
@@ -815,6 +898,25 @@ let () =
     else
       build_bundle_from_files ~root ~globs:args.cli_files
   in
+
+  (* --emit-prompt: write the exact LLM prompt for this bundle and exit.
+     This is the deterministic half of the external provider route — the
+     emitted file is byte-identical to what the HTTP route would send
+     (instruction + target metadata + hashed file bundle). *)
+  if args.cli_emit_prompt <> "" then begin
+    let instruction =
+      match read_file (Filename.concat args.cli_root args.cli_instruction) with
+      | Error e -> Printf.eprintf "Error: %s\n" e; exit 1
+      | Ok content -> content
+    in
+    let prompt = Prompt.build_prompt ~instruction ~bundle in
+    write_file args.cli_emit_prompt prompt;
+    Printf.printf "Done. LLM prompt (%d files, %d bytes): %s\n"
+      (List.length bundle.bundle_files)
+      (String.length prompt)
+      args.cli_emit_prompt;
+    exit 0
+  end;
 
   (* Dispatch *)
   match effective_mode with

@@ -4,10 +4,15 @@
 
 open Types
 
+(** The KIND names the class of surface, never a target's name — the
+    registry can hold many targets of one kind (repo, methodology, and
+    cm-of-cms are all aggregates). Conflating kind with the canonical
+    target names made the witness validator refuse valid responses for
+    any aggregate target not literally named "repo". *)
 let target_kind_to_string = function
-  | Theory -> "spec"
-  | Implementation -> "engine"
-  | Aggregate -> "repo"
+  | Theory -> "theory"
+  | Implementation -> "implementation"
+  | Aggregate -> "aggregate"
 
 (** Render the file bundle section of the prompt. *)
 let render_bundle_section bundle =

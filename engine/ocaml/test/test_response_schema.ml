@@ -156,6 +156,93 @@ let test_mixed_missing_and_invalid () =
         && List.mem "delta_gamma_alpha" err.missing_fields) label
 
 (* ------------------------------------------------------------------ *)
+(* Witness-validation funnel (review round 2)                          *)
+(*
+   Every refusal stage is classified; no stage falls through to another
+   or silently accepts. Fixtures mirror the failure shapes a live Claude
+   CLI witness is most likely to produce: prose, fenced JSON, missing
+   base fields, computed coherence, wrong target, bad deltas. *)
+
+(* A base-valid witness response for target "spec", parameterized on the
+   delta_alpha_beta value and an optional extra top-level field. *)
+let witness_raw ?(delta_ab = "0.1") ?(extra = "") () = Printf.sprintf {|{
+  "target": "spec",
+  "alpha": 0.9, "beta": 0.8, "gamma": 0.7,
+  "delta_alpha_beta": %s, "delta_beta_gamma": 0.2, "delta_gamma_alpha": 0.15,
+  "bottleneck_axis": "gamma",
+  "confidence": 0.8,
+  "summary": "funnel fixture",
+  "axis_evidence": {
+    "alpha": {"positive": ["p"], "negative": ["n"], "reason": "r"},
+    "beta":  {"positive": ["p"], "negative": ["n"], "reason": "r"},
+    "gamma": {"positive": ["p"], "negative": ["n"], "reason": "r"}
+  },
+  "unresolved_ambiguity": [],
+  "next_fixes": []%s
+}|} delta_ab extra
+
+let valid_witness_raw = witness_raw ()
+
+let expect_stage label raw ~expected_target stage =
+  match Response_schema.validate_witness_response ~expected_target raw with
+  | Ok _ -> fail (label ^ " — accepted instead of refused")
+  | Error wf ->
+    check (Response_schema.witness_stage_to_string wf.wf_stage = stage)
+      (Printf.sprintf "%s (stage=%s)" label stage)
+
+let test_funnel_accepts_valid () =
+  let label = "funnel positive: fully valid witness response accepted" in
+  match
+    Response_schema.validate_witness_response
+      ~expected_target:"spec" valid_witness_raw
+  with
+  | Ok (result, (d_ab, _, _)) ->
+    check (result.Tsc_engine.Types.result_target = "spec"
+        && abs_float (d_ab -. 0.1) < 1e-9) label
+  | Error wf ->
+    fail (label ^ " — refused: " ^ Response_schema.format_witness_failure wf)
+
+let test_funnel_prose () =
+  expect_stage "funnel negative: prose refused" ~expected_target:"spec"
+    "The coherence of this bundle seems quite high overall."
+    "parse"
+
+let test_funnel_fenced_json () =
+  expect_stage "funnel negative: fenced ```json refused" ~expected_target:"spec"
+    ("```json\n" ^ valid_witness_raw ^ "\n```")
+    "parse"
+
+let test_funnel_missing_base_field () =
+  (* Valid JSON, but no summary / axis_evidence / etc. *)
+  expect_stage "funnel negative: missing base contract fields refused"
+    ~expected_target:"spec"
+    {|{"target": "spec", "alpha": 0.9, "beta": 0.8, "gamma": 0.7}|}
+    "base_schema"
+
+let test_funnel_prohibited_coherence () =
+  (* Structurally valid response that also computes C_sigma — the witness
+     must not compute coherence; the engine owns the transform. *)
+  expect_stage "funnel negative: computed C_sigma field refused"
+    ~expected_target:"spec"
+    (witness_raw ~extra:",\n  \"C_sigma\": 0.82" ())
+    "prohibited_fields"
+
+let test_funnel_target_mismatch () =
+  expect_stage "funnel negative: wrong target refused"
+    ~expected_target:"engine" valid_witness_raw "target_mismatch"
+
+let test_funnel_delta_failure_classified () =
+  (* Base-valid response with one delta out of range: must be classified as
+     the v3.2 delta stage, and name the offending field. *)
+  let raw = witness_raw ~delta_ab:"1.5" () in
+  match Response_schema.validate_witness_response ~expected_target:"spec" raw with
+  | Ok _ -> fail "funnel negative: out-of-range delta accepted"
+  | Error wf ->
+    check (Response_schema.witness_stage_to_string wf.wf_stage = "v3_2_delta"
+        && List.mem_assoc "delta_alpha_beta" wf.wf_invalid_fields)
+      "funnel negative: out-of-range delta classified as v3_2_delta with field named"
+
+(* ------------------------------------------------------------------ *)
 
 let () =
   test_valid_v32_deltas ();
@@ -166,4 +253,11 @@ let () =
   test_negative_delta ();
   test_string_delta ();
   test_mixed_missing_and_invalid ();
+  test_funnel_accepts_valid ();
+  test_funnel_prose ();
+  test_funnel_fenced_json ();
+  test_funnel_missing_base_field ();
+  test_funnel_prohibited_coherence ();
+  test_funnel_target_mismatch ();
+  test_funnel_delta_failure_classified ();
   Printf.printf "All response_schema v3.2 strict validation tests passed.\n%!"

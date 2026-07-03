@@ -1,4 +1,4 @@
-# Documentation
+# Docs
 
 Start with [THESIS.md](THESIS.md).
 

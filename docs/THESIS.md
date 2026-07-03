@@ -1,4 +1,4 @@
-# TSC
+# The TSC Thesis
 
 TSC (Triadic Self-Coherence) is a theory of measurement for systems that describe themselves.
 

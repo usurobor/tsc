@@ -1,0 +1,37 @@
+format = "tsc-target/0.1"
+name = "methodology"
+kind = "aggregate"
+description = "The 1st coherence methodology as a measurable corpus: the self-measurement declaration, its schema, validators, renderer, rendered surfaces, scoring instruction, corpus declarations, and the engine modules its pipeline names."
+
+include = [
+  "skills/README.md",
+  "skills/self-measure/**",
+  "schemas/skill.cue",
+  "schemas/README.md",
+  "scripts/render-self-measure.sh",
+  "scripts/coh-self",
+  "scripts/coherence-ledger.sh",
+  "scripts/ci/validate-skill-frontmatter.sh",
+  "scripts/ci/self-measure-smoke.sh",
+  ".github/workflows/tsc-self-measure.yml",
+  ".github/workflows/tsc-coherence-ledger.yml",
+  "runtime/SELF-MEASURE.md",
+  "targets/registry.tsc",
+  "targets/spec.tsc",
+  "targets/engine.tsc",
+  "targets/repo.tsc",
+  "engine/ocaml/lib/target_registry.ml",
+  "engine/ocaml/lib/bundle.ml",
+  "engine/ocaml/lib/mechanical_scoring.ml",
+  "engine/ocaml/lib/mechanical_scoring.mli",
+  "engine/ocaml/lib/prompt.ml",
+  "engine/ocaml/lib/response_schema.ml",
+  "engine/ocaml/lib/coherence.ml",
+  "engine/ocaml/lib/report.ml",
+  "engine/ocaml/lib/hybrid_scoring.ml",
+  "engine/ocaml/lib/cross_target.ml"
+]
+
+exclude = [
+  ".tsc/**"
+]

@@ -1,0 +1,14 @@
+{
+  "anchor_id": "hx-01",
+  "challenger": "cherry-pick-assassin",
+  "scorer_sha256": "a0ca1163eef08cae85bce52e5e8c68fc2246cbacbcc3bc5bc7dda524d9851507",
+  "score": 1.0,
+  "score_band": [
+    0.85,
+    1.0
+  ],
+  "hit": true,
+  "loss": 0.0,
+  "standing_scope": "house-authored-blind-heldout",
+  "note": "commit-reveal proves ordering (unmemorizability); the label is house judgment \u2014 external-blind-heldout requires a non-house anchor author"
+}

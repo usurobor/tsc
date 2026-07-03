@@ -55,7 +55,7 @@ jobs:
             --no-progress
             --max-concurrency 4
             --accept 200..299,403,429
-            --exclude-path "CHANGELOG.md|LICENSE"
+            --exclude-path "CHANGELOG.md|LICENSE|heldout/revealed"
             -- *.md **/*.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -97,6 +97,89 @@ jobs:
   # kata-check job removed in cycle #36 — consolidated into the dedicated
   # `katas.yml` workflow which adds an OPAM + dune build cache and
   # PR-only concurrency cancellation. See `.github/workflows/katas.yml`.
+
+  skill-validate:
+    # Failure classes guarded (schemas/README.md):
+    #   - skill frontmatter that no longer satisfies schemas/skill.cue;
+    #   - a measurement skill declaring signals/estimates the engine or
+    #     scoring instruction does not carry (declaration drift);
+    #   - rendered artifacts (scripts/coh-self,
+    #     .github/workflows/tsc-self-measure.yml) hand-edited or stale
+    #     relative to skills/self-measure/SKILL.md (render drift).
+    # Consumer: anyone reading a SKILL.md as the authority on behavior.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup CUE
+        uses: cue-lang/setup-cue@v1.0.1
+        with:
+          version: v0.13.2
+
+      - name: Install Python deps (explicit — runner preinstall is not a contract)
+        run: python3 -m pip install --disable-pip-version-check PyYAML
+
+      - name: Schema self-test (positive + negative fixtures)
+        run: ./scripts/ci/validate-skill-frontmatter.sh --self-test
+
+      - name: Validate every SKILL.md frontmatter
+        run: ./scripts/ci/validate-skill-frontmatter.sh
+
+      - name: Render byte-identity (skill -> command + workflow)
+        run: ./scripts/render-self-measure.sh --check
+
+  self-measure-smoke:
+    # Failure class guarded: the rendered coh-self command or the external
+    # witness route (emit-prompt -> witness response -> ingest) regressing
+    # silently. The tsc-self-measure llm-witness job is gated off by
+    # default, so this credential-free smoke is the always-on proof of the
+    # route, including its refusal path (invalid response => validation-
+    # failure artifact, no report). Consumer: anyone touching
+    # engine/ocaml/bin/main.ml, scripts/coh-self, or the skill.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+
+      - name: Self-measurement smoke (mechanical + external witness route)
+        run: ./scripts/ci/self-measure-smoke.sh
+
+      - name: CM admissibility self-test (five-attacker matrix)
+        # Failure class guarded: the CM selection rule crowning a
+        # non-measurer. Asserts the exact matrix — engine admitted;
+        # flatterer, path-gamer, boilerplate-gamer rejected;
+        # basename-gamer and cherry-pick-assassin ADMITTED (the two
+        # named residuals: held-out anchors and adjudication are their
+        # closures). skills/cm-of-cms/SKILL.md section 6.
+        run: ./scripts/cm-admissibility.sh --self-test
+
+      - name: Held-out anchor integrity (commitments vs reveals)
+        run: ./scripts/cm-heldout.sh verify
+
+      - name: Held-out matrix (memorizers must fail the unseen anchor)
+        # The second measured result, asserted permanently: on revealed
+        # fail-anchor hx-02 (sealed before the challengers registered),
+        # every memorization/inflation attacker misses while the engine
+        # hits. Standing earned: house-authored-blind-heldout —
+        # unmemorizability, not externality.
+        run: ./scripts/cm-heldout.sh self-test
 
   forbidden-wording:
     # v0.10.0 cutover (#54 AC7): forward-only check that rejects newly-added

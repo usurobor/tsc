@@ -1,0 +1,9 @@
+{
+  "anchor_id": "hx-01",
+  "sha256": "939e683e4770b4da75f0bf4182ed7c2f9e40fa99f5d166483b84fc4dd868fb06",
+  "author_class": "house",
+  "steward": "house",
+  "label_schema": "score_band [lo, hi] over C_sigma_num; loss predeclared in label.json",
+  "loss_function_id": "band-distance",
+  "earns": "house-authored-blind-heldout"
+}

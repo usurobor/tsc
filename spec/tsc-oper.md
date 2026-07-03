@@ -2,7 +2,8 @@
 
 **Version:** 3.2.1\
 **Status:** Normative\
-**Foundation:** TSC Core v3.2.0
+**Foundation:** TSC Core v3.2.0\
+**Changelog:** `CHANGELOG.md` § Spec releases
 
 **Change from v3.2.0 (patch):** §7.4 added — canonicalizes the **cross-target aggregate** `C_Σ_cross` as the geometric mean of per-target C_Σ values for self-application across multiple target scopes (e.g. `spec`, `engine`, `repo`). Strictly additive; existing measurement and verdict logic unchanged.
 
@@ -392,7 +393,9 @@ OOD stable
 
 **Current target:** Θ = 0.75
 
-**Reporting:** Self-coherence score published in docs/self-coherence-v3.0.1.md
+Θ is the self-application acceptance gate. Reader-facing documents additionally quote a rough `C_Σ^num ≥ 0.80` "holds together" band; that band is a stricter descriptive quality bar, not the verdict gate — a measurement can clear Θ while sitting below the band.
+
+**Reporting:** Frozen self-coherence snapshots are published under `docs/alpha/doctrine/{version}/SELF-COHERENCE.md`; current measurements are generated into `.tsc/self/` by the self-measurement surface (`coh self`).
 
 ### 7.4 Cross-Target Aggregate
 
@@ -402,7 +405,7 @@ Self-application of TSC routinely measures more than one target scope (e.g. `spe
 C_Σ_cross = (∏_{i=1}^{n} C_Σ_i)^(1/n)
 ```
 
-where `i` ranges over the `n` targets in scope.
+where `i` ranges over the `n` targets in scope. This rule's consumer is the multi-target self-application surface (in the canonical engine: the cross-target report emitted when two or more targets are measured in one run).
 
 **Properties:**
 

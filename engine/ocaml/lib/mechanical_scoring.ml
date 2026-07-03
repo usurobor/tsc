@@ -180,6 +180,81 @@ let contains_keyword kw content =
 let contains_any keywords content =
   List.exists (fun kw -> contains_keyword kw content) keywords
 
+(** A keyword MENTION is not a keyword ACT: "deprecated" as a quoted enum
+    value, or a scorer's own keyword list in a string literal, does not
+    deprecate anything. An occurrence counts only when no character of the
+    match sits inside a double-quote or backtick span on its line. *)
+let line_has_unquoted needle line =
+  let nl = String.length needle and ll = String.length line in
+  if nl = 0 || nl > ll then false
+  else begin
+    let inside = Array.make ll false in
+    let in_dq = ref false and in_bt = ref false in
+    String.iteri (fun i c ->
+      (match c with
+       | '"' -> in_dq := not !in_dq
+       | '`' -> in_bt := not !in_bt
+       | _ -> ());
+      inside.(i) <- !in_dq || !in_bt) line;
+    let found = ref false and i = ref 0 in
+    while !i <= ll - nl && not !found do
+      if String.sub line !i nl = needle then begin
+        let quoted = ref false in
+        for j = !i to !i + nl - 1 do
+          if inside.(j) then quoted := true
+        done;
+        if not !quoted then found := true
+      end;
+      incr i
+    done;
+    !found
+  end
+
+let contains_any_unquoted keywords content =
+  let lines = String.split_on_char '\n' (str_lower content) in
+  List.exists (fun kw ->
+    let kw = str_lower kw in
+    List.exists (line_has_unquoted kw) lines) keywords
+
+(** A document is a Markdown file. Document-structure signals — headings,
+    links, authority claims, filename fit — measure documents only: a
+    markdown-shaped substring inside an OCaml string literal is not a
+    cross-reference, and a `#`-prefixed code line is not a heading.
+    Corpus-level signals (versions, generated markers, deprecation,
+    traceability) keep scanning every file. *)
+let is_document (f : bundle_file) =
+  Filename.check_suffix (str_lower f.file_path) ".md"
+
+let documents files = List.filter is_document files
+
+(** Normalize a link target as a path relative to the linking file's
+    directory, collapsing `.` and `..` segments (clamped at the bundle
+    root) and stripping any `#anchor` fragment. Markdown links are
+    relative to the document that carries them — raw string comparison
+    mis-resolved every `../` link from a nested file. *)
+let normalize_link ~src target =
+  let clean =
+    match String.split_on_char '#' target with p :: _ -> p | [] -> target
+  in
+  if clean = "" then ""
+  else begin
+    let base_dir = Filename.dirname src in
+    let combined =
+      if base_dir = "." || base_dir = "" then clean
+      else base_dir ^ "/" ^ clean
+    in
+    let stack =
+      List.fold_left (fun acc seg ->
+        match seg with
+        | "" | "." -> acc
+        | ".."     -> (match acc with _ :: tl -> tl | [] -> acc)
+        | s        -> s :: acc
+      ) [] (String.split_on_char '/' combined)
+    in
+    String.concat "/" (List.rev stack)
+  end
+
+
 (** Extract (level, heading-text) pairs from Markdown headings. *)
 let extract_headings content =
   List.filter_map (fun line ->
@@ -219,7 +294,10 @@ let extract_md_links content =
   done;
   !links
 
-(** Extract X.Y.Z version strings from content. *)
+(** Extract X.Y.Z version strings from content. A match with a '/'
+    immediately adjacent is a path segment (a reference to a versioned
+    directory, e.g. docs/alpha/engine/0.1.0/README.md), not a version
+    claim, and is skipped. *)
 let extract_versions content =
   let len = String.length content in
   let versions = ref [] in
@@ -236,7 +314,11 @@ let extract_versions content =
           incr i;
           let es = !i in
           while !i < len && content.[!i] >= '0' && content.[!i] <= '9' do incr i done;
-          if !i - es > 0 then
+          let path_adjacent =
+            (start > 0 && content.[start - 1] = '/')
+            || (!i < len && content.[!i] = '/')
+          in
+          if !i - es > 0 && not path_adjacent then
             versions := String.sub content start (!i - start) :: !versions
         end
       end
@@ -251,6 +333,53 @@ let is_internal_link target =
   && not (str_starts_with "mailto" target)
   && not (str_starts_with "#" target)
   && not (str_starts_with "ftp" target)
+
+(** GitHub-style anchor slug for a heading: lowercase, spaces to dashes,
+    alphanumerics/dashes/underscores kept, everything else dropped. *)
+let slugify heading =
+  let b = Buffer.create (String.length heading) in
+  String.iter (fun c ->
+    let c = if c >= 'A' && c <= 'Z' then Char.chr (Char.code c + 32) else c in
+    if (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c = '-' || c = '_'
+    then Buffer.add_char b c
+    else if c = ' ' then Buffer.add_char b '-'
+  ) heading;
+  Buffer.contents b
+
+(** (path, heading slugs) for every document — the anchor-resolution map. *)
+let doc_slug_map files =
+  List.map (fun f ->
+    (f.file_path,
+     List.map (fun (_, text) -> slugify text) (extract_headings f.file_content)))
+    (documents files)
+
+(** A normalized link resolves when it names a bundle file exactly or is a
+    directory prefix of one (directory links are valid tree references).
+    When the link carries a #fragment and its target is a document in the
+    bundle, the fragment must match one of that document's heading slugs —
+    an anchor naming a heading the target does not have is a broken
+    cross-reference (and, across files, a contradiction fingerprint:
+    two documents citing the same section under different names cannot
+    both be describing the same system). *)
+let link_resolves ~bundle_paths ~doc_slugs ~src target =
+  let fragment =
+    match String.split_on_char '#' target with
+    | _ :: frag :: _ -> frag
+    | _ -> ""
+  in
+  let norm = normalize_link ~src target in
+  if norm = "" then true  (* pure #anchor links are same-document *)
+  else
+    let file_match = List.exists (fun p -> p = norm) bundle_paths in
+    let dir_match =
+      List.exists (fun p -> str_starts_with (norm ^ "/") p) bundle_paths
+    in
+    if not (file_match || dir_match) then false
+    else if fragment = "" || not file_match then true
+    else
+      match List.assoc_opt norm doc_slugs with
+      | None -> true  (* fragment into a non-document: cannot validate *)
+      | Some slugs -> List.mem (str_lower fragment) slugs
 
 (** Compute axis score as weighted average of signal scores. *)
 let axis_score_of_signals (sigs : signal list) =
@@ -380,19 +509,32 @@ let sig_naming_drift ~cfg (files : bundle_file list) : signal =
     done;
     !found
   in
+  (* Parenthesized words are quoted vocabulary ("Grounding Witness
+     (GroundingCertificate)" defines a formal name); quoting a name is
+     not adopting a heading naming convention. Hyphenated Title-Case
+     ("Self-Measure", "Post-Release") is prose, not camelCase — split on
+     '-' before classifying. *)
+  let is_quoted w = String.contains w '(' || String.contains w ')' in
   let snake = ref 0 and camel = ref 0 in
   List.iter (fun f ->
     List.iter (fun (_, text) ->
       String.split_on_char ' ' text |> List.iter (fun w ->
-        if is_snake w then incr snake
-        else if has_upper_after_lower w then incr camel)
+        if is_quoted w then ()
+        else if is_snake w then incr snake
+        else if List.exists has_upper_after_lower (String.split_on_char '-' w)
+        then incr camel)
     ) (extract_headings f.file_content)
   ) files;
   let total = !snake + !camel in
-  if total = 0 then
+  if total < 5 then
+    (* Fewer than five identifier tokens across all headings cannot
+       establish a naming convention, let alone drift from one. *)
     { code = "alpha.naming_drift"; label = "Naming drift";
       weight = cfg.alpha.naming_drift; score = 1.0;
-      evidence = ["No mixed identifiers in headings"] }
+      evidence =
+        [Printf.sprintf
+           "%d identifier token(s) in headings — too few to assess drift"
+           total] }
   else begin
     let majority = Float.max (float_of_int !snake) (float_of_int !camel) in
     let score = clamp01 (majority /. float_of_int total) in
@@ -405,38 +547,28 @@ let sig_naming_drift ~cfg (files : bundle_file list) : signal =
 (* ------------------------------------------------------------------ *)
 (* Beta signals *)
 
-(** Signal: Cross-reference consistency — internal link resolution rate. *)
+(** Signal: Cross-reference consistency — link resolution rate over the
+    bundle's documents. Links normalize relative to their source document. *)
 let sig_cross_reference_consistency ~cfg (files : bundle_file list) : signal =
   let bundle_paths = List.map (fun f -> f.file_path) files in
+  let doc_slugs = doc_slug_map files in
   let all_links =
     List.concat_map (fun f ->
-      List.filter is_internal_link (extract_md_links f.file_content)
-    ) files
+      extract_md_links f.file_content
+      |> List.filter is_internal_link
+      |> List.map (fun target -> (f.file_path, target))
+    ) (documents files)
   in
   if all_links = [] then
     { code = "beta.cross_reference_consistency"; label = "Cross-reference consistency";
       weight = cfg.beta.cross_reference_consistency; score = 1.0;
       evidence = ["No internal links found"] }
   else begin
-    let resolves target =
-      let clean =
-        if str_starts_with "./" target
-        then String.sub target 2 (String.length target - 2)
-        else target
-      in
-      (* strip any anchor fragment *)
-      let clean = match String.split_on_char '#' clean with
-        | p :: _ -> p
-        | [] -> clean
-      in
-      clean = "" ||
-      List.exists (fun p ->
-        p = clean
-        || str_starts_with clean p
-        || str_starts_with p clean
-      ) bundle_paths
+    let broken =
+      List.filter
+        (fun (src, t) -> not (link_resolves ~bundle_paths ~doc_slugs ~src t))
+        all_links
     in
-    let broken = List.filter (fun t -> not (resolves t)) all_links in
     let n_total = List.length all_links in
     let n_broken = List.length broken in
     let score = clamp01 (1.0 -. float_of_int n_broken /. float_of_int n_total) in
@@ -445,7 +577,8 @@ let sig_cross_reference_consistency ~cfg (files : bundle_file list) : signal =
         [Printf.sprintf "All %d internal links resolve" n_total]
       else
         [Printf.sprintf "%d/%d links unresolved" n_broken n_total]
-        @ List.filteri (fun i _ -> i < 3) broken
+        @ (List.filteri (fun i _ -> i < 3) broken
+           |> List.map (fun (src, t) -> Printf.sprintf "%s -> %s" src t))
     in
     { code = "beta.cross_reference_consistency"; label = "Cross-reference consistency";
       weight = cfg.beta.cross_reference_consistency;
@@ -453,27 +586,44 @@ let sig_cross_reference_consistency ~cfg (files : bundle_file list) : signal =
       evidence }
   end
 
-(** Signal: Authority alignment — files claiming canonical authority. *)
+(** Signal: Authority alignment — documents CLAIMING authority for
+    themselves. Self-claim phrases only: a document that points at the
+    canonical source ("spec/ is canonical") is coordinating, not
+    contesting — only competing self-claims signal authority confusion.
+    Emphasis markers are stripped before matching so "this file is the
+    **canonical** definition" is recognized as the self-claim it is.
+    One self-claimant is the ideal shape; two or more is a direct
+    contest — the strongest structural contradiction mechanical scoring
+    can detect — and is penalized steeply. *)
 let sig_authority_alignment ~cfg (files : bundle_file list) : signal =
-  let authority_kws =
-    ["canonical"; "governs on disagreement"; "source of truth"; "authoritative";
-     "authority surface"; "this is canonical"] in
+  let strip_emphasis s =
+    let b = Buffer.create (String.length s) in
+    String.iter (fun c ->
+      if c <> '*' && c <> '_' && c <> '`' then Buffer.add_char b c) s;
+    Buffer.contents b
+  in
+  let self_claim_kws =
+    ["this is canonical"; "this is the canonical";
+     "this document is canonical"; "this document is the canonical";
+     "this file is canonical"; "this file is the canonical";
+     "this spec is canonical"; "this spec is the canonical";
+     "governs on disagreement";
+     "is the source of truth"; "is authoritative"] in
   let files_with_authority = List.filter (fun f ->
-    contains_any authority_kws f.file_content
-  ) files in
+    contains_any self_claim_kws (strip_emphasis f.file_content)
+  ) (documents files) in
   let n = List.length files_with_authority in
-  (* 0 authority files = clean (no contested claims) = 1.0
-     1 authority file = ideal = 0.95
-     multiple = possible contest, decreasing score *)
+  (* 0 self-claims = clean; 1 = ideal (one named authority);
+     >= 2 = contested authority, steep penalty per extra claimant. *)
   let score =
     if n = 0 then 1.0
     else if n = 1 then 0.95
-    else clamp01 (1.0 -. 0.05 *. float_of_int (n - 1))
+    else clamp01 (0.5 -. 0.15 *. float_of_int (n - 2))
   in
   let evidence =
-    if n = 0 then ["No authority-claim language found — clean surface"]
+    if n = 0 then ["No authority self-claims found — clean surface"]
     else
-      [Printf.sprintf "%d files contain authority-claim language" n]
+      [Printf.sprintf "%d documents self-claim authority" n]
       @ List.filteri (fun i _ -> i < 3) (List.map (fun f -> f.file_path) files_with_authority)
   in
   { code = "beta.authority_alignment"; label = "Authority alignment";
@@ -481,40 +631,55 @@ let sig_authority_alignment ~cfg (files : bundle_file list) : signal =
     score;
     evidence }
 
-(** Signal: Source-of-truth alignment — internal link resolution from
-    across the bundle (reuses link extraction, measures in-bundle coverage). *)
+(** Signal: Source-of-truth alignment — fraction of documents-with-links
+    whose reference set is FULLY grounded in the bundle. Complements
+    cross_reference_consistency (per-link rate) at document granularity:
+    one document scattering half-broken references hurts more than the
+    same broken links spread across many otherwise-grounded documents. *)
 let sig_source_of_truth_alignment ~cfg (files : bundle_file list) : signal =
   let bundle_paths = List.map (fun f -> f.file_path) files in
-  let n_refs = ref 0 and n_in = ref 0 in
-  List.iter (fun f ->
-    List.iter (fun target ->
-      if is_internal_link target then begin
-        incr n_refs;
-        let clean = match String.split_on_char '#' target with p :: _ -> p | [] -> target in
-        let clean = if str_starts_with "./" clean
-          then String.sub clean 2 (String.length clean - 2)
-          else clean
-        in
-        if clean = "" || List.exists (fun p ->
-          str_contains clean p || str_contains p clean
-        ) bundle_paths then
-          incr n_in
-      end
-    ) (extract_md_links f.file_content)
-  ) files;
-  if !n_refs = 0 then
+  let doc_slugs = doc_slug_map files in
+  let per_doc =
+    List.filter_map (fun f ->
+      let links =
+        List.filter is_internal_link (extract_md_links f.file_content)
+      in
+      if links = [] then None
+      else
+        Some (f.file_path,
+              List.for_all
+                (fun t ->
+                   link_resolves ~bundle_paths ~doc_slugs ~src:f.file_path t)
+                links)
+    ) (documents files)
+  in
+  if per_doc = [] then
     { code = "beta.source_of_truth_alignment"; label = "Source-of-truth alignment";
       weight = cfg.beta.source_of_truth_alignment; score = 1.0;
       evidence = ["No internal cross-references found"] }
   else begin
-    let score = clamp01 (float_of_int !n_in /. float_of_int !n_refs) in
+    let n_total = List.length per_doc in
+    let n_grounded = List.length (List.filter snd per_doc) in
+    let score = clamp01 (float_of_int n_grounded /. float_of_int n_total) in
+    let evidence =
+      [Printf.sprintf "%d/%d linking documents fully grounded in bundle"
+         n_grounded n_total]
+      @ (List.filter (fun (_, ok) -> not ok) per_doc
+         |> List.filteri (fun i _ -> i < 3)
+         |> List.map fst)
+    in
     { code = "beta.source_of_truth_alignment"; label = "Source-of-truth alignment";
       weight = cfg.beta.source_of_truth_alignment;
       score;
-      evidence = [Printf.sprintf "%d/%d cross-references point into bundle" !n_in !n_refs] }
+      evidence }
   end
 
-(** Signal: Target–file fit — H1 heading words overlap with filename stem. *)
+(** Signal: Target–file fit — H1 heading words overlap with the filename
+    stem. Documents only. Words match on equality or prefix (>= 3 chars
+    each way) so abbreviated stems fit their expansions ("equiv" /
+    "equivalence"). README and SKILL.md title their DIRECTORY by
+    convention, so their H1s compare against the directory words; the
+    repo-root README titles the whole corpus and always fits. *)
 let sig_target_file_fit ~cfg (files : bundle_file list) : signal =
   let words_of s =
     str_lower s
@@ -522,16 +687,30 @@ let sig_target_file_fit ~cfg (files : bundle_file list) : signal =
     |> String.split_on_char ' '
     |> List.filter (fun w -> String.length w > 2)
   in
+  let word_match a b =
+    a = b || str_starts_with a b || str_starts_with b a
+  in
   let scored = List.filter_map (fun f ->
     let headings = extract_headings f.file_content in
     match List.find_opt (fun (lvl, _) -> lvl = 1) headings with
     | None -> None
     | Some (_, h1) ->
-      let stem_words = words_of (Filename.remove_extension (Filename.basename f.file_path)) in
-      let h1_words   = words_of h1 in
-      let overlap = List.exists (fun w -> List.mem w stem_words) h1_words in
+      let stem =
+        str_lower (Filename.remove_extension (Filename.basename f.file_path))
+      in
+      let h1_words = words_of h1 in
+      let against words =
+        List.exists (fun w -> List.exists (word_match w) words) h1_words
+      in
+      let overlap =
+        if stem = "readme" || stem = "skill" then
+          match words_of (Filename.dirname f.file_path) with
+          | [] -> true  (* repo-root README titles the corpus *)
+          | dir_words -> against dir_words
+        else against (words_of stem)
+      in
       Some overlap
-  ) files in
+  ) (documents files) in
   if scored = [] then
     { code = "beta.target_file_fit"; label = "Target-file fit";
       weight = cfg.beta.target_file_fit; score = 0.7;
@@ -549,20 +728,39 @@ let sig_target_file_fit ~cfg (files : bundle_file list) : signal =
 (* ------------------------------------------------------------------ *)
 (* Gamma signals *)
 
-(** Signal: Canonical/generated distinction. *)
+(** Signal: Canonical/generated distinction. Explicitly marking generated
+    artifacts (DO-NOT-EDIT headers) is the γ virtue this signal wants —
+    never penalized. The risk case is inversion: when generated markers
+    saturate the corpus, the canonical surface is too thin to own change. *)
 let sig_canonical_generated_distinction ~cfg (files : bundle_file list) : signal =
   let gen_kws = ["generated"; "do not edit"; "auto-generated"; "automatically generated"] in
-  let marked = List.filter (fun f -> contains_any gen_kws f.file_content) files in
+  (* A generated-file marker is a HEADER property: it lives in the first
+     few lines. A document that merely discusses the DO-NOT-EDIT
+     convention in prose is not a generated artifact. *)
+  let header f =
+    let rec take n = function
+      | l :: rest when n > 0 -> l :: take (n - 1) rest
+      | _ -> []
+    in
+    String.concat "\n" (take 5 (split_lines f.file_content))
+  in
+  let marked = List.filter (fun f -> contains_any gen_kws (header f)) files in
   let n_marked = List.length marked in
   let n_total  = List.length files in
+  let density =
+    if n_total = 0 then 0.0
+    else float_of_int n_marked /. float_of_int n_total
+  in
   let score =
-    if n_total = 0 then 1.0
-    else if n_marked = 0 then 1.0
-    else clamp01 (1.0 -. float_of_int n_marked /. float_of_int n_total *. 0.3)
+    if density <= 0.3 then 1.0
+    else clamp01 (1.0 -. (density -. 0.3))
   in
   let evidence =
     if n_marked = 0 then ["No generated-file markers — clean canonical surface"]
-    else [Printf.sprintf "%d/%d files contain generated-file markers" n_marked n_total]
+    else
+      [Printf.sprintf
+         "%d/%d files carry generated-file markers (distinction explicit)"
+         n_marked n_total]
   in
   { code = "gamma.canonical_generated_distinction"; label = "Canonical/generated distinction";
     weight = cfg.gamma.canonical_generated_distinction;
@@ -594,7 +792,11 @@ let sig_version_surface_consistency ~cfg (files : bundle_file list) : signal =
            n_total n_unique (String.concat ", " (List.filteri (fun i _ -> i < 5) unique))] }
   end
 
-(** Signal: Traceability presence — issue refs, changelog, commit SHAs. *)
+(** Signal: Traceability presence — issue refs, changelog, commit SHAs.
+    Corpus-level property with saturation: traceability holds when a
+    meaningful share of files (one per ten, minimum one) carries markers.
+    A raw per-file fraction would reward spraying "changelog" into every
+    file — ritual, not traceability. *)
 let sig_traceability_presence ~cfg (files : bundle_file list) : signal =
   let trace_kws = ["changelog"; "closes #"; "fixes #"; "issue #"] in
   let files_with_trace = List.filter (fun f ->
@@ -602,43 +804,73 @@ let sig_traceability_presence ~cfg (files : bundle_file list) : signal =
   ) files in
   let n = List.length files_with_trace in
   let n_total = List.length files in
+  let threshold = max 1 (n_total / 10) in
   let score =
     if n_total = 0 then 1.0
     else if n = 0 then 0.5
-    else clamp01 (float_of_int n /. float_of_int n_total)
+    else clamp01 (float_of_int n /. float_of_int threshold)
   in
   { code = "gamma.traceability_presence"; label = "Traceability presence";
     weight = cfg.gamma.traceability_presence;
     score;
     evidence =
       if n = 0 then ["No traceability markers found"]
-      else [Printf.sprintf "%d/%d files contain traceability markers" n n_total] }
+      else
+        [Printf.sprintf
+           "%d/%d files contain traceability markers (saturation threshold %d)"
+           n n_total threshold] }
 
-(** Signal: Authority evolution consistency — deprecation language uniformity. *)
+(** Signal: Authority evolution consistency — deprecation-language density
+    over LIVING surfaces. An isolated supersession note is normal
+    evolution (explicit change paths are a γ virtue); supersession
+    language saturating the living corpus is transitional ambiguity — too
+    much of the bundle is busy replacing itself to say what is current.
+    Ledger and archive surfaces (changelogs; frozen X.Y.Z version
+    directories) exist to record supersession — deprecation language
+    there is the system working, not ambiguity. *)
 let sig_authority_evolution_consistency ~cfg (files : bundle_file list) : signal =
+  let is_version_segment s =
+    s <> ""
+    && String.for_all (fun c -> (c >= '0' && c <= '9') || c = '.') s
+    && String.contains s '.'
+  in
+  let is_ledger_or_archive f =
+    let path = str_lower f.file_path in
+    str_contains "changelog" path
+    || List.exists is_version_segment (String.split_on_char '/' path)
+  in
   let dep_kws = ["deprecated"; "superseded"; "replaced by"; "moved to"; "use instead"] in
-  let files_with_dep = List.filter (fun f -> contains_any dep_kws f.file_content) files in
+  let living = List.filter (fun f -> not (is_ledger_or_archive f)) files in
+  let files_with_dep =
+    List.filter (fun f -> contains_any_unquoted dep_kws f.file_content) living
+  in
   let n = List.length files_with_dep in
+  let n_total = List.length living in
   let score =
     if n = 0 then 1.0
-    else clamp01 (0.9 -. float_of_int (n - 1) *. 0.05)
+    else if n = 1 then 0.95
+    else
+      let density = float_of_int n /. float_of_int (max 1 n_total) in
+      clamp01 (1.0 -. Float.min 0.5 (2.0 *. density))
   in
   { code = "gamma.authority_evolution_consistency"; label = "Authority evolution consistency";
     weight = cfg.gamma.authority_evolution_consistency;
     score;
     evidence =
       if n = 0 then ["No deprecation language found — clean evolution surface"]
-      else [Printf.sprintf "%d files contain deprecation/supersession language" n] }
+      else [Printf.sprintf "%d/%d files contain deprecation/supersession language" n n_total] }
 
 (* ------------------------------------------------------------------ *)
 (* Axis scoring *)
 
 let score_alpha ~config files =
+  (* Heading-based signals measure documents; see [is_document]. *)
+  let docs = documents files in
   let sigs = [
-    sig_terminology_consistency      ~cfg:config files;
-    sig_repeated_structure           ~cfg:config files;
-    sig_duplicate_definition_tension ~cfg:config files;
-    sig_naming_drift                 ~cfg:config files;
+    sig_terminology_consistency      ~cfg:config docs;
+    sig_repeated_structure           ~cfg:config docs;
+    sig_duplicate_definition_tension ~cfg:config docs;
+    sig_naming_drift                 ~cfg:config docs;
   ] in
   let s = axis_score_of_signals sigs in
   ({ axis = `Alpha;

@@ -36,11 +36,11 @@ baseline_command        = "coh --kata 01-glider --mode mechanical"
 mode                    = "mechanical"
 config_hash             = "pending-ci"
 input_file_hashes       = "pending-ci"
-alpha                   = 1.000   # README signal table, cycle/34-impl
-beta                    = 0.990   # README signal table, cycle/34-impl
-gamma                   = 0.779   # back-solved from arithmetic c_sigma 0.923; subject to CI re-baseline
-c_sigma_math            = 0.9170  # = (α·β·γ)^(1/3); analytical estimate
-c_sigma_num             = 0.9170  # equal to c_sigma_math when no zero component is present
+alpha                   = 1.0000  # instrument-validity pass HEAD
+beta                    = 1.0000  # instrument-validity pass HEAD
+gamma                   = 0.7850  # instrument-validity pass HEAD
+c_sigma_math            = 0.9225  # = (α·β·γ)^(1/3)
+c_sigma_num             = 0.9225  # equal to c_sigma_math when no zero component is present
 zero_component_present  = false
 numeric_floor_applied   = false
 rationale_category      = "aggregate-correction"

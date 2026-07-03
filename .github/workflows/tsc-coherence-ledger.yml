@@ -1,0 +1,473 @@
+# DO NOT EDIT. Rendered by `scripts/render-self-measure.sh` from:
+#   source: skills/self-measure/SKILL.md
+# Schema:  tsc.self-measure.v1 (schemas/skill.cue #SelfMeasure)
+#
+# Authority split: the skill owns the measurement contract (targets,
+# modes, LLM delegation + constraints); this renderer owns substrate
+# encoding (triggers / permissions / action versions / secret-name
+# bindings / step layout). Edit the skill, re-render, commit both.
+
+name: tsc-coherence-ledger
+
+on:
+  push:
+    tags:
+      - '[0-9]*'
+      - 'v[0-9]*'
+    # A version increment is the VERSION-bump commit; the tag follows.
+    # Firing on the bump (and on this workflow's own installation) makes
+    # the ledger record patch increments even when the tag arrives later
+    # or from an environment that cannot push tags. The append is
+    # idempotent, so overlapping triggers are no-ops.
+    branches:
+      - '**'
+    paths:
+      - 'VERSION'
+      - '.github/workflows/tsc-coherence-ledger.yml'
+  # Manual path: record (and, if missing, create) a release tag's row —
+  # for recovery and backfill.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version to record (e.g. 0.10.1)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  # One ledger row per version increment (patch releases included):
+  # hybrid — mechanical backend + Claude CLI witness — when the
+  # CLAUDE_CODE_OAUTH_TOKEN secret is present; a labeled mechanical row when not.
+  # Commits between releases do not write the ledger — per-run reports
+  # are CI artifacts of the tsc-self-measure workflow instead.
+  ledger:
+    runs-on: ubuntu-22.04
+    env:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+
+      - name: Emit witness prompt (spec)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --emit-prompt spec --output .tsc/self
+
+      - name: Estimate deltas and evidence (spec — Claude CLI witness, k=3 samples)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        # The ledger contract (skill section 6): mechanical is the
+        # explicit, labeled fallback. A witness that cannot run (bad
+        # credential, provider outage) must not leave the release
+        # rowless — the step stays visibly red via the warning
+        # annotation, and the row's Mode column says mechanical. The
+        # ledger takes the SAME k=3 sampled route as the measurement
+        # workflow: a release row is never a single-sample semantic
+        # reading.
+        continue-on-error: true
+        run: |
+          npm install -g @anthropic-ai/claude-code@2.1.199
+          # The secret slot is named for the OAuth token, but route by shape:
+          # an sk-ant-api key belongs in ANTHROPIC_API_KEY. Never printed.
+          if [ "${CLAUDE_CODE_OAUTH_TOKEN#sk-ant-api}" != "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
+            unset CLAUDE_CODE_OAUTH_TOKEN
+          fi
+          # Allow rules in both spellings (relative to cwd and filesystem-
+          # absolute) — the settings file lives in RUNNER_TEMP, and rule-path
+          # resolution has already denied the workspace write once. The
+          # acceptEdits permission mode is the load-bearing grant: file writes
+          # inside the workspace auto-accept, everything else stays denied,
+          # and the engine funnel enforces content and target downstream.
+          cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
+          {
+            "permissions": {
+              "allow": [
+                "Read(.tsc/self/prompt/**)",
+                "Write(.tsc/self/response/**)",
+                "Read(//${PWD#/}/.tsc/self/prompt/**)",
+                "Write(//${PWD#/}/.tsc/self/response/**)"
+              ]
+            }
+          }
+          SETTINGS
+          cat > "$RUNNER_TEMP/witness-prompt.md" <<'WITNESS_PROMPT'
+          You are the LLM witness step of TSC self-measurement, rendered from
+          skills/self-measure/SKILL.md. Your entire task:
+
+          1. Read the file .tsc/self/prompt/spec.md. It contains the
+             canonical scoring instruction (runtime/SELF-MEASURE.md) followed
+             by the spec target bundle. Follow that instruction exactly.
+          2. Write your answer — the single JSON object the instruction
+             requires, with no markdown fences and no prose around it — to
+             .tsc/self/response/spec.json.
+
+          Constraints (your tool permissions also enforce them):
+          - Do not read any file other than .tsc/self/prompt/spec.md.
+          - Do not write any file other than .tsc/self/response/spec.json.
+          - Do not compute Coh or C_sigma values; report the delta and
+            component estimates the instruction asks for. The engine applies
+            the barrier transform and aggregation deterministically after
+            validating your output, and rejects the response if any required
+            delta field is missing or out of range.
+          WITNESS_PROMPT
+          # 50 turns: the repo bundle's emitted prompt runs to hundreds of
+          # files, and the Read tool pages large files — 16 turns starved the
+          # repo witness mid-read (run 3).
+          RESP=".tsc/self/response/spec.json"; BASE="${RESP%.json}"
+          for i in $(seq 1 3); do
+            claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
+              --settings "$RUNNER_TEMP/witness-settings.json" \
+              --permission-mode acceptEdits \
+              --max-turns 50 || true
+            if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
+          done
+          # The first sample is the adjudicated response; all samples feed
+          # the consistency spread.
+          if [ -f "$BASE.r1.json" ]; then cp "$BASE.r1.json" "$RESP"; fi
+          ls -l "$(dirname "$RESP")" || true
+
+      - name: Validate and ingest witness response (spec)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        continue-on-error: true
+        env:
+          LLM_PROVIDER: claude-cli
+          LLM_MODEL: claude-code-cli@2.1.199
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --ingest spec --output .tsc/self
+
+      - name: Witness consistency (spec, k=3 spread) and standing scope
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        continue-on-error: true
+        run: |
+          T="spec"
+          BASE=".tsc/self/response/$T"
+          COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+          valid=""
+          for r in "$BASE".r*.json; do
+            [ -f "$r" ] || continue
+            if "$COH" --mode hybrid --target "$T" \
+                 --registry targets/registry.tsc --instruction runtime/SELF-MEASURE.md \
+                 --root . --llm-response "$r" --output ".tsc/self/validate" >/dev/null 2>&1; then
+              valid="$valid $r"
+            fi
+          done
+          n=$(echo $valid | wc -w)
+          coh_c="0"
+          if [ "$n" -ge 2 ]; then
+            COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
+            coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            cp ".tsc/cm/consistency/$T.llm.json" ".tsc/self/consistency-$T.json" 2>/dev/null || true
+          fi
+          gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= 0.9 else 'failed')" "$coh_c")
+          python3 -c "import json,sys; json.dump({'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': 0.9, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}, open('.tsc/self/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
+          echo "consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)"
+
+      - name: Emit witness prompt (engine)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --emit-prompt engine --output .tsc/self
+
+      - name: Estimate deltas and evidence (engine — Claude CLI witness, k=3 samples)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        # The ledger contract (skill section 6): mechanical is the
+        # explicit, labeled fallback. A witness that cannot run (bad
+        # credential, provider outage) must not leave the release
+        # rowless — the step stays visibly red via the warning
+        # annotation, and the row's Mode column says mechanical. The
+        # ledger takes the SAME k=3 sampled route as the measurement
+        # workflow: a release row is never a single-sample semantic
+        # reading.
+        continue-on-error: true
+        run: |
+          npm install -g @anthropic-ai/claude-code@2.1.199
+          # The secret slot is named for the OAuth token, but route by shape:
+          # an sk-ant-api key belongs in ANTHROPIC_API_KEY. Never printed.
+          if [ "${CLAUDE_CODE_OAUTH_TOKEN#sk-ant-api}" != "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
+            unset CLAUDE_CODE_OAUTH_TOKEN
+          fi
+          # Allow rules in both spellings (relative to cwd and filesystem-
+          # absolute) — the settings file lives in RUNNER_TEMP, and rule-path
+          # resolution has already denied the workspace write once. The
+          # acceptEdits permission mode is the load-bearing grant: file writes
+          # inside the workspace auto-accept, everything else stays denied,
+          # and the engine funnel enforces content and target downstream.
+          cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
+          {
+            "permissions": {
+              "allow": [
+                "Read(.tsc/self/prompt/**)",
+                "Write(.tsc/self/response/**)",
+                "Read(//${PWD#/}/.tsc/self/prompt/**)",
+                "Write(//${PWD#/}/.tsc/self/response/**)"
+              ]
+            }
+          }
+          SETTINGS
+          cat > "$RUNNER_TEMP/witness-prompt.md" <<'WITNESS_PROMPT'
+          You are the LLM witness step of TSC self-measurement, rendered from
+          skills/self-measure/SKILL.md. Your entire task:
+
+          1. Read the file .tsc/self/prompt/engine.md. It contains the
+             canonical scoring instruction (runtime/SELF-MEASURE.md) followed
+             by the engine target bundle. Follow that instruction exactly.
+          2. Write your answer — the single JSON object the instruction
+             requires, with no markdown fences and no prose around it — to
+             .tsc/self/response/engine.json.
+
+          Constraints (your tool permissions also enforce them):
+          - Do not read any file other than .tsc/self/prompt/engine.md.
+          - Do not write any file other than .tsc/self/response/engine.json.
+          - Do not compute Coh or C_sigma values; report the delta and
+            component estimates the instruction asks for. The engine applies
+            the barrier transform and aggregation deterministically after
+            validating your output, and rejects the response if any required
+            delta field is missing or out of range.
+          WITNESS_PROMPT
+          # 50 turns: the repo bundle's emitted prompt runs to hundreds of
+          # files, and the Read tool pages large files — 16 turns starved the
+          # repo witness mid-read (run 3).
+          RESP=".tsc/self/response/engine.json"; BASE="${RESP%.json}"
+          for i in $(seq 1 3); do
+            claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
+              --settings "$RUNNER_TEMP/witness-settings.json" \
+              --permission-mode acceptEdits \
+              --max-turns 50 || true
+            if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
+          done
+          # The first sample is the adjudicated response; all samples feed
+          # the consistency spread.
+          if [ -f "$BASE.r1.json" ]; then cp "$BASE.r1.json" "$RESP"; fi
+          ls -l "$(dirname "$RESP")" || true
+
+      - name: Validate and ingest witness response (engine)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        continue-on-error: true
+        env:
+          LLM_PROVIDER: claude-cli
+          LLM_MODEL: claude-code-cli@2.1.199
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --ingest engine --output .tsc/self
+
+      - name: Witness consistency (engine, k=3 spread) and standing scope
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        continue-on-error: true
+        run: |
+          T="engine"
+          BASE=".tsc/self/response/$T"
+          COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+          valid=""
+          for r in "$BASE".r*.json; do
+            [ -f "$r" ] || continue
+            if "$COH" --mode hybrid --target "$T" \
+                 --registry targets/registry.tsc --instruction runtime/SELF-MEASURE.md \
+                 --root . --llm-response "$r" --output ".tsc/self/validate" >/dev/null 2>&1; then
+              valid="$valid $r"
+            fi
+          done
+          n=$(echo $valid | wc -w)
+          coh_c="0"
+          if [ "$n" -ge 2 ]; then
+            COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
+            coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            cp ".tsc/cm/consistency/$T.llm.json" ".tsc/self/consistency-$T.json" 2>/dev/null || true
+          fi
+          gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= 0.9 else 'failed')" "$coh_c")
+          python3 -c "import json,sys; json.dump({'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': 0.9, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}, open('.tsc/self/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
+          echo "consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)"
+
+      - name: Emit witness prompt (repo)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --emit-prompt repo --output .tsc/self
+
+      - name: Estimate deltas and evidence (repo — Claude CLI witness, k=3 samples)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        # The ledger contract (skill section 6): mechanical is the
+        # explicit, labeled fallback. A witness that cannot run (bad
+        # credential, provider outage) must not leave the release
+        # rowless — the step stays visibly red via the warning
+        # annotation, and the row's Mode column says mechanical. The
+        # ledger takes the SAME k=3 sampled route as the measurement
+        # workflow: a release row is never a single-sample semantic
+        # reading.
+        continue-on-error: true
+        run: |
+          npm install -g @anthropic-ai/claude-code@2.1.199
+          # The secret slot is named for the OAuth token, but route by shape:
+          # an sk-ant-api key belongs in ANTHROPIC_API_KEY. Never printed.
+          if [ "${CLAUDE_CODE_OAUTH_TOKEN#sk-ant-api}" != "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
+            unset CLAUDE_CODE_OAUTH_TOKEN
+          fi
+          # Allow rules in both spellings (relative to cwd and filesystem-
+          # absolute) — the settings file lives in RUNNER_TEMP, and rule-path
+          # resolution has already denied the workspace write once. The
+          # acceptEdits permission mode is the load-bearing grant: file writes
+          # inside the workspace auto-accept, everything else stays denied,
+          # and the engine funnel enforces content and target downstream.
+          cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
+          {
+            "permissions": {
+              "allow": [
+                "Read(.tsc/self/prompt/**)",
+                "Write(.tsc/self/response/**)",
+                "Read(//${PWD#/}/.tsc/self/prompt/**)",
+                "Write(//${PWD#/}/.tsc/self/response/**)"
+              ]
+            }
+          }
+          SETTINGS
+          cat > "$RUNNER_TEMP/witness-prompt.md" <<'WITNESS_PROMPT'
+          You are the LLM witness step of TSC self-measurement, rendered from
+          skills/self-measure/SKILL.md. Your entire task:
+
+          1. Read the file .tsc/self/prompt/repo.md. It contains the
+             canonical scoring instruction (runtime/SELF-MEASURE.md) followed
+             by the repo target bundle. Follow that instruction exactly.
+          2. Write your answer — the single JSON object the instruction
+             requires, with no markdown fences and no prose around it — to
+             .tsc/self/response/repo.json.
+
+          Constraints (your tool permissions also enforce them):
+          - Do not read any file other than .tsc/self/prompt/repo.md.
+          - Do not write any file other than .tsc/self/response/repo.json.
+          - Do not compute Coh or C_sigma values; report the delta and
+            component estimates the instruction asks for. The engine applies
+            the barrier transform and aggregation deterministically after
+            validating your output, and rejects the response if any required
+            delta field is missing or out of range.
+          WITNESS_PROMPT
+          # 50 turns: the repo bundle's emitted prompt runs to hundreds of
+          # files, and the Read tool pages large files — 16 turns starved the
+          # repo witness mid-read (run 3).
+          RESP=".tsc/self/response/repo.json"; BASE="${RESP%.json}"
+          for i in $(seq 1 3); do
+            claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
+              --settings "$RUNNER_TEMP/witness-settings.json" \
+              --permission-mode acceptEdits \
+              --max-turns 50 || true
+            if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
+          done
+          # The first sample is the adjudicated response; all samples feed
+          # the consistency spread.
+          if [ -f "$BASE.r1.json" ]; then cp "$BASE.r1.json" "$RESP"; fi
+          ls -l "$(dirname "$RESP")" || true
+
+      - name: Validate and ingest witness response (repo)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        continue-on-error: true
+        env:
+          LLM_PROVIDER: claude-cli
+          LLM_MODEL: claude-code-cli@2.1.199
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --ingest repo --output .tsc/self
+
+      - name: Witness consistency (repo, k=3 spread) and standing scope
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        continue-on-error: true
+        run: |
+          T="repo"
+          BASE=".tsc/self/response/$T"
+          COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+          valid=""
+          for r in "$BASE".r*.json; do
+            [ -f "$r" ] || continue
+            if "$COH" --mode hybrid --target "$T" \
+                 --registry targets/registry.tsc --instruction runtime/SELF-MEASURE.md \
+                 --root . --llm-response "$r" --output ".tsc/self/validate" >/dev/null 2>&1; then
+              valid="$valid $r"
+            fi
+          done
+          n=$(echo $valid | wc -w)
+          coh_c="0"
+          if [ "$n" -ge 2 ]; then
+            COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
+            coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            cp ".tsc/cm/consistency/$T.llm.json" ".tsc/self/consistency-$T.json" 2>/dev/null || true
+          fi
+          gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= 0.9 else 'failed')" "$coh_c")
+          python3 -c "import json,sys; json.dump({'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': 0.9, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}, open('.tsc/self/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
+          echo "consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)"
+
+      - name: Append ledger row and push
+        run: |
+          set -euo pipefail
+          # Version resolution: explicit input > tag name > VERSION file.
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            version="${{ github.event.inputs.version }}"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            version="${{ github.ref_name }}"
+          else
+            version="$(tr -d '[:space:]' < VERSION)"
+          fi
+          version="${version#v}"
+          # Materialize the release tag if it does not exist yet. (A
+          # token-pushed tag deliberately does not cascade into other
+          # workflows; releases are cut by pushing the tag directly.)
+          if ! git rev-parse -q --verify "refs/tags/$version" >/dev/null \
+             && ! git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            git tag "$version" "$GITHUB_SHA"
+            git push origin "refs/tags/$version"
+            echo "created tag $version at $GITHUB_SHA"
+          fi
+          # Commit to the branch that carries the tagged commit (prefer main).
+          branches=$(git branch -r --contains "$GITHUB_SHA" --format='%(refname:short)' | sed 's|origin/||' | grep -v '^HEAD' || true)
+          branch=$(echo "$branches" | grep -m1 -x main || echo "$branches" | head -1)
+          if [ -z "$branch" ]; then
+            echo "::error::no branch contains the tagged commit; cannot record ledger row"
+            exit 1
+          fi
+          git config user.name  "tsc-coherence-ledger"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout "$branch"
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coherence-ledger.sh append "$version"
+          git add .tsc/COHERENCE.md
+          git diff --cached --quiet && { echo "ledger unchanged"; exit 0; }
+          git commit -m "ledger: coherence row for $version [skip ci]"
+          # The branch may have advanced while the engine built; rebase the
+          # one ledger commit onto the current head before pushing.
+          # --autostash: the engine build regenerates tsc_engine.opam in
+          # the working tree, and a plain rebase refuses a dirty tree —
+          # runs 10 and 11 each computed a full hybrid measurement and
+          # lost it exactly here.
+          for attempt in 1 2 3 4 5; do
+            git push origin "$branch" && exit 0
+            git pull --rebase --autostash origin "$branch"
+          done
+          git push origin "$branch"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Coherence ledger" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -5 .tsc/COHERENCE.md >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "no ledger" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

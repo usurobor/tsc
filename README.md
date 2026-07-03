@@ -8,6 +8,8 @@ See [docs/THESIS.md](docs/THESIS.md) for what TSC is.
 - `engine/ocaml/` — canonical implementation
 - `runtime/SELF-MEASURE.md` — canonical LLM scoring instruction
 - `targets/` — named target declarations
+- `skills/` — [typed skill modules](skills/README.md) (self-measurement declaration)
+- `schemas/` — [CUE schemas](schemas/README.md) validating skill frontmatter
 - `katas/` — [kata framework](katas/README.md) (pedagogical/regression inputs with expected outcomes)
 - `docs/` — [documentation tree](docs/README.md) (operator manual, design, governance)
 - `examples/` — runnable examples
@@ -47,6 +49,26 @@ See the [operator manual](docs/beta/guides/OPERATOR-MANUAL.md) for configuration
 | `auto` | Optional | `hybrid` when credentials are present; `mechanical` otherwise. (Default.) |
 
 Direct file input (`--files <glob>`) works with any mode. Named targets (`--target`) require `--registry`.
+
+## Self-measurement
+
+TSC measures itself:
+
+```bash
+coh self --mode mechanical   # deterministic, offline, no credentials
+coh self                     # auto: hybrid when LLM credentials are present
+```
+
+The whole procedure — which steps are fully mechanical and exactly what
+cognitive work is delegated to an LLM, under what constraints — is declared
+in [skills/self-measure/SKILL.md](skills/self-measure/SKILL.md). That skill
+is the authority: its frontmatter is validated by [schemas/skill.cue](schemas/skill.cue),
+cross-checked against the engine source, and rendered into the `coh-self`
+command and the [`tsc-self-measure`](.github/workflows/tsc-self-measure.yml)
+workflow (mechanical job always on; the LLM witness runs via a pinned
+Claude CLI, gated by the presence of the `CLAUDE_CODE_OAUTH_TOKEN`
+secret — no separate toggle to drift out of sync with it). CI proves the
+rendered artifacts match the skill byte-for-byte.
 
 ## Theory stack
 

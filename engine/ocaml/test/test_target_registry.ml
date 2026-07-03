@@ -3,14 +3,17 @@
     Run via: opam exec -- dune runtest engine/ocaml/test/
 
     AC6 invariant: the test suite proves the shipped target registry
-    resolves the three canonical targets to non-empty bundles.
+    resolves the canonical targets to non-empty bundles.
 
     AC6 oracle (each bullet a check below):
       1. parse_registry yields Ok for targets/registry.tsc;
          asserts registry_format = "tsc-target-registry/0.1".
-      2. exactly the three names {spec, engine, repo} are registered.
+      2. exactly the five names {spec, engine, repo, methodology,
+         cm-of-cms} are registered (methodology and cm-of-cms joined
+         with the CM² wave — the 1st and 0th coherence methodologies
+         as measurable targets).
       3. resolve_target_path returns Ok for each name -> the canonical
-         targets/{spec,engine,repo}.tsc manifest path.
+         targets/<name>.tsc manifest path.
       4. parse_manifest returns Ok with a non-empty manifest_include OR
          manifest_include_targets list for each target.
       5. file expansion produces > 0 files for each target via the same
@@ -146,9 +149,10 @@ let test_parse_registry () =
          reg.registry_format);
     let names = List.map fst reg.registry_targets in
     let sorted = List.sort String.compare names in
-    check (sorted = ["engine"; "repo"; "spec"])
+    check (sorted = ["cm-of-cms"; "engine"; "methodology"; "repo"; "spec"])
       (Printf.sprintf
-         "AC6.2: exactly {spec, engine, repo} registered (got %s)"
+         "AC6.2: exactly {spec, engine, repo, methodology, cm-of-cms} \
+          registered (got %s)"
          (String.concat ", " sorted))
 
 (* AC6 bullet 3: resolve_target_path returns the canonical manifest
@@ -168,9 +172,11 @@ let test_resolve_target_path () =
           (Printf.sprintf "AC6.3: resolve %S -> %S (got %S)"
              name expected_path p)
     in
-    expect "spec"   "targets/spec.tsc";
-    expect "engine" "targets/engine.tsc";
-    expect "repo"   "targets/repo.tsc"
+    expect "spec"        "targets/spec.tsc";
+    expect "engine"      "targets/engine.tsc";
+    expect "repo"        "targets/repo.tsc";
+    expect "methodology" "targets/methodology.tsc";
+    expect "cm-of-cms"   "targets/cm-of-cms.tsc"
 
 (* AC6 bullet 4: each manifest parses and carries a non-empty include
    OR include_targets list. (spec and engine carry `include` globs;
@@ -200,7 +206,7 @@ let test_parse_manifest_each () =
                  name
                  (List.length m.manifest_include)
                  (List.length m.manifest_include_targets))))
-    ) ["spec"; "engine"; "repo"]
+    ) ["spec"; "engine"; "repo"; "methodology"; "cm-of-cms"]
 
 (* AC6 bullet 5: file expansion produces > 0 files for each target
    using the same root/path semantics main.ml uses. For `repo` (aggregate
@@ -246,7 +252,7 @@ let test_file_expansion_nonempty () =
       let n = List.length files in
       check (n > 0)
         (Printf.sprintf "AC6.5: target %S expands to %d > 0 files" name n)
-    ) ["spec"; "engine"; "repo"]
+    ) ["spec"; "engine"; "repo"; "methodology"; "cm-of-cms"]
 
 (* ------------------------------------------------------------------ *)
 (* Runner *)

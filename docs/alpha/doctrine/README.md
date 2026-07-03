@@ -18,6 +18,11 @@ The canonical spec is `spec/tsc-core.md`. All other spec documents elaborate on 
 
 ## Self-coherence reports
 
+Frozen, versioned snapshots land here. Current measurements are produced
+by `coh self` per [skills/self-measure/SKILL.md](../../../skills/self-measure/SKILL.md)
+into `.tsc/self/` — generated state, never committed; a row is added here
+only when a snapshot is frozen at a spec release.
+
 | Version | Path | Engine | Mode |
 |---------|------|--------|------|
 | 3.2.0 | [3.2.0/SELF-COHERENCE.md](3.2.0/SELF-COHERENCE.md) | v0.7.0 (OCaml) | mechanical |

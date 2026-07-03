@@ -153,6 +153,29 @@ TMPFILE=""  # prevent cleanup from removing installed binary
 
 ok "Installed to ${BIN_DIR}/${BINARY_NAME}"
 
+# --- Companion command: coh-self (self-measurement) ---
+# Rendered from skills/self-measure/SKILL.md; `coh self` dispatches to it.
+# Pinned to the SAME release tag as the binary so the pair cannot skew —
+# a coh-self from a newer main could require engine flags the released
+# binary does not have. Best-effort: coh works without it for everything
+# except `coh self`.
+SELF_URL="https://raw.githubusercontent.com/${REPO}/${LATEST}/scripts/coh-self"
+SELF_TMP="$(mktemp)" || SELF_TMP=""
+if [ -n "$SELF_TMP" ] && curl -fsSL -o "$SELF_TMP" "$SELF_URL" 2>/dev/null; then
+  chmod +x "$SELF_TMP"
+  if mv "$SELF_TMP" "${BIN_DIR}/coh-self" 2>/dev/null; then
+    ok "Installed to ${BIN_DIR}/coh-self (coh self, pinned to ${LATEST})"
+    "${BIN_DIR}/coh-self" --help >/dev/null 2>&1 \
+      || warn "coh-self --help failed; report at https://github.com/${REPO}/issues"
+  else
+    rm -f "$SELF_TMP"
+    warn "Could not install coh-self to ${BIN_DIR} — 'coh self' will be unavailable"
+  fi
+else
+  [ -n "$SELF_TMP" ] && rm -f "$SELF_TMP"
+  warn "Release ${LATEST} does not ship scripts/coh-self — 'coh self' will be unavailable (build from source or use a newer release)"
+fi
+
 # --- Verify ---
 echo ""
 "${BIN_DIR}/${BINARY_NAME}" --version
