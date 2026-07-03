@@ -1,4 +1,4 @@
-# Self-Measure v3.2.0
+# Self-Measure v3.2.1
 
 You are evaluating a TSC target bundle.
 
@@ -131,7 +131,7 @@ Do not punish `repo` only because one layer is unfinished if the bundle already 
 
 ---
 
-## 3. Scoring rules — v3.2.0 protocol
+## 3. Scoring rules — v3.2.1 protocol
 
 **Do not output Coh (coherence) values directly. Output normalized discrepancy δ values in [0,1] per pair.**
 
@@ -171,6 +171,41 @@ Also estimate:
 - **s_alpha** ∈ [0, 1]: pattern coherence score for the bundle as a whole (α axis stability under perturbation)
 - **s_beta** ∈ [0, 1]: relational coherence score (β axis cross-file fit)
 - **s_gamma** ∈ [0, 1]: process coherence score (γ axis temporal / evolution stability)
+
+**Count first, then map** (v3.2.1 — this discipline exists to make
+independent runs of this instruction agree; do not skip it):
+
+1. For each axis, enumerate your findings as a list of DEFECTS
+   (contradictions, broken references, drift, unowned change paths),
+   each with its severity: *cosmetic* (a reader is never misled),
+   *isolated* (a reader of one section is misled; ≤ 2 sites), or
+   *systemic* (repeated pattern, or a load-bearing claim contradicted).
+2. Map the enumerated list onto a band:
+
+| Band | s value to report | Condition |
+|------|-------------------|-----------|
+| A | **0.95** | no defects found after an explicit search |
+| B | **0.85** | cosmetic defects only |
+| C | **0.75** | 1–2 isolated defects, bounded scope |
+| D | **0.60** | 3+ isolated defects, or 1 systemic defect |
+| E | **0.40** | multiple systemic defects |
+| F | **0.20** | pervasive: the axis's descriptions do not cohere |
+
+3. Report the band value EXACTLY, adjusted by at most ±0.03 only when
+   two enumerated lists in the same band clearly differ in weight.
+   Never interpolate freely between bands: the band decision carries
+   the judgment; the decimals do not.
+
+Apply the same discipline to the three δ estimates: choose the row of
+the §3.1 table from your enumerated pair-level findings, report the
+row's midpoint (0.05, 0.175, 0.375, 0.625, 0.875), and adjust by at
+most ±0.03.
+
+**Confidence rubric**: 0.9 — you read every file and your findings are
+all directly cited; 0.75 — some claims reference material outside the
+bundle and could not be verified; 0.6 — a substantial fraction of the
+bundle is outside what you could verify; below 0.5 — say why in
+`unresolved_ambiguity`.
 
 ### 3.3 Score mapping for top-level fields
 

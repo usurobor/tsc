@@ -108,15 +108,19 @@ instrument_version() {
 
 # Hybrid reading: the freshest hybrid report per target in the output
 # root (written by the workflow's witness+ingest steps just before this
-# script runs). Prints "spec engine repo cross" or nothing when any
+# script runs). Reports older than one hour are ignored: in CI the
+# workspace is fresh, but a LOCAL append must not scoop up stale
+# session reports and label them as this release's measurement. Prints "spec engine repo cross" or nothing when any
 # target lacks a hybrid report. Cross is the §7.4 geometric mean of the
 # three hybrid per-target values (the engine's cross-target surface is
 # mechanical-only this cycle — engine follow-up noted in its README).
 read_hybrid() {
   python3 - "$REPO_ROOT/.tsc/self" <<'PYEOF'
-import json, glob, math, sys
+import json, glob, math, os, sys, time
 best = {}
 for f in sorted(glob.glob(sys.argv[1] + "/tsc-*.json")):
+    if time.time() - os.path.getmtime(f) > 3600:
+        continue
     try:
         d = json.load(open(f))
     except Exception:

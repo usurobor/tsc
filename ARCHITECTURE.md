@@ -25,14 +25,38 @@ A target is an explicit declaration of what TSC measures.
 
 Current target surfaces are:
 
-- `spec`
-- `engine`
-- `repo`
+- `spec` — the theory
+- `engine` — the verifier
+- `repo` — the aggregate repository surface
+- `methodology` — the 1st coherence methodology (self-measurement) as a
+  measurable corpus
+- `cm-of-cms` — the 0th coherence methodology (the CM of CMs) as a
+  measurable corpus
 
 The target model lives in:
 
 - `targets/registry.tsc` — target registry
 - `targets/*.tsc` — target manifests
+
+## Methodologies
+
+Measurement procedures are declared as typed skills (`skills/*/SKILL.md`,
+frontmatter validated by `schemas/skill.cue`) and rendered into their
+executable surfaces — the declaration is the authority, the rendered
+command and workflows carry DO-NOT-EDIT headers, and CI enforces
+byte-identity:
+
+- `skills/self-measure/` — the 1st methodology: how this repo measures
+  itself (rendered into `scripts/coh-self` and two workflows).
+- `skills/cm-of-cms/` — the 0th methodology: how methodologies
+  themselves are measured — consistency protocol, admissibility with a
+  five-attacker matrix, and held-out commit-reveal anchors (`heldout/`,
+  `scripts/cm-heldout.sh`) whose standing scope states exactly what its
+  anchor provenance earns.
+
+Generated measurement state lands under `.tsc/` and is never canonical;
+the one tracked exception is `.tsc/COHERENCE.md`, the per-release
+coherence ledger.
 
 ## Katas
 

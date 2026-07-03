@@ -529,7 +529,7 @@ let run_llm ~args ~bundle ~ts =
     meta_target = bundle.bundle_target_name;
     meta_file_hashes =
       List.map (fun f -> (f.file_path, f.file_hash)) bundle.bundle_files;
-    meta_prompt_version = "SELF-MEASURE/3.2.0";
+    meta_prompt_version = "SELF-MEASURE/3.2.1";
     meta_provider = provider_name;
     meta_model    = provider_model;
     meta_timestamp = ts;
