@@ -1,0 +1,36 @@
+# One-off maintenance: delete the stale 0.11.0 release tag (re-cut from
+# main — see PR #63). Dispatch-only; refuses to delete a tag that does
+# not point at the expected SHA. Removed from the branch after use.
+name: tag-delete-once
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to delete"
+        required: true
+      expected_sha:
+        description: "Full SHA the tag must currently point at (safety check)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  delete:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and delete
+        run: |
+          set -euo pipefail
+          tag="${{ github.event.inputs.tag }}"
+          expected="${{ github.event.inputs.expected_sha }}"
+          git fetch origin "refs/tags/$tag:refs/tags/$tag"
+          actual=$(git rev-parse "refs/tags/$tag")
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::refusing: $tag points at $actual, expected $expected"
+            exit 1
+          fi
+          git push origin ":refs/tags/$tag"
+          echo "deleted $tag (was $actual)"
