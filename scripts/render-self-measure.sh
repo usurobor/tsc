@@ -609,7 +609,9 @@ on:
     # Firing on the bump (and on this workflow's own installation) makes
     # the ledger record patch increments even when the tag arrives later
     # or from an environment that cannot push tags. The append is
-    # idempotent, so overlapping triggers are no-ops.
+    # idempotent, so overlapping triggers are no-ops. Non-main branch
+    # pushes run measurement only — the release surface (tag + ledger
+    # row) is guarded to main in the append step.
     branches:
       - '**'
     paths:
@@ -648,6 +650,25 @@ jobs:
       - name: Append ledger row and push
         run: |
           set -euo pipefail
+          # The authoritative release surface is main: only a main push, a
+          # tag push, or a main-ref dispatch may materialize a release tag
+          # or write the release ledger. A VERSION-bump push on any other
+          # branch still measures (the steps above; reports are artifacts)
+          # but stops here — a run started at an older SHA would otherwise
+          # tag and measure a tree the branch has already moved past, then
+          # rebase that stale row onto the advanced head (the 0.11.0
+          # tag/row race). The release is cut by the merge itself.
+          if [ "${{{{ github.event_name }}}}" = "push" ] \\
+             && [ "${{{{ github.ref_type }}}}" = "branch" ] \\
+             && [ "${{{{ github.ref_name }}}}" != "main" ]; then
+            echo "branch push (${{{{ github.ref_name }}}}): measurement only — no tag, no ledger row; the release surface is main"
+            exit 0
+          fi
+          if [ "${{{{ github.event_name }}}}" = "workflow_dispatch" ] \\
+             && [ "${{{{ github.ref_name }}}}" != "main" ]; then
+            echo "::error::workflow_dispatch must run on main (got ${{{{ github.ref_name }}}})"
+            exit 1
+          fi
           # Version resolution: explicit input > tag name > VERSION file.
           if [ -n "${{{{ github.event.inputs.version }}}}" ]; then
             version="${{{{ github.event.inputs.version }}}}"
