@@ -1,4 +1,4 @@
-# Self-Measure v3.2.1
+# Self-Measure v3.2.2
 
 You are evaluating a TSC target bundle.
 
@@ -131,7 +131,7 @@ Do not punish `repo` only because one layer is unfinished if the bundle already 
 
 ---
 
-## 3. Scoring rules — v3.2.1 protocol
+## 3. Scoring rules — v3.2.2 protocol
 
 **Do not output Coh (coherence) values directly. Output normalized discrepancy δ values in [0,1] per pair.**
 
@@ -172,34 +172,40 @@ Also estimate:
 - **s_beta** ∈ [0, 1]: relational coherence score (β axis cross-file fit)
 - **s_gamma** ∈ [0, 1]: process coherence score (γ axis temporal / evolution stability)
 
-**Count first, then map** (v3.2.1 — this discipline exists to make
-independent runs of this instruction agree; do not skip it):
+**Count first** (v3.2.1, retained): for each axis, enumerate your
+findings as a list of DEFECTS (contradictions, broken references,
+drift, unowned change paths), each with its severity: *cosmetic* (a
+reader is never misled), *isolated* (a reader of one section is
+misled; ≤ 2 sites), or *systemic* (repeated pattern, or a load-bearing
+claim contradicted). List every enumerated defect in `axis_evidence`
+with its severity — the enumeration is part of the record, not a
+private step.
 
-1. For each axis, enumerate your findings as a list of DEFECTS
-   (contradictions, broken references, drift, unowned change paths),
-   each with its severity: *cosmetic* (a reader is never misled),
-   *isolated* (a reader of one section is misled; ≤ 2 sites), or
-   *systemic* (repeated pattern, or a load-bearing claim contradicted).
-2. Map the enumerated list onto a band:
+**Map continuously, guided by the bands** (v3.2.2): use this table as
+INTERPRETATION, not quantization — report any value in the range that
+your enumerated list supports:
 
-| Band | s value to report | Condition |
-|------|-------------------|-----------|
-| A | **0.95** | no defects found after an explicit search |
-| B | **0.85** | cosmetic defects only |
-| C | **0.75** | 1–2 isolated defects, bounded scope |
-| D | **0.60** | 3+ isolated defects, or 1 systemic defect |
-| E | **0.40** | multiple systemic defects |
-| F | **0.20** | pervasive: the axis's descriptions do not cohere |
+| Range | Condition |
+|-------|-----------|
+| 0.90–1.00 | no defects found after an explicit search |
+| 0.80–0.90 | cosmetic defects only |
+| 0.70–0.80 | 1–2 isolated defects, bounded scope |
+| 0.50–0.70 | 3+ isolated defects, or 1 systemic defect |
+| 0.30–0.50 | multiple systemic defects |
+| 0.00–0.30 | pervasive: the axis's descriptions do not cohere |
 
-3. Report the band value EXACTLY, adjusted by at most ±0.03 only when
-   two enumerated lists in the same band clearly differ in weight.
-   Never interpolate freely between bands: the band decision carries
-   the judgment; the decimals do not.
+Likewise report δ as a continuous value read against the §3.1 table.
 
-Apply the same discipline to the three δ estimates: choose the row of
-the §3.1 table from your enumerated pair-level findings, report the
-row's midpoint (0.05, 0.175, 0.375, 0.625, 0.875), and adjust by at
-most ±0.03.
+**Refutation record (v3.2.1 → v3.2.2).** v3.2.1 required snapping to
+band midpoints (0.95/0.85/0.75/0.60/0.40/0.20; δ row midpoints). The
+k=3 consistency measurement refuted it: spread WIDENED on all three
+targets (spec Coh_consistency 0.815→0.618, engine 0.873→0.618, repo
+0.754→0.513; the 0.325 spreads are exactly two-row snaps). The
+variance is in FINDING defects, not in mapping them — quantization
+chunked the disagreement instead of reducing it. The enumeration
+discipline and confidence rubric are retained; the snap is withdrawn.
+Reducing finding-variance (a per-axis defect checklist) is the next
+protocol experiment, versioned when it lands.
 
 **Confidence rubric**: 0.9 — you read every file and your findings are
 all directly cited; 0.75 — some claims reference material outside the
