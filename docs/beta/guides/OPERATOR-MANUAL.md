@@ -259,26 +259,33 @@ The `ci` workflow (`.github/workflows/ci.yml`) runs on every push to main and ev
 
 ### Self-measurement
 
-The `TSC Measurement` workflow (`.github/workflows/tsc.yml`) runs when files in `spec/`, `engine/ocaml/`, `targets/`, or `runtime/` change.
+The `tsc-self-measure` workflow (`.github/workflows/tsc-self-measure.yml`,
+rendered from `skills/self-measure/SKILL.md` — edit the skill, never the
+YAML) runs on any branch push or PR touching `spec/`, `engine/ocaml/`,
+`targets/`, `runtime/`, or `skills/`:
 
-It requires three **repository secrets** and one **repository variable**:
-
-**Secrets** (Settings > Secrets and variables > Actions > Secrets):
+- **mechanical job** — always on; no secrets, no gate. Measures every
+  target deterministically and uploads the reports.
+- **llm-witness job** — one matrix job per target, gated by the
+  **presence** of one repository secret; there is no separate enable
+  variable to drift out of sync with it:
 
 | Secret | Value |
 |--------|-------|
-| `LLM_PROVIDER` | e.g. `anthropic` |
-| `LLM_MODEL` | e.g. `claude-sonnet-4-20250514` |
-| `LLM_API_KEY` | your API key |
+| `CLAUDE_CODE_OAUTH_TOKEN` | output of `claude setup-token` |
 
-**Variable** (Settings > Secrets and variables > Actions > Variables):
+The witness runs a version-pinned Claude CLI against the engine-emitted
+prompt, may only read that prompt and write its single response JSON,
+and the engine validates the response through the witness funnel before
+rendering the hybrid report. A refused response produces a durable
+validation-failure artifact and no report.
 
-| Variable | Value |
-|----------|-------|
-| `TSC_ENABLED` | `true` |
+The `tsc-coherence-ledger` workflow appends one row per version
+increment to `.tsc/COHERENCE.md` (hybrid when the same secret is
+present; labeled mechanical fallback otherwise).
 
-When configured, the workflow measures all three targets (spec, engine, repo) and uploads JSON reports as artifacts.
-
+The HTTP provider route (`LLM_PROVIDER` / `LLM_MODEL` / `LLM_API_KEY`,
+section 3) is the **local** route only; CI never carries a raw API key.
 ---
 
 ## 7. Troubleshooting

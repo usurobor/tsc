@@ -65,9 +65,10 @@ in [skills/self-measure/SKILL.md](skills/self-measure/SKILL.md). That skill
 is the authority: its frontmatter is validated by [schemas/skill.cue](schemas/skill.cue),
 cross-checked against the engine source, and rendered into the `coh-self`
 command and the [`tsc-self-measure`](.github/workflows/tsc-self-measure.yml)
-workflow (mechanical job always on; the LLM witness runs via the Claude CLI,
-gated by the `TSC_LLM_ENABLED` repo variable). CI proves the rendered
-artifacts match the skill byte-for-byte.
+workflow (mechanical job always on; the LLM witness runs via a pinned
+Claude CLI, gated by the presence of the `CLAUDE_CODE_OAUTH_TOKEN`
+secret — no separate toggle to drift out of sync with it). CI proves the
+rendered artifacts match the skill byte-for-byte.
 
 ## Theory stack
 

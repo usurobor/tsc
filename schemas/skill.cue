@@ -45,9 +45,10 @@ package skill
 // the coherence of a presented thing. Anyone can supply their own CM —
 // a skill whose typed block satisfies this definition — and a conforming
 // consumer (`coh` with a methodology input; the renderer) can execute it.
-// tsc's self-measurement is the 0th methodology: the tsc-repo CM applied
-// to tsc itself. A more generic "software tool repo CM" would be another
-// instance of this same definition with its own corpus and prompts.
+// tsc's self-measurement is the 1st methodology: the tsc-repo CM applied
+// to tsc itself (the 0th is the CM of CMs, #CMOfCMs below). A more
+// generic "software tool repo CM" would be another instance of this same
+// definition with its own corpus and prompts.
 //
 // Authority split (mirrors cnos wake-provider §3):
 // - Methodology authority: what the measurement IS — targets, registry,
@@ -100,6 +101,21 @@ package skill
 		// anything else carry standing. Its self-test must reject the
 		// trivial flatterer (all-1.0, perfect self-score).
 		admissibility?: !=""
+
+		// Standing scope (optional): how far standing earned under this
+		// methodology reaches — declared, never inferred, so the fixed
+		// point cannot sound stronger than its anchor base. The scope
+		// promotes only when the mechanics change (registered challengers,
+		// revealed held-out anchors), never by prose.
+		standing?: {
+			scope:                 "house-authored-public-commons" | "blind-external-anchors"
+			admissibility:         "public-only" | "public-plus-heldout"
+			heldout_status:        "none" | "registered-and-revealed"
+			external_anchor_count: int & >=0
+			llm_consistency_gate:  "reported-not-gating" | "passed" | "failed"
+			llm_consistency_floor: float & >=0 & <=1
+			...
+		}
 
 		// Mechanical contract: the deterministic backend and its full
 		// signal inventory. The validation script cross-checks every

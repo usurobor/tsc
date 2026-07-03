@@ -243,14 +243,47 @@ prompt_body = ci_prompt.replace("{target}", "${{ matrix.target }}")
 # encoding, step layout.
 CLAUDE_CLI_VERSION = "2.1.199"
 
-def cli_witness_run(prompt_text):
+# The witness response path inside the matrix job (GitHub expression is
+# substituted by the runner, not the shell).
+witness_resp = output_root + "/response/${{ matrix.target }}.json"
+
+# The LLM-consistency standing floor is doctrine owned by the 0th
+# methodology (skills/cm-of-cms/SKILL.md, standing block) — read, never
+# assumed.
+with open(os.path.join(repo_root, "skills/cm-of-cms/SKILL.md")) as f:
+    cm0 = yaml.safe_load(f.read().split("---\n", 2)[1])
+llm_consistency_floor = cm0["cm_of_cms"]["standing"]["llm_consistency_floor"]
+
+def cli_witness_run(prompt_text, k=1, resp=None):
     """Run-block body for a CLI witness step. Every emitted line sits at
     the run block's base indentation (10 spaces), so after YAML strips
-    the block indent the heredoc delimiters land at column 0."""
+    the block indent the heredoc delimiters land at column 0. With k>1
+    the witness is sampled k times against the same frozen prompt
+    (consistency protocol, cm-of-cms skill section 3): each sample is
+    moved aside as .rN.json and the first sample is restored as the
+    response the ingest step adjudicates."""
     ind = "          "
     prompt_block = "\n".join(
         (ind + line).rstrip() for line in prompt_text.rstrip("\n").split("\n")
     )
+    if k > 1:
+        claude_call = f"""{ind}RESP="{resp}"; BASE="${{RESP%.json}}"
+{ind}for i in $(seq 1 {k}); do
+{ind}  claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \\
+{ind}    --settings "$RUNNER_TEMP/witness-settings.json" \\
+{ind}    --permission-mode acceptEdits \\
+{ind}    --max-turns 50 || true
+{ind}  if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
+{ind}done
+{ind}# The first sample is the adjudicated response; all samples feed
+{ind}# the consistency spread.
+{ind}if [ -f "$BASE.r1.json" ]; then cp "$BASE.r1.json" "$RESP"; fi
+{ind}ls -l "$(dirname "$RESP")" || true"""
+    else:
+        claude_call = f"""{ind}claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \\
+{ind}  --settings "$RUNNER_TEMP/witness-settings.json" \\
+{ind}  --permission-mode acceptEdits \\
+{ind}  --max-turns 50"""
     return f"""{ind}npm install -g @anthropic-ai/claude-code@{CLAUDE_CLI_VERSION}
 {ind}# The secret slot is named for the OAuth token, but route by shape:
 {ind}# an sk-ant-api key belongs in ANTHROPIC_API_KEY. Never printed.
@@ -421,11 +454,11 @@ jobs:
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
             {command_out} --emit-prompt ${{{{ matrix.target }}}} --output {output_root}
 
-      - name: Estimate deltas and evidence (LLM witness — Claude CLI)
+      - name: Estimate deltas and evidence (LLM witness — Claude CLI, k=3 samples)
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{{{ secrets.{llm_secret} }}}}
         run: |
-{cli_witness_run(prompt_body)}
+{cli_witness_run(prompt_body, k=3, resp=witness_resp)}
 
       - name: Validate and ingest witness response (deterministic)
         env:
@@ -434,6 +467,37 @@ jobs:
         run: |
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
             {command_out} --ingest ${{{{ matrix.target }}}} --output {output_root}
+
+      # Consistency protocol, LLM arm (cm-of-cms skill section 3): every
+      # extra sample is validated through the same witness funnel; the
+      # spread of the validated samples maps through the barrier. The
+      # result is a STANDING gate, not a publishing gate — a failing
+      # spread never blocks the report, it scopes its standing.
+      - name: Witness consistency (k=3 spread) and standing scope
+        if: always()
+        run: |
+          T="${{{{ matrix.target }}}}"
+          BASE="{output_root}/response/$T"
+          COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+          valid=""
+          for r in "$BASE".r*.json; do
+            [ -f "$r" ] || continue
+            if "$COH" --mode hybrid --target "$T" \\
+                 --registry targets/registry.tsc --instruction runtime/SELF-MEASURE.md \\
+                 --root . --llm-response "$r" --output "{output_root}/validate" >/dev/null 2>&1; then
+              valid="$valid $r"
+            fi
+          done
+          n=$(echo $valid | wc -w)
+          coh_c="0"
+          if [ "$n" -ge 2 ]; then
+            COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
+            coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            cp ".tsc/cm/consistency/$T.llm.json" "{output_root}/consistency-$T.json" 2>/dev/null || true
+          fi
+          gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= {llm_consistency_floor} else 'failed')" "$coh_c")
+          python3 -c "import json,sys; json.dump({{'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': {llm_consistency_floor}, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}}, open('{output_root}/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
+          echo "consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)"
 
       - name: Summary
         if: always()

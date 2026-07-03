@@ -1,7 +1,7 @@
 format = "tsc-target/0.1"
 name = "cm-of-cms"
 kind = "aggregate"
-description = "The 0th coherence methodology as a measurable corpus: the CM-of-CMs declaration, the comparable schema it types against, its consistency instrument, its corpus declarations, and the calibration commons."
+description = "The 0th coherence methodology as a measurable corpus: the CM-of-CMs declaration, the comparable schema it types against, its consistency and admissibility instruments, its corpus declarations, and the calibration commons CONTRACT (the kata label manifests). The anchor input BODIES are excluded by design: negative-control specimens are deliberately incoherent, and measuring them as part of this corpus would penalize the methodology for possessing correctly-labeled incoherent exhibits."
 
 include = [
   "skills/cm-of-cms/SKILL.md",
@@ -14,6 +14,11 @@ include = [
   "targets/methodology.tsc",
   "runtime/SELF-MEASURE.md",
   "katas/README.md",
+  "katas/01-glider/kata.toml",
+  "katas/02-random-soup/kata.toml",
+  "katas/03-comparative/kata.toml",
+  "katas/04-philosophical/kata.toml",
+  "katas/05-adversarial/kata.toml",
   "engine/ocaml/lib/mechanical_scoring.ml",
   "engine/ocaml/lib/response_schema.ml",
   "engine/ocaml/lib/coherence.ml"

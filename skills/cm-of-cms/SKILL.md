@@ -50,6 +50,13 @@ cm_of_cms:
       (tsc-core section 3.2, lambda = 1)
     script: scripts/cm-consistency.sh
   admissibility: scripts/cm-admissibility.sh
+  standing:
+    scope: house-authored-public-commons
+    admissibility: public-only
+    heldout_status: none
+    external_anchor_count: 0
+    llm_consistency_gate: reported-not-gating
+    llm_consistency_floor: 0.90
   mechanical:
     backend: engine/ocaml/lib/mechanical_scoring.ml
     determinism: >-
@@ -226,6 +233,16 @@ Coh_consistency   = exp(-phi(delta_consistency)),  phi(d) = d/(1-d)
 may not average it away: an instrument with Coh_consistency near zero
 has no stable reading to report, whatever its self-assigned coherence.
 
+The two arms gate differently. The mechanical arm is a **hard gate**:
+any divergence fails the run. The LLM arm is a **standing gate**: a
+report below the floor (`Coh_consistency ≥ 0.90` initially, 0.95 once
+witness diversity improves) still publishes — refusing to publish would
+hide the instability — but carries no off-diagonal standing (§6). The
+rendered measurement workflow samples the witness k=3 times per target
+against the same frozen prompt, validates every sample through the same
+funnel, and computes the spread in CI; same-witness repeats remain a
+lower bound on true spread, which the consistency report states.
+
 ---
 
 ## 4. The split
@@ -308,15 +325,31 @@ others count only if the CM is **admissible**:
    the prose ceiling, catch the adversarial trap. A meter that cannot
    read the commons has no standing to read anything else. The check is
    executable — [scripts/cm-admissibility.sh](../../scripts/cm-admissibility.sh)
-   runs any candidate scorer over the anchors, and its `--self-test`
-   proves the rule has teeth: the trivial flatterer (all-1.0, perfect
-   self-score) is **rejected** on the negative controls while the
-   engine is admitted. That test runs in CI; if the attacker can ever
-   win, the build fails.
+   runs any candidate scorer over the anchors **blind**: every anchor is
+   staged into a neutral case directory (no kata path, no adjacent
+   label manifest, case order ≠ kata order), the comparative anchor is
+   executed directly per component, and the scorer must answer in a
+   JSON contract (`{"score", "evidence"}`) — a low score with no cited
+   evidence is an unfalsifiable verdict and inadmissible by itself.
+   The `--self-test` proves the rule has teeth against **both**
+   degeneracies: the trivial flatterer (all-1.0, perfect self-score)
+   and the path-gamer (a lookup table tuned to every public range,
+   denied its key by the staging) are rejected while the engine is
+   admitted. That test runs in CI; if either attacker can ever win, the
+   build fails. One leak is inherent and stays named: interior
+   filenames are part of the measured artifact and are preserved, so a
+   scorer that memorizes public anchor bodies can still pass — which is
+   exactly why public-commons admissibility never confers more than
+   `house-authored-public-commons` standing (see **Standing scope**).
 2. **Consistency.** It must pass its own §3 protocol — self-agreement
-   before cross-judgment.
+   before cross-judgment. Mechanical arm: hard gate (bit-identical).
+   LLM arm: a *standing* gate, not a publishing gate — a report with
+   `Coh_consistency < 0.90` still publishes, but carries no
+   off-diagonal standing (0.90 ≈ max numeric spread 0.095; the target
+   floor once witness diversity improves is 0.95 ≈ spread 0.049).
 3. **Evidence.** Every low score it assigns must cite evidence from the
-   object CM's bundle (the `axis_evidence` contract). Unfalsifiable
+   object CM's bundle (the `axis_evidence` contract; mechanically
+   enforced at admission by the JSON scorer contract). Unfalsifiable
    verdicts are inadmissible, however low the number.
 4. **Fixed point.** It must have a stable, defined self-score (§5) —
    a hygiene gate, not a merit.
@@ -349,18 +382,72 @@ kata that breaks a gamed CM) is how the ecosystem answers Goodhart:
 adversaries improve the anchors, and every CM is re-read against them.
 
 **Displacement is symmetric — neither party judges the duel.** "Beat
-the incumbent" is decided by the commons labels, never by either
+the incumbent" is decided by **anchor labels**, never by either
 methodology's own scale: judged by the incumbent, the duel is
 self-sealing dogma (a CM written to score all rivals low is
 unfalsifiable); judged by the challenger, it is churn (every challenger
-self-scores 1.0 and "wins"). A challenger displaces the incumbent only
-if it (a) passes admissibility — self-application included, (b)
-**discriminates better on shared held-out anchors** — anchors published
-after the challenger was authored, so neither party could tune to them,
-and (c) **agrees with the incumbent on the uncontested controls** — a
-judge that flips verdicts everywhere is not a better meter, it is a
-differently biased one. Its own self-score appears nowhere in this
-rule.
+self-scores 1.0 and "wins"). The incumbent's opinions are used only to
+*identify historically stable controls* — never as ground truth. A
+challenger C displaces incumbent I only if all five hold, with these
+initial thresholds:
+
+1. **Registration.** C was registered (see the registration protocol
+   below) before the held-out anchor labels were revealed.
+2. **Admission.** C passes the public commons blind, the evidence
+   contract, the consistency floors, and the self-application hygiene
+   gate.
+3. **Held-out improvement.** On held-out anchors H, C's predeclared
+   anchor loss beats I's by margin:
+   `loss(C,H) + ε < loss(I,H)` with ε = 0.03 absolute (or ≥ 10%
+   relative loss reduction, whichever is stricter to game).
+4. **Stable-control preservation.** On uncontested controls U — anchors
+   where label and incumbent have agreed across the operating record —
+   C matches the **labels** within tolerance: numeric anchors
+   `|score − label_midpoint| ≤ 0.10`; verdict anchors ≥ 95% label
+   agreement once |U| ≥ 20 (all-pass required while |U| < 20); ranking
+   anchors exact on the public controls, Kendall τ ≥ 0.9 once enough
+   ranked cases exist.
+5. **Legitimate flips.** A C-vs-I disagreement does not count against C
+   when the label (or held-out adjudication) says I was wrong. A
+   genuinely better meter may flip many incumbent verdicts; the rule
+   protects stable *controls*, not incumbent *opinions*.
+
+Its own self-score appears nowhere in this rule.
+
+**Registration protocol — "held-out" needs a mechanical oracle.**
+Commit timestamps alone prove observation, not knowledge; "published
+after the challenger was authored" is enforceable only through a
+registration event. Phase A (challenger registration): a signed ledger
+row or PR records the methodology id, repository URL, commit SHA,
+scorer source digest, container/image digest where executable, the
+dependency lockfile digest, the prompt/instruction digest for
+LLM-based arms, the host-platform registration timestamp, and a
+steward signature or CI attestation. Phase B (held-out reveal): each
+held-out anchor carries an anchor id, label commit, reveal commit,
+steward, label schema, the predeclared loss function, and a pre-reveal
+hash commitment to the hidden bundle and labels. Eligibility: anchor A
+scores challenger C only if `reveal_commit(A)` postdates
+`registration_commit(C)` **and** C's scorer digest at evaluation equals
+the registered digest. No steward exists for this repository yet — so
+no anchor is held-out yet, and every standing claim below says so.
+
+**Standing scope — the report says how far its standing reaches.**
+Every admissibility and consistency report carries a `standing_scope`
+so the fixed point can never sound stronger than its anchor base:
+
+```json
+{
+  "standing_scope": "house-authored-public-commons",
+  "admissibility": "public-only",
+  "heldout_status": "none",
+  "external_anchor_count": 0,
+  "llm_consistency_gate": "reported-not-gating"
+}
+```
+
+The scope promotes to `blind-external-anchors` only when the mechanics
+change (registered challengers, revealed held-out anchors, external
+anchor count > 0, consistency gate passing) — never by prose.
 
 **The regress does not vanish — it relocates, and honesty requires
 saying where.** Self-application closes the formal tower; the

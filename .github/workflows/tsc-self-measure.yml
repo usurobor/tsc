@@ -156,7 +156,7 @@ jobs:
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
             scripts/coh-self --emit-prompt ${{ matrix.target }} --output .tsc/self
 
-      - name: Estimate deltas and evidence (LLM witness — Claude CLI)
+      - name: Estimate deltas and evidence (LLM witness — Claude CLI, k=3 samples)
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
@@ -220,6 +220,37 @@ jobs:
         run: |
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
             scripts/coh-self --ingest ${{ matrix.target }} --output .tsc/self
+
+      # Consistency protocol, LLM arm (cm-of-cms skill section 3): every
+      # extra sample is validated through the same witness funnel; the
+      # spread of the validated samples maps through the barrier. The
+      # result is a STANDING gate, not a publishing gate — a failing
+      # spread never blocks the report, it scopes its standing.
+      - name: Witness consistency (k=3 spread) and standing scope
+        if: always()
+        run: |
+          T="${{ matrix.target }}"
+          BASE=".tsc/self/response/$T"
+          COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+          valid=""
+          for r in "$BASE".r*.json; do
+            [ -f "$r" ] || continue
+            if "$COH" --mode hybrid --target "$T" \
+                 --registry targets/registry.tsc --instruction runtime/SELF-MEASURE.md \
+                 --root . --llm-response "$r" --output ".tsc/self/validate" >/dev/null 2>&1; then
+              valid="$valid $r"
+            fi
+          done
+          n=$(echo $valid | wc -w)
+          coh_c="0"
+          if [ "$n" -ge 2 ]; then
+            COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
+            coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            cp ".tsc/cm/consistency/$T.llm.json" ".tsc/self/consistency-$T.json" 2>/dev/null || true
+          fi
+          gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= 0.9 else 'failed')" "$coh_c")
+          python3 -c "import json,sys; json.dump({'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': 0.9, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}, open('.tsc/self/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
+          echo "consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)"
 
       - name: Summary
         if: always()
