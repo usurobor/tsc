@@ -4,11 +4,13 @@ kind = "implementation"
 description = "Canonical implementation surface."
 
 include = [
+  "engine/ocaml/README.md",
   "engine/ocaml/**/*.ml",
   "engine/ocaml/**/*.mli",
   "engine/ocaml/dune-project",
   "engine/ocaml/lib/dune",
   "engine/ocaml/bin/dune",
+  "engine/ocaml/test/fixtures/*.json",
   "tests/ocaml/**"
 ]
 

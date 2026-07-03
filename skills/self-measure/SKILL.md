@@ -212,6 +212,11 @@ owned.
 `coh self --mode mechanical` — deterministic, credential-free, offline.
 
 The mechanical backend scores structural proxies for the three axes.
+Document-structure signals (headings, links, authority claims, filename
+fit) measure the bundle's Markdown documents — code is not a document;
+corpus-level signals (versions, generated markers, deprecation language,
+traceability) scan every file. Links normalize relative to their source
+document, and an anchored link must name a real heading in its target.
 Twelve signals, four per axis:
 
 **α — pattern coherence** (stable internal structure)

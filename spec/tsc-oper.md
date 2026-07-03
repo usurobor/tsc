@@ -2,7 +2,8 @@
 
 **Version:** 3.2.1\
 **Status:** Normative\
-**Foundation:** TSC Core v3.2.0
+**Foundation:** TSC Core v3.2.0\
+**Changelog:** `CHANGELOG.md` § Spec releases
 
 **Change from v3.2.0 (patch):** §7.4 added — canonicalizes the **cross-target aggregate** `C_Σ_cross` as the geometric mean of per-target C_Σ values for self-application across multiple target scopes (e.g. `spec`, `engine`, `repo`). Strictly additive; existing measurement and verdict logic unchanged.
 

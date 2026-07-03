@@ -39,24 +39,34 @@ max = 0.78
 bottleneck_axis = "beta"
 
 [baseline]
-# v0.10.0 baseline provenance per #54 AC1.
+# v0.10.x baseline provenance (instrument-validity pass; supersedes the
+# #54 AC1 baseline recorded below as history).
 baseline_engine_commit  = "pending-ci"
 baseline_engine_version = "0.10.0"
 baseline_command        = "coh --kata 05-adversarial --mode mechanical"
 mode                    = "mechanical"
 config_hash             = "pending-ci"
 input_file_hashes       = "pending-ci"
-alpha                   = 0.969 # explicit reading, cycle/34-impl HEAD
-beta                    = 0.470 # explicit reading, cycle/34-impl HEAD
-gamma                   = 0.801 # explicit reading, cycle/34-impl HEAD
-c_sigma_math            = 0.7145 # = (0.969·0.470·0.801)^(1/3)
-c_sigma_num             = 0.7145 # equal to c_sigma_math when no zero component is present
+alpha                   = 0.9692 # explicit reading, instrument-validity pass HEAD
+beta                    = 0.6367 # explicit reading, instrument-validity pass HEAD
+gamma                   = 0.7556 # explicit reading, instrument-validity pass HEAD
+c_sigma_math            = 0.7754 # = (0.9692·0.6367·0.7556)^(1/3)
+c_sigma_num             = 0.7754 # equal to c_sigma_math when no zero component is present
 zero_component_present  = false
 numeric_floor_applied   = false
 rationale_category      = "frontier-tightening"
-# Rationale: per-axis triple is explicit; only the aggregate is
-# recomputed from arithmetic 0.7466 to geometric 0.7145. The max=0.78
-# margin is retained — kata-05 is the "moving frontier" kata; its
-# range is intentionally a small step above observed so that small
-# scorer refinements surface here first. Tightening to 0.72 would
-# collapse that early-warning property.
+# Rationale: the instrument-validity pass changed HOW this kata fails,
+# not WHETHER it fails. The old β=0.470 catch was a path artifact —
+# links counted as unresolved only because the kata runner prefixes
+# bundle paths while the inputs link sibling-relative; link
+# normalization removed that false positive. The corpus is now caught
+# by its REAL contradictions: three documents each self-claiming to be
+# the canonical definition (beta.authority_alignment, steep contest
+# penalty) and anchors citing sections the targets do not have
+# (spec-a cites spec-c §3 as "historical-tcp-mode", spec-b as
+# "historical-udp-mode"; spec-c §3 is "Segment format").
+# max=0.78 is retained per the moving-frontier doctrine; the margin is
+# now thin (0.7754 observed) by construction — the next scorer
+# refinement surfaces here first, which is this kata's job.
+# Historical baseline (cycle/34 → #54 AC1): α=0.969 β=0.470 γ=0.801,
+# c_sigma_num=0.7145.

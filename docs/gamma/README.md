@@ -1,4 +1,4 @@
-# γ — Process coherence
+# Gamma (γ) — Process coherence
 
 How the system changes over time.
 

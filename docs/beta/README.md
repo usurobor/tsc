@@ -1,4 +1,4 @@
-# β — Relational coherence
+# Beta (β) — Relational coherence
 
 Do the parts reveal one system. Governance, operator guides, evidence.
 

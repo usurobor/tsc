@@ -1,6 +1,8 @@
-# C≡ v3.1.0 — Self-Articulating Foundation
+# C-Equivalence (C≡) v3.1.0 — Self-Articulating Foundation
 
 ## **Version:** 3.1.0<br /> **Date:** November 2025<br /> **Status:** Normative (with pedagogical scaffolding)
+
+**Changelog:** `CHANGELOG.md` § Spec releases
 
 ## 0. What Is C≡? (in one breath)
 

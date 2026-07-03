@@ -1,4 +1,4 @@
-# Quick Start
+# Quickstart
 
 Measure the coherence of any text corpus in under 2 minutes.
 

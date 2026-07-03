@@ -86,7 +86,7 @@ The engine has one shared pipeline:
 | `hybrid` | Both backends; `hybrid_scoring.ml` combines results | Required |
 | `auto` | Resolves to `hybrid` when credentials present, else `mechanical` | Optional |
 
-**Mechanical mode** scores structural coherence proxies for α, β, γ across twelve signals. It does not call an LLM, perform network I/O, or parse Markdown into a semantic AST. Determinism guarantee: identical bundle + config → identical result.
+**Mechanical mode** scores structural coherence proxies for α, β, γ across twelve signals. Document-structure signals (headings, links, authority claims, filename fit) measure the bundle's Markdown documents; corpus-level signals (versions, generated markers, deprecation language, traceability) scan every file. Links normalize relative to their source document, and anchored links must name a real heading in their target. It does not call an LLM, perform network I/O, or parse Markdown into a semantic AST. Determinism guarantee: identical bundle + config → identical result.
 
 **LLM mode** sends the bundle to the configured provider using the instruction in `runtime/SELF-MEASURE.md`. This is the semantic scoring path.
 

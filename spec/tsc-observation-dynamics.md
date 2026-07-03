@@ -4,6 +4,7 @@ Formal Specification of Observer Construction, Verification, Epistemic Refinemen
 Version: v1.0.13
 Status: Proposed Extension Specification
 Artifact: Specification
+Changelog: `CHANGELOG.md` § Spec releases
 
 Normative dependencies:
     C≡ v3.1.0
