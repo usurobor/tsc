@@ -425,7 +425,12 @@ exist yet; releases themselves are cut by `scripts/release.sh`, which
 gates on a `CHANGELOG.md` entry) — via
 [scripts/coherence-ledger.sh](../../scripts/coherence-ledger.sh);
 commits between releases do not write the ledger (per-run reports are CI
-artifacts instead). Historical rows were backfilled by measuring each
+artifacts instead). The authoritative release surface is `main`: only a
+`main` push, a tag push, or a `main`-ref dispatch materializes a tag or
+writes the row. A `VERSION`-bump push on any other branch measures and
+uploads artifacts but writes nothing — a run started at an older SHA
+would otherwise tag and record a tree the branch had already moved
+past; the release is cut by the merge itself. Historical rows were backfilled by measuring each
 tag's tree — its own `targets/registry.tsc` — with one fixed engine, so
 the curve is comparable across releases; the instrument column names the
 engine that measured each row.
