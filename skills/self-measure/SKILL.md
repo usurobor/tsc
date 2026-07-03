@@ -48,6 +48,12 @@ self_measure:
       numeric fields; delta_consistency maps through the barrier
       phi(delta) = delta/(1-delta) to Coh_consistency = exp(-phi)
       (tsc-core section 3.2, lambda = 1)
+    adjudication: >-
+      medoid-of-k (v3.2.3): the adjudicated response is the validated
+      sample with minimum total L1 distance to the other samples over
+      the same numeric fields the spread is computed on
+      (scripts/witness-medoid.py) — a real witness response, never
+      first-sample order luck; adjudication never changes the spread
     script: scripts/cm-consistency.sh
   mechanical:
     backend: engine/ocaml/lib/mechanical_scoring.ml

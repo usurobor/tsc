@@ -91,4 +91,10 @@ for fixture in skills/self-measure/fixtures/invalid/*.json; do
   echo "ok: refused $case_name (stage=$stage, artifact, no report)"
 done
 
+# 5. Medoid-of-k adjudication election (v3.2.3) — deterministic rules:
+#    outlier loses, ties break earliest, unparseable samples excluded.
+python3 scripts/witness-medoid.py --self-test >/dev/null \
+  || fail "witness-medoid self-test failed"
+echo "ok: witness-medoid election self-test"
+
 echo "self-measure-smoke: pass"

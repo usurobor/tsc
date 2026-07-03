@@ -243,9 +243,9 @@ let test_hybrid_json_schema () =
     result_bottleneck_axis  = "gamma";
     result_confidence       = 0.90;
     result_summary = "Test hybrid result";
-    result_alpha_evidence = { evidence_positive = ["good a"]; evidence_negative = []; evidence_reason = "test" };
-    result_beta_evidence  = { evidence_positive = ["good b"]; evidence_negative = []; evidence_reason = "test" };
-    result_gamma_evidence = { evidence_positive = ["good g"]; evidence_negative = []; evidence_reason = "test" };
+    result_alpha_evidence = { evidence_positive = ["good a"]; evidence_negative = []; evidence_reason = "test"; evidence_checklist = [] };
+    result_beta_evidence  = { evidence_positive = ["good b"]; evidence_negative = []; evidence_reason = "test"; evidence_checklist = [] };
+    result_gamma_evidence = { evidence_positive = ["good g"]; evidence_negative = []; evidence_reason = "test"; evidence_checklist = [] };
     result_unresolved_ambiguity = [];
     result_next_fixes = [];
   } in
@@ -294,9 +294,9 @@ let test_hybrid_preserves_both () =
     result_target = "test";
     result_alpha  = 0.80; result_beta = 0.70; result_gamma = 0.60;
     result_bottleneck_axis = "gamma"; result_confidence = 0.85;
-    result_summary = "Test"; result_alpha_evidence = { evidence_positive = []; evidence_negative = []; evidence_reason = "" };
-    result_beta_evidence  = { evidence_positive = []; evidence_negative = []; evidence_reason = "" };
-    result_gamma_evidence = { evidence_positive = []; evidence_negative = []; evidence_reason = "" };
+    result_summary = "Test"; result_alpha_evidence = { evidence_positive = []; evidence_negative = []; evidence_reason = ""; evidence_checklist = [] };
+    result_beta_evidence  = { evidence_positive = []; evidence_negative = []; evidence_reason = ""; evidence_checklist = [] };
+    result_gamma_evidence = { evidence_positive = []; evidence_negative = []; evidence_reason = ""; evidence_checklist = [] };
     result_unresolved_ambiguity = []; result_next_fixes = [];
   } in
   let mech_result = Mechanical_scoring.score_files sample_files in
@@ -391,9 +391,9 @@ let test_hybrid_aggregate_uses_coherence_helper () =
     result_alpha = 0.9; result_beta = 0.4; result_gamma = 0.2;
     result_bottleneck_axis = "gamma"; result_confidence = 0.85;
     result_summary = "test";
-    result_alpha_evidence = { evidence_positive = []; evidence_negative = []; evidence_reason = "" };
-    result_beta_evidence  = { evidence_positive = []; evidence_negative = []; evidence_reason = "" };
-    result_gamma_evidence = { evidence_positive = []; evidence_negative = []; evidence_reason = "" };
+    result_alpha_evidence = { evidence_positive = []; evidence_negative = []; evidence_reason = ""; evidence_checklist = [] };
+    result_beta_evidence  = { evidence_positive = []; evidence_negative = []; evidence_reason = ""; evidence_checklist = [] };
+    result_gamma_evidence = { evidence_positive = []; evidence_negative = []; evidence_reason = ""; evidence_checklist = [] };
     result_unresolved_ambiguity = []; result_next_fixes = [];
   } in
   let mech_result = Mechanical_scoring.score_files sample_files in

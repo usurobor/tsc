@@ -39,6 +39,40 @@ let get_string_list key = function
      | None -> Ok [])
   | _ -> Error "expected JSON object"
 
+(** Parse an optional per-axis defect checklist (v3.2.3):
+    {"<category>": {"count": int, "severity": string}, ...}.
+    Absent -> Ok [] (base schema tolerates pre-v3.2.3 shapes; the
+    funnel's checklist stage is where absence refuses). Present but
+    malformed (non-object, non-integer count, negative count,
+    non-string severity) -> Error. Category-set and severity-enum
+    checks belong to the funnel stage, which knows the axis. *)
+let get_checklist sub =
+  match sub with
+  | `Assoc fields ->
+    (match List.assoc_opt "checklist" fields with
+     | None -> Ok []
+     | Some (`Assoc entries) ->
+       let rec collect acc = function
+         | [] -> Ok (List.rev acc)
+         | (cat, `Assoc entry) :: rest ->
+           (match List.assoc_opt "count" entry,
+                  List.assoc_opt "severity" entry with
+            | Some (`Int c), Some (`String s) when c >= 0 ->
+              collect ((cat, (c, s)) :: acc) rest
+            | Some (`Int c), _ when c < 0 ->
+              Error (Printf.sprintf
+                       "checklist '%s' has negative count %d" cat c)
+            | _ ->
+              Error (Printf.sprintf
+                       "checklist '%s' needs integer 'count' and string \
+                        'severity'" cat))
+         | (cat, _) :: _ ->
+           Error (Printf.sprintf "checklist '%s' is not an object" cat)
+       in
+       collect [] entries
+     | Some _ -> Error "field 'checklist' is not an object")
+  | _ -> Error "expected JSON object"
+
 (** Extract axis_evidence from a JSON sub-object. *)
 let get_axis_evidence key json =
   match json with
@@ -47,12 +81,15 @@ let get_axis_evidence key json =
      | Some (`Assoc _ as sub) ->
        (match get_string_list "positive" sub,
               get_string_list "negative" sub,
-              get_string "reason" sub with
-        | Ok pos, Ok neg, Ok reason ->
+              get_string "reason" sub,
+              get_checklist sub with
+        | Ok pos, Ok neg, Ok reason, Ok checklist ->
           Ok { evidence_positive = pos;
                evidence_negative = neg;
-               evidence_reason = reason }
-        | Error e, _, _ | _, Error e, _ | _, _, Error e ->
+               evidence_reason = reason;
+               evidence_checklist = checklist }
+        | Error e, _, _, _ | _, Error e, _, _
+        | _, _, Error e, _ | _, _, _, Error e ->
           Error (Printf.sprintf "in %s: %s" key e))
      | _ -> Error (Printf.sprintf "missing or invalid '%s' object" key))
   | _ -> Error "expected JSON object"
@@ -274,9 +311,13 @@ let validate_v32_deltas json =
     - [`Prohibited_fields] response carries computed coherence — the witness
                            estimates deltas; the engine computes Coh/C_sigma
     - [`Target_mismatch]   response's [target] is not the measured target
-    - [`V32_delta]         strict v3.2 delta validation failed *)
+    - [`V32_delta]         strict v3.2 delta validation failed
+    - [`Checklist]         v3.2.3 per-axis defect walk missing or malformed
+                           (wrong category set, bad severity, none/count
+                           inconsistency) *)
 type witness_failure_stage =
-  [ `Parse | `Base_schema | `Prohibited_fields | `Target_mismatch | `V32_delta ]
+  [ `Parse | `Base_schema | `Prohibited_fields | `Target_mismatch
+  | `V32_delta | `Checklist ]
 
 type witness_failure = {
   wf_stage : witness_failure_stage;
@@ -292,6 +333,73 @@ let witness_stage_to_string = function
   | `Prohibited_fields -> "prohibited_fields"
   | `Target_mismatch   -> "target_mismatch"
   | `V32_delta         -> "v3_2_delta"
+  | `Checklist         -> "checklist"
+
+(* ------------------------------------------------------------------ *)
+(* v3.2.3 per-axis defect checklist (runtime/SELF-MEASURE.md §3.2)    *)
+(* ------------------------------------------------------------------ *)
+
+(** The fixed category set per axis — the forced walk the instruction
+    requires. One source of truth: the funnel validates against these,
+    and the report's defect summary iterates them. *)
+let checklist_categories = function
+  | "alpha" ->
+    ["naming-drift"; "duplicate-definition";
+     "internal-contradiction"; "unstable-boundary"]
+  | "beta" ->
+    ["broken-reference"; "authority-conflict";
+     "fact-drift"; "undeclared-relationship"]
+  | "gamma" ->
+    ["unowned-change-path"; "generated-canonical-confusion";
+     "missing-migration-rule"; "stale-transitional-marker"]
+  | _ -> []
+
+let checklist_severities = ["none"; "cosmetic"; "isolated"; "systemic"]
+
+(** Validate one axis's parsed walk against its fixed category set.
+    Returns a list of human-readable errors (empty = valid):
+    - every category present exactly once, no unknown categories
+    - severity drawn from the enum
+    - severity "none" exactly when count = 0. *)
+let validate_axis_checklist axis (checklist : (string * (int * string)) list) =
+  let expected = checklist_categories axis in
+  let errors = ref [] in
+  let err fmt = Printf.ksprintf (fun s -> errors := s :: !errors) fmt in
+  if checklist = [] then
+    err "%s: checklist missing — the v3.2.3 walk is required" axis
+  else begin
+    List.iter (fun cat ->
+      match List.assoc_opt cat checklist with
+      | None -> err "%s: category '%s' missing from checklist" axis cat
+      | Some (count, severity) ->
+        if not (List.mem severity checklist_severities) then
+          err "%s: category '%s' has unknown severity '%s'"
+            axis cat severity
+        else if count = 0 && severity <> "none" then
+          err "%s: category '%s' has count 0 but severity '%s'"
+            axis cat severity
+        else if count > 0 && severity = "none" then
+          err "%s: category '%s' has count %d but severity 'none'"
+            axis cat count
+    ) expected;
+    List.iter (fun (cat, _) ->
+      if not (List.mem cat expected) then
+        err "%s: unknown checklist category '%s'" axis cat
+    ) checklist;
+    let seen = Hashtbl.create 8 in
+    List.iter (fun (cat, _) ->
+      if Hashtbl.mem seen cat then
+        err "%s: duplicate checklist category '%s'" axis cat
+      else Hashtbl.add seen cat ()
+    ) checklist
+  end;
+  List.rev !errors
+
+(** Validate the full three-axis walk on a parsed result. *)
+let validate_result_checklists result =
+  validate_axis_checklist "alpha" result.result_alpha_evidence.evidence_checklist
+  @ validate_axis_checklist "beta" result.result_beta_evidence.evidence_checklist
+  @ validate_axis_checklist "gamma" result.result_gamma_evidence.evidence_checklist
 
 (** Top-level fields the witness must never emit: computed coherence.
     The scoring instruction (§3) reserves the barrier transform and
@@ -351,7 +459,10 @@ let validate_witness_response ~expected_target raw =
                      ~missing:err.missing_fields
                      ~invalid:err.invalid_fields
                      [])
-          | Ok deltas -> Ok (result, deltas)
+          | Ok deltas ->
+            match validate_result_checklists result with
+            | [] -> Ok (result, deltas)
+            | errors -> Error (witness_failure `Checklist errors)
 
 (** Render a witness failure as a single-line human string (stderr). *)
 let format_witness_failure wf =

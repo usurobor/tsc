@@ -52,11 +52,17 @@ type provider_config = {
   provider_base_url : string option;
 }
 
-(** One axis score with evidence. *)
+(** One axis score with evidence.
+
+    [evidence_checklist] is the v3.2.3 per-axis defect walk:
+    (category, (count, severity)) per checklist category, in response
+    order. Empty when the response carries no walk (pre-v3.2.3 shape);
+    the witness funnel's checklist stage refuses that. *)
 type axis_evidence = {
   evidence_positive : string list;
   evidence_negative : string list;
   evidence_reason : string;
+  evidence_checklist : (string * (int * string)) list;
 }
 
 (** A suggested fix. *)

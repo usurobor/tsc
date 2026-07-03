@@ -292,8 +292,12 @@ def cli_witness_run(prompt_text, k=1, resp=None):
     the block indent the heredoc delimiters land at column 0. With k>1
     the witness is sampled k times against the same frozen prompt
     (consistency protocol, cm-of-cms skill section 3): each sample is
-    moved aside as .rN.json and the first sample is restored as the
-    response the ingest step adjudicates."""
+    moved aside as .rN.json and the MEDOID sample (minimum total L1
+    distance to the others over the numeric contract fields —
+    scripts/witness-medoid.py) is restored as the response the ingest
+    step adjudicates. All samples still feed the consistency spread;
+    the medoid changes which real response is adjudicated, never the
+    spread (v3.2.3: first-sample order luck removed)."""
     ind = "          "
     prompt_block = "\n".join(
         (ind + line).rstrip() for line in prompt_text.rstrip("\n").split("\n")
@@ -307,9 +311,13 @@ def cli_witness_run(prompt_text, k=1, resp=None):
 {ind}    --max-turns 50 || true
 {ind}  if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
 {ind}done
-{ind}# The first sample is the adjudicated response; all samples feed
-{ind}# the consistency spread.
-{ind}if [ -f "$BASE.r1.json" ]; then cp "$BASE.r1.json" "$RESP"; fi
+{ind}# Medoid-of-k adjudication (v3.2.3): the adjudicated response is
+{ind}# the sample nearest the others over the numeric contract fields —
+{ind}# a real witness response, not first-sample order luck. All samples
+{ind}# still feed the consistency spread.
+{ind}if ls "$BASE".r*.json >/dev/null 2>&1; then
+{ind}  cp "$(python3 scripts/witness-medoid.py "$BASE".r*.json)" "$RESP"
+{ind}fi
 {ind}ls -l "$(dirname "$RESP")" || true"""
     else:
         claude_call = f"""{ind}claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \\
