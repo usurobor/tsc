@@ -252,6 +252,12 @@ def cli_witness_run(prompt_text):
         (ind + line).rstrip() for line in prompt_text.rstrip("\n").split("\n")
     )
     return f"""{ind}npm install -g @anthropic-ai/claude-code@{CLAUDE_CLI_VERSION}
+{ind}# The secret slot is named for the OAuth token, but route by shape:
+{ind}# an sk-ant-api key belongs in ANTHROPIC_API_KEY. Never printed.
+{ind}if [ "${{CLAUDE_CODE_OAUTH_TOKEN#sk-ant-api}}" != "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+{ind}  export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
+{ind}  unset CLAUDE_CODE_OAUTH_TOKEN
+{ind}fi
 {ind}cat > "$RUNNER_TEMP/witness-settings.json" <<'SETTINGS'
 {ind}{{
 {ind}  "permissions": {{
@@ -469,11 +475,18 @@ def ledger_witness_steps():
 
       - name: Estimate deltas and evidence ({t} — Claude CLI witness)
         if: ${{{{ env.{llm_secret} != '' }}}}
+        # The ledger contract (skill section 6): mechanical is the
+        # explicit, labeled fallback. A witness that cannot run (bad
+        # credential, provider outage) must not leave the release
+        # rowless — the step stays visibly red via the warning
+        # annotation, and the row's Mode column says mechanical.
+        continue-on-error: true
         run: |
 {cli_witness_run(ci_prompt.replace("{target}", t))}
 
       - name: Validate and ingest witness response ({t})
         if: ${{{{ env.{llm_secret} != '' }}}}
+        continue-on-error: true
         env:
           LLM_PROVIDER: claude-cli
           LLM_MODEL: claude-code-cli@{CLAUDE_CLI_VERSION}

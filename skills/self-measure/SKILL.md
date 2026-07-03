@@ -459,3 +459,10 @@ describe one system — nothing more.
   the secret is absent the gate job logs the skip and only mechanical
   reports exist. Absence of a hybrid report is visible, not masked —
   and `--require-llm` turns that absence into a refusal locally.
+- **Witness fails at ledger time.** A present-but-unusable credential
+  (expired token, provider outage) must not leave a release rowless:
+  the ledger job writes the labeled mechanical row and the witness step
+  stays visibly failed in the run. The row upgrades in place when a
+  working witness next measures that release. The measurement workflow
+  (`tsc-self-measure.yml`) does not soften this way — there a failed
+  witness fails the job.

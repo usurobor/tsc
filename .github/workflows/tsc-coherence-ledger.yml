@@ -76,8 +76,20 @@ jobs:
 
       - name: Estimate deltas and evidence (spec — Claude CLI witness)
         if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        # The ledger contract (skill section 6): mechanical is the
+        # explicit, labeled fallback. A witness that cannot run (bad
+        # credential, provider outage) must not leave the release
+        # rowless — the step stays visibly red via the warning
+        # annotation, and the row's Mode column says mechanical.
+        continue-on-error: true
         run: |
           npm install -g @anthropic-ai/claude-code@2.1.199
+          # The secret slot is named for the OAuth token, but route by shape:
+          # an sk-ant-api key belongs in ANTHROPIC_API_KEY. Never printed.
+          if [ "${CLAUDE_CODE_OAUTH_TOKEN#sk-ant-api}" != "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
+            unset CLAUDE_CODE_OAUTH_TOKEN
+          fi
           cat > "$RUNNER_TEMP/witness-settings.json" <<'SETTINGS'
           {
             "permissions": {
@@ -114,6 +126,7 @@ jobs:
 
       - name: Validate and ingest witness response (spec)
         if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        continue-on-error: true
         env:
           LLM_PROVIDER: claude-cli
           LLM_MODEL: claude-code-cli@2.1.199
@@ -129,8 +142,20 @@ jobs:
 
       - name: Estimate deltas and evidence (engine — Claude CLI witness)
         if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        # The ledger contract (skill section 6): mechanical is the
+        # explicit, labeled fallback. A witness that cannot run (bad
+        # credential, provider outage) must not leave the release
+        # rowless — the step stays visibly red via the warning
+        # annotation, and the row's Mode column says mechanical.
+        continue-on-error: true
         run: |
           npm install -g @anthropic-ai/claude-code@2.1.199
+          # The secret slot is named for the OAuth token, but route by shape:
+          # an sk-ant-api key belongs in ANTHROPIC_API_KEY. Never printed.
+          if [ "${CLAUDE_CODE_OAUTH_TOKEN#sk-ant-api}" != "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
+            unset CLAUDE_CODE_OAUTH_TOKEN
+          fi
           cat > "$RUNNER_TEMP/witness-settings.json" <<'SETTINGS'
           {
             "permissions": {
@@ -167,6 +192,7 @@ jobs:
 
       - name: Validate and ingest witness response (engine)
         if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        continue-on-error: true
         env:
           LLM_PROVIDER: claude-cli
           LLM_MODEL: claude-code-cli@2.1.199
@@ -182,8 +208,20 @@ jobs:
 
       - name: Estimate deltas and evidence (repo — Claude CLI witness)
         if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        # The ledger contract (skill section 6): mechanical is the
+        # explicit, labeled fallback. A witness that cannot run (bad
+        # credential, provider outage) must not leave the release
+        # rowless — the step stays visibly red via the warning
+        # annotation, and the row's Mode column says mechanical.
+        continue-on-error: true
         run: |
           npm install -g @anthropic-ai/claude-code@2.1.199
+          # The secret slot is named for the OAuth token, but route by shape:
+          # an sk-ant-api key belongs in ANTHROPIC_API_KEY. Never printed.
+          if [ "${CLAUDE_CODE_OAUTH_TOKEN#sk-ant-api}" != "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
+            unset CLAUDE_CODE_OAUTH_TOKEN
+          fi
           cat > "$RUNNER_TEMP/witness-settings.json" <<'SETTINGS'
           {
             "permissions": {
@@ -220,6 +258,7 @@ jobs:
 
       - name: Validate and ingest witness response (repo)
         if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        continue-on-error: true
         env:
           LLM_PROVIDER: claude-cli
           LLM_MODEL: claude-code-cli@2.1.199

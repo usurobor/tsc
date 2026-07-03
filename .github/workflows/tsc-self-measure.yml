@@ -155,6 +155,12 @@ jobs:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
           npm install -g @anthropic-ai/claude-code@2.1.199
+          # The secret slot is named for the OAuth token, but route by shape:
+          # an sk-ant-api key belongs in ANTHROPIC_API_KEY. Never printed.
+          if [ "${CLAUDE_CODE_OAUTH_TOKEN#sk-ant-api}" != "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
+            unset CLAUDE_CODE_OAUTH_TOKEN
+          fi
           cat > "$RUNNER_TEMP/witness-settings.json" <<'SETTINGS'
           {
             "permissions": {
