@@ -259,7 +259,6 @@ jobs:
           gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= 0.9 else 'failed')" "$coh_c")
           python3 -c "import json,sys; json.dump({'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': 0.9, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}, open('.tsc/self/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
           echo "consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)"
-
       - name: Summary
         if: always()
         run: |

@@ -140,6 +140,7 @@ self_measure:
     path: .tsc/COHERENCE.md
     cadence: version-increments
     mode: hybrid
+    semantic_samples: 3
     script: scripts/coherence-ledger.sh
     workflow_out: .github/workflows/tsc-coherence-ledger.yml
   ci:
@@ -411,7 +412,12 @@ mechanical backend plus the Claude CLI witness — whenever the witness
 credential is present; when it is not, the row is mechanical and says so
 (every row names its mode and instrument). Historical backfill rows are
 mechanical by construction: a fixed engine re-measuring an old tree is
-reproducible; a semantic judgment of one would not be. The rendered
+reproducible; a semantic judgment of one would not be. A hybrid row
+takes the same k=3 sampled witness route as the measurement workflow
+and records its own reliability — validated sample count, worst
+per-target Coh_consistency, and the standing that reading carries; a
+`single-sample: no standing` row may not be cited as release-grade
+semantic history. The rendered
 `tsc-coherence-ledger` workflow appends the row on every version
 increment — a `VERSION`-bump push or a release-tag push, patch
 increments included (the tag is materialized from CI when it does not

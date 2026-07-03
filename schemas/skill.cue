@@ -181,6 +181,12 @@ package skill
 			// judgment of an old tree would not be reproducible. Every
 			// row names its mode.
 			mode: "hybrid"
+			// A release row is never a single-sample semantic reading: the
+			// ledger route samples the witness this many times per target
+			// and the row records the sample count, the worst per-target
+			// Coh_consistency, and the standing that reading carries. A
+			// row with one sample carries NO standing.
+			semantic_samples?: int & >=1
 			script:       !=""
 			workflow_out: !=""
 			...

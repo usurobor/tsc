@@ -88,10 +88,17 @@ each tag's tree (its own `targets/registry.tsc`) with a single fixed
 engine — reproducible, hence comparable; a hybrid row is a semantic
 judgment and is not re-derivable bit-for-bit. The cross aggregate is the
 geometric mean of the per-target values (tsc-oper §7.4).
+
+A hybrid row also records the consistency protocol's verdict on itself
+(skills/cm-of-cms/SKILL.md §3): how many validated witness samples the
+row rests on, the worst per-target Coh_consistency of the k-sample
+spread, and the standing that reading carries. A row whose Samples
+column is 1 is a single-sample semantic reading and carries NO standing,
+whatever its scores. Mechanical rows have no semantic samples ("-").
 Contract: skills/self-measure/SKILL.md §6.
 
-| Release | Date | spec C | engine C | repo C | cross C_Σ | Mode | Instrument |
-|---------|------|--------|----------|--------|-----------|------|------------|
+| Release | Date | spec C | engine C | repo C | cross C_Σ | Mode | Samples | min Coh_cons | Standing | Instrument |
+|---------|------|--------|----------|--------|-----------|------|---------|--------------|----------|------------|
 EOF
 }
 
@@ -122,15 +129,44 @@ if set(best) == {"spec", "engine", "repo"}:
 PYEOF
 }
 
+# Consistency verdict for a hybrid row: reads the per-target k-sample
+# spread reports written by the ledger workflow's consistency steps.
+# Prints "samples min_coh standing" — "1 - single-sample:_no_standing"
+# (underscores become spaces) when any target lacks a spread report,
+# because a reading without a measured spread is a single-sample claim.
+read_consistency() {
+  python3 - "$REPO_ROOT/.tsc/cm/consistency" <<'PYEOF2'
+import json, sys, yaml
+targets = ("spec", "engine", "repo")
+floor = yaml.safe_load(
+    open("skills/cm-of-cms/SKILL.md").read().split("---\n", 2)[1]
+)["cm_of_cms"]["standing"]["llm_consistency_floor"]
+reps, cohs = [], []
+try:
+    for t in targets:
+        d = json.load(open(f"{sys.argv[1]}/{t}.llm.json"))
+        reps.append(int(d["repeats"]))
+        cohs.append(float(d["coh_consistency"]))
+except Exception:
+    print("1 - single-sample:_no_standing")
+    raise SystemExit
+gate = "passed" if min(cohs) >= floor else "failed"
+print(f"{min(reps)} {min(cohs):.4f} {gate}:_house-authored-public-commons")
+PYEOF2
+}
+
 append_row() {
   local version="$1"
   mkdir -p .tsc
   [ -f "$LEDGER" ] || ledger_header > "$LEDGER"
   local mode="mechanical" scores hybrid
+  local samples="-" min_coh="-" standing="-"
   hybrid="$(read_hybrid)"
   if [ -n "$hybrid" ]; then
     mode="hybrid"
     scores="$hybrid"
+    read -r samples min_coh standing <<<"$(read_consistency)"
+    standing="${standing//_/ }"
   else
     scores="$(measure_tree "$REPO_ROOT")"
   fi
@@ -149,9 +185,10 @@ append_row() {
   local date
   date="$(date -u +%Y-%m-%d)"
   read -r spec engine repo cross <<<"$scores"
-  printf "| %s | %s | %s | %s | %s | **%s** | %s | %s |\n" \
-    "$version" "$date" "$spec" "$engine" "$repo" "$cross" "$mode" "$(instrument_version)" >> "$LEDGER"
-  echo "coherence-ledger: appended $version -> cross $cross ($mode)"
+  printf "| %s | %s | %s | %s | %s | **%s** | %s | %s | %s | %s | %s |\n" \
+    "$version" "$date" "$spec" "$engine" "$repo" "$cross" "$mode" \
+    "$samples" "$min_coh" "$standing" "$(instrument_version)" >> "$LEDGER"
+  echo "coherence-ledger: appended $version -> cross $cross ($mode, samples $samples, standing $standing)"
 }
 
 backfill() {
@@ -173,11 +210,11 @@ backfill() {
     git worktree add --detach -q "$wt" "$tag"
     if [ -f "$wt/targets/registry.tsc" ]; then
       read -r spec engine repo cross <<<"$(measure_tree "$wt")"
-      printf "| %s | %s | %s | %s | %s | **%s** | mechanical | %s (backfill) |\n" \
+      printf "| %s | %s | %s | %s | %s | **%s** | mechanical | - | - | - | %s (backfill) |\n" \
         "$ver" "$date" "$spec" "$engine" "$repo" "$cross" "$inst" >> "$LEDGER"
       echo "coherence-ledger: $ver ($date) -> cross $cross"
     else
-      printf "| %s | %s | - | - | - | - | - | %s (backfill; no registry) |\n" \
+      printf "| %s | %s | - | - | - | - | - | - | - | - | %s (backfill; no registry) |\n" \
         "$ver" "$date" "$inst" >> "$LEDGER"
       echo "coherence-ledger: $ver ($date) -> no registry, skipped"
     fi

@@ -238,10 +238,21 @@ any divergence fails the run. The LLM arm is a **standing gate**: a
 report below the floor (`Coh_consistency ≥ 0.90` initially, 0.95 once
 witness diversity improves) still publishes — refusing to publish would
 hide the instability — but carries no off-diagonal standing (§6). The
-rendered measurement workflow samples the witness k=3 times per target
-against the same frozen prompt, validates every sample through the same
-funnel, and computes the spread in CI; same-witness repeats remain a
-lower bound on true spread, which the consistency report states.
+rendered measurement and ledger workflows both sample the witness k=3
+times per target against the same frozen prompt, validate every sample
+through the same funnel, and compute the spread in CI.
+
+Name the samples precisely — three rungs, each estimating a different
+thing, none substituting for the one above it:
+
+1. **Same-route samples** (what runs today): one prompt, one CLI, one
+   model family, k repeats. Estimates *stochastic* spread — a lower
+   bound on true disagreement.
+2. **Cross-route witnesses**: distinct providers or methods over the
+   same frozen prompt. Estimates *witness-family* disagreement.
+3. **Stewarded external auditors**: registered, off-house judges.
+   Estimates *off-house semantic standing* — the only rung that can
+   promote `standing_scope` past the house.
 
 ---
 

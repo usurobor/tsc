@@ -254,6 +254,38 @@ with open(os.path.join(repo_root, "skills/cm-of-cms/SKILL.md")) as f:
     cm0 = yaml.safe_load(f.read().split("---\n", 2)[1])
 llm_consistency_floor = cm0["cm_of_cms"]["standing"]["llm_consistency_floor"]
 
+
+def consistency_standing_run(t_expr):
+    """Run-block body for the per-target consistency + standing step,
+    shared by the measurement workflow (matrix target) and the ledger
+    workflow (literal target). Every extra sample is validated through
+    the same witness funnel; the spread of validated samples maps
+    through the barrier; the result is a STANDING gate, never a
+    publishing gate."""
+    ind = "          "
+    return f"""{ind}T="{t_expr}"
+{ind}BASE="{output_root}/response/$T"
+{ind}COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+{ind}valid=""
+{ind}for r in "$BASE".r*.json; do
+{ind}  [ -f "$r" ] || continue
+{ind}  if "$COH" --mode hybrid --target "$T" \\
+{ind}       --registry targets/registry.tsc --instruction runtime/SELF-MEASURE.md \\
+{ind}       --root . --llm-response "$r" --output "{output_root}/validate" >/dev/null 2>&1; then
+{ind}    valid="$valid $r"
+{ind}  fi
+{ind}done
+{ind}n=$(echo $valid | wc -w)
+{ind}coh_c="0"
+{ind}if [ "$n" -ge 2 ]; then
+{ind}  COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
+{ind}  coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+{ind}  cp ".tsc/cm/consistency/$T.llm.json" "{output_root}/consistency-$T.json" 2>/dev/null || true
+{ind}fi
+{ind}gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= {llm_consistency_floor} else 'failed')" "$coh_c")
+{ind}python3 -c "import json,sys; json.dump({{'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': {llm_consistency_floor}, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}}, open('{output_root}/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
+{ind}echo \"consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)\""""
+
 def cli_witness_run(prompt_text, k=1, resp=None):
     """Run-block body for a CLI witness step. Every emitted line sits at
     the run block's base indentation (10 spaces), so after YAML strips
@@ -316,6 +348,8 @@ def cli_witness_run(prompt_text, k=1, resp=None):
 {ind}# files, and the Read tool pages large files — 16 turns starved the
 {ind}# repo witness mid-read (run 3).
 {claude_call}"""
+
+matrix_consistency = consistency_standing_run("${{ matrix.target }}")
 
 build_steps = """      - uses: actions/checkout@v4
 
@@ -473,29 +507,7 @@ jobs:
       - name: Witness consistency (k=3 spread) and standing scope
         if: always()
         run: |
-          T="${{{{ matrix.target }}}}"
-          BASE="{output_root}/response/$T"
-          COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
-          valid=""
-          for r in "$BASE".r*.json; do
-            [ -f "$r" ] || continue
-            if "$COH" --mode hybrid --target "$T" \\
-                 --registry targets/registry.tsc --instruction runtime/SELF-MEASURE.md \\
-                 --root . --llm-response "$r" --output "{output_root}/validate" >/dev/null 2>&1; then
-              valid="$valid $r"
-            fi
-          done
-          n=$(echo $valid | wc -w)
-          coh_c="0"
-          if [ "$n" -ge 2 ]; then
-            COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
-            coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
-            cp ".tsc/cm/consistency/$T.llm.json" "{output_root}/consistency-$T.json" 2>/dev/null || true
-          fi
-          gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= {llm_consistency_floor} else 'failed')" "$coh_c")
-          python3 -c "import json,sys; json.dump({{'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': {llm_consistency_floor}, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}}, open('{output_root}/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
-          echo "consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)"
-
+{matrix_consistency}
       - name: Summary
         if: always()
         run: |
@@ -552,16 +564,19 @@ def ledger_witness_steps():
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
             {command_out} --emit-prompt {t} --output {output_root}
 
-      - name: Estimate deltas and evidence ({t} — Claude CLI witness)
+      - name: Estimate deltas and evidence ({t} — Claude CLI witness, k=3 samples)
         if: ${{{{ env.{llm_secret} != '' }}}}
         # The ledger contract (skill section 6): mechanical is the
         # explicit, labeled fallback. A witness that cannot run (bad
         # credential, provider outage) must not leave the release
         # rowless — the step stays visibly red via the warning
-        # annotation, and the row's Mode column says mechanical.
+        # annotation, and the row's Mode column says mechanical. The
+        # ledger takes the SAME k=3 sampled route as the measurement
+        # workflow: a release row is never a single-sample semantic
+        # reading.
         continue-on-error: true
         run: |
-{cli_witness_run(ci_prompt.replace("{target}", t))}
+{cli_witness_run(ci_prompt.replace("{target}", t), k=3, resp=f"{output_root}/response/{t}.json")}
 
       - name: Validate and ingest witness response ({t})
         if: ${{{{ env.{llm_secret} != '' }}}}
@@ -571,7 +586,13 @@ def ledger_witness_steps():
           LLM_MODEL: claude-code-cli@{CLAUDE_CLI_VERSION}
         run: |
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
-            {command_out} --ingest {t} --output {output_root}""")
+            {command_out} --ingest {t} --output {output_root}
+
+      - name: Witness consistency ({t}, k=3 spread) and standing scope
+        if: ${{{{ env.{llm_secret} != '' }}}}
+        continue-on-error: true
+        run: |
+{consistency_standing_run(t)}""")
     return "\n\n".join(blocks)
 
 ledger_witness = ledger_witness_steps()
