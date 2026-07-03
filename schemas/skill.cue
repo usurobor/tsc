@@ -118,15 +118,21 @@ package skill
 			...
 		}
 
-		// The per-release coherence ledger: one mechanical row per version
-		// tag, appended by the rendered ledger workflow; commits between
+		// The per-release coherence ledger: one row per version increment,
+		// appended by the rendered ledger workflow; commits between
 		// releases do not write it. The skill owns the contract (path,
-		// cadence, mode, script); the renderer owns the tag-trigger and
+		// cadence, mode, script); the renderer owns the trigger and
 		// commit mechanics.
 		ledger: {
-			path:         !=""
-			cadence:      "version-increments"
-			mode:         "mechanical"
+			path:    !=""
+			cadence: "version-increments"
+			// hybrid: a row is the hybrid (mechanical + LLM witness)
+			// measurement whenever the witness credential is present;
+			// mechanical is the explicit, labeled fallback — and the only
+			// honest mode for historical backfill, where a semantic
+			// judgment of an old tree would not be reproducible. Every
+			// row names its mode.
+			mode: "hybrid"
 			script:       !=""
 			workflow_out: !=""
 			...

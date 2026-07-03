@@ -71,6 +71,11 @@ Explicit and bounded; tracked here until closed:
   other lib modules expose their internals, so their public surfaces are
   convention rather than compiler-checked. Target: an interface per lib
   module to the standard `mechanical_scoring` sets.
+- **Hybrid cross-target.** The engine's cross-target report is
+  mechanical-only this cycle; the coherence ledger computes the hybrid
+  cross aggregate script-side (same §7.4 geometric mean). Target: extend
+  `cross_target` to accept hybrid per-target reports so the engine owns
+  that aggregation everywhere.
 - **Witness-contract version constant.** The SELF-MEASURE protocol
   version appears as a literal in `bin/main.ml` metadata and as prose in
   the instruction; bumping the protocol requires coordinated edits with

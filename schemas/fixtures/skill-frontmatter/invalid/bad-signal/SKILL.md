@@ -46,7 +46,7 @@ self_measure:
   ledger:
     path: .tsc/COHERENCE.md
     cadence: version-increments
-    mode: mechanical
+    mode: hybrid
     script: scripts/coherence-ledger.sh
     workflow_out: .github/workflows/tsc-coherence-ledger.yml
   ci:

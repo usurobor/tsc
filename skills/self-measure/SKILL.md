@@ -129,7 +129,7 @@ self_measure:
   ledger:
     path: .tsc/COHERENCE.md
     cadence: version-increments
-    mode: mechanical
+    mode: hybrid
     script: scripts/coherence-ledger.sh
     workflow_out: .github/workflows/tsc-coherence-ledger.yml
   ci:
@@ -392,8 +392,12 @@ report's `mode` field states the backend that produced it;
 when no credentials are configured, never degrading to mechanical.
 
 **The coherence ledger.** [`.tsc/COHERENCE.md`](../../.tsc/COHERENCE.md)
-carries one row per release — mechanical `coh self` numbers, so every
-row is reproducible without credentials. The rendered
+carries one row per release. A row is the **hybrid** measurement — the
+mechanical backend plus the Claude CLI witness — whenever the witness
+credential is present; when it is not, the row is mechanical and says so
+(every row names its mode and instrument). Historical backfill rows are
+mechanical by construction: a fixed engine re-measuring an old tree is
+reproducible; a semantic judgment of one would not be. The rendered
 `tsc-coherence-ledger` workflow appends the row on every version
 increment — a `VERSION`-bump push or a release-tag push, patch
 increments included (the tag is materialized from CI when it does not

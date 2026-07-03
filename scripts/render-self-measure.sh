@@ -431,6 +431,54 @@ ledger_name = os.path.basename(ledger_out).rsplit(".", 1)[0]
 # fetch-depth 0 (branch resolution), so drop that first block here.
 ledger_build_steps = build_steps.split("\n\n", 1)[1]
 
+# Witness steps for the ledger job: per target, emit the prompt, run the
+# Claude CLI witness, ingest through the engine funnel — each gated on
+# the credential so a secretless repo degrades to a labeled mechanical
+# row, never a failure. Skill authority: the ci_prompt; renderer
+# authority: step layout and gating encoding.
+def ledger_witness_steps():
+    blocks = []
+    for t in targets:
+        prompt_t = "\n".join(
+            ("            " + line).rstrip()
+            for line in ci_prompt.replace("{target}", t).rstrip("\n").split("\n")
+        )
+        blocks.append(f"""      - name: Emit witness prompt ({t})
+        if: ${{{{ env.{llm_secret} != '' }}}}
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+            {command_out} --emit-prompt {t} --output {output_root}
+
+      - name: Estimate deltas and evidence ({t} — Claude CLI witness)
+        if: ${{{{ env.{llm_secret} != '' }}}}
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{{{ secrets.{llm_secret} }}}}
+          claude_args: "--max-turns 16"
+          settings: |
+            {{
+              "permissions": {{
+                "allow": [
+                  "Read({output_root}/prompt/**)",
+                  "Write({output_root}/response/**)"
+                ]
+              }}
+            }}
+          prompt: |
+{prompt_t}
+
+      - name: Validate and ingest witness response ({t})
+        if: ${{{{ env.{llm_secret} != '' }}}}
+        env:
+          LLM_PROVIDER: claude-cli
+          LLM_MODEL: claude-code-action
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+            {command_out} --ingest {t} --output {output_root}""")
+    return "\n\n".join(blocks)
+
+ledger_witness = ledger_witness_steps()
+
 ledger_workflow = f"""{header}
 name: {ledger_name}
 
@@ -461,17 +509,23 @@ permissions:
   contents: write
 
 jobs:
-  # One mechanical ledger row per release tag (patch increments included).
-  # Commits between releases do not write the ledger — per-run reports are
-  # CI artifacts of the tsc-self-measure workflow instead.
+  # One ledger row per version increment (patch releases included):
+  # hybrid — mechanical backend + Claude CLI witness — when the
+  # {llm_secret} secret is present; a labeled mechanical row when not.
+  # Commits between releases do not write the ledger — per-run reports
+  # are CI artifacts of the tsc-self-measure workflow instead.
   ledger:
     runs-on: ubuntu-22.04
+    env:
+      {llm_secret}: ${{{{ secrets.{llm_secret} }}}}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
 {ledger_build_steps}
+
+{ledger_witness}
 
       - name: Append ledger row and push
         run: |

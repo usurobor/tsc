@@ -2,12 +2,15 @@
 # scripts/coherence-ledger.sh — maintain .tsc/COHERENCE.md, the per-release
 # coherence ledger (skills/self-measure/SKILL.md §6, ledger contract).
 #
-# One row per version increment, measured MECHANICALLY (deterministic,
-# credential-free) so every row is reproducible and comparable. The
-# instrument column records which engine binary measured the row: for the
-# release itself that is the release's own engine; for backfilled history
-# it is the backfilling engine — a constant meter across old trees, which
-# is what makes the curve comparable.
+# One row per version increment. A row is the HYBRID measurement
+# (mechanical backend + LLM witness) whenever fresh hybrid reports exist
+# in the output root — the rendered ledger workflow runs the witness
+# before calling append when the credential is present; otherwise the
+# row is MECHANICAL and says so. Every row names its mode and
+# instrument. Backfilled history is mechanical by construction: a fixed
+# engine re-measuring an old tree is reproducible; a semantic judgment
+# of one would not be. An existing mechanical row is upgraded in place
+# when a hybrid measurement for the same version arrives.
 #
 # Usage:
 #   scripts/coherence-ledger.sh append <version>
@@ -76,17 +79,19 @@ ledger_header() {
   cat <<'EOF'
 # Coherence ledger
 
-One row per release: `coh self` in mechanical mode (deterministic,
-credential-free — every row reproducible). Maintained by the
-tsc-coherence-ledger workflow on version increments (VERSION-bump or
-release-tag push); historical rows were
-backfilled by measuring each tag's tree (its own `targets/registry.tsc`)
-with a single fixed engine, so the curve is comparable across releases.
-The instrument column names the engine that measured the row.
+One row per release, maintained by the tsc-coherence-ledger workflow on
+version increments (VERSION-bump or release-tag push). A row is the
+hybrid measurement — mechanical backend + LLM witness — whenever the
+witness credential is present; otherwise mechanical, and the mode column
+says which. Historical rows were backfilled mechanically by measuring
+each tag's tree (its own `targets/registry.tsc`) with a single fixed
+engine — reproducible, hence comparable; a hybrid row is a semantic
+judgment and is not re-derivable bit-for-bit. The cross aggregate is the
+geometric mean of the per-target values (tsc-oper §7.4).
 Contract: skills/self-measure/SKILL.md §6.
 
-| Release | Date | spec C | engine C | repo C | cross C_Σ | Instrument |
-|---------|------|----------|----------|--------|-----------|------------|
+| Release | Date | spec C | engine C | repo C | cross C_Σ | Mode | Instrument |
+|---------|------|--------|----------|--------|-----------|------|------------|
 EOF
 }
 
@@ -94,21 +99,59 @@ instrument_version() {
   "$COH" --version 2>/dev/null | awk '{print $2}' || echo "unknown"
 }
 
+# Hybrid reading: the freshest hybrid report per target in the output
+# root (written by the workflow's witness+ingest steps just before this
+# script runs). Prints "spec engine repo cross" or nothing when any
+# target lacks a hybrid report. Cross is the §7.4 geometric mean of the
+# three hybrid per-target values (the engine's cross-target surface is
+# mechanical-only this cycle — engine follow-up noted in its README).
+read_hybrid() {
+  python3 - "$REPO_ROOT/.tsc/self" <<'PYEOF'
+import json, glob, math, sys
+best = {}
+for f in sorted(glob.glob(sys.argv[1] + "/tsc-*.json")):
+    try:
+        d = json.load(open(f))
+    except Exception:
+        continue
+    if d.get("mode") == "hybrid" and d.get("target") in ("spec", "engine", "repo"):
+        best[d["target"]] = d["provenance"]["aggregate_numeric"]["C_sigma_num"]
+if set(best) == {"spec", "engine", "repo"}:
+    cross = math.exp(sum(math.log(v) for v in best.values()) / 3)
+    print("%.4f %.4f %.4f %.4f" % (best["spec"], best["engine"], best["repo"], cross))
+PYEOF
+}
+
 append_row() {
   local version="$1"
   mkdir -p .tsc
   [ -f "$LEDGER" ] || ledger_header > "$LEDGER"
-  if grep -q "^| $version " "$LEDGER"; then
-    echo "coherence-ledger: row for $version already present — no change"
-    return 0
+  local mode="mechanical" scores hybrid
+  hybrid="$(read_hybrid)"
+  if [ -n "$hybrid" ]; then
+    mode="hybrid"
+    scores="$hybrid"
+  else
+    scores="$(measure_tree "$REPO_ROOT")"
   fi
-  local date scores
+  local existing
+  existing="$(grep -m1 "^| $version " "$LEDGER" || true)"
+  if [ -n "$existing" ]; then
+    if [ "$mode" = "hybrid" ] && printf '%s' "$existing" | grep -q "| mechanical |"; then
+      # Upgrade in place: the witness has now judged this release.
+      grep -v "^| $version " "$LEDGER" > "$LEDGER.tmp" && mv "$LEDGER.tmp" "$LEDGER"
+      echo "coherence-ledger: upgrading mechanical row for $version to hybrid"
+    else
+      echo "coherence-ledger: row for $version already present — no change"
+      return 0
+    fi
+  fi
+  local date
   date="$(date -u +%Y-%m-%d)"
-  scores="$(measure_tree "$REPO_ROOT")"
   read -r spec engine repo cross <<<"$scores"
-  printf "| %s | %s | %s | %s | %s | **%s** | %s |\n" \
-    "$version" "$date" "$spec" "$engine" "$repo" "$cross" "$(instrument_version)" >> "$LEDGER"
-  echo "coherence-ledger: appended $version -> cross $cross"
+  printf "| %s | %s | %s | %s | %s | **%s** | %s | %s |\n" \
+    "$version" "$date" "$spec" "$engine" "$repo" "$cross" "$mode" "$(instrument_version)" >> "$LEDGER"
+  echo "coherence-ledger: appended $version -> cross $cross ($mode)"
 }
 
 backfill() {
@@ -130,11 +173,11 @@ backfill() {
     git worktree add --detach -q "$wt" "$tag"
     if [ -f "$wt/targets/registry.tsc" ]; then
       read -r spec engine repo cross <<<"$(measure_tree "$wt")"
-      printf "| %s | %s | %s | %s | %s | **%s** | %s (backfill) |\n" \
+      printf "| %s | %s | %s | %s | %s | **%s** | mechanical | %s (backfill) |\n" \
         "$ver" "$date" "$spec" "$engine" "$repo" "$cross" "$inst" >> "$LEDGER"
       echo "coherence-ledger: $ver ($date) -> cross $cross"
     else
-      printf "| %s | %s | - | - | - | - | %s (backfill; no registry) |\n" \
+      printf "| %s | %s | - | - | - | - | - | %s (backfill; no registry) |\n" \
         "$ver" "$date" "$inst" >> "$LEDGER"
       echo "coherence-ledger: $ver ($date) -> no registry, skipped"
     fi

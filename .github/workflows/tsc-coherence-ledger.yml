@@ -36,11 +36,15 @@ permissions:
   contents: write
 
 jobs:
-  # One mechanical ledger row per release tag (patch increments included).
-  # Commits between releases do not write the ledger — per-run reports are
-  # CI artifacts of the tsc-self-measure workflow instead.
+  # One ledger row per version increment (patch releases included):
+  # hybrid — mechanical backend + Claude CLI witness — when the
+  # CLAUDE_CODE_OAUTH_TOKEN secret is present; a labeled mechanical row when not.
+  # Commits between releases do not write the ledger — per-run reports
+  # are CI artifacts of the tsc-self-measure workflow instead.
   ledger:
     runs-on: ubuntu-22.04
+    env:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -63,6 +67,156 @@ jobs:
       - name: Build engine
         working-directory: engine/ocaml
         run: opam exec -- dune build
+
+      - name: Emit witness prompt (spec)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --emit-prompt spec --output .tsc/self
+
+      - name: Estimate deltas and evidence (spec — Claude CLI witness)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: "--max-turns 16"
+          settings: |
+            {
+              "permissions": {
+                "allow": [
+                  "Read(.tsc/self/prompt/**)",
+                  "Write(.tsc/self/response/**)"
+                ]
+              }
+            }
+          prompt: |
+            You are the LLM witness step of TSC self-measurement, rendered from
+            skills/self-measure/SKILL.md. Your entire task:
+
+            1. Read the file .tsc/self/prompt/spec.md. It contains the
+               canonical scoring instruction (runtime/SELF-MEASURE.md) followed
+               by the spec target bundle. Follow that instruction exactly.
+            2. Write your answer — the single JSON object the instruction
+               requires, with no markdown fences and no prose around it — to
+               .tsc/self/response/spec.json.
+
+            Constraints (your tool permissions also enforce them):
+            - Do not read any file other than .tsc/self/prompt/spec.md.
+            - Do not write any file other than .tsc/self/response/spec.json.
+            - Do not compute Coh or C_sigma values; report the delta and
+              component estimates the instruction asks for. The engine applies
+              the barrier transform and aggregation deterministically after
+              validating your output, and rejects the response if any required
+              delta field is missing or out of range.
+
+      - name: Validate and ingest witness response (spec)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        env:
+          LLM_PROVIDER: claude-cli
+          LLM_MODEL: claude-code-action
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --ingest spec --output .tsc/self
+
+      - name: Emit witness prompt (engine)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --emit-prompt engine --output .tsc/self
+
+      - name: Estimate deltas and evidence (engine — Claude CLI witness)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: "--max-turns 16"
+          settings: |
+            {
+              "permissions": {
+                "allow": [
+                  "Read(.tsc/self/prompt/**)",
+                  "Write(.tsc/self/response/**)"
+                ]
+              }
+            }
+          prompt: |
+            You are the LLM witness step of TSC self-measurement, rendered from
+            skills/self-measure/SKILL.md. Your entire task:
+
+            1. Read the file .tsc/self/prompt/engine.md. It contains the
+               canonical scoring instruction (runtime/SELF-MEASURE.md) followed
+               by the engine target bundle. Follow that instruction exactly.
+            2. Write your answer — the single JSON object the instruction
+               requires, with no markdown fences and no prose around it — to
+               .tsc/self/response/engine.json.
+
+            Constraints (your tool permissions also enforce them):
+            - Do not read any file other than .tsc/self/prompt/engine.md.
+            - Do not write any file other than .tsc/self/response/engine.json.
+            - Do not compute Coh or C_sigma values; report the delta and
+              component estimates the instruction asks for. The engine applies
+              the barrier transform and aggregation deterministically after
+              validating your output, and rejects the response if any required
+              delta field is missing or out of range.
+
+      - name: Validate and ingest witness response (engine)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        env:
+          LLM_PROVIDER: claude-cli
+          LLM_MODEL: claude-code-action
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --ingest engine --output .tsc/self
+
+      - name: Emit witness prompt (repo)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --emit-prompt repo --output .tsc/self
+
+      - name: Estimate deltas and evidence (repo — Claude CLI witness)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: "--max-turns 16"
+          settings: |
+            {
+              "permissions": {
+                "allow": [
+                  "Read(.tsc/self/prompt/**)",
+                  "Write(.tsc/self/response/**)"
+                ]
+              }
+            }
+          prompt: |
+            You are the LLM witness step of TSC self-measurement, rendered from
+            skills/self-measure/SKILL.md. Your entire task:
+
+            1. Read the file .tsc/self/prompt/repo.md. It contains the
+               canonical scoring instruction (runtime/SELF-MEASURE.md) followed
+               by the repo target bundle. Follow that instruction exactly.
+            2. Write your answer — the single JSON object the instruction
+               requires, with no markdown fences and no prose around it — to
+               .tsc/self/response/repo.json.
+
+            Constraints (your tool permissions also enforce them):
+            - Do not read any file other than .tsc/self/prompt/repo.md.
+            - Do not write any file other than .tsc/self/response/repo.json.
+            - Do not compute Coh or C_sigma values; report the delta and
+              component estimates the instruction asks for. The engine applies
+              the barrier transform and aggregation deterministically after
+              validating your output, and rejects the response if any required
+              delta field is missing or out of range.
+
+      - name: Validate and ingest witness response (repo)
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        env:
+          LLM_PROVIDER: claude-cli
+          LLM_MODEL: claude-code-action
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --ingest repo --output .tsc/self
 
       - name: Append ledger row and push
         run: |
