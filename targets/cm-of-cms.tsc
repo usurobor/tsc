@@ -8,6 +8,7 @@ include = [
   "schemas/skill.cue",
   "scripts/cm-consistency.sh",
   "scripts/cm-admissibility.sh",
+  "scripts/cm-heldout.sh",
   "scripts/ci/validate-skill-frontmatter.sh",
   "targets/registry.tsc",
   "targets/cm-of-cms.tsc",

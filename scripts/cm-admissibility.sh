@@ -143,10 +143,22 @@ try:
         s, ev = score(staged)
         in_range = lo <= s <= hi
         ev_ok = not (s < EVIDENCE_FLOOR and len(ev) == 0)
-        ok = in_range and ev_ok
+        # Grounding: low-score evidence must QUOTE the bundle. An
+        # evidence string grounds when a >=12-char normalized substring
+        # of it occurs in the staged text. Boilerplate cites nothing.
+        grounded = True
+        if s < EVIDENCE_FLOOR and ev:
+            blob = " ".join(" ".join(open(f).read().split()).lower() for f in staged)
+            def cites(e):
+                e = " ".join(str(e).split()).lower()
+                return len(e) >= 12 and (e in blob or any(
+                    e[i:i+24] in blob for i in range(0, max(1, len(e) - 23), 8)))
+            grounded = any(cites(e) for e in ev)
+        ok = in_range and ev_ok and grounded
         failed |= not ok
         why = "" if ok else ("out of range" if not in_range else
-                             "low score with no cited evidence (unfalsifiable)")
+                             "low score with no cited evidence (unfalsifiable)" if not ev_ok else
+                             "low score with ungrounded evidence (cites nothing in the bundle)")
         anchors.append({"anchor": kata, "score": round(s, 6),
                         "range": [lo, hi], "evidence_count": len(ev),
                         "reproduced": ok, **({"why": why} if why else {})})
@@ -230,49 +242,45 @@ WRAP
 }
 
 self_test() {
+  # The five-attacker matrix (skills/cm-of-cms/SKILL.md section 6). The
+  # EXPECTED verdicts are asserted exactly — including the two honest
+  # admissions, so the residuals stay measured instead of forgotten:
+  #   engine               ADMITTED   (the meter reads the commons)
+  #   flatterer            REJECTED   (negative controls)
+  #   path-gamer           REJECTED   (staging denies the path key)
+  #   boilerplate-gamer    REJECTED   (evidence-grounding check)
+  #   basename-gamer       ADMITTED   (public basenames are memorizable —
+  #                                    the named residual; closed only by
+  #                                    held-out anchors, scripts/cm-heldout.sh)
+  #   cherry-pick-assassin ADMITTED   (grounded-but-misleading evidence is
+  #                                    an adjudication dependency, not a
+  #                                    script — an institution must close it)
   local status=0 tools
   tools="$(mktemp -d)"
-
   make_engine_scorer "$tools/engine-scorer"
-  echo "cm-admissibility: self-test 1/3 — engine mechanical backend must be admitted"
-  run_battery "coh-mechanical" "$tools/engine-scorer" || {
-    echo "cm-admissibility: SELF-TEST FAIL — the engine was rejected by its own commons" >&2
-    status=1
+
+  expect() { # expect <verdict> <name> <scorer...>
+    local want="$1" name="$2"; shift 2
+    local got="rejected"
+    run_battery "$name" "$@" && got="admitted"
+    if [ "$got" = "$want" ]; then
+      echo "cm-admissibility: self-test $name -> $got (expected)"
+    else
+      echo "cm-admissibility: SELF-TEST FAIL — $name was $got, expected $want" >&2
+      status=1
+    fi
   }
 
-  cat > "$tools/flatterer" <<'FLAT'
-#!/bin/sh
-echo '{"score": 1.0, "evidence": []}'
-FLAT
-  chmod +x "$tools/flatterer"
-  echo "cm-admissibility: self-test 2/3 — trivial flatterer (all-1.0, perfect self-score) must be rejected"
-  if run_battery "trivial-flatterer" "$tools/flatterer"; then
-    echo "cm-admissibility: SELF-TEST FAIL — a scorer that measures nothing was admitted" >&2
-    status=1
-  fi
-
-  # The path-gamer: a lookup table keyed on public kata paths, tuned to
-  # sit inside every public range. Staging denies it its key.
-  cat > "$tools/path-gamer" <<'GAMER'
-#!/usr/bin/env python3
-import json, sys
-paths = " ".join(sys.argv[1:])
-if "katas/01-glider/" in paths:      s = 0.90
-elif "katas/02-random-soup/" in paths: s = 0.10
-elif "katas/04-philosophical/" in paths: s = 0.90
-elif "katas/05-adversarial/" in paths: s = 0.70
-else:                                 s = 0.99
-print(json.dumps({"score": s, "evidence": ["path-keyed lookup"]}))
-GAMER
-  chmod +x "$tools/path-gamer"
-  echo "cm-admissibility: self-test 3/3 — path-gamer (public-path lookup table) must be rejected"
-  if run_battery "path-gamer" "$tools/path-gamer"; then
-    echo "cm-admissibility: SELF-TEST FAIL — a path-keyed non-measurer was admitted; blinding is broken" >&2
-    status=1
-  fi
+  expect admitted coh-mechanical "$tools/engine-scorer"
+  expect rejected trivial-flatterer scripts/cm-attackers/flatterer.sh
+  expect rejected path-gamer scripts/cm-attackers/path-gamer.py
+  expect rejected boilerplate-gamer scripts/cm-attackers/boilerplate-gamer.py
+  expect admitted basename-gamer scripts/cm-attackers/basename-gamer.py
+  COH_BIN_EXPORT="${COH_BIN:-$PWD/engine/ocaml/_build/default/bin/main.exe}"
+  COH_BIN="$COH_BIN_EXPORT" expect admitted cherry-pick-assassin scripts/cm-attackers/cherry-pick-assassin.py
 
   rm -rf "$tools"
-  [ $status -eq 0 ] && echo "cm-admissibility: self-test pass (engine admitted; flatterer and path-gamer rejected)"
+  [ $status -eq 0 ] && echo "cm-admissibility: self-test pass (5-attacker matrix holds: basename-gamer and cherry-pick-assassin are the two measured admissions — held-out anchors and adjudication are their named closures)"
   return $status
 }
 

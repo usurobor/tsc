@@ -108,8 +108,14 @@ package skill
 		// promotes only when the mechanics change (registered challengers,
 		// revealed held-out anchors), never by prose.
 		standing?: {
-			scope:                 "house-authored-public-commons" | "blind-external-anchors"
-			admissibility:         "public-only" | "public-plus-heldout"
+			// Three rungs. house-authored-heldout-anchors is what
+			// commit-reveal mechanics can earn by themselves:
+			// UNMEMORIZABILITY (the anchor was fixed before the challenger
+			// registered), never externality — the label is still house
+			// judgment. blind-external-anchors additionally requires a
+			// non-house anchor AUTHOR, which is an institution, not code.
+			scope:                 "house-authored-public-commons" | "house-authored-heldout-anchors" | "blind-external-anchors"
+			admissibility:         "public-only" | "public-plus-house-heldout" | "public-plus-heldout"
 			heldout_status:        "none" | "registered-and-revealed"
 			external_anchor_count: int & >=0
 			llm_consistency_gate:  "reported-not-gating" | "passed" | "failed"

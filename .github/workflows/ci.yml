@@ -161,12 +161,17 @@ jobs:
       - name: Self-measurement smoke (mechanical + external witness route)
         run: ./scripts/ci/self-measure-smoke.sh
 
-      - name: CM admissibility self-test (trivial attacker must lose)
-        # Failure class guarded: the CM selection rule crowning
-        # self-flattery. Builds the degenerate all-1.0 scorer and fails
-        # the build if the commons ever admits it (or rejects the
-        # engine). skills/cm-of-cms/SKILL.md section 6.
+      - name: CM admissibility self-test (five-attacker matrix)
+        # Failure class guarded: the CM selection rule crowning a
+        # non-measurer. Asserts the exact matrix — engine admitted;
+        # flatterer, path-gamer, boilerplate-gamer rejected;
+        # basename-gamer and cherry-pick-assassin ADMITTED (the two
+        # named residuals: held-out anchors and adjudication are their
+        # closures). skills/cm-of-cms/SKILL.md section 6.
         run: ./scripts/cm-admissibility.sh --self-test
+
+      - name: Held-out anchor integrity (commitments vs reveals)
+        run: ./scripts/cm-heldout.sh verify
 
   forbidden-wording:
     # v0.10.0 cutover (#54 AC7): forward-only check that rejects newly-added

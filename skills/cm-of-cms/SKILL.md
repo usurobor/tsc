@@ -442,6 +442,40 @@ scores challenger C only if `reveal_commit(A)` postdates
 the registered digest. No steward exists for this repository yet — so
 no anchor is held-out yet, and every standing claim below says so.
 
+**Held-out anchors earn unmemorizability, not externality.** The
+commit-reveal machinery is executable
+([scripts/cm-heldout.sh](../../scripts/cm-heldout.sh)): an anchor is
+generated with salted vocabulary and salted *filenames*, sealed, and
+its sha256 commitment committed; challengers register (source digest +
+commit) ; the bundle is revealed later and may score only challengers
+whose registration predates the reveal, at their registered digest,
+under the predeclared loss. What that proves is tamper-evident
+ORDERING — no challenger could have memorized or tuned to the anchor.
+What it does not prove is that the label is right: a house-authored
+held-out anchor tests agreement with *the house's* judgment on an
+unseen case. So held-out-house standing is the middle rung
+(`house-authored-heldout-anchors`), and promotion to
+`blind-external-anchors` inherits the non-house-provenance requirement:
+the anchor's AUTHOR must be outside the house. That last step is not
+code — an external author or steward adds their commitment via PR.
+
+**The adjudicator is the least-code-solvable dependency.** The
+five-attacker matrix (run by the admissibility self-test in CI, every
+run) states exactly where authority still rests:
+
+| Attacker | Public gate | Closed by |
+|---|---|---|
+| trivial flatterer | rejected | negative controls |
+| path-gamer | rejected | blind staging |
+| boilerplate-gamer | rejected | evidence grounding (low-score evidence must quote the bundle) |
+| basename-gamer | **admitted** | held-out anchors (salted filenames — nothing to memorize) |
+| cherry-pick-assassin | **admitted** | adjudication only: evidence that exists but misleads cannot be caught by a grounding check, a hash, or a schema — it requires a credible judge (external steward or non-house quorum), which is a social artifact, not a script |
+
+The two admissions are asserted in CI so they stay measured instead of
+forgotten. Until a non-house adjudicator exists, the dispute layer's
+only available judges are the house and automated labels — which is
+the current state, said plainly, not a hypothetical.
+
 **Standing scope — the report says how far its standing reaches.**
 Every admissibility and consistency report carries a `standing_scope`
 so the fixed point can never sound stronger than its anchor base:
