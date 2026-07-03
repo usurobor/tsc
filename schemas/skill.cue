@@ -128,7 +128,7 @@ package skill
 		// commit mechanics.
 		ledger: {
 			path:         !=""
-			cadence:      "version-tags"
+			cadence:      "version-increments"
 			mode:         "mechanical"
 			script:       !=""
 			workflow_out: !=""

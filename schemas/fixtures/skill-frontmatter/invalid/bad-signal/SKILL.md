@@ -45,7 +45,7 @@ self_measure:
     workflow_out: .github/workflows/tsc-self-measure.yml
   ledger:
     path: .tsc/COHERENCE.md
-    cadence: version-tags
+    cadence: version-increments
     mode: mechanical
     script: scripts/coherence-ledger.sh
     workflow_out: .github/workflows/tsc-coherence-ledger.yml

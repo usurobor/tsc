@@ -128,7 +128,7 @@ self_measure:
     workflow_out: .github/workflows/tsc-self-measure.yml
   ledger:
     path: .tsc/COHERENCE.md
-    cadence: version-tags
+    cadence: version-increments
     mode: mechanical
     script: scripts/coherence-ledger.sh
     workflow_out: .github/workflows/tsc-coherence-ledger.yml
@@ -148,13 +148,15 @@ a model estimates.
 
 The declaration is executable.
 [scripts/render-self-measure.sh](../../scripts/render-self-measure.sh)
-renders the frontmatter above into two artifacts, both carrying
-DO-NOT-EDIT headers that point back here:
+renders the frontmatter above into three artifacts, each carrying a
+DO-NOT-EDIT header that points back here:
 
 - [scripts/coh-self](../../scripts/coh-self) — the local command. The
   engine dispatches `coh self` to it (git-style external subcommand).
 - [.github/workflows/tsc-self-measure.yml](../../.github/workflows/tsc-self-measure.yml)
-  — the CI surface.
+  — the CI measurement surface.
+- [.github/workflows/tsc-coherence-ledger.yml](../../.github/workflows/tsc-coherence-ledger.yml)
+  — the per-release ledger writer (§6).
 
 CI re-renders and diffs on every change, so the rendered artifacts cannot
 drift from this file. The frontmatter is validated against
@@ -382,8 +384,10 @@ when no credentials are configured, never degrading to mechanical.
 **The coherence ledger.** [`.tsc/COHERENCE.md`](../../.tsc/COHERENCE.md)
 carries one row per release — mechanical `coh self` numbers, so every
 row is reproducible without credentials. The rendered
-`tsc-coherence-ledger` workflow appends the row on every version-tag
-push (patch increments included) via
+`tsc-coherence-ledger` workflow appends the row on every version
+increment — a `VERSION`-bump push or a release-tag push, patch
+increments included (the tag is materialized from CI when it does not
+exist yet) — via
 [scripts/coherence-ledger.sh](../../scripts/coherence-ledger.sh);
 commits between releases do not write the ledger (per-run reports are CI
 artifacts instead). Historical rows were backfilled by measuring each

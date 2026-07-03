@@ -2,7 +2,7 @@
 # scripts/coherence-ledger.sh — maintain .tsc/COHERENCE.md, the per-release
 # coherence ledger (skills/self-measure/SKILL.md §6, ledger contract).
 #
-# One row per version tag, measured MECHANICALLY (deterministic,
+# One row per version increment, measured MECHANICALLY (deterministic,
 # credential-free) so every row is reproducible and comparable. The
 # instrument column records which engine binary measured the row: for the
 # release itself that is the release's own engine; for backfilled history
@@ -78,7 +78,8 @@ ledger_header() {
 
 One row per release: `coh self` in mechanical mode (deterministic,
 credential-free — every row reproducible). Maintained by the
-tsc-coherence-ledger workflow on version-tag push; historical rows were
+tsc-coherence-ledger workflow on version increments (VERSION-bump or
+release-tag push); historical rows were
 backfilled by measuring each tag's tree (its own `targets/registry.tsc`)
 with a single fixed engine, so the curve is comparable across releases.
 The instrument column names the engine that measured the row.

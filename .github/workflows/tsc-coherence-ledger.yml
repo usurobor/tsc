@@ -14,8 +14,18 @@ on:
     tags:
       - '[0-9]*'
       - 'v[0-9]*'
+    # A version increment is the VERSION-bump commit; the tag follows.
+    # Firing on the bump (and on this workflow's own installation) makes
+    # the ledger record patch increments even when the tag arrives later
+    # or from an environment that cannot push tags. The append is
+    # idempotent, so overlapping triggers are no-ops.
+    branches:
+      - '**'
+    paths:
+      - 'VERSION'
+      - '.github/workflows/tsc-coherence-ledger.yml'
   # Manual path: record (and, if missing, create) a release tag's row —
-  # for recovery, backfill, and environments that cannot push tags.
+  # for recovery and backfill.
   workflow_dispatch:
     inputs:
       version:
@@ -57,13 +67,19 @@ jobs:
       - name: Append ledger row and push
         run: |
           set -euo pipefail
-          version="${{ github.event.inputs.version || github.ref_name }}"
+          # Version resolution: explicit input > tag name > VERSION file.
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            version="${{ github.event.inputs.version }}"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            version="${{ github.ref_name }}"
+          else
+            version="$(tr -d '[:space:]' < VERSION)"
+          fi
           version="${version#v}"
-          # Dispatch path: materialize the tag if it does not exist yet.
-          # (A token-pushed tag deliberately does not cascade into other
+          # Materialize the release tag if it does not exist yet. (A
+          # token-pushed tag deliberately does not cascade into other
           # workflows; releases are cut by pushing the tag directly.)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] \
-             && ! git rev-parse -q --verify "refs/tags/$version" >/dev/null \
+          if ! git rev-parse -q --verify "refs/tags/$version" >/dev/null \
              && ! git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
             git tag "$version" "$GITHUB_SHA"
             git push origin "refs/tags/$version"
