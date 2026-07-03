@@ -12,6 +12,22 @@
       --target <name> --registry <path>    named target (any mode); repeatable
       --files <glob>  [--files <glob>...]  direct file input (mechanical / hybrid)
 
+    Self-measurement (skills/self-measure/SKILL.md):
+      coh self [...]           dispatches to the rendered [coh-self] command
+                               (git-style external subcommand; the procedure
+                               is declared by the skill, not by this binary)
+
+    External provider route (skills/self-measure/SKILL.md §LLM contract):
+      --emit-prompt <path>     write the exact LLM prompt (instruction +
+                               target metadata + file bundle) to <path> and
+                               exit; no provider call is made
+      --llm-response <path>    in llm / hybrid modes, read the provider
+                               response from <path> instead of calling the
+                               provider over HTTP. Validation is identical
+                               to the HTTP route (strict v3.2 delta
+                               validation; failure = no report, no
+                               mechanical fallback)
+
     Cross-target (Operational §7.4):
       When [--target] is provided two or more times, the engine emits a
       cross-target report (`kind = cross_target_report`) whose top-level
@@ -193,12 +209,42 @@ type cli_args = {
   cli_output_dir : string;
   cli_files      : string list;  (* globs for direct file input *)
   cli_kata       : string;       (* "" when not using --kata *)
+  cli_emit_prompt  : string;     (* "" when not emitting the LLM prompt *)
+  cli_llm_response : string;     (* "" when using the HTTP provider route *)
 }
 
 let () =
   if Array.length Sys.argv = 2 && Sys.argv.(1) = "--version" then begin
     Printf.printf "coh %s (%s)\n" Build_version.version Build_commit.commit;
     exit 0
+  end
+
+(* `coh self` — git-style external-subcommand dispatch.
+
+   The self-measurement procedure is declared by
+   skills/self-measure/SKILL.md and rendered into the [coh-self]
+   executable by scripts/render-self-measure.sh. The engine stays
+   generic (measure any target); the skill owns what "self" means.
+   Resolution order: sibling of this binary, then PATH. *)
+let () =
+  if Array.length Sys.argv >= 2 && Sys.argv.(1) = "self" then begin
+    let rest = Array.sub Sys.argv 2 (Array.length Sys.argv - 2) in
+    let argv cmd = Array.append [| cmd |] rest in
+    let sibling =
+      Filename.concat (Filename.dirname Sys.executable_name) "coh-self"
+    in
+    (try
+       if Sys.file_exists sibling then Unix.execv sibling (argv sibling)
+       else Unix.execvp "coh-self" (argv "coh-self")
+     with Unix.Unix_error _ ->
+       Printf.eprintf
+         "coh self: cannot find 'coh-self' (sibling of %s or on PATH).\n\
+          The self-measurement command is rendered from \
+          skills/self-measure/SKILL.md;\n\
+          run scripts/render-self-measure.sh and install scripts/coh-self \
+          next to coh.\n"
+         Sys.executable_name;
+       exit 127)
   end
 
 let parse_args () =
@@ -210,6 +256,8 @@ let parse_args () =
   let output_dir = ref ".tsc" in
   let files     = ref [] in
   let kata      = ref "" in
+  let emit_prompt  = ref "" in
+  let llm_response = ref "" in
   let specs = [
     ("--mode",        Arg.Set_string mode_s,
      "Scoring mode: mechanical | llm | hybrid | auto (default: auto)");
@@ -228,9 +276,15 @@ let parse_args () =
      "Repository root directory (default: .)");
     ("--output",      Arg.Set_string output_dir,
      "Output directory for reports (default: .tsc)");
+    ("--emit-prompt", Arg.Set_string emit_prompt,
+     "Write the exact LLM prompt for the resolved bundle to <path> and \
+      exit (no provider call)");
+    ("--llm-response", Arg.Set_string llm_response,
+     "Read the LLM response from <path> instead of calling the provider \
+      (llm / hybrid modes; external provider route)");
   ] in
   let usage =
-    "coh --mode <mode> [--kata <id> | --target <name> [--target <name>...] | \
+    "coh [self] --mode <mode> [--kata <id> | --target <name> [--target <name>...] | \
      --files <glob>...] [options]"
   in
   Arg.parse specs (fun _ -> ()) usage;
@@ -245,6 +299,14 @@ let parse_args () =
     Arg.usage specs usage;
     exit 1
   end;
+  if !emit_prompt <> "" && !llm_response <> "" then begin
+    Printf.eprintf "Error: --emit-prompt and --llm-response are mutually exclusive\n";
+    exit 1
+  end;
+  if !llm_response <> "" && parse_mode !mode_s = Some Mechanical then begin
+    Printf.eprintf "Error: --llm-response requires --mode llm or --mode hybrid\n";
+    exit 1
+  end;
   { cli_mode        = mode;
     cli_targets     = List.rev !targets;
     cli_registry    = !registry;
@@ -252,7 +314,9 @@ let parse_args () =
     cli_root        = !root;
     cli_output_dir  = !output_dir;
     cli_files       = List.rev !files;
-    cli_kata        = !kata }
+    cli_kata        = !kata;
+    cli_emit_prompt  = !emit_prompt;
+    cli_llm_response = !llm_response }
 
 (* ------------------------------------------------------------------ *)
 (* Bundle builders *)
@@ -346,6 +410,50 @@ let write_validation_failure_artifact
 (* ------------------------------------------------------------------ *)
 (* Mode execution *)
 
+(** Obtain the raw LLM response plus (provider, model) labels.
+
+    Two routes (skills/self-measure/SKILL.md §LLM contract):
+    - HTTP route (default): engine calls the configured provider.
+    - External route (--llm-response): the response was produced out of
+      band (e.g. by the Claude CLI step of the rendered self-measurement
+      workflow); the engine reads it from disk. Provider/model labels
+      come from LLM_PROVIDER / LLM_MODEL when set, else "external".
+
+    Both routes feed the identical validation pipeline downstream. *)
+let obtain_llm_response ~args ~system_msg ~user_msg =
+  if args.cli_llm_response <> "" then begin
+    Printf.eprintf "Reading LLM response from %s (external provider route)...\n%!"
+      args.cli_llm_response;
+    let raw =
+      match read_file args.cli_llm_response with
+      | Error e -> Printf.eprintf "Error: %s\n" e; exit 1
+      | Ok r -> r
+    in
+    let getenv_label name =
+      match Sys.getenv_opt name with
+      | Some v when String.trim v <> "" -> v
+      | _ -> "external"
+    in
+    (raw, getenv_label "LLM_PROVIDER", getenv_label "LLM_MODEL")
+  end else begin
+    let env_file = Filename.concat args.cli_root ".tsc/.env" in
+    let n = Dotenv.load env_file in
+    if n > 0 then Printf.eprintf "Loaded %d variable(s) from %s\n%!" n env_file;
+    Printf.eprintf "Loading provider configuration...\n%!";
+    let config =
+      match Provider.config_from_env () with
+      | Error e -> Printf.eprintf "Error: %s\n" e; exit 1
+      | Ok c -> c
+    in
+    Printf.eprintf "Calling %s/%s...\n%!" config.provider_name config.provider_model;
+    let raw =
+      match Provider.call_provider ~config ~system_message:system_msg ~user_message:user_msg with
+      | Error e -> Printf.eprintf "Error calling provider: %s\n" e; exit 1
+      | Ok r -> r
+    in
+    (raw, config.provider_name, config.provider_model)
+  end
+
 let run_mechanical ~args ~bundle ~ts =
   Printf.eprintf "Running mechanical scoring...\n%!";
   let result = Mechanical_scoring.score_bundle bundle in
@@ -366,20 +474,8 @@ let run_llm ~args ~bundle ~ts =
   in
   let system_msg = Prompt.build_system_message ~instruction in
   let user_msg   = Prompt.build_user_message   ~bundle in
-  let env_file   = Filename.concat args.cli_root ".tsc/.env" in
-  let n = Dotenv.load env_file in
-  if n > 0 then Printf.eprintf "Loaded %d variable(s) from %s\n%!" n env_file;
-  Printf.eprintf "Loading provider configuration...\n%!";
-  let config =
-    match Provider.config_from_env () with
-    | Error e -> Printf.eprintf "Error: %s\n" e; exit 1
-    | Ok c -> c
-  in
-  Printf.eprintf "Calling %s/%s...\n%!" config.provider_name config.provider_model;
-  let raw_response =
-    match Provider.call_provider ~config ~system_message:system_msg ~user_message:user_msg with
-    | Error e -> Printf.eprintf "Error calling provider: %s\n" e; exit 1
-    | Ok r -> r
+  let raw_response, provider_name, provider_model =
+    obtain_llm_response ~args ~system_msg ~user_msg
   in
   Printf.eprintf "Validating response...\n%!";
   (* Raw response is always preserved on disk, regardless of validation
@@ -394,8 +490,8 @@ let run_llm ~args ~bundle ~ts =
     meta_file_hashes =
       List.map (fun f -> (f.file_path, f.file_hash)) bundle.bundle_files;
     meta_prompt_version = "SELF-MEASURE/1.0";
-    meta_provider = config.provider_name;
-    meta_model    = config.provider_model;
+    meta_provider = provider_name;
+    meta_model    = provider_model;
     meta_timestamp = ts;
   } in
   match Response_schema.parse_json raw_response with
@@ -457,20 +553,8 @@ let run_hybrid ~args ~bundle ~ts =
   in
   let system_msg = Prompt.build_system_message ~instruction in
   let user_msg   = Prompt.build_user_message   ~bundle in
-  let env_file   = Filename.concat args.cli_root ".tsc/.env" in
-  let n = Dotenv.load env_file in
-  if n > 0 then Printf.eprintf "Loaded %d variable(s) from %s\n%!" n env_file;
-  Printf.eprintf "Loading provider configuration...\n%!";
-  let config =
-    match Provider.config_from_env () with
-    | Error e -> Printf.eprintf "Error: %s\n" e; exit 1
-    | Ok c -> c
-  in
-  Printf.eprintf "Calling %s/%s...\n%!" config.provider_name config.provider_model;
-  let raw_response =
-    match Provider.call_provider ~config ~system_message:system_msg ~user_message:user_msg with
-    | Error e -> Printf.eprintf "Error calling provider: %s\n" e; exit 1
-    | Ok r -> r
+  let raw_response, _provider_name, _provider_model =
+    obtain_llm_response ~args ~system_msg ~user_msg
   in
   Printf.eprintf "Validating LLM response...\n%!";
   (* Raw response is always preserved on disk, regardless of validation
@@ -766,7 +850,13 @@ let () =
      never falls back to mechanical scoring. *)
   let effective_mode = match args.cli_mode with
     | Auto ->
-      if Tsc_engine.Credentials.has_llm_credentials () then begin
+      if args.cli_llm_response <> "" then begin
+        (* External provider route: a pre-produced response stands in
+           for credentials — auto resolves to hybrid. *)
+        Printf.eprintf "Auto mode: --llm-response supplied — running hybrid.\n%!";
+        Hybrid
+      end
+      else if Tsc_engine.Credentials.has_llm_credentials () then begin
         Printf.eprintf "Auto mode: credentials found — running hybrid.\n%!";
         Hybrid
       end else begin
@@ -779,6 +869,12 @@ let () =
   (* Cross-target (Operational §7.4): two or more --target flags.
      Mechanical-only for this cycle; reject LLM / Hybrid explicitly. *)
   let n_targets = List.length args.cli_targets in
+  if n_targets >= 2 && (args.cli_emit_prompt <> "" || args.cli_llm_response <> "") then begin
+    Printf.eprintf
+      "Error: --emit-prompt / --llm-response take a single --target \
+       (cross-target is mechanical-only); run each target separately.\n";
+    exit 1
+  end;
   if n_targets >= 2 then begin
     (match effective_mode with
      | Mechanical -> ()
@@ -815,6 +911,25 @@ let () =
     else
       build_bundle_from_files ~root ~globs:args.cli_files
   in
+
+  (* --emit-prompt: write the exact LLM prompt for this bundle and exit.
+     This is the deterministic half of the external provider route — the
+     emitted file is byte-identical to what the HTTP route would send
+     (instruction + target metadata + hashed file bundle). *)
+  if args.cli_emit_prompt <> "" then begin
+    let instruction =
+      match read_file (Filename.concat args.cli_root args.cli_instruction) with
+      | Error e -> Printf.eprintf "Error: %s\n" e; exit 1
+      | Ok content -> content
+    in
+    let prompt = Prompt.build_prompt ~instruction ~bundle in
+    write_file args.cli_emit_prompt prompt;
+    Printf.printf "Done. LLM prompt (%d files, %d bytes): %s\n"
+      (List.length bundle.bundle_files)
+      (String.length prompt)
+      args.cli_emit_prompt;
+    exit 0
+  end;
 
   (* Dispatch *)
   match effective_mode with

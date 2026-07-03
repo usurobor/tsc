@@ -1,0 +1,187 @@
+# DO NOT EDIT. Rendered by `scripts/render-self-measure.sh` from:
+#   source: skills/self-measure/SKILL.md
+# Schema:  tsc.self-measure.v1 (schemas/skill.cue #SelfMeasure)
+#
+# Authority split: the skill owns the measurement contract (targets,
+# modes, LLM delegation + constraints); this renderer owns substrate
+# encoding (triggers / permissions / action versions / secret-name
+# bindings / step layout). Edit the skill, re-render, commit both.
+
+name: tsc-self-measure
+
+on:
+  pull_request:
+    paths:
+      - 'spec/**'
+      - 'engine/ocaml/**'
+      - 'targets/**'
+      - 'runtime/**'
+      - 'skills/**'
+  push:
+    branches: [main]
+    paths:
+      - 'spec/**'
+      - 'engine/ocaml/**'
+      - 'targets/**'
+      - 'runtime/**'
+      - 'skills/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Fully mechanical: deterministic structural scoring. No credentials,
+  # no gate, no LLM. skills/self-measure/SKILL.md section 3.
+  mechanical:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+
+      - name: Self-measure (mechanical, all targets + cross-target)
+        run: |
+          export PATH="$PWD/engine/ocaml/_build/default/bin:$PATH"
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --mode mechanical --output .tsc/self
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Self-measurement (mechanical)" >> $GITHUB_STEP_SUMMARY
+          for f in .tsc/self/*.json; do
+            [ -f "$f" ] || continue
+            echo "### $(basename "$f")" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            python3 -m json.tool "$f" >> $GITHUB_STEP_SUMMARY 2>/dev/null || cat "$f" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsc-self-mechanical-${{ github.sha }}
+          path: .tsc/self/
+          retention-days: 90
+          if-no-files-found: ignore
+
+  # LLM witness: the single delegated cognitive step, run per target via
+  # the Claude CLI, gated by the TSC_LLM_ENABLED repo variable. The engine
+  # emits the exact prompt, the model estimates deltas/components/evidence,
+  # the engine validates and renders the hybrid report.
+  # skills/self-measure/SKILL.md sections 4-5.
+  llm-witness:
+    if: ${{ vars.TSC_LLM_ENABLED == 'true' }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [spec, engine, repo]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+
+      - name: Emit witness prompt (deterministic)
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --emit-prompt ${{ matrix.target }} --output .tsc/self
+
+      - name: Estimate deltas and evidence (LLM witness — Claude CLI)
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: "--max-turns 16"
+          settings: |
+            {
+              "permissions": {
+                "allow": [
+                  "Read(.tsc/self/prompt/**)",
+                  "Write(.tsc/self/response/**)"
+                ]
+              }
+            }
+          prompt: |
+            You are the LLM witness step of TSC self-measurement, rendered from
+            skills/self-measure/SKILL.md. Your entire task:
+
+            1. Read the file .tsc/self/prompt/${{ matrix.target }}.md. It contains the
+               canonical scoring instruction (runtime/SELF-MEASURE.md) followed
+               by the ${{ matrix.target }} target bundle. Follow that instruction exactly.
+            2. Write your answer — the single JSON object the instruction
+               requires, with no markdown fences and no prose around it — to
+               .tsc/self/response/${{ matrix.target }}.json.
+
+            Constraints (your tool permissions also enforce them):
+            - Do not read any file other than .tsc/self/prompt/${{ matrix.target }}.md.
+            - Do not write any file other than .tsc/self/response/${{ matrix.target }}.json.
+            - Do not compute Coh or C_sigma values; report the delta and
+              component estimates the instruction asks for. The engine applies
+              the barrier transform and aggregation deterministically after
+              validating your output, and rejects the response if any required
+              delta field is missing or out of range.
+
+      - name: Validate and ingest witness response (deterministic)
+        env:
+          LLM_PROVIDER: claude-cli
+          LLM_MODEL: claude-code-action
+        run: |
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coh-self --ingest ${{ matrix.target }} --output .tsc/self
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Self-measurement (hybrid, ${{ matrix.target }})" >> $GITHUB_STEP_SUMMARY
+          for f in .tsc/self/*.json; do
+            [ -f "$f" ] || continue
+            echo "### $(basename "$f")" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            python3 -m json.tool "$f" >> $GITHUB_STEP_SUMMARY 2>/dev/null || cat "$f" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsc-self-llm-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            .tsc/self/
+            !.tsc/self/prompt/
+          retention-days: 90
+          if-no-files-found: ignore

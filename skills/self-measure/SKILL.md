@@ -1,0 +1,371 @@
+---
+name: self-measure
+description: >-
+  How TSC measures itself. Declares the full self-measurement procedure —
+  the targets, the deterministic (mechanical) work, and the one narrowly
+  scoped cognitive task delegated to an LLM — and is rendered into the
+  `coh self` command and the tsc-self-measure workflow by
+  scripts/render-self-measure.sh. Frontmatter is validated by
+  schemas/skill.cue (#SelfMeasure); the declared signal codes and estimate
+  fields are cross-checked against the engine source and the scoring
+  instruction, so this declaration cannot silently drift from what runs.
+governing_question: >-
+  When TSC measures itself, which parts of the measurement are
+  deterministic machine work, and exactly what cognitive work is delegated
+  to an LLM, under what constraints?
+artifact_class: measurement
+scope: repo
+kata_surface: none
+triggers:
+  - coh self
+  - self-measure
+  - self-measurement
+  - tsc self-coherence
+inputs:
+  - "targets/registry.tsc (named targets: spec, engine, repo)"
+  - "runtime/SELF-MEASURE.md (canonical LLM scoring instruction)"
+  - "LLM credentials or an external witness response (optional — hybrid/llm modes only)"
+outputs:
+  - ".tsc/self/ — per-target reports (mechanical, llm, or hybrid) + cross-target report"
+  - "validation-failure artifacts when an LLM response fails the v3.2 contract"
+visibility: public
+self_measure:
+  command: coh-self
+  registry: targets/registry.tsc
+  targets:
+    - spec
+    - engine
+    - repo
+  cross_target: true
+  instruction: runtime/SELF-MEASURE.md
+  output_root: .tsc/self
+  default_mode: auto
+  mechanical:
+    backend: engine/ocaml/lib/mechanical_scoring.ml
+    determinism: >-
+      identical bundle + config -> identical result; no LLM, no network
+      I/O, no semantic parsing of file contents
+    signals:
+      alpha:
+        - alpha.terminology_consistency
+        - alpha.repeated_structure
+        - alpha.duplicate_definition_tension
+        - alpha.naming_drift
+      beta:
+        - beta.cross_reference_consistency
+        - beta.authority_alignment
+        - beta.source_of_truth_alignment
+        - beta.target_file_fit
+      gamma:
+        - gamma.canonical_generated_distinction
+        - gamma.version_surface_consistency
+        - gamma.traceability_presence
+        - gamma.authority_evolution_consistency
+  llm:
+    estimates:
+      - target
+      - alpha
+      - beta
+      - gamma
+      - delta_alpha_beta
+      - delta_beta_gamma
+      - delta_gamma_alpha
+      - bottleneck_axis
+      - confidence
+      - summary
+      - axis_evidence
+      - unresolved_ambiguity
+      - next_fixes
+    must_not:
+      - >-
+        compute Coh or C_sigma values — the engine applies the barrier
+        transform phi(delta) = delta/(1-delta) and the aggregate forms
+        deterministically after validation
+      - >-
+        read anything beyond the emitted prompt (instruction + hashed
+        file bundle)
+      - >-
+        write anything beyond its single JSON response artifact
+      - >-
+        output anything except the JSON object required by the scoring
+        instruction's output contract
+    validation: >-
+      engine/ocaml/lib/response_schema.ml — strict v3.2 delta validation;
+      a missing or out-of-range delta field produces a durable
+      validation-failure artifact, no coherence report, and no mechanical
+      fallback
+    providers:
+      local: >-
+        engine HTTP route — LLM_PROVIDER / LLM_MODEL / LLM_API_KEY
+        (docs/beta/guides/OPERATOR-MANUAL.md section 3)
+      ci: >-
+        claude-cli — an anthropics/claude-code-action step in the rendered
+        workflow, permitted only to read the emitted prompt and write the
+        response JSON; the engine ingests the response via --llm-response
+    ci_prompt: |
+      You are the LLM witness step of TSC self-measurement, rendered from
+      skills/self-measure/SKILL.md. Your entire task:
+
+      1. Read the file .tsc/self/prompt/{target}.md. It contains the
+         canonical scoring instruction (runtime/SELF-MEASURE.md) followed
+         by the {target} target bundle. Follow that instruction exactly.
+      2. Write your answer — the single JSON object the instruction
+         requires, with no markdown fences and no prose around it — to
+         .tsc/self/response/{target}.json.
+
+      Constraints (your tool permissions also enforce them):
+      - Do not read any file other than .tsc/self/prompt/{target}.md.
+      - Do not write any file other than .tsc/self/response/{target}.json.
+      - Do not compute Coh or C_sigma values; report the delta and
+        component estimates the instruction asks for. The engine applies
+        the barrier transform and aggregation deterministically after
+        validating your output, and rejects the response if any required
+        delta field is missing or out of range.
+  render:
+    command_out: scripts/coh-self
+    workflow_out: .github/workflows/tsc-self-measure.yml
+  ci:
+    llm_gate_variable: TSC_LLM_ENABLED
+    llm_secret: CLAUDE_CODE_OAUTH_TOKEN
+    permission_intent:
+      - contents.read
+---
+
+# Self-measurement
+
+TSC measures whether three descriptions of a system still describe one
+system. This skill declares how TSC turns that instrument on itself — and
+draws the exact line between the parts a machine computes and the one part
+a model estimates.
+
+The declaration is executable. `scripts/render-self-measure.sh` renders the
+frontmatter above into two artifacts, both carrying DO-NOT-EDIT headers
+that point back here:
+
+- `scripts/coh-self` — the local command. The engine dispatches `coh self`
+  to it (git-style external subcommand).
+- `.github/workflows/tsc-self-measure.yml` — the CI surface.
+
+CI re-renders and diffs on every change, so the rendered artifacts cannot
+drift from this file. The frontmatter is validated against
+`schemas/skill.cue` (`#SelfMeasure`), and the validator additionally checks
+that every declared mechanical signal code exists in the engine source and
+every declared LLM estimate field exists in the scoring instruction's
+output contract. What you read here is what runs.
+
+---
+
+## 1. What is measured
+
+Three named targets from `targets/registry.tsc`:
+
+| Target | Kind | Corpus |
+|--------|------|--------|
+| `spec` | theory | `spec/**/*.md` — the canonical theory |
+| `engine` | implementation | `engine/ocaml/**` — the verifier |
+| `repo` | aggregate | `spec` + `engine` + integration surfaces (README, ARCHITECTURE, targets, scoring instruction) |
+
+Each target is resolved into a deterministic bundle: ordered files, raw
+text, SHA-256 per file. Bundles are built the same way in every mode.
+A mechanical cross-target report (geometric mean over per-target
+aggregates, `spec/tsc-oper.md` §7.4) covers all three.
+
+Reports land in `.tsc/self/`. Generated state is never canonical
+(ARCHITECTURE.md); the directory is gitignored.
+
+---
+
+## 2. The split
+
+One table. Everything TSC self-measurement does, and who does it.
+
+| # | Step | Owner | Where |
+|---|------|-------|-------|
+| 1 | Resolve targets, expand globs, order files | mechanical | `target_registry.ml` |
+| 2 | Build bundle: raw text + SHA-256 hashes | mechanical | `bundle.ml` |
+| 3 | Score 12 structural signals per axis | mechanical | `mechanical_scoring.ml` |
+| 4 | Assemble the LLM prompt (instruction + metadata + bundle) | mechanical | `prompt.ml` |
+| 5 | **Estimate δ per axis pair + component scores + cite evidence** | **LLM** | `runtime/SELF-MEASURE.md` |
+| 6 | Validate the LLM response (strict v3.2 delta contract) | mechanical | `response_schema.ml` |
+| 7 | Barrier transform φ(δ) = δ/(1−δ), Coh = exp(−λ·φ(δ)) | mechanical | `coherence.ml` |
+| 8 | Aggregate C_Σ^math / C_Σ^num (geometric forms, ε-floor) | mechanical | `coherence.ml` |
+| 9 | Bottleneck rule, provenance, report emission | mechanical | `report.ml`, `hybrid_scoring.ml` |
+| 10 | Cross-target aggregate | mechanical | `cross_target.ml` |
+| 11 | CI gating, artifact upload, summaries | mechanical | rendered workflow |
+
+Step 5 is the only cognitive step. In `mechanical` mode it is skipped
+entirely and the run is credential-free and offline. In `llm` / `hybrid`
+modes it is delegated to a model under the constraints in §4.
+
+This is the dumb-models boundary (cnos,
+`docs/papers/DUMB-MODELS-SMART-CELLS.md`): the model is a witness, not an
+authority. It produces estimates for the engine; the engine validates,
+transforms, aggregates, and decides. Capability is rented; authority is
+owned.
+
+---
+
+## 3. Mechanical mode
+
+`coh self --mode mechanical` — deterministic, credential-free, offline.
+
+The mechanical backend scores structural proxies for the three axes.
+Twelve signals, four per axis:
+
+**α — pattern coherence** (stable internal structure)
+
+- `alpha.terminology_consistency` — key terms used consistently across files
+- `alpha.repeated_structure` — recurring structural conventions
+- `alpha.duplicate_definition_tension` — same thing defined twice, differently
+- `alpha.naming_drift` — one concept, several spellings
+
+**β — relational coherence** (the parts fit together)
+
+- `beta.cross_reference_consistency` — internal references resolve
+- `beta.authority_alignment` — authority claims match declared roles
+- `beta.source_of_truth_alignment` — repeated facts agree
+- `beta.target_file_fit` — the manifest matches what the bundle contains
+
+**γ — process coherence** (survives change)
+
+- `gamma.canonical_generated_distinction` — canonical vs generated is explicit
+- `gamma.version_surface_consistency` — version claims agree
+- `gamma.traceability_presence` — changes can be traced
+- `gamma.authority_evolution_consistency` — future change paths are owned
+
+Each signal carries its evidence into the report. Axis scores feed the
+canonical aggregate (§5 of `spec/tsc-core.md`): C_Σ^math is the strict
+geometric mean (zero if any axis is zero), C_Σ^num the ε-floored numerical
+form (ε = 10⁻⁵) that carries verdicts. No flat aggregate field exists;
+readers consult `provenance.aggregate_numeric.C_sigma_num`.
+
+Guarantee (from `mechanical_scoring.mli`): identical bundle + config →
+identical result. No LLM, no network, no semantic parsing. Mechanical
+scores are structural proxies — well-formatted incoherence can fool them
+(kata 05 documents this). That ceiling is why the LLM witness exists.
+
+---
+
+## 4. The LLM witness
+
+The delegated task, in full: given the prompt from step 4 (the scoring
+instruction `runtime/SELF-MEASURE.md` + the hashed bundle), estimate
+
+- `delta_alpha_beta`, `delta_beta_gamma`, `delta_gamma_alpha` — normalized
+  discrepancy δ ∈ [0,1] per axis pair (`spec/tsc-core.md` §3.1),
+- `alpha`, `beta`, `gamma` — component scores s_α, s_β, s_γ ∈ [0,1],
+- `bottleneck_axis`, `confidence`, `summary`,
+- `axis_evidence` — strongest positive and negative evidence per axis,
+  cited from the bundle,
+- `unresolved_ambiguity`, `next_fixes`,
+
+and return them as one JSON object. Nothing else.
+
+The model must not:
+
+- **compute Coh or C_Σ** — it reports δ; the engine applies
+  φ(δ) = δ/(1−δ) and Coh = exp(−λ·φ(δ)) deterministically. A response
+  that carries computed coherence in place of the required δ fields fails
+  validation.
+- **see anything beyond the bundle** — no repo access, no outside
+  knowledge, no inferred missing files.
+- **produce anything beyond the JSON** — no prose, no fences.
+
+Validation is unconditional: `response_schema.ml` enforces the full
+response contract, including strict v3.2 delta validation. On failure the
+engine writes a durable validation-failure artifact, preserves the raw
+response, renders **no** report, and does **not** fall back to mechanical
+scoring. A refused witness is a recorded fact, not a silent downgrade.
+
+`hybrid` mode runs both backends on the same bundle and preserves both
+results; the `final` sub-object names which backend authored the
+adjudication (`llm`, `mechanical`, or `agreement`).
+
+---
+
+## 5. Provider routes
+
+The witness reaches a model over one of two routes. Both feed the same
+validation pipeline; the route is recorded in report metadata.
+
+**Local (HTTP).** The engine calls the configured provider directly:
+`LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY` (operator manual §3).
+
+```bash
+coh self               # auto: hybrid with credentials, mechanical without
+coh self --mode hybrid # explicit
+```
+
+**CI (claude-cli).** No raw API key in CI. The rendered workflow splits
+the route into three explicit steps per target:
+
+1. `coh-self --emit-prompt <target>` — the engine writes the exact prompt
+   (byte-identical to what the HTTP route would send) to
+   `.tsc/self/prompt/<target>.md`.
+2. A Claude CLI step (`anthropics/claude-code-action`) runs the
+   `ci_prompt` declared in this skill's frontmatter, with tool permissions
+   reduced to reading that prompt file and writing
+   `.tsc/self/response/<target>.json`.
+3. `coh-self --ingest <target>` — the engine reads the response via
+   `coh --llm-response`, validates it, and renders the hybrid report.
+
+The model performs step 2 only. If it writes anything malformed, step 3
+refuses it.
+
+---
+
+## 6. Running it
+
+```bash
+# Local, no credentials — mechanical reports + cross-target aggregate
+coh self --mode mechanical
+
+# Local, with credentials — hybrid per-target + mechanical cross-target
+coh self
+
+# Individual pieces (what the workflow runs)
+coh-self --emit-prompt spec
+coh-self --ingest spec
+```
+
+In CI (`tsc-self-measure.yml`):
+
+- **mechanical job** — always runs on changes to `spec/`, `engine/ocaml/`,
+  `targets/`, `runtime/`, `skills/`. No secrets, no gate.
+- **llm-witness job** — runs only when the repo variable
+  `TSC_LLM_ENABLED` is `'true'` and the `CLAUDE_CODE_OAUTH_TOKEN` secret
+  is configured. One matrix job per target.
+
+Both jobs upload their `.tsc/self/` reports as artifacts and write a
+step-summary table.
+
+---
+
+## 7. Reading a report
+
+Every report carries `alpha`, `beta`, `gamma`, `bottleneck_axis`, and a
+`provenance` object with both aggregate forms. The verdict-bearing number
+is `provenance.aggregate_numeric.C_sigma_num`. Hybrid reports add
+`mechanical`, `llm`, and `final` sub-objects — compare them to see where
+structural proxies and semantic judgment disagree.
+
+The bottleneck is not averaged away: the lowest axis names the constraint,
+and `next_fixes` (LLM modes) names the repair direction per axis.
+
+Coherence is not quality. A high C_Σ means the three descriptions still
+describe one system — nothing more.
+
+---
+
+## 8. Failure modes
+
+- **Rendered artifacts edited by hand.** CI re-renders and diffs; the
+  build fails. Edit this skill, re-render, commit both.
+- **Skill drifts from engine.** A signal code declared here but absent
+  from `mechanical_scoring.ml` (or an estimate field absent from
+  `runtime/SELF-MEASURE.md`) fails `scripts/ci/validate-skill-frontmatter.sh`.
+- **Witness response invalid.** Validation-failure artifact, no report,
+  no fallback — by design. Fix the route or the model, re-run.
+- **LLM job silently skipped.** The gate is a repo variable; when unset,
+  the job does not run and only mechanical reports exist. Absence of a
+  hybrid report is visible, not masked.

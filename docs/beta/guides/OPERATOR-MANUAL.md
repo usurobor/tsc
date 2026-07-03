@@ -129,7 +129,7 @@ coh \
   --target repo \
   --registry targets/registry.tsc \
   --instruction runtime/SELF-MEASURE.md \
-  --output .tsc/repo-report.json
+  --output .tsc
 ```
 
 ### CLI arguments
@@ -140,6 +140,23 @@ coh \
 | `--registry` | Yes | Path to `targets/registry.tsc` |
 | `--instruction` | Yes | Path to the scoring instruction (`runtime/SELF-MEASURE.md`) |
 | `--output` | Yes | Path for the JSON report |
+| `--emit-prompt` | No | Write the exact LLM prompt (instruction + hashed bundle) to the given path and exit; no provider call |
+| `--llm-response` | No | Read the LLM response from the given path instead of calling the provider (llm/hybrid; the external witness route) |
+
+### Self-measurement (`coh self`)
+
+`coh self` measures this repository against its own targets. The engine
+dispatches it (git-style external subcommand) to the `coh-self` command,
+which is rendered from [skills/self-measure/SKILL.md](../../../skills/self-measure/SKILL.md) —
+read that skill for the full procedure, including exactly which steps are
+mechanical and which single step is delegated to an LLM.
+
+```bash
+coh self --mode mechanical   # deterministic, no credentials
+coh self                     # auto: hybrid with credentials, mechanical without
+coh-self --emit-prompt spec  # external witness route, deterministic half
+coh-self --ingest spec       # validate + ingest a witness response
+```
 
 ### Available targets
 
@@ -154,10 +171,11 @@ Targets are declared in `targets/*.tsc` and registered in `targets/registry.tsc`
 ### Using make
 
 ```bash
-make measure    # runs the repo target, writes to .tsc/repo-report.json
+make measure    # coh self: all targets + cross-target, into .tsc/self/
 ```
 
-Requires `LLM_PROVIDER`, `LLM_MODEL`, and `LLM_API_KEY` to be set.
+Runs in auto mode: hybrid when `LLM_PROVIDER`, `LLM_MODEL`, and
+`LLM_API_KEY` are set, mechanical otherwise.
 
 ---
 

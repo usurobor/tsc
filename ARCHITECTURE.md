@@ -122,6 +122,29 @@ Hybrid reports add `mechanical`, `llm`, and `final` sub-objects. The schema fixt
 
 The engine does not parse Markdown semantically. Files are raw text.
 
+## Self-measurement
+
+TSC turned on itself is a declared, rendered surface — not ad-hoc CI glue.
+
+- **Declaration:** `skills/self-measure/SKILL.md`. Frontmatter is the typed
+  machine contract (`schemas/skill.cue`, `#SelfMeasure`); the body is the
+  human-readable authority on which steps are mechanical and exactly what
+  cognitive work the LLM witness performs, under what constraints.
+- **Renderer:** `scripts/render-self-measure.sh` materializes the skill
+  into `scripts/coh-self` (the command `coh self` dispatches to) and
+  `.github/workflows/tsc-self-measure.yml`. Both carry DO-NOT-EDIT headers;
+  CI re-renders and fails on drift.
+- **Split:** every step is mechanical except one — estimating the pairwise
+  discrepancies δ, component scores, and cited evidence per
+  `runtime/SELF-MEASURE.md`. The engine emits the exact prompt
+  (`--emit-prompt`), validates the witness response, and ingests it
+  (`--llm-response`) — so in CI the witness runs as a tool-restricted
+  Claude CLI step with no raw API key, and the engine keeps authority over
+  validation, the barrier transform, and aggregation.
+- **Proof:** `scripts/ci/self-measure-smoke.sh` exercises the mechanical
+  run and both halves of the witness route (including the refusal path)
+  on every CI run, credential-free.
+
 ## Generated state
 
 Generated measurement output belongs in `.tsc/`.
@@ -144,9 +167,14 @@ Python is retired as a live engine. OCaml is the canonical implementation.
   lib/hybrid_scoring      backend combiner (pure)
   lib/bundle              shared bundle model
   lib/kata                kata manifest parser
-  bin/main.ml             CLI entrypoint (--mode, --files, --target, --kata)
+  bin/main.ml             CLI entrypoint (--mode, --files, --target, --kata,
+                          --emit-prompt, --llm-response; `coh self` dispatch)
 /runtime/                 scoring instruction (SELF-MEASURE.md)
 /targets/                 named target declarations (project-internal corpora)
+/skills/                  typed skill modules
+  self-measure/SKILL.md   self-measurement declaration (renders coh-self + workflow)
+/schemas/                 CUE schemas for skill frontmatter (+ fixtures)
+/scripts/coh-self         RENDERED self-measurement command (do not edit)
 /katas/                   kata framework (pedagogical/regression inputs)
   README.md               framework docs + kata.toml schema
   01-glider/              positive control kata

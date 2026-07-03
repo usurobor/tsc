@@ -192,9 +192,23 @@ non-zero otherwise. See [katas/README.md](katas/README.md) for the framework
 and `kata.toml` schema (including the Phase 2 `[[components]]` / `ranking`
 extension exercised by kata-03).
 
+## 9. Measure TSC itself
+
+```bash
+coh self --mode mechanical   # deterministic, no credentials
+coh self                     # auto: hybrid when LLM credentials are present
+```
+
+`coh self` runs the three named targets (`spec`, `engine`, `repo`) plus the
+mechanical cross-target aggregate, into `.tsc/self/`. The full procedure —
+including exactly which steps are mechanical and which single step is
+delegated to an LLM — is declared in
+[skills/self-measure/SKILL.md](skills/self-measure/SKILL.md).
+
 ## What's next
 
 - [Operator manual](docs/beta/guides/OPERATOR-MANUAL.md) — configuration, targets, troubleshooting
+- [Self-measurement skill](skills/self-measure/SKILL.md) — how TSC measures itself (mechanical/LLM split)
 - [Kata framework](katas/README.md) — pedagogical / regression inputs with known expected outcomes
 - [Theory](spec/) — the formal triadic coherence model
 - [Architecture](ARCHITECTURE.md) — how the engine works

@@ -153,6 +153,24 @@ TMPFILE=""  # prevent cleanup from removing installed binary
 
 ok "Installed to ${BIN_DIR}/${BINARY_NAME}"
 
+# --- Companion command: coh-self (self-measurement) ---
+# Rendered from skills/self-measure/SKILL.md; `coh self` dispatches to it.
+# Best-effort: coh works without it for everything except `coh self`.
+SELF_URL="https://raw.githubusercontent.com/${REPO}/main/scripts/coh-self"
+SELF_TMP="$(mktemp)" || SELF_TMP=""
+if [ -n "$SELF_TMP" ] && curl -fsSL -o "$SELF_TMP" "$SELF_URL" 2>/dev/null; then
+  chmod +x "$SELF_TMP"
+  if mv "$SELF_TMP" "${BIN_DIR}/coh-self" 2>/dev/null; then
+    ok "Installed to ${BIN_DIR}/coh-self (coh self)"
+  else
+    rm -f "$SELF_TMP"
+    warn "Could not install coh-self to ${BIN_DIR} — 'coh self' will be unavailable"
+  fi
+else
+  [ -n "$SELF_TMP" ] && rm -f "$SELF_TMP"
+  warn "Could not download coh-self — 'coh self' will be unavailable"
+fi
+
 # --- Verify ---
 echo ""
 "${BIN_DIR}/${BINARY_NAME}" --version
