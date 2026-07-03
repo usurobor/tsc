@@ -13,9 +13,11 @@ diffs so the two cannot drift.
 
 - `cm-of-cms/` — the 0th coherence methodology: how coherence
   methodologies themselves are measured, this one included. Declares the
-  consistency protocol (`scripts/cm-consistency.sh`), what measuring a
-  CM means per axis, and the adversarial-CM doctrine (admissibility,
-  maximin standing).
+  consistency protocol (`scripts/cm-consistency.sh`), the admissibility
+  instrument (`scripts/cm-admissibility.sh`, whose CI self-test proves a
+  perfect self-score wins nothing), what measuring a CM means per axis,
+  and the adversarial-CM doctrine (symmetric displacement, maximin
+  standing, the commons as the real anchor).
 - `self-measure/` — the 1st coherence methodology: how TSC measures
   itself — the targets, the fully mechanical pipeline, and the one
   narrowly scoped cognitive task delegated to an LLM. Rendered into the

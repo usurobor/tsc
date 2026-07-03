@@ -95,6 +95,12 @@ package skill
 			...
 		}
 
+		// Admissibility instrument (optional): the executable check that a
+		// scorer reproduces the calibration commons before its readings of
+		// anything else carry standing. Its self-test must reject the
+		// trivial flatterer (all-1.0, perfect self-score).
+		admissibility?: !=""
+
 		// Mechanical contract: the deterministic backend and its full
 		// signal inventory. The validation script cross-checks every
 		// declared signal code against the engine source, so this block

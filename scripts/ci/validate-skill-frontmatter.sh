@@ -205,6 +205,7 @@ validate_measurement_cross_checks() {
   done
   for key in \
     ".${block}.consistency.script" \
+    ".${block}.admissibility" \
     ".${block}.render.command_out" \
     ".${block}.render.workflow_out" \
     ".${block}.ledger.path" \

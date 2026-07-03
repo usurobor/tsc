@@ -90,13 +90,18 @@ jobs:
             export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
             unset CLAUDE_CODE_OAUTH_TOKEN
           fi
-          # Permission rules must be filesystem-absolute (// prefix): the
-          # settings file lives in RUNNER_TEMP, so relative rules would
-          # resolve there and the workspace write would be denied.
+          # Allow rules in both spellings (relative to cwd and filesystem-
+          # absolute) — the settings file lives in RUNNER_TEMP, and rule-path
+          # resolution has already denied the workspace write once. The
+          # acceptEdits permission mode is the load-bearing grant: file writes
+          # inside the workspace auto-accept, everything else stays denied,
+          # and the engine funnel enforces content and target downstream.
           cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
           {
             "permissions": {
               "allow": [
+                "Read(.tsc/self/prompt/**)",
+                "Write(.tsc/self/response/**)",
                 "Read(//${PWD#/}/.tsc/self/prompt/**)",
                 "Write(//${PWD#/}/.tsc/self/response/**)"
               ]
@@ -125,6 +130,7 @@ jobs:
           WITNESS_PROMPT
           claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
             --settings "$RUNNER_TEMP/witness-settings.json" \
+            --permission-mode acceptEdits \
             --max-turns 16
 
       - name: Validate and ingest witness response (spec)
@@ -159,13 +165,18 @@ jobs:
             export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
             unset CLAUDE_CODE_OAUTH_TOKEN
           fi
-          # Permission rules must be filesystem-absolute (// prefix): the
-          # settings file lives in RUNNER_TEMP, so relative rules would
-          # resolve there and the workspace write would be denied.
+          # Allow rules in both spellings (relative to cwd and filesystem-
+          # absolute) — the settings file lives in RUNNER_TEMP, and rule-path
+          # resolution has already denied the workspace write once. The
+          # acceptEdits permission mode is the load-bearing grant: file writes
+          # inside the workspace auto-accept, everything else stays denied,
+          # and the engine funnel enforces content and target downstream.
           cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
           {
             "permissions": {
               "allow": [
+                "Read(.tsc/self/prompt/**)",
+                "Write(.tsc/self/response/**)",
                 "Read(//${PWD#/}/.tsc/self/prompt/**)",
                 "Write(//${PWD#/}/.tsc/self/response/**)"
               ]
@@ -194,6 +205,7 @@ jobs:
           WITNESS_PROMPT
           claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
             --settings "$RUNNER_TEMP/witness-settings.json" \
+            --permission-mode acceptEdits \
             --max-turns 16
 
       - name: Validate and ingest witness response (engine)
@@ -228,13 +240,18 @@ jobs:
             export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
             unset CLAUDE_CODE_OAUTH_TOKEN
           fi
-          # Permission rules must be filesystem-absolute (// prefix): the
-          # settings file lives in RUNNER_TEMP, so relative rules would
-          # resolve there and the workspace write would be denied.
+          # Allow rules in both spellings (relative to cwd and filesystem-
+          # absolute) — the settings file lives in RUNNER_TEMP, and rule-path
+          # resolution has already denied the workspace write once. The
+          # acceptEdits permission mode is the load-bearing grant: file writes
+          # inside the workspace auto-accept, everything else stays denied,
+          # and the engine funnel enforces content and target downstream.
           cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
           {
             "permissions": {
               "allow": [
+                "Read(.tsc/self/prompt/**)",
+                "Write(.tsc/self/response/**)",
                 "Read(//${PWD#/}/.tsc/self/prompt/**)",
                 "Write(//${PWD#/}/.tsc/self/response/**)"
               ]
@@ -263,6 +280,7 @@ jobs:
           WITNESS_PROMPT
           claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
             --settings "$RUNNER_TEMP/witness-settings.json" \
+            --permission-mode acceptEdits \
             --max-turns 16
 
       - name: Validate and ingest witness response (repo)

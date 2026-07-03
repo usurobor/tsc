@@ -161,6 +161,13 @@ jobs:
       - name: Self-measurement smoke (mechanical + external witness route)
         run: ./scripts/ci/self-measure-smoke.sh
 
+      - name: CM admissibility self-test (trivial attacker must lose)
+        # Failure class guarded: the CM selection rule crowning
+        # self-flattery. Builds the degenerate all-1.0 scorer and fails
+        # the build if the commons ever admits it (or rejects the
+        # engine). skills/cm-of-cms/SKILL.md section 6.
+        run: ./scripts/cm-admissibility.sh --self-test
+
   forbidden-wording:
     # v0.10.0 cutover (#54 AC7): forward-only check that rejects newly-added
     # `"Operational acceptance"`, `"Operationally accepted"`,

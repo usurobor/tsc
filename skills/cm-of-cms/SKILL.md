@@ -49,6 +49,7 @@ cm_of_cms:
       phi(delta) = delta/(1-delta) to Coh_consistency = exp(-phi)
       (tsc-core section 3.2, lambda = 1)
     script: scripts/cm-consistency.sh
+  admissibility: scripts/cm-admissibility.sh
   mechanical:
     backend: engine/ocaml/lib/mechanical_scoring.ml
     determinism: >-
@@ -256,14 +257,24 @@ score it, run the consistency protocol on the instruments doing the
 scoring. The result is *its own coherence on its own terms* — reported
 like any other measurement.
 
-This closes the regress instead of opening one. There is no \-1th
-methodology: the 0th's fitness claim is the **fixed point** — it scores
-itself, the score is stable (consistency protocol) and defined (the
-pipeline terminates with a number, not a paradox). A methodology that
-cannot produce a stable, defined self-score is *inadmissible* (§6): the
-liar-flavored CM ("this methodology is incoherent") and the oscillating
-CM (self-score changes with each evaluation) both fail here, by
-construction rather than by fiat.
+This closes the *formal* regress instead of opening one. There is no
+\-1th methodology: the 0th's fitness claim is the **fixed point** — it
+scores itself, the score is stable (consistency protocol) and defined
+(the pipeline terminates with a number, not a paradox). A methodology
+that cannot produce a stable, defined self-score is *inadmissible*
+(§6): the liar-flavored CM ("this methodology is incoherent") and the
+oscillating CM (self-score changes with each evaluation) both fail
+here, by construction rather than by fiat.
+
+**What a self-score means — and does not.** A high self-score proves
+consistency, never correctness: it says the methodology is *not
+self-refuting and currently undefeated in-house*, nothing more. A
+perfectly coherent methodology can measure the wrong thing — coherent
+astrology is still astrology. So self-application is a **hygiene gate
+only**: it qualifies a CM to compete and never wins anything. "Is this
+CM internally coherent?" and "is this CM a good measurer?" are
+different columns (§6 keeps them apart), and the first number must
+never stand in for the second.
 
 ---
 
@@ -284,22 +295,31 @@ B outscore C, and C outscore A — a Condorcet cycle. "The strongest CM"
 by pairwise domination may simply not exist. Any ranking must be built
 from something other than raw head-to-head wins.
 
-**Assassin instruments are cheap.** A CM that scores every other CM 0
-is trivially constructible — degeneracy costs nothing. Raw scores
-therefore confer no standing. A CM's scores of others count only if the
-CM is **admissible**:
+**Degenerate instruments are cheap in both directions.** A CM that
+scores every other CM 0 (the assassin) and a CM that scores everything
+— itself included — 1.0 (the flatterer) are both trivially
+constructible; degeneracy costs nothing either way. Raw scores,
+self-scores above all, therefore confer no standing. A CM's scores of
+others count only if the CM is **admissible**:
 
 1. **Calibration commons.** It must reproduce the shared anchors
    ([katas/](../../katas/README.md)): pass the positive control, fail
    the negative control, rank the comparative pair correctly, respect
    the prose ceiling, catch the adversarial trap. A meter that cannot
-   read the commons has no standing to read anything else.
+   read the commons has no standing to read anything else. The check is
+   executable — [scripts/cm-admissibility.sh](../../scripts/cm-admissibility.sh)
+   runs any candidate scorer over the anchors, and its `--self-test`
+   proves the rule has teeth: the trivial flatterer (all-1.0, perfect
+   self-score) is **rejected** on the negative controls while the
+   engine is admitted. That test runs in CI; if the attacker can ever
+   win, the build fails.
 2. **Consistency.** It must pass its own §3 protocol — self-agreement
    before cross-judgment.
 3. **Evidence.** Every low score it assigns must cite evidence from the
    object CM's bundle (the `axis_evidence` contract). Unfalsifiable
    verdicts are inadmissible, however low the number.
-4. **Fixed point.** It must have a stable, defined self-score (§5).
+4. **Fixed point.** It must have a stable, defined self-score (§5) —
+   a hygiene gate, not a merit.
 
 **Standing is off-diagonal.** A CM's standing is what *other admissible
 CMs* say about it — never its self-score. Every CM would self-report
@@ -328,6 +348,33 @@ which is what admissibility rule 1 does. Growing the commons (adding a
 kata that breaks a gamed CM) is how the ecosystem answers Goodhart:
 adversaries improve the anchors, and every CM is re-read against them.
 
+**Displacement is symmetric — neither party judges the duel.** "Beat
+the incumbent" is decided by the commons labels, never by either
+methodology's own scale: judged by the incumbent, the duel is
+self-sealing dogma (a CM written to score all rivals low is
+unfalsifiable); judged by the challenger, it is churn (every challenger
+self-scores 1.0 and "wins"). A challenger displaces the incumbent only
+if it (a) passes admissibility — self-application included, (b)
+**discriminates better on shared held-out anchors** — anchors published
+after the challenger was authored, so neither party could tune to them,
+and (c) **agrees with the incumbent on the uncontested controls** — a
+judge that flips verdicts everywhere is not a better meter, it is a
+differently biased one. Its own self-score appears nowhere in this
+rule.
+
+**The regress does not vanish — it relocates, and honesty requires
+saying where.** Self-application closes the formal tower; the
+*epistemic* anchor is the calibration commons, and whoever authors the
+commons holds the real authority. Today that is five katas written in
+this repository — a small, house-authored battery, and the declared
+standing debt of this methodology (its γ finding in the reports says
+the same). The protocol starts producing validation that outruns the
+house only as anchors arrive from outside it: adversary-contributed
+katas, blind before scoring, misses published. Until then, "no
+challenger beats the 0th" means precisely "no one in the house has
+beaten the house" — the honest reading, recorded here so the elegance
+of the fixed point cannot hide it.
+
 **So: then what?** Then people can pick the strongest CM — and the
 mechanism is sound *because* it is adversarial. A challenger that passes
 admissibility and demonstrates a low score has produced evidence, cited
@@ -335,7 +382,10 @@ from the object's own corpus, that survives the commons. The object CM's
 options are to fix what the evidence names or to contest the anchors by
 extending the commons. Either move improves the ecosystem; a maximin
 equilibrium under a growing auditor pool selects for methodologies that
-are hard to discredit rather than easy to inflate.
+are hard to discredit rather than easy to inflate. What the mechanism
+buys is consistency and contestability; correctness still bottoms out
+in the commons and in outcome correlation — no amount of self-reference
+manufactures ground truth, it only makes the dependence explicit.
 
 ---
 
@@ -351,6 +401,10 @@ scripts/cm-consistency.sh mechanical methodology      # N-run determinism
 scripts/cm-consistency.sh mechanical cm-of-cms
 scripts/cm-consistency.sh llm-spread methodology \
   r1.json r2.json r3.json                             # witness repeat spread
+
+# Admissibility (the trivial-attacker test runs in CI)
+scripts/cm-admissibility.sh --self-test               # attacker rejected, engine admitted
+scripts/cm-admissibility.sh --scorer '<command>' --name my-cm
 
 # External witness route (same shape as the 1st methodology, .tsc/cm root)
 coh --target cm-of-cms --registry targets/registry.tsc \
@@ -378,6 +432,10 @@ consistency reports in `.tsc/cm/consistency/`.
 - **A CM games its own scale.** Its scores of others carry no standing
   until it reads the calibration commons correctly — and the commons
   grows precisely when someone demonstrates a gamed reading.
+- **The protocol crowns self-flattery.** Guarded executably: the
+  admissibility self-test builds the degenerate all-1.0 scorer and
+  fails the build if it is ever admitted. If the selection rule can be
+  won by measuring nothing, the rule — not the challenger — is broken.
 - **Self-application paradox.** A CM without a stable, defined
   self-score is inadmissible by §5; the regress terminates at the fixed
   point instead of recursing.

@@ -258,13 +258,18 @@ def cli_witness_run(prompt_text):
 {ind}  export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
 {ind}  unset CLAUDE_CODE_OAUTH_TOKEN
 {ind}fi
-{ind}# Permission rules must be filesystem-absolute (// prefix): the
-{ind}# settings file lives in RUNNER_TEMP, so relative rules would
-{ind}# resolve there and the workspace write would be denied.
+{ind}# Allow rules in both spellings (relative to cwd and filesystem-
+{ind}# absolute) — the settings file lives in RUNNER_TEMP, and rule-path
+{ind}# resolution has already denied the workspace write once. The
+{ind}# acceptEdits permission mode is the load-bearing grant: file writes
+{ind}# inside the workspace auto-accept, everything else stays denied,
+{ind}# and the engine funnel enforces content and target downstream.
 {ind}cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
 {ind}{{
 {ind}  "permissions": {{
 {ind}    "allow": [
+{ind}      "Read({output_root}/prompt/**)",
+{ind}      "Write({output_root}/response/**)",
 {ind}      "Read(//${{PWD#/}}/{output_root}/prompt/**)",
 {ind}      "Write(//${{PWD#/}}/{output_root}/response/**)"
 {ind}    ]
@@ -276,6 +281,7 @@ def cli_witness_run(prompt_text):
 {ind}WITNESS_PROMPT
 {ind}claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \\
 {ind}  --settings "$RUNNER_TEMP/witness-settings.json" \\
+{ind}  --permission-mode acceptEdits \\
 {ind}  --max-turns 16"""
 
 build_steps = """      - uses: actions/checkout@v4
