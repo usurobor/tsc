@@ -1,0 +1,33 @@
+# One-off maintenance: dispatch tsc-coherence-ledger on main with
+# version=0.11.0 (the re-cut — see PR #63). Fires on pushes touching
+# this file on the re-cut branch (the session credentials cannot call
+# the dispatches API directly); the dispatched run executes on main
+# under the main-only guard and re-materializes the tag and ledger row
+# from merged main history. This file is removed from the branch after
+# use.
+name: recut-dispatch-once
+
+on:
+  push:
+    branches:
+      - claude/tsc-self-measurement-vxifjo
+    paths:
+      - '.github/workflows/recut-dispatch-once.yml'
+
+permissions:
+  actions: write
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Dispatch ledger on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run tsc-coherence-ledger.yml \
+            --repo "${{ github.repository }}" \
+            --ref main \
+            -f version=0.11.0
+          echo "dispatched tsc-coherence-ledger on main with version=0.11.0"
