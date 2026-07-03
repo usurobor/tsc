@@ -14,6 +14,13 @@ on:
     tags:
       - '[0-9]*'
       - 'v[0-9]*'
+  # Manual path: record (and, if missing, create) a release tag's row —
+  # for recovery, backfill, and environments that cannot push tags.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version to record (e.g. 0.10.1)"
+        required: true
 
 permissions:
   contents: write
@@ -50,8 +57,18 @@ jobs:
       - name: Append ledger row and push
         run: |
           set -euo pipefail
-          version="${{ github.ref_name }}"
+          version="${{ github.event.inputs.version || github.ref_name }}"
           version="${version#v}"
+          # Dispatch path: materialize the tag if it does not exist yet.
+          # (A token-pushed tag deliberately does not cascade into other
+          # workflows; releases are cut by pushing the tag directly.)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] \
+             && ! git rev-parse -q --verify "refs/tags/$version" >/dev/null \
+             && ! git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            git tag "$version" "$GITHUB_SHA"
+            git push origin "refs/tags/$version"
+            echo "created tag $version at $GITHUB_SHA"
+          fi
           # Commit to the branch that carries the tagged commit (prefer main).
           branches=$(git branch -r --contains "$GITHUB_SHA" --format='%(refname:short)' | sed 's|origin/||' | grep -v '^HEAD' || true)
           branch=$(echo "$branches" | grep -m1 -x main || echo "$branches" | head -1)
