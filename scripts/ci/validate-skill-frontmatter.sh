@@ -204,6 +204,7 @@ validate_measurement_cross_checks() {
     fi
   done
   for key in \
+    ".${block}.consistency.script" \
     ".${block}.render.command_out" \
     ".${block}.render.workflow_out" \
     ".${block}.ledger.path" \

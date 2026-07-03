@@ -87,6 +87,11 @@ package skill
 			mechanical: "identical"
 			llm_repeats: int & >=2
 			llm_spread:  !=""
+			// The executor of this protocol (optional: a supplied CM may name
+			// its own instrument; tsc's methodologies name
+			// scripts/cm-consistency.sh so the declared protocol has an
+			// in-corpus owner).
+			script?: !=""
 			...
 		}
 

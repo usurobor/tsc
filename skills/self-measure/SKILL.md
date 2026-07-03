@@ -48,6 +48,7 @@ self_measure:
       numeric fields; delta_consistency maps through the barrier
       phi(delta) = delta/(1-delta) to Coh_consistency = exp(-phi)
       (tsc-core section 3.2, lambda = 1)
+    script: scripts/cm-consistency.sh
   mechanical:
     backend: engine/ocaml/lib/mechanical_scoring.ml
     determinism: >-
