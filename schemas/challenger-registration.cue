@@ -25,3 +25,7 @@ package heldout
 	signature_or_attestation?: !=""
 	...
 }
+
+// The registry file itself (heldout/registrations.json) is a list of
+// registration records: `cue vet -d '#RegistrationFile' <schema> <file>`.
+#RegistrationFile: [...#ChallengerRegistration]

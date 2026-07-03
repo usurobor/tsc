@@ -454,9 +454,13 @@ jobs:
           git commit -m "ledger: coherence row for $version [skip ci]"
           # The branch may have advanced while the engine built; rebase the
           # one ledger commit onto the current head before pushing.
-          for attempt in 1 2 3; do
+          # --autostash: the engine build regenerates tsc_engine.opam in
+          # the working tree, and a plain rebase refuses a dirty tree —
+          # runs 10 and 11 each computed a full hybrid measurement and
+          # lost it exactly here.
+          for attempt in 1 2 3 4 5; do
             git push origin "$branch" && exit 0
-            git pull --rebase origin "$branch"
+            git pull --rebase --autostash origin "$branch"
           done
           git push origin "$branch"
 
