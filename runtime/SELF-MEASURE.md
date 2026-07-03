@@ -225,8 +225,22 @@ per-target k=3 Coh_consistency rises by ≥ +0.10 absolute (or crosses
 the 0.90 standing floor). Falsified if it does not. The adjudication
 change shipped alongside (medoid-of-k replaces first-sample) cannot
 move this number — spread is computed over all validated samples — so
-the consistency delta measures the checklist alone. Result recorded
-here when measured.
+the consistency delta measures the checklist alone.
+
+**Result (measured, k=3 CI run on the candidate): FALSIFIED.**
+spec 0.7165 (δ 0.25), engine 0.8612 (δ 0.13), repo 0.7666 (δ 0.21) —
+worst 0.7165, a +0.0128 move against a +0.10 gate: noise-level. Every
+sample passed the checklist funnel stage, so the walk itself is
+followed; the spread survives it because the variance is in DISCOVERY,
+not reporting — the three witnesses found DIFFERENT defects in the
+same bundle (two found a τ_lip verdict-rule contradiction, the third
+found a broken cross-reference instead) and mapped their own findings
+honestly. A checklist disciplines the map; it cannot make independent
+readers encounter the same defects in a multi-thousand-line bundle.
+The checklist and the walk-validating funnel stage are retained as
+contract hardening; the next variance experiment must target discovery
+(pooled-findings adjudication: a second witness phase that re-scores
+against the union of all samples' enumerated defects).
 
 **Confidence rubric**: 0.9 — you read every file and your findings are
 all directly cited; 0.75 — some claims reference material outside the
