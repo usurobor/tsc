@@ -11,14 +11,18 @@
 # coh-self — TSC self-measurement command (invoked as `coh self`).
 #
 # Usage:
-#   coh-self [--mode mechanical|llm|hybrid|auto] [--output DIR] [--root DIR]
+#   coh-self [--mode mechanical|llm|hybrid|auto] [--require-llm]
+#             [--output DIR] [--root DIR]
 #   coh-self --emit-prompt <target> [--output DIR] [--root DIR]
 #   coh-self --ingest <target> [--output DIR] [--root DIR]
 #
 # Default run: measure each named target (spec, engine, repo) in the given
-# mode (default: auto), then emit the mechanical cross-target
-# report. --emit-prompt / --ingest are the two deterministic halves of the
-# external witness route (skills/self-measure/SKILL.md section 5).
+# mode (default: auto — hybrid when LLM credentials are present,
+# mechanical otherwise; every report's `mode` field states which backend
+# produced it). --require-llm forces the semantic path: it refuses to run
+# at all when no LLM credentials are configured, instead of degrading to
+# mechanical. --emit-prompt / --ingest are the two deterministic halves of
+# the external witness route (skills/self-measure/SKILL.md section 5).
 set -eu
 
 TARGETS="spec engine repo"
@@ -29,12 +33,14 @@ MODE="auto"
 ROOT="."
 EMIT=""
 INGEST=""
+REQUIRE_LLM=0
 
 usage() { sed -n '/^# Usage:/,/^set -eu/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --mode)        MODE="$2"; shift 2 ;;
+    --require-llm) REQUIRE_LLM=1; shift ;;
     --output)      OUTPUT="$2"; shift 2 ;;
     --root)        ROOT="$2"; shift 2 ;;
     --emit-prompt) EMIT="$2"; shift 2 ;;
@@ -43,6 +49,21 @@ while [ $# -gt 0 ]; do
     *) echo "coh-self: unknown argument: $1" >&2; usage >&2; exit 1 ;;
   esac
 done
+
+if [ "$REQUIRE_LLM" = 1 ]; then
+  # Loud refusal, never a silent mechanical downgrade.
+  if [ -z "${LLM_API_KEY:-}" ]; then
+    echo "coh-self: --require-llm but no LLM credentials configured" >&2
+    echo "  set LLM_PROVIDER / LLM_MODEL / LLM_API_KEY (or use the CI witness route)" >&2
+    exit 2
+  fi
+  case "$MODE" in
+    mechanical)
+      echo "coh-self: --require-llm conflicts with --mode mechanical" >&2
+      exit 2 ;;
+    auto) MODE="hybrid" ;;
+  esac
+fi
 
 # Resolve the engine binary: COH_BIN override, sibling of this script,
 # PATH, then the in-repo dune build output.
@@ -89,5 +110,7 @@ run "$COH" --mode mechanical --target spec --target engine --target repo \
   --registry "$REGISTRY" --instruction "$INSTRUCTION" --root "$ROOT" \
   --output "$OUTPUT" || status=1
 
-echo "self-measurement reports in $OUTPUT/"
+echo "self-measurement reports in $OUTPUT/ (requested mode: $MODE;" \
+     "each report's 'mode' field states the backend that produced it;" \
+     "cross-target is always mechanical)"
 exit $status

@@ -88,32 +88,43 @@ jobs:
           # condition — this job is the always-on measurement surface.
           if-no-files-found: error
 
+  # Gate: the witness is enabled by the PRESENCE of the CLAUDE_CODE_OAUTH_TOKEN
+  # secret — no separate toggle to drift out of sync with it. Secrets
+  # cannot appear in job-level `if:` conditions, so a one-step job
+  # projects presence into an output. Its log states the decision either
+  # way (skills/self-measure/SKILL.md section 6).
+  witness-gate:
+    runs-on: ubuntu-22.04
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check witness credential
+        id: check
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "${CLAUDE_CODE_OAUTH_TOKEN}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "witness: CLAUDE_CODE_OAUTH_TOKEN present — llm-witness runs"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "witness: CLAUDE_CODE_OAUTH_TOKEN not configured — llm-witness unavailable (mechanical job still runs)"
+          fi
+
   # LLM witness: the single delegated cognitive step, run per target via
-  # the Claude CLI, gated by the TSC_LLM_ENABLED repo variable. The engine
-  # emits the exact prompt, the model estimates deltas/components/evidence,
-  # the engine validates and renders the hybrid report.
+  # the Claude CLI when the credential exists. The engine emits the exact
+  # prompt, the model estimates deltas/components/evidence, the engine
+  # validates and renders the hybrid report.
   # skills/self-measure/SKILL.md sections 4-5.
   llm-witness:
-    if: ${{ vars.TSC_LLM_ENABLED == 'true' }}
+    needs: witness-gate
+    if: ${{ needs.witness-gate.outputs.enabled == 'true' }}
     runs-on: ubuntu-22.04
-    env:
-      # Job-level indirection: secrets cannot be referenced in `if:`
-      # conditions, so the preflight step checks this env binding.
-      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
         target: [spec, engine, repo]
     steps:
-      # TSC_LLM_ENABLED=true declares intent to run the witness; a missing
-      # secret is then a configuration error, not a silent skip
-      # (skills/self-measure/SKILL.md section 6).
-      - name: Require Claude token when the witness is enabled
-        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN == '' }}
-        run: |
-          echo "::error::TSC_LLM_ENABLED=true but the CLAUDE_CODE_OAUTH_TOKEN secret is not configured"
-          exit 1
-
       - uses: actions/checkout@v4
 
       - name: Install system depexts (libcurl for ezcurl)

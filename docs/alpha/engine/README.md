@@ -18,8 +18,18 @@ The canonical implementation is `engine/ocaml/`. The operator manual is [docs/be
 
 ## Version history
 
-| Version | Directory | Note |
-|---------|-----------|------|
+Releases 0.1.0–0.5.0 have frozen artifact directories here. From 0.6.0
+onward, per-release records live in [CHANGELOG.md](../../../CHANGELOG.md)
+and per-cycle CDD artifacts instead of frozen directories — the rows
+below link the changelog for those.
+
+| Version | Record | Note |
+|---------|--------|------|
+| 0.10.0 | [CHANGELOG.md](../../../CHANGELOG.md) | Canonical v3.2 scoring cutover: geometric `C_Σ^math` / `C_Σ^num` under `provenance`; strict v3.2 LLM δ validation; cross-target report surface (#49 wave). |
+| 0.9.0 | [CHANGELOG.md](../../../CHANGELOG.md) | Phase 2 kata progression: comparative, philosophical, adversarial katas; `[[components]]` + ranking runner. |
+| 0.8.0 | [CHANGELOG.md](../../../CHANGELOG.md) | Process enforcement: CHANGELOG release gate in release scripts. |
+| 0.7.0 | [CHANGELOG.md](../../../CHANGELOG.md) | Test migration: Python retired; OCaml test suite; auto-mode fallback; Credentials module. |
+| 0.6.0 | [CHANGELOG.md](../../../CHANGELOG.md) | Spec v3.2.0 engine: barrier transform φ, math/num split, W2 gauge witness, δ-based SELF-MEASURE protocol. |
 | 0.5.0 | [0.5.0/POST-RELEASE-ASSESSMENT.md](0.5.0/POST-RELEASE-ASSESSMENT.md) | Hybrid scoring: mechanical + llm + hybrid + auto modes. Three-mode engine, 61-assertion OCaml test suite, direct file input. Full CDD cycle (#25). |
 | 0.4.0 | [0.4.0/POST-RELEASE-ASSESSMENT.md](0.4.0/POST-RELEASE-ASSESSMENT.md) | Dotenv credential loading, VERSION as single source of truth, release scripts. |
 | 0.3.1 | — | Binary renamed `tsc` → `coh`. Single-commit hot fix; no design phase — frozen artifact directory not created. |

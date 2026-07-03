@@ -10,8 +10,7 @@ include = [
   "engine/ocaml/dune-project",
   "engine/ocaml/lib/dune",
   "engine/ocaml/bin/dune",
-  "engine/ocaml/test/fixtures/*.json",
-  "tests/ocaml/**"
+  "engine/ocaml/test/fixtures/*.json"
 ]
 
 exclude = [

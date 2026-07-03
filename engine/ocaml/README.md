@@ -62,3 +62,17 @@ Release history lives in `CHANGELOG.md` at the repo root; engine releases
 are cut by `scripts/release.sh`, which gates on a changelog entry.
 Behavioral anchors live in `katas/` — any change to scoring must keep
 every kata's declared expectation (`coh --kata <id> --mode mechanical`).
+
+## Known debt
+
+Explicit and bounded; tracked here until closed:
+
+- **Interface coverage.** Only `mechanical_scoring` has a `.mli`; the
+  other lib modules expose their internals, so their public surfaces are
+  convention rather than compiler-checked. Target: an interface per lib
+  module to the standard `mechanical_scoring` sets.
+- **Witness-contract version constant.** The SELF-MEASURE protocol
+  version appears as a literal in `bin/main.ml` metadata and as prose in
+  the instruction; bumping the protocol requires coordinated edits with
+  no compiler error if one is missed. Target: one shared constant
+  consumed by prompt metadata and the response validator.

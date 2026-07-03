@@ -6,16 +6,26 @@ This manual covers building, configuring, and running the TSC engine.
 
 ## 1. What the engine does
 
-The engine measures triadic self-coherence of a target. It:
+The engine measures triadic self-coherence of a target in one of four
+modes — `mechanical` | `llm` | `hybrid` | `auto` (the default: `hybrid`
+when LLM credentials are present, `mechanical` otherwise). It:
 
-1. Resolves a named target from the registry
+1. Resolves input — a named target from the registry, direct file globs
+   (`--files`), or a kata (`--kata`)
 2. Builds a file bundle (raw text + SHA-256 hashes)
-3. Constructs a prompt from the bundle and a scoring instruction
-4. Sends the prompt to an LLM provider
-5. Validates the structured response
-6. Writes JSON and text reports
+3. Scores the bundle:
+   - **mechanical** — deterministic structural signals; no credentials,
+     no network, works offline and in CI
+   - **llm / hybrid** — constructs a prompt from the bundle and the
+     scoring instruction, sends it to the provider, and validates the
+     structured response through the witness funnel (`hybrid` also runs
+     the mechanical backend and combines both results)
+4. Writes JSON (and text) reports; every report's `mode` field states
+   which backend produced it
 
-The engine does not interpret file contents. The LLM scores coherence; the engine ensures the process is deterministic and the output is valid.
+The mechanical backend interprets file structure only, never semantics;
+the LLM path is the semantic judgment. In every mode the engine owns
+validation, the barrier transform, and aggregation.
 
 ---
 
@@ -72,13 +82,22 @@ The binary is `engine/ocaml/_build/default/bin/main.exe`.
 
 The engine reads all configuration from environment variables. Nothing is hardcoded; nothing is stored in the repository.
 
-### Required variables
+Mechanical mode (and `auto` without credentials) needs **no configuration
+at all**. The variables below matter only for the `llm` and `hybrid`
+semantic paths.
+
+### Credentials (llm / hybrid modes only)
 
 | Variable | Purpose | Example |
 |----------|---------|---------|
 | `LLM_PROVIDER` | LLM provider name. Determines API URL and auth scheme. | `anthropic`, `openai` |
 | `LLM_MODEL` | Model identifier sent to the provider. | `claude-sonnet-4-20250514`, `gpt-4o` |
 | `LLM_API_KEY` | API key for authentication. | `sk-ant-...`, `sk-...` |
+
+In CI, the rendered self-measurement workflow uses no raw API key: the
+witness runs via the Claude CLI, gated by the presence of the
+`CLAUDE_CODE_OAUTH_TOKEN` secret (see
+[skills/self-measure/SKILL.md](../../../skills/self-measure/SKILL.md) §5–6).
 
 ### Optional variables
 
@@ -125,22 +144,25 @@ export LLM_BASE_URL=http://localhost:11434/v1/chat/completions
 ### Basic usage
 
 ```bash
-coh \
-  --target repo \
-  --registry targets/registry.tsc \
-  --instruction runtime/SELF-MEASURE.md \
-  --output .tsc
+coh --target repo                       # auto mode, defaults for everything else
+coh --mode mechanical --files spec/     # direct file input, no credentials
 ```
 
 ### CLI arguments
 
+Exactly one input selector is required: `--target`, `--files`, or
+`--kata`. Everything else has a default.
+
 | Argument | Required | Purpose |
 |----------|----------|---------|
-| `--target` | Yes | Target name to measure (`spec`, `engine`, `repo`) |
-| `--registry` | Yes | Path to `targets/registry.tsc` |
-| `--instruction` | Yes | Path to the scoring instruction (`runtime/SELF-MEASURE.md`) |
-| `--output` | Yes | Path for the JSON report |
-| `--emit-prompt` | No | Write the exact LLM prompt (instruction + hashed bundle) to the given path and exit; no provider call |
+| `--target` | one selector | Target name to measure (`spec`, `engine`, `repo`); repeatable — two or more produce the mechanical cross-target report |
+| `--files` | one selector | Direct file/glob input (repeatable); same bundle model as named targets |
+| `--kata` | one selector | Run a kata from `katas/` against its declared expectation |
+| `--mode` | No (default `auto`) | `mechanical` \| `llm` \| `hybrid` \| `auto` |
+| `--registry` | No (default `targets/registry.tsc`) | Path to the target registry |
+| `--instruction` | No (default `runtime/SELF-MEASURE.md`) | Path to the scoring instruction |
+| `--output` | No (default `.tsc`) | Output directory for reports |
+| `--emit-prompt` | No | Write the exact LLM prompt content (instruction + hashed bundle) to the given path and exit; no provider call |
 | `--llm-response` | No | Read the LLM response from the given path instead of calling the provider (llm/hybrid; the external witness route) |
 
 ### Self-measurement (`coh self`)
@@ -216,6 +238,8 @@ There is no flat top-level `c_sigma` field — readers consult `provenance` for 
 | B | >= 0.80 |
 | C | >= 0.70 |
 | F | < 0.70 |
+
+Grades are a descriptive quality band. The spec's acceptance gate for self-application verdicts is Θ (Operational §5/§7; currently 0.75) — related but deliberately distinct.
 
 The geometric mean naturally penalizes imbalance — one collapsed axis drags the aggregate disproportionately. The report names the lowest-scoring axis as the bottleneck.
 

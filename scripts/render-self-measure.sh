@@ -82,7 +82,6 @@ default_mode  = req(sm, "default_mode")
 ci_prompt     = req(sm, "llm.ci_prompt")
 command_out   = req(sm, "render.command_out")
 workflow_out  = req(sm, "render.workflow_out")
-gate_var      = req(sm, "ci.llm_gate_variable")
 llm_secret    = req(sm, "ci.llm_secret")
 perm_intent   = req(sm, "ci.permission_intent")
 
@@ -111,14 +110,18 @@ coh_self = f"""#!/bin/sh
 # {command} — TSC self-measurement command (invoked as `coh self`).
 #
 # Usage:
-#   {command} [--mode mechanical|llm|hybrid|auto] [--output DIR] [--root DIR]
+#   {command} [--mode mechanical|llm|hybrid|auto] [--require-llm]
+#             [--output DIR] [--root DIR]
 #   {command} --emit-prompt <target> [--output DIR] [--root DIR]
 #   {command} --ingest <target> [--output DIR] [--root DIR]
 #
 # Default run: measure each named target ({", ".join(targets)}) in the given
-# mode (default: {default_mode}), then emit the mechanical cross-target
-# report. --emit-prompt / --ingest are the two deterministic halves of the
-# external witness route (skills/self-measure/SKILL.md section 5).
+# mode (default: {default_mode} — hybrid when LLM credentials are present,
+# mechanical otherwise; every report's `mode` field states which backend
+# produced it). --require-llm forces the semantic path: it refuses to run
+# at all when no LLM credentials are configured, instead of degrading to
+# mechanical. --emit-prompt / --ingest are the two deterministic halves of
+# the external witness route (skills/self-measure/SKILL.md section 5).
 set -eu
 
 TARGETS="{targets_sp}"
@@ -129,12 +132,14 @@ MODE="{default_mode}"
 ROOT="."
 EMIT=""
 INGEST=""
+REQUIRE_LLM=0
 
 usage() {{ sed -n '/^# Usage:/,/^set -eu/p' "$0" | sed '$d' | sed 's/^# \\{{0,1\\}}//'; }}
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --mode)        MODE="$2"; shift 2 ;;
+    --require-llm) REQUIRE_LLM=1; shift ;;
     --output)      OUTPUT="$2"; shift 2 ;;
     --root)        ROOT="$2"; shift 2 ;;
     --emit-prompt) EMIT="$2"; shift 2 ;;
@@ -143,6 +148,21 @@ while [ $# -gt 0 ]; do
     *) echo "{command}: unknown argument: $1" >&2; usage >&2; exit 1 ;;
   esac
 done
+
+if [ "$REQUIRE_LLM" = 1 ]; then
+  # Loud refusal, never a silent mechanical downgrade.
+  if [ -z "${{LLM_API_KEY:-}}" ]; then
+    echo "{command}: --require-llm but no LLM credentials configured" >&2
+    echo "  set LLM_PROVIDER / LLM_MODEL / LLM_API_KEY (or use the CI witness route)" >&2
+    exit 2
+  fi
+  case "$MODE" in
+    mechanical)
+      echo "{command}: --require-llm conflicts with --mode mechanical" >&2
+      exit 2 ;;
+    auto) MODE="hybrid" ;;
+  esac
+fi
 
 # Resolve the engine binary: COH_BIN override, sibling of this script,
 # PATH, then the in-repo dune build output.
@@ -195,7 +215,9 @@ run "$COH" --mode mechanical {cross_flags} \\
 """
 
 coh_self += """
-echo "self-measurement reports in $OUTPUT/"
+echo "self-measurement reports in $OUTPUT/ (requested mode: $MODE;" \\
+     "each report's 'mode' field states the backend that produced it;" \\
+     "cross-target is always mechanical)"
 exit $status
 """
 
@@ -297,32 +319,43 @@ jobs:
           # condition — this job is the always-on measurement surface.
           if-no-files-found: error
 
+  # Gate: the witness is enabled by the PRESENCE of the {llm_secret}
+  # secret — no separate toggle to drift out of sync with it. Secrets
+  # cannot appear in job-level `if:` conditions, so a one-step job
+  # projects presence into an output. Its log states the decision either
+  # way (skills/self-measure/SKILL.md section 6).
+  witness-gate:
+    runs-on: ubuntu-22.04
+    outputs:
+      enabled: ${{{{ steps.check.outputs.enabled }}}}
+    steps:
+      - name: Check witness credential
+        id: check
+        env:
+          {llm_secret}: ${{{{ secrets.{llm_secret} }}}}
+        run: |
+          if [ -n "${{{llm_secret}}}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "witness: {llm_secret} present — llm-witness runs"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "witness: {llm_secret} not configured — llm-witness unavailable (mechanical job still runs)"
+          fi
+
   # LLM witness: the single delegated cognitive step, run per target via
-  # the Claude CLI, gated by the {gate_var} repo variable. The engine
-  # emits the exact prompt, the model estimates deltas/components/evidence,
-  # the engine validates and renders the hybrid report.
+  # the Claude CLI when the credential exists. The engine emits the exact
+  # prompt, the model estimates deltas/components/evidence, the engine
+  # validates and renders the hybrid report.
   # skills/self-measure/SKILL.md sections 4-5.
   llm-witness:
-    if: ${{{{ vars.{gate_var} == 'true' }}}}
+    needs: witness-gate
+    if: ${{{{ needs.witness-gate.outputs.enabled == 'true' }}}}
     runs-on: ubuntu-22.04
-    env:
-      # Job-level indirection: secrets cannot be referenced in `if:`
-      # conditions, so the preflight step checks this env binding.
-      {llm_secret}: ${{{{ secrets.{llm_secret} }}}}
     strategy:
       fail-fast: false
       matrix:
         target: [{matrix}]
     steps:
-      # {gate_var}=true declares intent to run the witness; a missing
-      # secret is then a configuration error, not a silent skip
-      # (skills/self-measure/SKILL.md section 6).
-      - name: Require Claude token when the witness is enabled
-        if: ${{{{ env.{llm_secret} == '' }}}}
-        run: |
-          echo "::error::{gate_var}=true but the {llm_secret} secret is not configured"
-          exit 1
-
 {build_steps}
 
       - name: Emit witness prompt (deterministic)

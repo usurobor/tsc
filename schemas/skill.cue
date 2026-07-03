@@ -122,11 +122,13 @@ package skill
 		}
 
 		// CI intent. Mechanical runs ungated; the LLM witness is gated by
-		// a repo variable + secret. permission_intent uses logical names
-		// (contents.read) — the renderer owns the substrate encoding.
+		// the PRESENCE of the named secret (llm_gate: secret-presence) —
+		// no separate toggle to drift out of sync with the credential.
+		// permission_intent uses logical names (contents.read) — the
+		// renderer owns the substrate encoding.
 		ci: {
-			llm_gate_variable: !=""
-			llm_secret:        !=""
+			llm_secret: !=""
+			llm_gate:   "secret-presence"
 			permission_intent: [...string]
 			...
 		}

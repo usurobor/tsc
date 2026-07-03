@@ -3,13 +3,14 @@ Formal Specification of Observer Construction, Verification, Epistemic Refinemen
 
 Version: v1.0.13
 Status: Proposed Extension Specification
+Status consequence: verdict-bearing measurement (Core §5, Operational §5) does not depend on this extension; engines MAY implement its witnesses (the canonical engine emits the W2 gauge witness in provenance). Promotion to Normative follows the spec-release process (`CHANGELOG.md` § Spec releases).
 Artifact: Specification
 Changelog: `CHANGELOG.md` § Spec releases
 
 Normative dependencies:
     C≡ v3.1.0
     TSC Core v3.2.0
-    TSC Operational v3.2.0
+    TSC Operational v3.2.1
 
 Compatibility note for v3.2.0 dependency uplift:
     TSC Core v3.2.0 introduces the Barrier-Coherence Link

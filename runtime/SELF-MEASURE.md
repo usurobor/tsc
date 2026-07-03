@@ -100,6 +100,27 @@ For `engine`, prioritize:
 - stable boundaries
 - whether the implementation matches the declared target model
 
+Judge implementation coherence to the standard of the strongest
+engineering practice the bundle itself declares — not to a lenient
+average. Concretely, for a typed functional codebase:
+
+- **types carry the invariants** — invalid states hard to express;
+  variants and signatures used so the compiler catches drift; interface
+  files agreeing with what modules actually expose
+- **effects bounded** — pure computation separated from I/O; the pure
+  core testable without the runtime; side effects at the edges
+- **one source of truth per rule** — a formula, constant, or contract
+  defined once and routed through, never re-derived in a second place
+- **proof discipline** — tests pinning declared behavior including the
+  refusal paths; regression anchors for the scoring surface; documented
+  change discipline
+- **boundary honesty** — comments and docs claiming exactly what the
+  code does; a stale claim in a doc comment is relational evidence, not
+  a style nit
+
+Low marks here are axis evidence like any other (pattern discipline →
+α, claim/implementation fit → β, change discipline → γ), cited to files.
+
 ### 2.3 `repo`
 For `repo`, prioritize:
 - cross-layer alignment

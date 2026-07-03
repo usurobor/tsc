@@ -44,8 +44,8 @@ self_measure:
     command_out: scripts/coh-self
     workflow_out: .github/workflows/tsc-self-measure.yml
   ci:
-    llm_gate_variable: TSC_LLM_ENABLED
     llm_secret: CLAUDE_CODE_OAUTH_TOKEN
+    llm_gate: secret-presence
     permission_intent:
       - contents.read
 ---

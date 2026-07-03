@@ -127,8 +127,8 @@ self_measure:
     command_out: scripts/coh-self
     workflow_out: .github/workflows/tsc-self-measure.yml
   ci:
-    llm_gate_variable: TSC_LLM_ENABLED
     llm_secret: CLAUDE_CODE_OAUTH_TOKEN
+    llm_gate: secret-presence
     permission_intent:
       - contents.read
 ---
@@ -275,6 +275,11 @@ instruction `runtime/SELF-MEASURE.md` + the hashed bundle), estimate
 
 and return them as one JSON object. Nothing else.
 
+For the `engine` target the instruction (§2.2) holds the witness to
+typed-functional code-craft standards — types carrying the invariants,
+bounded effects, one source of truth per rule, proof discipline, and
+boundary honesty — with low marks cited to files as axis evidence.
+
 The model must not:
 
 - **compute Coh or C_Σ** — it reports δ; the engine applies
@@ -357,11 +362,16 @@ In CI (`tsc-self-measure.yml`):
 
 - **mechanical job** — always runs on changes to `spec/`, `engine/ocaml/`,
   `targets/`, `runtime/`, `skills/`. No secrets, no gate.
-- **llm-witness job** — gated by the repo variable `TSC_LLM_ENABLED`.
-  When the variable is `'true'` but the `CLAUDE_CODE_OAUTH_TOKEN` secret
-  is missing, a preflight step fails the job loudly — enabling the
-  witness without its credential is a configuration error, never a
-  silent skip. One matrix job per target.
+- **llm-witness job** — gated by the presence of the
+  `CLAUDE_CODE_OAUTH_TOKEN` secret; there is no separate toggle to drift
+  out of sync with it. Secret present → the witness runs; absent → the
+  witness is unavailable and the gate job's log says so. One matrix job
+  per target.
+
+Locally the same posture holds: `coh self` defaults to auto and every
+report's `mode` field states the backend that produced it;
+`coh self --require-llm` forces the semantic path and refuses loudly
+when no credentials are configured, never degrading to mechanical.
 
 Both jobs upload their `.tsc/self/` reports as artifacts and write a
 step-summary table.
@@ -395,6 +405,7 @@ describe one system — nothing more.
   fenced JSON, missing fields, computed coherence, wrong target, bad
   δ — one validation-failure artifact records the stage; no report, no
   fallback — by design. Fix the route or the model, re-run.
-- **LLM job silently skipped.** The gate is a repo variable; when unset,
-  the job does not run and only mechanical reports exist. Absence of a
-  hybrid report is visible, not masked.
+- **LLM job skipped.** The gate is the witness credential itself; when
+  the secret is absent the gate job logs the skip and only mechanical
+  reports exist. Absence of a hybrid report is visible, not masked —
+  and `--require-llm` turns that absence into a refusal locally.
