@@ -43,6 +43,12 @@ self_measure:
   render:
     command_out: scripts/coh-self
     workflow_out: .github/workflows/tsc-self-measure.yml
+  ledger:
+    path: .tsc/COHERENCE.md
+    cadence: version-tags
+    mode: mechanical
+    script: scripts/coherence-ledger.sh
+    workflow_out: .github/workflows/tsc-coherence-ledger.yml
   ci:
     llm_secret: CLAUDE_CODE_OAUTH_TOKEN
     llm_gate: secret-presence

@@ -126,6 +126,12 @@ self_measure:
   render:
     command_out: scripts/coh-self
     workflow_out: .github/workflows/tsc-self-measure.yml
+  ledger:
+    path: .tsc/COHERENCE.md
+    cadence: version-tags
+    mode: mechanical
+    script: scripts/coherence-ledger.sh
+    workflow_out: .github/workflows/tsc-coherence-ledger.yml
   ci:
     llm_secret: CLAUDE_CODE_OAUTH_TOKEN
     llm_gate: secret-presence
@@ -372,6 +378,18 @@ Locally the same posture holds: `coh self` defaults to auto and every
 report's `mode` field states the backend that produced it;
 `coh self --require-llm` forces the semantic path and refuses loudly
 when no credentials are configured, never degrading to mechanical.
+
+**The coherence ledger.** [`.tsc/COHERENCE.md`](../../.tsc/COHERENCE.md)
+carries one row per release — mechanical `coh self` numbers, so every
+row is reproducible without credentials. The rendered
+`tsc-coherence-ledger` workflow appends the row on every version-tag
+push (patch increments included) via
+[scripts/coherence-ledger.sh](../../scripts/coherence-ledger.sh);
+commits between releases do not write the ledger (per-run reports are CI
+artifacts instead). Historical rows were backfilled by measuring each
+tag's tree — its own `targets/registry.tsc` — with one fixed engine, so
+the curve is comparable across releases; the instrument column names the
+engine that measured each row.
 
 Both jobs upload their `.tsc/self/` reports as artifacts and write a
 step-summary table.

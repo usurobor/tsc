@@ -178,7 +178,10 @@ validate_measurement_cross_checks() {
     '.self_measure.instruction' \
     '.self_measure.mechanical.backend' \
     '.self_measure.render.command_out' \
-    '.self_measure.render.workflow_out'
+    '.self_measure.render.workflow_out' \
+    '.self_measure.ledger.path' \
+    '.self_measure.ledger.script' \
+    '.self_measure.ledger.workflow_out'
   do
     path=$(jq -r "$key // \"\"" "$json_path")
     if [[ -z "$path" ]]; then

@@ -1,0 +1,78 @@
+# DO NOT EDIT. Rendered by `scripts/render-self-measure.sh` from:
+#   source: skills/self-measure/SKILL.md
+# Schema:  tsc.self-measure.v1 (schemas/skill.cue #SelfMeasure)
+#
+# Authority split: the skill owns the measurement contract (targets,
+# modes, LLM delegation + constraints); this renderer owns substrate
+# encoding (triggers / permissions / action versions / secret-name
+# bindings / step layout). Edit the skill, re-render, commit both.
+
+name: tsc-coherence-ledger
+
+on:
+  push:
+    tags:
+      - '[0-9]*'
+      - 'v[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  # One mechanical ledger row per release tag (patch increments included).
+  # Commits between releases do not write the ledger — per-run reports are
+  # CI artifacts of the tsc-self-measure workflow instead.
+  ledger:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+
+      - name: Append ledger row and push
+        run: |
+          set -euo pipefail
+          version="${{ github.ref_name }}"
+          version="${version#v}"
+          # Commit to the branch that carries the tagged commit (prefer main).
+          branches=$(git branch -r --contains "$GITHUB_SHA" --format='%(refname:short)' | sed 's|origin/||' | grep -v '^HEAD' || true)
+          branch=$(echo "$branches" | grep -m1 -x main || echo "$branches" | head -1)
+          if [ -z "$branch" ]; then
+            echo "::error::no branch contains the tagged commit; cannot record ledger row"
+            exit 1
+          fi
+          git config user.name  "tsc-coherence-ledger"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout "$branch"
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            scripts/coherence-ledger.sh append "$version"
+          git add .tsc/COHERENCE.md
+          git diff --cached --quiet && { echo "ledger unchanged"; exit 0; }
+          git commit -m "ledger: coherence row for $version [skip ci]"
+          git push origin "$branch"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Coherence ledger" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -5 .tsc/COHERENCE.md >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "no ledger" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

@@ -84,6 +84,9 @@ command_out   = req(sm, "render.command_out")
 workflow_out  = req(sm, "render.workflow_out")
 llm_secret    = req(sm, "ci.llm_secret")
 perm_intent   = req(sm, "ci.permission_intent")
+ledger_path   = req(sm, "ledger.path")
+ledger_script = req(sm, "ledger.script")
+ledger_out    = req(sm, "ledger.workflow_out")
 
 if not targets:
     print("render-self-measure: self_measure.targets is empty", file=sys.stderr)
@@ -419,10 +422,76 @@ jobs:
           if-no-files-found: error
 """
 
+# --- render ledger workflow -------------------------------------------------
+# Skill authority: ledger path, cadence (version tags), mechanical mode,
+# script. Renderer authority: tag-pattern encoding, branch resolution,
+# commit/push mechanics, action versions.
+ledger_name = os.path.basename(ledger_out).rsplit(".", 1)[0]
+# build_steps begins with a plain checkout; the ledger job needs
+# fetch-depth 0 (branch resolution), so drop that first block here.
+ledger_build_steps = build_steps.split("\n\n", 1)[1]
+
+ledger_workflow = f"""{header}
+name: {ledger_name}
+
+on:
+  push:
+    tags:
+      - '[0-9]*'
+      - 'v[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  # One mechanical ledger row per release tag (patch increments included).
+  # Commits between releases do not write the ledger — per-run reports are
+  # CI artifacts of the tsc-self-measure workflow instead.
+  ledger:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+{ledger_build_steps}
+
+      - name: Append ledger row and push
+        run: |
+          set -euo pipefail
+          version="${{{{ github.ref_name }}}}"
+          version="${{version#v}}"
+          # Commit to the branch that carries the tagged commit (prefer main).
+          branches=$(git branch -r --contains "$GITHUB_SHA" --format='%(refname:short)' | sed 's|origin/||' | grep -v '^HEAD' || true)
+          branch=$(echo "$branches" | grep -m1 -x main || echo "$branches" | head -1)
+          if [ -z "$branch" ]; then
+            echo "::error::no branch contains the tagged commit; cannot record ledger row"
+            exit 1
+          fi
+          git config user.name  "tsc-coherence-ledger"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout "$branch"
+          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+            {ledger_script} append "$version"
+          git add {ledger_path}
+          git diff --cached --quiet && {{ echo "ledger unchanged"; exit 0; }}
+          git commit -m "ledger: coherence row for $version [skip ci]"
+          git push origin "$branch"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Coherence ledger" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -5 {ledger_path} >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "no ledger" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+"""
+
 # --- write (idempotent) ---------------------------------------------------
 outputs = {
     os.path.join(repo_root, command_out): (coh_self, 0o755),
     os.path.join(repo_root, workflow_out): (workflow, 0o644),
+    os.path.join(repo_root, ledger_out): (ledger_workflow, 0o644),
 }
 
 drift = False

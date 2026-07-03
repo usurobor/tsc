@@ -34,6 +34,7 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|
+| 0.10.1 | A | A- | A | A- | L7 | Self-measurement platformization wave. `coh self` (skill-declared, CUE-validated, rendered command + workflows); witness-validation funnel with staged refusal artifacts; external witness route (`--emit-prompt` / `--llm-response`); Claude CLI CI witness gated by secret presence; instrument-validity pass on the twelve mechanical signals (document scoping, link normalization, anchor validation, authority self-claims) — kata-05 now caught for its real contradictions; per-release coherence ledger (`.tsc/COHERENCE.md`, backfilled 0.1.0→0.10.0 with a fixed instrument). Mechanical self-measurement at release: spec 0.984, engine 0.990, repo 0.978, cross 0.984; first hybrid witness run: cross 0.943. |
 | 0.10.0 | A- | A- | A- | A- | L7 | Canonical v3.2 scoring cutover wave (#49). Geometric `C_Σ^math` / `C_Σ^num` replaces flat arithmetic `c_sigma`; report schema emits aggregate facts only under `provenance.aggregate_math` / `provenance.aggregate_numeric`. OOD detector for `aggregate_semantics` (#52). Strict v3.2 LLM δ validation (#51). Cross-target §7.4 report surface (#53). Cleanup pass (this row): kata baselines re-scaled; active docs rewritten; `project.tsc` removed; target-registry smoke tests; forbidden-wording CI rule. **Migration:** pre-v0.10.0 reports quoted arithmetic mean `(α+β+γ)/3`; v0.10.0 reports quote geometric `(α·β·γ)^(1/3)` — historical reports are not directly comparable. See `RELEASE.md`. (#49 master; subs #50, #51, #52, #53, #54) |
 | 0.9.0 | A- | A- | A | A- | L6 | Phase 2 kata progression: comparative (kata-03) + philosophical (kata-04, mechanical-mode) + adversarial (kata-05, multi-file); kata runner gains [[components]]+ranking; +25 hermetic test assertions (146→171). 1 round (β R1 APPROVED, 0A/0B/4C). (#34, cycle: L6) |
 | 0.8.0 | A | A | A | A- | L6 | Process enforcement: CHANGELOG release gate in scripts/release.sh. Prevents incomplete releases (v0.4.0 class). (#30, cycle: L6) |
@@ -50,6 +51,28 @@ Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [
 Pre-0.1.0 versions (2.0.0–3.1.0) used a Python implementation with category-theoretic axioms. Removed — available in git history. Not scored — different system.
 
 ---
+
+## 0.10.1 (2026-07-03)
+
+Self-measurement platformization. The full procedure is declared in `skills/self-measure/SKILL.md` (frontmatter CUE-validated, cross-checked against engine source and the scoring instruction) and rendered into `scripts/coh-self`, the `tsc-self-measure` workflow (mechanical job ungated; LLM witness via Claude CLI, gated by presence of the `CLAUDE_CODE_OAUTH_TOKEN` secret), and the `tsc-coherence-ledger` workflow (one mechanical row per version tag into `.tsc/COHERENCE.md`).
+
+### Added
+
+- `coh self` — external-subcommand dispatch to the rendered `coh-self` (per-target + cross-target self-measurement; `--require-llm` refuses loudly without credentials; every report's `mode` field states its backend).
+- External witness route: `--emit-prompt` / `--llm-response`; one validation funnel (`Response_schema.validate_witness_response`) classifying every refusal (parse / base_schema / prohibited_fields / target_mismatch / v3_2_delta) into a durable stage-tagged artifact; per-stage fixtures replayed by CI smoke.
+- Per-release coherence ledger `.tsc/COHERENCE.md`, backfilled 0.1.0→0.10.0 with the 0.10.1 instrument.
+- `skills/` + `schemas/skill.cue` (+ fixtures, validator) — typed skill modules, cnos-style.
+- Engine README (module map, change discipline, known debt); SELF-MEASURE §2.2 code-craft standards for engine-target judgment.
+
+### Changed
+
+- Mechanical instrument validity: document-scoped structure signals, source-relative link normalization, anchor (heading-slug) validation, authority self-claim detection with steep contest penalty, ledger/archive-aware deprecation and version scanning, header-positioned generated markers. Kata expectations unchanged; kata-05 baseline re-documented (caught via contested self-claims + contradictory anchors at 0.7754 ≤ 0.78).
+- Operator manual rewritten to the four-mode contract; engine docs release history completed through 0.10.0; report metadata stamps `SELF-MEASURE/3.2.0`.
+- `tsc.yml` (dormant, raw-API-key) replaced by rendered `tsc-self-measure.yml`.
+
+### Measured
+
+Mechanical at release: spec 0.9839 · engine 0.9896 · repo 0.9779 · cross **0.9838**. First hybrid witness run (external route, claude-session): cross 0.9432 after three fix rounds (from 0.8672 — operator docs had lagged the system).
 
 ## 0.10.0 (2026-05-13)
 

@@ -121,6 +121,20 @@ package skill
 			...
 		}
 
+		// The per-release coherence ledger: one mechanical row per version
+		// tag, appended by the rendered ledger workflow; commits between
+		// releases do not write it. The skill owns the contract (path,
+		// cadence, mode, script); the renderer owns the tag-trigger and
+		// commit mechanics.
+		ledger: {
+			path:         !=""
+			cadence:      "version-tags"
+			mode:         "mechanical"
+			script:       !=""
+			workflow_out: !=""
+			...
+		}
+
 		// CI intent. Mechanical runs ungated; the LLM witness is gated by
 		// the PRESENCE of the named secret (llm_gate: secret-presence) —
 		// no separate toggle to drift out of sync with the credential.
