@@ -100,6 +100,12 @@ jobs:
           git add .tsc/COHERENCE.md
           git diff --cached --quiet && { echo "ledger unchanged"; exit 0; }
           git commit -m "ledger: coherence row for $version [skip ci]"
+          # The branch may have advanced while the engine built; rebase the
+          # one ledger commit onto the current head before pushing.
+          for attempt in 1 2 3; do
+            git push origin "$branch" && exit 0
+            git pull --rebase origin "$branch"
+          done
           git push origin "$branch"
 
       - name: Summary
