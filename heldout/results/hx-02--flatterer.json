@@ -9,6 +9,6 @@
   ],
   "hit": false,
   "loss": 0.22,
-  "standing_scope": "house-authored-heldout-anchors",
-  "note": "commit-reveal proves ordering (unmemorizability); the label is house judgment \u2014 externality requires a non-house anchor author"
+  "standing_scope": "house-authored-blind-heldout",
+  "note": "commit-reveal proves ordering (unmemorizability); the label is house judgment \u2014 external-blind-heldout requires a non-house anchor author"
 }

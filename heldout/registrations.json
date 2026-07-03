@@ -3,36 +3,42 @@
     "name": "coh-mechanical",
     "scorer_sha256": "ec0c31122616bb2f8b9572c9ce8270025d9299867cb0d46624a45be6fd3a8c7b",
     "registered_at_commit": "bd7647e38d58bd238a501ddd2a4944c89f3f5ecf",
-    "scorer_path": "scripts/cm-attackers/engine-scorer.sh"
+    "scorer_path": "scripts/cm-attackers/engine-scorer.sh",
+    "steward": "house"
   },
   {
     "name": "flatterer",
     "scorer_sha256": "4f170dc993820bc773b64a0e84b396e9fdb53e52ff60068b75c89e75bb34d4a6",
     "registered_at_commit": "bd7647e38d58bd238a501ddd2a4944c89f3f5ecf",
-    "scorer_path": "scripts/cm-attackers/flatterer.sh"
+    "scorer_path": "scripts/cm-attackers/flatterer.sh",
+    "steward": "house"
   },
   {
     "name": "path-gamer",
     "scorer_sha256": "a913ecf04bd3ee6b30c3babba6f9c7ecf7735cf078034d55e664d0d33f07ffa8",
     "registered_at_commit": "bd7647e38d58bd238a501ddd2a4944c89f3f5ecf",
-    "scorer_path": "scripts/cm-attackers/path-gamer.py"
+    "scorer_path": "scripts/cm-attackers/path-gamer.py",
+    "steward": "house"
   },
   {
     "name": "basename-gamer",
     "scorer_sha256": "f5df9b594a4ea3266a2f6763a65513335a957f4da61ba19390297ba9d7ddff64",
     "registered_at_commit": "bd7647e38d58bd238a501ddd2a4944c89f3f5ecf",
-    "scorer_path": "scripts/cm-attackers/basename-gamer.py"
+    "scorer_path": "scripts/cm-attackers/basename-gamer.py",
+    "steward": "house"
   },
   {
     "name": "boilerplate-gamer",
     "scorer_sha256": "fad939838978408c36ebc2e547182ae11226c2ef87f246b96e85968ae5fc3a63",
     "registered_at_commit": "bd7647e38d58bd238a501ddd2a4944c89f3f5ecf",
-    "scorer_path": "scripts/cm-attackers/boilerplate-gamer.py"
+    "scorer_path": "scripts/cm-attackers/boilerplate-gamer.py",
+    "steward": "house"
   },
   {
     "name": "cherry-pick-assassin",
     "scorer_sha256": "a0ca1163eef08cae85bce52e5e8c68fc2246cbacbcc3bc5bc7dda524d9851507",
     "registered_at_commit": "bd7647e38d58bd238a501ddd2a4944c89f3f5ecf",
-    "scorer_path": "scripts/cm-attackers/cherry-pick-assassin.py"
+    "scorer_path": "scripts/cm-attackers/cherry-pick-assassin.py",
+    "steward": "house"
   }
 ]

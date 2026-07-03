@@ -173,6 +173,14 @@ jobs:
       - name: Held-out anchor integrity (commitments vs reveals)
         run: ./scripts/cm-heldout.sh verify
 
+      - name: Held-out matrix (memorizers must fail the unseen anchor)
+        # The second measured result, asserted permanently: on revealed
+        # fail-anchor hx-02 (sealed before the challengers registered),
+        # every memorization/inflation attacker misses while the engine
+        # hits. Standing earned: house-authored-blind-heldout —
+        # unmemorizability, not externality.
+        run: ./scripts/cm-heldout.sh self-test
+
   forbidden-wording:
     # v0.10.0 cutover (#54 AC7): forward-only check that rejects newly-added
     # `"Operational acceptance"`, `"Operationally accepted"`,

@@ -9,8 +9,8 @@
 # tamper-evident ORDERING. It does not prove the label is correct: a
 # house-authored held-out anchor earns UNMEMORIZABILITY, not
 # externality. Standing earned here is scoped
-# `house-authored-heldout-anchors` — above the public commons, below
-# `blind-external-anchors`, which requires a non-house anchor AUTHOR
+# `house-authored-blind-heldout` — above the public commons, below
+# `external-blind-heldout`, which requires a non-house anchor AUTHOR
 # (an institution, not code; add an external commitment via PR to take
 # that role).
 #
@@ -177,6 +177,11 @@ for name, text in docs.items():
 label = {
     "anchor_id": anchor_id, "kind": kind, "score_band": band,
     "loss": "0 if band[0] <= score <= band[1] else min(|score-band[0]|,|score-band[1]|)",
+    "rationale": ("a small corpus whose three documents share one vocabulary, one "
+                  "version, resolving links, and uncontested authority" if kind == "pass"
+                  else "contested single-source-of-truth claims in every file, three "
+                       "conflicting versions, broken links and dead anchors, and "
+                       "duplicate definitions that disagree"),
     "salt": salt,
 }
 open(os.path.join(bdir, "label.json"), "w").write(json.dumps(label, indent=2))
@@ -189,10 +194,11 @@ digest = hashlib.sha256(open(tar_path, "rb").read()).hexdigest()
 commitment = {
     "anchor_id": anchor_id,
     "sha256": digest,
-    "label_schema": "score_band [lo, hi] over C_sigma_num; loss predeclared in label.json",
-    "authored_by": "house",
-    "earns": "unmemorizability, not externality (cm-of-cms SKILL.md section 6)",
-    "files": sorted(docs.keys()) and len(docs) + 1,
+    "author_class": "house",
+    "steward": "house",
+    "label_schema": "score_band [lo, hi] over C_sigma_num; label carries band, rationale, salt",
+    "loss_function_id": "band-distance",
+    "earns": "house-authored-blind-heldout",
 }
 open(f"heldout/{anchor_id}.commitment.json", "w").write(json.dumps(commitment, indent=2))
 print(f"cm-heldout: sealed {anchor_id} ({kind}) -> {tar_path}")
@@ -215,7 +221,7 @@ regs = json.load(open(path)) if os.path.exists(path) else []
 if any(r["name"] == name for r in regs):
     print(f"cm-heldout: {name} already registered", file=sys.stderr); raise SystemExit(2)
 regs.append({"name": name, "scorer_sha256": digest, "registered_at_commit": head,
-             "scorer_path": scorer})
+             "scorer_path": scorer, "steward": "house"})
 json.dump(regs, open(path, "w"), indent=2)
 print(f"cm-heldout: registered {name} (digest {digest[:16]}..., commit {head[:9]})")
 PYEOF
@@ -294,7 +300,7 @@ os.makedirs("heldout/results", exist_ok=True)
 out = {
     "anchor_id": anchor_id, "challenger": name, "scorer_sha256": reg["scorer_sha256"],
     "score": s, "score_band": [lo, hi], "hit": hit, "loss": loss,
-    "standing_scope": "house-authored-heldout-anchors",
+    "standing_scope": "house-authored-blind-heldout",
     "note": "commit-reveal proves ordering (unmemorizability); the label is house judgment — externality requires a non-house anchor author",
 }
 json.dump(out, open(f"heldout/results/{anchor_id}--{name}.json", "w"), indent=2)
@@ -302,6 +308,41 @@ print(f"cm-heldout: {anchor_id} :: {name} -> score {s} band [{lo}, {hi}] "
       f"{'HIT' if hit else 'MISS (published)'}")
 raise SystemExit(0 if hit else 1)
 PYEOF
+}
+
+# Assert the executed held-out matrix (CI acceptance test): the meter
+# hits both anchors; every memorization/inflation attacker misses the
+# fail anchor; cherry-pick-assassin hits it (honest score, lying
+# evidence — adjudication is its closure, not this script).
+self_test() {
+  python3 - <<'PYEOF3'
+import json, sys
+EXPECT = {
+    ("hx-01", "coh-mechanical"): True,  ("hx-02", "coh-mechanical"): True,
+    ("hx-02", "flatterer"): False,      ("hx-02", "path-gamer"): False,
+    ("hx-02", "basename-gamer"): False, ("hx-02", "boilerplate-gamer"): False,
+    ("hx-02", "cherry-pick-assassin"): True,
+}
+status = 0
+for (anchor, name), want in EXPECT.items():
+    try:
+        d = json.load(open(f"heldout/results/{anchor}--{name}.json"))
+    except FileNotFoundError:
+        print(f"cm-heldout: SELF-TEST FAIL — no result for {anchor}::{name}", file=sys.stderr)
+        status = 1; continue
+    got = bool(d["hit"])
+    if got != want:
+        print(f"cm-heldout: SELF-TEST FAIL — {anchor}::{name} hit={got}, expected {want}", file=sys.stderr)
+        status = 1
+    else:
+        print(f"cm-heldout: self-test {anchor}::{name} -> {'HIT' if got else 'MISS'} (expected)")
+    if d.get("standing_scope") != "house-authored-blind-heldout":
+        print(f"cm-heldout: SELF-TEST FAIL — {anchor}::{name} carries wrong standing scope", file=sys.stderr)
+        status = 1
+if status == 0:
+    print("cm-heldout: self-test pass (memorizers fail the unseen anchor; the meter does not)")
+sys.exit(status)
+PYEOF3
 }
 
 verify() {
@@ -334,5 +375,6 @@ case "${1:-}" in
             reveal "$2" "$3" ;;
   score)    id="$2"; shift 2; score "$id" "$@" ;;
   verify)   verify ;;
-  *) echo "usage: $0 generate|register|reveal|score|verify ..." >&2; exit 2 ;;
+  self-test) self_test ;;
+  *) echo "usage: $0 generate|register|reveal|score|verify|self-test ..." >&2; exit 2 ;;
 esac

@@ -1,8 +1,9 @@
 {
   "anchor_id": "hx-02",
   "sha256": "c8bcfff58e0ff56b12c19a64f9dbc388d7eea66e30d8fcdf8e56120baffb93d8",
+  "author_class": "house",
+  "steward": "house",
   "label_schema": "score_band [lo, hi] over C_sigma_num; loss predeclared in label.json",
-  "authored_by": "house",
-  "earns": "unmemorizability, not externality (cm-of-cms SKILL.md section 6)",
-  "files": 4
+  "loss_function_id": "band-distance",
+  "earns": "house-authored-blind-heldout"
 }

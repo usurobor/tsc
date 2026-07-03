@@ -454,8 +454,8 @@ ORDERING — no challenger could have memorized or tuned to the anchor.
 What it does not prove is that the label is right: a house-authored
 held-out anchor tests agreement with *the house's* judgment on an
 unseen case. So held-out-house standing is the middle rung
-(`house-authored-heldout-anchors`), and promotion to
-`blind-external-anchors` inherits the non-house-provenance requirement:
+(`house-authored-blind-heldout`), and promotion to
+`external-blind-heldout` inherits the non-house-provenance requirement:
 the anchor's AUTHOR must be outside the house. That last step is not
 code — an external author or steward adds their commitment via PR.
 
@@ -490,7 +490,7 @@ so the fixed point can never sound stronger than its anchor base:
 }
 ```
 
-The scope promotes to `blind-external-anchors` only when the mechanics
+The scope promotes to `external-blind-heldout` only when the mechanics
 change (registered challengers, revealed held-out anchors, external
 anchor count > 0, consistency gate passing) — never by prose.
 
