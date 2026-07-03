@@ -143,20 +143,32 @@ with open(sys.argv[1]) as f:
     print(json.dumps(yaml.safe_load(f)))
 ' "$yaml_path" > "$json_path"
 
-  # 4. Measurement skills: also vet the typed #SelfMeasure definition and
-  #    run the cross-file consistency checks.
+  # 4. Measurement skills: also vet the typed methodology definition and
+  #    run the cross-file consistency checks. The methodology block key
+  #    picks the definition: `self_measure` -> #SelfMeasure (deployed,
+  #    bindings required), `cm_of_cms` -> #CMOfCMs (essence-only).
   local artifact_class
   artifact_class=$(jq -r '.artifact_class // ""' "$json_path")
   if [[ "$artifact_class" == "measurement" ]]; then
-    if ! cue_err=$(cd "$REPO_ROOT" && cue vet -d '#SelfMeasure' "$SCHEMA" "$yaml_path" 2>&1); then
+    local block cue_def
+    if jq -e '.self_measure' "$json_path" >/dev/null; then
+      block="self_measure" cue_def="#SelfMeasure"
+    elif jq -e '.cm_of_cms' "$json_path" >/dev/null; then
+      block="cm_of_cms" cue_def="#CMOfCMs"
+    else
+      emit_finding "$rel" "(methodology)" "block-present" \
+        "measurement skill has neither a self_measure nor a cm_of_cms block"
+      return 1
+    fi
+    if ! cue_err=$(cd "$REPO_ROOT" && cue vet -d "$cue_def" "$SCHEMA" "$yaml_path" 2>&1); then
       while IFS= read -r line; do
         [[ -z "$line" ]] && continue
         [[ "$line" =~ ^[[:space:]] || "$line" == *"$yaml_path"* ]] && continue
-        emit_finding "$rel" "(cue)" "self-measure-schema" "$line"
+        emit_finding "$rel" "(cue)" "methodology-schema" "$line"
       done <<<"$cue_err"
       return 1
     fi
-    validate_measurement_cross_checks "$rel" "$json_path" || return 1
+    validate_measurement_cross_checks "$rel" "$json_path" "$block" || return 1
   fi
 
   printf "%s%s%s %s\n" "$GREEN" "$SYM_OK" "$RESET" "$rel"
@@ -166,22 +178,21 @@ with open(sys.argv[1]) as f:
 # --- measurement cross-file checks ---------------------------------------
 # The skill declares what the engine computes and what the LLM estimates.
 # These checks pin the declaration to the sources of truth so the skill
-# cannot drift from what actually runs.
+# cannot drift from what actually runs. $3 is the methodology block key
+# (`self_measure` or `cm_of_cms`); binding paths (render/ledger) are
+# checked only when the block declares them — they are optional in the
+# core contract and required only for deployed methodologies.
 validate_measurement_cross_checks() {
-  local rel="$1" json_path="$2"
+  local rel="$1" json_path="$2" block="$3"
   local ok=0
 
-  # 4a. Declared paths must exist.
+  # 4a. Declared paths must exist. Essence paths are unconditional;
+  #     binding paths are checked when present.
   local key path
   for key in \
-    '.self_measure.registry' \
-    '.self_measure.instruction' \
-    '.self_measure.mechanical.backend' \
-    '.self_measure.render.command_out' \
-    '.self_measure.render.workflow_out' \
-    '.self_measure.ledger.path' \
-    '.self_measure.ledger.script' \
-    '.self_measure.ledger.workflow_out'
+    ".${block}.registry" \
+    ".${block}.instruction" \
+    ".${block}.mechanical.backend"
   do
     path=$(jq -r "$key // \"\"" "$json_path")
     if [[ -z "$path" ]]; then
@@ -192,34 +203,47 @@ validate_measurement_cross_checks() {
       ok=1
     fi
   done
+  for key in \
+    ".${block}.render.command_out" \
+    ".${block}.render.workflow_out" \
+    ".${block}.ledger.path" \
+    ".${block}.ledger.script" \
+    ".${block}.ledger.workflow_out"
+  do
+    path=$(jq -r "$key // \"\"" "$json_path")
+    if [[ -n "$path" && ! -e "$REPO_ROOT/$path" ]]; then
+      emit_finding "$rel" "$key" "path-exists" "declared path not found: $path"
+      ok=1
+    fi
+  done
 
   # 4b. Every declared target must resolve in the registry.
   local registry
-  registry=$(jq -r '.self_measure.registry // ""' "$json_path")
+  registry=$(jq -r ".${block}.registry // \"\"" "$json_path")
   if [[ -n "$registry" && -f "$REPO_ROOT/$registry" ]]; then
     local target
     while IFS= read -r target; do
       if ! grep -q "^\[target\.${target}\]" "$REPO_ROOT/$registry"; then
-        emit_finding "$rel" "self_measure.targets" "target-registered" \
+        emit_finding "$rel" "${block}.targets" "target-registered" \
           "target '$target' not found in $registry"
         ok=1
       fi
-    done < <(jq -r '.self_measure.targets[]' "$json_path")
+    done < <(jq -r ".${block}.targets[]" "$json_path")
   fi
 
   # 4c. Every declared mechanical signal code must exist in the backend
   #     source (the engine is the source of truth for what is computed).
   local backend
-  backend=$(jq -r '.self_measure.mechanical.backend // ""' "$json_path")
+  backend=$(jq -r ".${block}.mechanical.backend // \"\"" "$json_path")
   if [[ -n "$backend" && -f "$REPO_ROOT/$backend" ]]; then
     local sig
     while IFS= read -r sig; do
       if ! grep -q "\"$sig\"" "$REPO_ROOT/$backend"; then
-        emit_finding "$rel" "self_measure.mechanical.signals" "signal-in-engine" \
+        emit_finding "$rel" "${block}.mechanical.signals" "signal-in-engine" \
           "signal code '$sig' not found in $backend"
         ok=1
       fi
-    done < <(jq -r '.self_measure.mechanical.signals | (.alpha[], .beta[], .gamma[])' "$json_path")
+    done < <(jq -r ".${block}.mechanical.signals | (.alpha[], .beta[], .gamma[])" "$json_path")
   fi
 
   # 4d. Declared LLM estimate fields must equal EXACTLY the top-level keys
@@ -228,13 +252,13 @@ validate_measurement_cross_checks() {
   #     so a field mentioned in prose but absent from the contract fails,
   #     and a contract key missing from the declaration fails too.
   local instruction
-  instruction=$(jq -r '.self_measure.instruction // ""' "$json_path")
+  instruction=$(jq -r ".${block}.instruction // \"\"" "$json_path")
   if [[ -n "$instruction" && -f "$REPO_ROOT/$instruction" ]]; then
     local contract_diff
-    if ! contract_diff=$(python3 - "$REPO_ROOT/$instruction" "$json_path" <<'PYEOF'
+    if ! contract_diff=$(python3 - "$REPO_ROOT/$instruction" "$json_path" "$block" <<'PYEOF'
 import json, re, sys
 
-instruction_path, skill_json_path = sys.argv[1], sys.argv[2]
+instruction_path, skill_json_path, block = sys.argv[1], sys.argv[2], sys.argv[3]
 text = open(instruction_path).read()
 m = re.search(r"```json\n(.*?)\n```", text, re.DOTALL)
 if not m:
@@ -245,7 +269,7 @@ try:
 except json.JSONDecodeError as e:
     print(f"output contract block is not valid JSON: {e}")
     sys.exit(1)
-declared = set(json.load(open(skill_json_path))["self_measure"]["llm"]["estimates"])
+declared = set(json.load(open(skill_json_path))[block]["llm"]["estimates"])
 missing_from_contract = sorted(declared - contract_keys)
 missing_from_declaration = sorted(contract_keys - declared)
 if missing_from_contract:
@@ -257,7 +281,7 @@ PYEOF
     ); then
       while IFS= read -r line; do
         [[ -z "$line" ]] && continue
-        emit_finding "$rel" "self_measure.llm.estimates" "estimate-in-contract" "$line"
+        emit_finding "$rel" "${block}.llm.estimates" "estimate-in-contract" "$line"
       done <<<"$contract_diff"
       ok=1
     fi

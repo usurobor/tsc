@@ -22,6 +22,10 @@ self_measure:
   instruction: runtime/SELF-MEASURE.md
   output_root: .tsc/self
   default_mode: mechanical
+  consistency:
+    mechanical: identical
+    llm_repeats: 3
+    llm_spread: max abs pairwise diff over numeric contract fields, barrier-mapped
   mechanical:
     backend: engine/ocaml/lib/mechanical_scoring.ml
     determinism: fixture

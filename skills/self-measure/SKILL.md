@@ -40,6 +40,14 @@ self_measure:
   instruction: runtime/SELF-MEASURE.md
   output_root: .tsc/self
   default_mode: auto
+  consistency:
+    mechanical: identical
+    llm_repeats: 3
+    llm_spread: >-
+      max absolute pairwise difference over the response contract's
+      numeric fields; delta_consistency maps through the barrier
+      phi(delta) = delta/(1-delta) to Coh_consistency = exp(-phi)
+      (tsc-core section 3.2, lambda = 1)
   mechanical:
     backend: engine/ocaml/lib/mechanical_scoring.ml
     determinism: >-
@@ -101,9 +109,10 @@ self_measure:
         engine HTTP route — LLM_PROVIDER / LLM_MODEL / LLM_API_KEY
         (docs/beta/guides/OPERATOR-MANUAL.md section 3)
       ci: >-
-        claude-cli — an anthropics/claude-code-action step in the rendered
-        workflow, permitted only to read the emitted prompt and write the
-        response JSON; the engine ingests the response via --llm-response
+        claude-cli — a pinned Claude CLI invocation in the rendered
+        workflow (the renderer owns the version pin), permitted only to
+        read the emitted prompt and write the response JSON; the engine
+        ingests the response via --llm-response
     ci_prompt: |
       You are the LLM witness step of TSC self-measurement, rendered from
       skills/self-measure/SKILL.md. Your entire task:
@@ -146,8 +155,11 @@ system. This skill declares how TSC turns that instrument on itself — and
 draws the exact line between the parts a machine computes and the one part
 a model estimates.
 
-This is the **0th coherence methodology**: the tsc-repo CM applied to its
-own repo. The typed contract it satisfies —
+This is the **1st coherence methodology**: the tsc-repo CM applied to its
+own repo. (The 0th is the CM of CMs — `skills/cm-of-cms/SKILL.md`, the
+methodology that measures methodologies, this one included; each
+methodology's corpus is measured as a closed system, so cross-methodology
+references are plain paths, not links.) The typed contract it satisfies —
 [`#CoherenceMethodology`](../../schemas/skill.cue) — is deliberately
 general: a methodology names its corpus (registry + targets), its
 mechanical signal inventory, its LLM estimate contract and prohibitions,
@@ -350,10 +362,11 @@ the route into three explicit steps per target:
    target metadata, and hashed bundle the HTTP route sends, joined into
    one document (the HTTP route carries the instruction as the system
    message and the rest as the user message).
-2. A Claude CLI step (`anthropics/claude-code-action`) runs the
-   `ci_prompt` declared in this skill's frontmatter, with tool permissions
-   reduced to reading that prompt file and writing
-   `.tsc/self/response/<target>.json`.
+2. A Claude CLI step (the `claude` CLI, npm-pinned by the renderer —
+   workflows fire on tag and `VERSION` pushes, which hosted actions for
+   this route do not serve) runs the `ci_prompt` declared in this skill's
+   frontmatter, with tool permissions reduced to reading that prompt file
+   and writing `.tsc/self/response/<target>.json`.
 3. `coh-self --ingest <target>` — the engine reads the response via
    `coh --llm-response`, validates it, and renders the hybrid report.
 
@@ -391,8 +404,8 @@ report's `mode` field states the backend that produced it;
 `coh self --require-llm` forces the semantic path and refuses loudly
 when no credentials are configured, never degrading to mechanical.
 
-**The coherence ledger.** [`.tsc/COHERENCE.md`](../../.tsc/COHERENCE.md)
-carries one row per release. A row is the **hybrid** measurement — the
+**The coherence ledger.** `.tsc/COHERENCE.md` (generated state — written
+by the ledger workflow, never edited by hand) carries one row per release. A row is the **hybrid** measurement — the
 mechanical backend plus the Claude CLI witness — whenever the witness
 credential is present; when it is not, the row is mechanical and says so
 (every row names its mode and instrument). Historical backfill rows are
@@ -401,7 +414,8 @@ reproducible; a semantic judgment of one would not be. The rendered
 `tsc-coherence-ledger` workflow appends the row on every version
 increment — a `VERSION`-bump push or a release-tag push, patch
 increments included (the tag is materialized from CI when it does not
-exist yet) — via
+exist yet; releases themselves are cut by `scripts/release.sh`, which
+gates on a `CHANGELOG.md` entry) — via
 [scripts/coherence-ledger.sh](../../scripts/coherence-ledger.sh);
 commits between releases do not write the ledger (per-run reports are CI
 artifacts instead). Historical rows were backfilled by measuring each

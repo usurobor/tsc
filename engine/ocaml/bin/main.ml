@@ -421,9 +421,7 @@ let write_validation_failure_artifact
     validation-failure artifact and exit non-zero. Shared by run_llm and
     run_hybrid so no refusal path can diverge between modes. *)
 let validate_witness_or_exit ~args ~bundle ~ts ~raw_path raw_response =
-  let expected_target =
-    Prompt.target_kind_to_string bundle.bundle_target_kind
-  in
+  let expected_target = bundle.bundle_target_name in
   match
     Response_schema.validate_witness_response ~expected_target raw_response
   with

@@ -13,6 +13,10 @@ Current targets:
 - `spec` — theory surface
 - `engine` — implementation surface
 - `repo` — aggregate repository surface
+- `methodology` — the 1st coherence methodology (self-measurement) as a
+  measurable corpus
+- `cm-of-cms` — the 0th coherence methodology (the CM of CMs) as a
+  measurable corpus, including the calibration commons
 
 ## Authority
 

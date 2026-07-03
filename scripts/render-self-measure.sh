@@ -234,9 +234,40 @@ workflow_name = os.path.basename(workflow_out).rsplit(".", 1)[0]
 matrix = ", ".join(targets)
 
 prompt_body = ci_prompt.replace("{target}", "${{ matrix.target }}")
-prompt_indented = "\n".join(
-    ("            " + line).rstrip() for line in prompt_body.rstrip("\n").split("\n")
-)
+
+# The witness rides the Claude CLI directly (npm-pinned) rather than
+# claude-code-action: the action rejects `push` events, and both rendered
+# workflows fire on tag / VERSION / path pushes. The CLI is the narrower
+# pipe anyway — one prompt in, tool permissions from a settings file, one
+# JSON artifact out. Renderer authority: CLI version pin, settings
+# encoding, step layout.
+CLAUDE_CLI_VERSION = "2.1.199"
+
+def cli_witness_run(prompt_text):
+    """Run-block body for a CLI witness step. Every emitted line sits at
+    the run block's base indentation (10 spaces), so after YAML strips
+    the block indent the heredoc delimiters land at column 0."""
+    ind = "          "
+    prompt_block = "\n".join(
+        (ind + line).rstrip() for line in prompt_text.rstrip("\n").split("\n")
+    )
+    return f"""{ind}npm install -g @anthropic-ai/claude-code@{CLAUDE_CLI_VERSION}
+{ind}cat > "$RUNNER_TEMP/witness-settings.json" <<'SETTINGS'
+{ind}{{
+{ind}  "permissions": {{
+{ind}    "allow": [
+{ind}      "Read({output_root}/prompt/**)",
+{ind}      "Write({output_root}/response/**)"
+{ind}    ]
+{ind}  }}
+{ind}}}
+{ind}SETTINGS
+{ind}cat > "$RUNNER_TEMP/witness-prompt.md" <<'WITNESS_PROMPT'
+{prompt_block}
+{ind}WITNESS_PROMPT
+{ind}claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \\
+{ind}  --settings "$RUNNER_TEMP/witness-settings.json" \\
+{ind}  --max-turns 16"""
 
 build_steps = """      - uses: actions/checkout@v4
 
@@ -367,26 +398,15 @@ jobs:
             {command_out} --emit-prompt ${{{{ matrix.target }}}} --output {output_root}
 
       - name: Estimate deltas and evidence (LLM witness — Claude CLI)
-        uses: anthropics/claude-code-action@v1
-        with:
-          claude_code_oauth_token: ${{{{ secrets.{llm_secret} }}}}
-          claude_args: "--max-turns 16"
-          settings: |
-            {{
-              "permissions": {{
-                "allow": [
-                  "Read({output_root}/prompt/**)",
-                  "Write({output_root}/response/**)"
-                ]
-              }}
-            }}
-          prompt: |
-{prompt_indented}
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{{{ secrets.{llm_secret} }}}}
+        run: |
+{cli_witness_run(prompt_body)}
 
       - name: Validate and ingest witness response (deterministic)
         env:
           LLM_PROVIDER: claude-cli
-          LLM_MODEL: claude-code-action
+          LLM_MODEL: claude-code-cli@{CLAUDE_CLI_VERSION}
         run: |
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
             {command_out} --ingest ${{{{ matrix.target }}}} --output {output_root}
@@ -439,10 +459,8 @@ ledger_build_steps = build_steps.split("\n\n", 1)[1]
 def ledger_witness_steps():
     blocks = []
     for t in targets:
-        prompt_t = "\n".join(
-            ("            " + line).rstrip()
-            for line in ci_prompt.replace("{target}", t).rstrip("\n").split("\n")
-        )
+        # The job-level env already projects the {llm_secret} secret, and
+        # the Claude CLI reads exactly that variable — no step env needed.
         blocks.append(f"""      - name: Emit witness prompt ({t})
         if: ${{{{ env.{llm_secret} != '' }}}}
         run: |
@@ -451,27 +469,14 @@ def ledger_witness_steps():
 
       - name: Estimate deltas and evidence ({t} — Claude CLI witness)
         if: ${{{{ env.{llm_secret} != '' }}}}
-        uses: anthropics/claude-code-action@v1
-        with:
-          claude_code_oauth_token: ${{{{ secrets.{llm_secret} }}}}
-          claude_args: "--max-turns 16"
-          settings: |
-            {{
-              "permissions": {{
-                "allow": [
-                  "Read({output_root}/prompt/**)",
-                  "Write({output_root}/response/**)"
-                ]
-              }}
-            }}
-          prompt: |
-{prompt_t}
+        run: |
+{cli_witness_run(ci_prompt.replace("{target}", t))}
 
       - name: Validate and ingest witness response ({t})
         if: ${{{{ env.{llm_secret} != '' }}}}
         env:
           LLM_PROVIDER: claude-cli
-          LLM_MODEL: claude-code-action
+          LLM_MODEL: claude-code-cli@{CLAUDE_CLI_VERSION}
         run: |
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
             {command_out} --ingest {t} --output {output_root}""")

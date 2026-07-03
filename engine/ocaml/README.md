@@ -52,9 +52,9 @@ dune build      # binary: _build/default/bin/main.exe
 dune runtest
 ```
 
-Current engine version: 0.10.0 (see `VERSION` at the repo root — the
-single version source; `dune-project` must agree, enforced by
-`scripts/check-version-consistency.sh`).
+The engine version lives in `VERSION` at the repo root — the single
+version source; `dune-project` must agree, enforced by
+`scripts/check-version-consistency.sh`.
 
 ## Change discipline
 

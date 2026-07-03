@@ -8,7 +8,9 @@ cnos (`schemas/` there); adapted to tsc's single-skill scale.
 - `skill.cue` — schema for `SKILL.md` frontmatter: `#Skill` (base),
   `#CoherenceMethodology` (the comparable contract for a coherence
   methodology — supply your own CM by conforming to it), and
-  `#SelfMeasure` (the 0th methodology: tsc's repo CM applied to itself).
+  `#SelfMeasure` (the 1st methodology: tsc's repo CM applied to itself,
+  deployed) and `#CMOfCMs` (the 0th: the methodology that measures
+  methodologies, itself included).
 - `fixtures/skill-frontmatter/{valid,invalid}/` — positive/negative
   regression suite for the validator. Each invalid fixture carries a
   `SKILL.expect` sidecar naming the expected diagnostic substring.

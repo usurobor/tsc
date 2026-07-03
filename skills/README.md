@@ -11,12 +11,17 @@ diffs so the two cannot drift.
 
 ## Index
 
-- `self-measure/` — how TSC measures itself: the targets, the fully
-  mechanical pipeline, and the one narrowly scoped cognitive task
-  delegated to an LLM. Rendered into the `coh self` command
-  (`scripts/coh-self`) and the `tsc-self-measure` workflow by
-  `scripts/render-self-measure.sh`. Includes the witness-response
-  fixtures used by the CI smoke.
+- `cm-of-cms/` — the 0th coherence methodology: how coherence
+  methodologies themselves are measured, this one included. Declares the
+  consistency protocol (`scripts/cm-consistency.sh`), what measuring a
+  CM means per axis, and the adversarial-CM doctrine (admissibility,
+  maximin standing).
+- `self-measure/` — the 1st coherence methodology: how TSC measures
+  itself — the targets, the fully mechanical pipeline, and the one
+  narrowly scoped cognitive task delegated to an LLM. Rendered into the
+  `coh self` command (`scripts/coh-self`) and the `tsc-self-measure` +
+  `tsc-coherence-ledger` workflows by `scripts/render-self-measure.sh`.
+  Includes the witness-response fixtures used by the CI smoke.
 
 ## Editing a skill
 

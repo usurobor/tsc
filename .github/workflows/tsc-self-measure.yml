@@ -151,43 +151,48 @@ jobs:
             scripts/coh-self --emit-prompt ${{ matrix.target }} --output .tsc/self
 
       - name: Estimate deltas and evidence (LLM witness — Claude CLI)
-        uses: anthropics/claude-code-action@v1
-        with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--max-turns 16"
-          settings: |
-            {
-              "permissions": {
-                "allow": [
-                  "Read(.tsc/self/prompt/**)",
-                  "Write(.tsc/self/response/**)"
-                ]
-              }
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          npm install -g @anthropic-ai/claude-code@2.1.199
+          cat > "$RUNNER_TEMP/witness-settings.json" <<'SETTINGS'
+          {
+            "permissions": {
+              "allow": [
+                "Read(.tsc/self/prompt/**)",
+                "Write(.tsc/self/response/**)"
+              ]
             }
-          prompt: |
-            You are the LLM witness step of TSC self-measurement, rendered from
-            skills/self-measure/SKILL.md. Your entire task:
+          }
+          SETTINGS
+          cat > "$RUNNER_TEMP/witness-prompt.md" <<'WITNESS_PROMPT'
+          You are the LLM witness step of TSC self-measurement, rendered from
+          skills/self-measure/SKILL.md. Your entire task:
 
-            1. Read the file .tsc/self/prompt/${{ matrix.target }}.md. It contains the
-               canonical scoring instruction (runtime/SELF-MEASURE.md) followed
-               by the ${{ matrix.target }} target bundle. Follow that instruction exactly.
-            2. Write your answer — the single JSON object the instruction
-               requires, with no markdown fences and no prose around it — to
-               .tsc/self/response/${{ matrix.target }}.json.
+          1. Read the file .tsc/self/prompt/${{ matrix.target }}.md. It contains the
+             canonical scoring instruction (runtime/SELF-MEASURE.md) followed
+             by the ${{ matrix.target }} target bundle. Follow that instruction exactly.
+          2. Write your answer — the single JSON object the instruction
+             requires, with no markdown fences and no prose around it — to
+             .tsc/self/response/${{ matrix.target }}.json.
 
-            Constraints (your tool permissions also enforce them):
-            - Do not read any file other than .tsc/self/prompt/${{ matrix.target }}.md.
-            - Do not write any file other than .tsc/self/response/${{ matrix.target }}.json.
-            - Do not compute Coh or C_sigma values; report the delta and
-              component estimates the instruction asks for. The engine applies
-              the barrier transform and aggregation deterministically after
-              validating your output, and rejects the response if any required
-              delta field is missing or out of range.
+          Constraints (your tool permissions also enforce them):
+          - Do not read any file other than .tsc/self/prompt/${{ matrix.target }}.md.
+          - Do not write any file other than .tsc/self/response/${{ matrix.target }}.json.
+          - Do not compute Coh or C_sigma values; report the delta and
+            component estimates the instruction asks for. The engine applies
+            the barrier transform and aggregation deterministically after
+            validating your output, and rejects the response if any required
+            delta field is missing or out of range.
+          WITNESS_PROMPT
+          claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
+            --settings "$RUNNER_TEMP/witness-settings.json" \
+            --max-turns 16
 
       - name: Validate and ingest witness response (deterministic)
         env:
           LLM_PROVIDER: claude-cli
-          LLM_MODEL: claude-code-action
+          LLM_MODEL: claude-code-cli@2.1.199
         run: |
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
             scripts/coh-self --ingest ${{ matrix.target }} --output .tsc/self

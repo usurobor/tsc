@@ -1,0 +1,23 @@
+format = "tsc-target/0.1"
+name = "cm-of-cms"
+kind = "aggregate"
+description = "The 0th coherence methodology as a measurable corpus: the CM-of-CMs declaration, the comparable schema it types against, its consistency instrument, its corpus declarations, and the calibration commons."
+
+include = [
+  "skills/cm-of-cms/SKILL.md",
+  "schemas/skill.cue",
+  "scripts/cm-consistency.sh",
+  "scripts/ci/validate-skill-frontmatter.sh",
+  "targets/registry.tsc",
+  "targets/cm-of-cms.tsc",
+  "targets/methodology.tsc",
+  "runtime/SELF-MEASURE.md",
+  "katas/README.md",
+  "engine/ocaml/lib/mechanical_scoring.ml",
+  "engine/ocaml/lib/response_schema.ml",
+  "engine/ocaml/lib/coherence.ml"
+]
+
+exclude = [
+  ".tsc/**"
+]

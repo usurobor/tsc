@@ -23,6 +23,10 @@ self_measure:
   instruction: schemas/fixtures/skill-frontmatter/invalid/estimate-not-in-contract/instruction.md
   output_root: .tsc/self
   default_mode: mechanical
+  consistency:
+    mechanical: identical
+    llm_repeats: 3
+    llm_spread: max abs pairwise diff over numeric contract fields, barrier-mapped
   mechanical:
     backend: engine/ocaml/lib/mechanical_scoring.ml
     determinism: fixture

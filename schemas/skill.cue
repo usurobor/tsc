@@ -58,9 +58,7 @@ package skill
 //   versions, runner image, secret-name bindings, tool allowlists,
 //   step layout, commit mechanics.
 #CoherenceMethodology: {
-		// Rendered command basename. The engine dispatches `coh self` to
-		// this executable (git-style external subcommand).
-		command: string & =~"^[a-z][a-z0-9-]*$"
+	// ---- Measurement essence (required for every CM) ----------------
 
 		// Named-target model inputs (existing engine surfaces).
 		registry: !=""
@@ -75,6 +73,22 @@ package skill
 		output_root: string & =~"^\\.tsc(/|$)"
 
 		default_mode: "mechanical" | "llm" | "hybrid" | "auto"
+
+		// Consistency protocol: a methodology must be tested against the
+		// same input repeatedly and the agreement of its outputs measured
+		// and reported. The mechanical arm must be exactly reproducible
+		// (identical bundle -> identical scores). The LLM arm's repeat
+		// spread maps through the canonical barrier: delta_consistency =
+		// max absolute pairwise difference over the response contract's
+		// numeric fields; Coh_consistency = exp(-lambda * phi(delta))
+		// (tsc-core §3.2). An instrument that cannot agree with itself is
+		// incoherent as an instrument — this is alpha applied to the meter.
+		consistency: {
+			mechanical: "identical"
+			llm_repeats: int & >=2
+			llm_spread:  !=""
+			...
+		}
 
 		// Mechanical contract: the deterministic backend and its full
 		// signal inventory. The validation script cross-checks every
@@ -110,9 +124,16 @@ package skill
 			...
 		}
 
-		// Render targets (renderer writes these; both carry DO-NOT-EDIT
-		// headers pointing back at this skill).
-		render: {
+	// ---- Deployment bindings (optional: a supplied CM is comparable
+	// on the essence alone; a DEPLOYED CM binds command/render/ledger/ci
+	// surfaces the way #SelfMeasure does) ------------------------------
+
+		// Rendered command basename (deployed CMs).
+		command?: string & =~"^[a-z][a-z0-9-]*$"
+
+		// Render targets (renderer writes these; each carries a
+		// DO-NOT-EDIT header pointing back at its skill).
+		render?: {
 			command_out:  !=""
 			workflow_out: !=""
 			...
@@ -123,7 +144,7 @@ package skill
 		// releases do not write it. The skill owns the contract (path,
 		// cadence, mode, script); the renderer owns the trigger and
 		// commit mechanics.
-		ledger: {
+		ledger?: {
 			path:    !=""
 			cadence: "version-increments"
 			// hybrid: a row is the hybrid (mechanical + LLM witness)
@@ -143,7 +164,7 @@ package skill
 		// no separate toggle to drift out of sync with the credential.
 		// permission_intent uses logical names (contents.read) — the
 		// renderer owns the substrate encoding.
-		ci: {
+		ci?: {
 			llm_secret: !=""
 			llm_gate:   "secret-presence"
 			permission_intent: [...string]
@@ -154,14 +175,33 @@ package skill
 	...
 }
 
-// #SelfMeasure — the 0th coherence methodology: tsc's repo CM applied to
-// tsc itself. The skill's frontmatter carries the methodology under the
-// `self_measure:` key; its body is the human-readable authority. The
-// renderer (scripts/render-self-measure.sh) consumes it and materializes
+// #SelfMeasure — the 1st coherence methodology: tsc's repo CM applied to
+// tsc itself, DEPLOYED (command + render + ledger + ci bindings are
+// required here, optional in the core contract). The 0th methodology is
+// the CM of CMs (skills/cm-of-cms/SKILL.md): the methodology that
+// measures methodologies, including itself. The renderer
+// (scripts/render-self-measure.sh) consumes this skill and materializes
 // the substrate artifacts (coh-self command, measurement workflow,
 // ledger workflow).
 #SelfMeasure: #Skill & {
 	artifact_class: "measurement"
 	scope:          "repo"
-	self_measure:   #CoherenceMethodology
+	self_measure:   #CoherenceMethodology & {
+		command!: _
+		render!:  _
+		ledger!:  _
+		ci!:      _
+	}
+}
+
+// #CMOfCMs — the 0th coherence methodology: measures coherence
+// methodologies, itself included. Essence-only (no deployment bindings
+// required): its mechanical arm is the object-CM's own executable
+// verification battery plus the standard structural scorer over the
+// CM's bundle; its LLM arm judges whether the CM's declaration,
+// implementation, and instrument behavior still describe one system.
+#CMOfCMs: #Skill & {
+	artifact_class: "measurement"
+	scope:          "repo"
+	cm_of_cms:      #CoherenceMethodology
 }

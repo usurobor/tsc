@@ -180,6 +180,42 @@ let contains_keyword kw content =
 let contains_any keywords content =
   List.exists (fun kw -> contains_keyword kw content) keywords
 
+(** A keyword MENTION is not a keyword ACT: "deprecated" as a quoted enum
+    value, or a scorer's own keyword list in a string literal, does not
+    deprecate anything. An occurrence counts only when no character of the
+    match sits inside a double-quote or backtick span on its line. *)
+let line_has_unquoted needle line =
+  let nl = String.length needle and ll = String.length line in
+  if nl = 0 || nl > ll then false
+  else begin
+    let inside = Array.make ll false in
+    let in_dq = ref false and in_bt = ref false in
+    String.iteri (fun i c ->
+      (match c with
+       | '"' -> in_dq := not !in_dq
+       | '`' -> in_bt := not !in_bt
+       | _ -> ());
+      inside.(i) <- !in_dq || !in_bt) line;
+    let found = ref false and i = ref 0 in
+    while !i <= ll - nl && not !found do
+      if String.sub line !i nl = needle then begin
+        let quoted = ref false in
+        for j = !i to !i + nl - 1 do
+          if inside.(j) then quoted := true
+        done;
+        if not !quoted then found := true
+      end;
+      incr i
+    done;
+    !found
+  end
+
+let contains_any_unquoted keywords content =
+  let lines = String.split_on_char '\n' (str_lower content) in
+  List.exists (fun kw ->
+    let kw = str_lower kw in
+    List.exists (line_has_unquoted kw) lines) keywords
+
 (** A document is a Markdown file. Document-structure signals — headings,
     links, authority claims, filename fit — measure documents only: a
     markdown-shaped substring inside an OCaml string literal is not a
@@ -805,7 +841,9 @@ let sig_authority_evolution_consistency ~cfg (files : bundle_file list) : signal
   in
   let dep_kws = ["deprecated"; "superseded"; "replaced by"; "moved to"; "use instead"] in
   let living = List.filter (fun f -> not (is_ledger_or_archive f)) files in
-  let files_with_dep = List.filter (fun f -> contains_any dep_kws f.file_content) living in
+  let files_with_dep =
+    List.filter (fun f -> contains_any_unquoted dep_kws f.file_content) living
+  in
   let n = List.length files_with_dep in
   let n_total = List.length living in
   let score =
