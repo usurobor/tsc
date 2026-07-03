@@ -17,14 +17,20 @@ on:
       - 'targets/**'
       - 'runtime/**'
       - 'skills/**'
+  # Measure on every branch: a measurement surface that only reads main
+  # never sees the work while it can still be repaired. Firing on this
+  # workflow's own file makes installation itself the first measurement
+  # (same self-installation pattern as the ledger workflow).
   push:
-    branches: [main]
+    branches:
+      - '**'
     paths:
       - 'spec/**'
       - 'engine/ocaml/**'
       - 'targets/**'
       - 'runtime/**'
       - 'skills/**'
+      - '.github/workflows/tsc-self-measure.yml'
   workflow_dispatch:
 
 permissions:
