@@ -258,7 +258,10 @@ let extract_md_links content =
   done;
   !links
 
-(** Extract X.Y.Z version strings from content. *)
+(** Extract X.Y.Z version strings from content. A match with a '/'
+    immediately adjacent is a path segment (a reference to a versioned
+    directory, e.g. docs/alpha/engine/0.1.0/README.md), not a version
+    claim, and is skipped. *)
 let extract_versions content =
   let len = String.length content in
   let versions = ref [] in
@@ -275,7 +278,11 @@ let extract_versions content =
           incr i;
           let es = !i in
           while !i < len && content.[!i] >= '0' && content.[!i] <= '9' do incr i done;
-          if !i - es > 0 then
+          let path_adjacent =
+            (start > 0 && content.[start - 1] = '/')
+            || (!i < len && content.[!i] = '/')
+          in
+          if !i - es > 0 && not path_adjacent then
             versions := String.sub content start (!i - start) :: !versions
         end
       end
@@ -691,7 +698,17 @@ let sig_target_file_fit ~cfg (files : bundle_file list) : signal =
     saturate the corpus, the canonical surface is too thin to own change. *)
 let sig_canonical_generated_distinction ~cfg (files : bundle_file list) : signal =
   let gen_kws = ["generated"; "do not edit"; "auto-generated"; "automatically generated"] in
-  let marked = List.filter (fun f -> contains_any gen_kws f.file_content) files in
+  (* A generated-file marker is a HEADER property: it lives in the first
+     few lines. A document that merely discusses the DO-NOT-EDIT
+     convention in prose is not a generated artifact. *)
+  let header f =
+    let rec take n = function
+      | l :: rest when n > 0 -> l :: take (n - 1) rest
+      | _ -> []
+    in
+    String.concat "\n" (take 5 (split_lines f.file_content))
+  in
+  let marked = List.filter (fun f -> contains_any gen_kws (header f)) files in
   let n_marked = List.length marked in
   let n_total  = List.length files in
   let density =

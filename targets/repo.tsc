@@ -37,9 +37,13 @@ include = [
   "CHANGELOG.md",
   "katas/README.md",
   "skills/README.md",
-  "skills/self-measure/SKILL.md",
+  "skills/self-measure/**",
   "schemas/README.md",
   "schemas/skill.cue",
+  "scripts/coh-self",
+  "scripts/render-self-measure.sh",
+  "scripts/ci/validate-skill-frontmatter.sh",
+  "scripts/ci/self-measure-smoke.sh",
   ".github/workflows/tsc-self-measure.yml"
 ]
 

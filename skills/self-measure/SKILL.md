@@ -140,26 +140,30 @@ system. This skill declares how TSC turns that instrument on itself — and
 draws the exact line between the parts a machine computes and the one part
 a model estimates.
 
-The declaration is executable. `scripts/render-self-measure.sh` renders the
-frontmatter above into two artifacts, both carrying DO-NOT-EDIT headers
-that point back here:
+The declaration is executable.
+[scripts/render-self-measure.sh](../../scripts/render-self-measure.sh)
+renders the frontmatter above into two artifacts, both carrying
+DO-NOT-EDIT headers that point back here:
 
-- `scripts/coh-self` — the local command. The engine dispatches `coh self`
-  to it (git-style external subcommand).
-- `.github/workflows/tsc-self-measure.yml` — the CI surface.
+- [scripts/coh-self](../../scripts/coh-self) — the local command. The
+  engine dispatches `coh self` to it (git-style external subcommand).
+- [.github/workflows/tsc-self-measure.yml](../../.github/workflows/tsc-self-measure.yml)
+  — the CI surface.
 
 CI re-renders and diffs on every change, so the rendered artifacts cannot
 drift from this file. The frontmatter is validated against
-`schemas/skill.cue` (`#SelfMeasure`), and the validator additionally checks
-that every declared mechanical signal code exists in the engine source and
-every declared LLM estimate field exists in the scoring instruction's
-output contract. What you read here is what runs.
+[schemas/skill.cue](../../schemas/skill.cue) (`#SelfMeasure`), and the
+validator ([scripts/ci/validate-skill-frontmatter.sh](../../scripts/ci/validate-skill-frontmatter.sh))
+additionally checks that every declared mechanical signal code exists in
+the engine source and that the declared LLM estimate fields equal exactly
+the scoring instruction's output-contract keys. What you read here is
+what runs.
 
 ---
 
 ## 1. What is measured
 
-Three named targets from `targets/registry.tsc`:
+Three named targets from [targets/registry.tsc](../../targets/registry.tsc):
 
 | Target | Kind | Corpus |
 |--------|------|--------|
@@ -183,17 +187,17 @@ One table. Everything TSC self-measurement does, and who does it.
 
 | # | Step | Owner | Where |
 |---|------|-------|-------|
-| 1 | Resolve targets, expand globs, order files | mechanical | `target_registry.ml` |
-| 2 | Build bundle: raw text + SHA-256 hashes | mechanical | `bundle.ml` |
-| 3 | Score 12 structural signals per axis | mechanical | `mechanical_scoring.ml` |
-| 4 | Assemble the LLM prompt (instruction + metadata + bundle) | mechanical | `prompt.ml` |
-| 5 | **Estimate δ per axis pair + component scores + cite evidence** | **LLM** | `runtime/SELF-MEASURE.md` |
-| 6 | Validate the LLM response (strict v3.2 delta contract) | mechanical | `response_schema.ml` |
-| 7 | Barrier transform φ(δ) = δ/(1−δ), Coh = exp(−λ·φ(δ)) | mechanical | `coherence.ml` |
-| 8 | Aggregate C_Σ^math / C_Σ^num (geometric forms, ε-floor) | mechanical | `coherence.ml` |
-| 9 | Bottleneck rule, provenance, report emission | mechanical | `report.ml`, `hybrid_scoring.ml` |
-| 10 | Cross-target aggregate | mechanical | `cross_target.ml` |
-| 11 | CI gating, artifact upload, summaries | mechanical | rendered workflow |
+| 1 | Resolve targets, expand globs, order files | mechanical | [target_registry.ml](../../engine/ocaml/lib/target_registry.ml) |
+| 2 | Build bundle: raw text + SHA-256 hashes | mechanical | [bundle.ml](../../engine/ocaml/lib/bundle.ml) |
+| 3 | Score 12 structural signals per axis | mechanical | [mechanical_scoring.ml](../../engine/ocaml/lib/mechanical_scoring.ml) |
+| 4 | Assemble the LLM prompt (instruction + metadata + bundle) | mechanical | [prompt.ml](../../engine/ocaml/lib/prompt.ml) |
+| 5 | **Estimate δ per axis pair + component scores + cite evidence** | **LLM** | [runtime/SELF-MEASURE.md](../../runtime/SELF-MEASURE.md) |
+| 6 | Validate the LLM response (strict v3.2 delta contract) | mechanical | [response_schema.ml](../../engine/ocaml/lib/response_schema.ml) |
+| 7 | Barrier transform φ(δ) = δ/(1−δ), Coh = exp(−λ·φ(δ)) | mechanical | [coherence.ml](../../engine/ocaml/lib/coherence.ml) |
+| 8 | Aggregate C_Σ^math / C_Σ^num (geometric forms, ε-floor) | mechanical | [coherence.ml](../../engine/ocaml/lib/coherence.ml) |
+| 9 | Bottleneck rule, provenance, report emission | mechanical | [report.ml](../../engine/ocaml/lib/report.ml), [hybrid_scoring.ml](../../engine/ocaml/lib/hybrid_scoring.ml) |
+| 10 | Cross-target aggregate | mechanical | [cross_target.ml](../../engine/ocaml/lib/cross_target.ml) |
+| 11 | CI gating, artifact upload, summaries | mechanical | [rendered workflow](../../.github/workflows/tsc-self-measure.yml) |
 
 Step 5 is the only cognitive step. In `mechanical` mode it is skipped
 entirely and the run is credential-free and offline. In `llm` / `hybrid`
@@ -246,10 +250,13 @@ geometric mean (zero if any axis is zero), C_Σ^num the ε-floored numerical
 form (ε = 10⁻⁵) that carries verdicts. No flat aggregate field exists;
 readers consult `provenance.aggregate_numeric.C_sigma_num`.
 
-Guarantee (from `mechanical_scoring.mli`): identical bundle + config →
-identical result. No LLM, no network, no semantic parsing. Mechanical
-scores are structural proxies — well-formatted incoherence can fool them
-(kata 05 documents this). That ceiling is why the LLM witness exists.
+Guarantee (from [mechanical_scoring.mli](../../engine/ocaml/lib/mechanical_scoring.mli)):
+identical bundle + config → identical result. No LLM, no network, no
+semantic parsing. Mechanical scores are structural proxies — well-written
+prose can outrun them (kata 04 documents that ceiling; kata 05 pins the
+adversarial case the proxies must keep catching: contested authority
+self-claims and contradictory anchors). The semantic residue beyond the
+proxies is why the LLM witness exists.
 
 ---
 
@@ -279,7 +286,8 @@ The model must not:
 - **produce anything beyond the JSON** — no prose, no fences.
 
 Validation is unconditional and single-funneled
-(`response_schema.ml`, `validate_witness_response`). Every way a response
+([response_schema.ml](../../engine/ocaml/lib/response_schema.ml),
+`validate_witness_response`). Every way a response
 can fail is classified into a stage — `parse` (prose, fenced JSON,
 malformed text), `base_schema` (missing/mistyped contract fields),
 `prohibited_fields` (computed coherence), `target_mismatch` (response
@@ -288,8 +296,9 @@ out-of-range δ) — and **every** stage writes the same durable
 validation-failure artifact naming its stage, preserves the raw response,
 renders **no** report, and does **not** fall back to mechanical scoring.
 A refused witness is a recorded fact, not a silent downgrade. The
-per-stage fixtures live in `fixtures/invalid/` and the CI smoke replays
-each of them on every run.
+per-stage fixtures live in [fixtures/invalid/](fixtures/invalid/) and the
+CI smoke ([scripts/ci/self-measure-smoke.sh](../../scripts/ci/self-measure-smoke.sh))
+replays each of them on every run.
 
 `hybrid` mode runs both backends on the same bundle and preserves both
 results; the `final` sub-object names which backend authored the
@@ -314,8 +323,10 @@ coh self --mode hybrid # explicit
 the route into three explicit steps per target:
 
 1. `coh-self --emit-prompt <target>` — the engine writes the exact prompt
-   (byte-identical to what the HTTP route would send) to
-   `.tsc/self/prompt/<target>.md`.
+   content to `.tsc/self/prompt/<target>.md`: the same instruction,
+   target metadata, and hashed bundle the HTTP route sends, joined into
+   one document (the HTTP route carries the instruction as the system
+   message and the rest as the user message).
 2. A Claude CLI step (`anthropics/claude-code-action`) runs the
    `ci_prompt` declared in this skill's frontmatter, with tool permissions
    reduced to reading that prompt file and writing
