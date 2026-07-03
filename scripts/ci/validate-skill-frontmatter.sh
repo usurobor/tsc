@@ -219,19 +219,45 @@ validate_measurement_cross_checks() {
     done < <(jq -r '.self_measure.mechanical.signals | (.alpha[], .beta[], .gamma[])' "$json_path")
   fi
 
-  # 4d. Every declared LLM estimate field must appear in the scoring
-  #     instruction (the instruction owns the output contract).
+  # 4d. Declared LLM estimate fields must equal EXACTLY the top-level keys
+  #     of the scoring instruction's JSON output contract (its first fenced
+  #     ```json block). Exact set comparison — not prose string presence —
+  #     so a field mentioned in prose but absent from the contract fails,
+  #     and a contract key missing from the declaration fails too.
   local instruction
   instruction=$(jq -r '.self_measure.instruction // ""' "$json_path")
   if [[ -n "$instruction" && -f "$REPO_ROOT/$instruction" ]]; then
-    local field
-    while IFS= read -r field; do
-      if ! grep -q "$field" "$REPO_ROOT/$instruction"; then
-        emit_finding "$rel" "self_measure.llm.estimates" "estimate-in-instruction" \
-          "estimate field '$field' not found in $instruction"
-        ok=1
-      fi
-    done < <(jq -r '.self_measure.llm.estimates[]' "$json_path")
+    local contract_diff
+    if ! contract_diff=$(python3 - "$REPO_ROOT/$instruction" "$json_path" <<'PYEOF'
+import json, re, sys
+
+instruction_path, skill_json_path = sys.argv[1], sys.argv[2]
+text = open(instruction_path).read()
+m = re.search(r"```json\n(.*?)\n```", text, re.DOTALL)
+if not m:
+    print("no fenced ```json output contract block found in instruction")
+    sys.exit(1)
+try:
+    contract_keys = set(json.loads(m.group(1)).keys())
+except json.JSONDecodeError as e:
+    print(f"output contract block is not valid JSON: {e}")
+    sys.exit(1)
+declared = set(json.load(open(skill_json_path))["self_measure"]["llm"]["estimates"])
+missing_from_contract = sorted(declared - contract_keys)
+missing_from_declaration = sorted(contract_keys - declared)
+if missing_from_contract:
+    print(f"declared but not in the output contract: {', '.join(missing_from_contract)}")
+if missing_from_declaration:
+    print(f"in the output contract but not declared: {', '.join(missing_from_declaration)}")
+sys.exit(1 if (missing_from_contract or missing_from_declaration) else 0)
+PYEOF
+    ); then
+      while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        emit_finding "$rel" "self_measure.llm.estimates" "estimate-in-contract" "$line"
+      done <<<"$contract_diff"
+      ok=1
+    fi
   fi
 
   return $ok

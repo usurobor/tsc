@@ -65,19 +65,30 @@ report=$(ls "$OUT_VALID"/tsc-spec-*.json 2>/dev/null | grep -v raw || true)
 grep -q '"mode": "hybrid"' $report || fail "ingested report is not hybrid"
 echo "ok: ingest valid witness response (hybrid report)"
 
-# 4. Ingest a contract-invalid response (missing required delta fields) —
-#    must refuse: non-zero exit, validation-failure artifact, no report.
-OUT_INVALID="$(mktemp -d)"
-mkdir -p "$OUT_INVALID/response"
-cp skills/self-measure/fixtures/witness-response-invalid.json "$OUT_INVALID/response/spec.json"
-if scripts/coh-self --ingest spec --output "$OUT_INVALID" >/dev/null 2>&1; then
-  fail "invalid witness response was accepted"
-fi
-ls "$OUT_INVALID"/tsc-spec-*-validation-failure.json >/dev/null 2>&1 \
-  || fail "no validation-failure artifact for invalid response"
-if ls "$OUT_INVALID"/tsc-spec-*.json 2>/dev/null | grep -v raw | grep -qv validation-failure; then
-  fail "invalid ingest rendered a report"
-fi
-echo "ok: invalid witness response refused (validation-failure artifact, no report)"
+# 4. Ingest every invalid witness fixture — each must refuse with a
+#    validation-failure artifact classified at the expected stage, and
+#    render no report. Fixtures cover the funnel: prose, fenced JSON,
+#    missing base fields, computed coherence, wrong target, bad deltas.
+OUT_INVALID=""
+for fixture in skills/self-measure/fixtures/invalid/*.json; do
+  case_name=$(basename "$fixture" .json)
+  expect_stage=$(cat "${fixture%.json}.expect")
+  OUT_INVALID="$(mktemp -d)"
+  mkdir -p "$OUT_INVALID/response"
+  cp "$fixture" "$OUT_INVALID/response/spec.json"
+  if scripts/coh-self --ingest spec --output "$OUT_INVALID" >/dev/null 2>&1; then
+    fail "invalid witness response accepted: $case_name"
+  fi
+  artifact=$(ls "$OUT_INVALID"/tsc-spec-*-validation-failure.json 2>/dev/null | head -1)
+  [[ -n "$artifact" ]] || fail "no validation-failure artifact: $case_name"
+  stage=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['stage'])" "$artifact")
+  [[ "$stage" == "$expect_stage" ]] \
+    || fail "$case_name: stage '$stage' != expected '$expect_stage'"
+  if ls "$OUT_INVALID"/tsc-spec-*.json 2>/dev/null | grep -v raw | grep -qv validation-failure; then
+    fail "invalid ingest rendered a report: $case_name"
+  fi
+  rm -rf "$OUT_INVALID"
+  echo "ok: refused $case_name (stage=$stage, artifact, no report)"
+done
 
 echo "self-measure-smoke: pass"

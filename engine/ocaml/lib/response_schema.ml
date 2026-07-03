@@ -258,6 +258,121 @@ let validate_v32_deltas json =
       invalid_fields = List.rev !invalid;
     }
 
+(* ------------------------------------------------------------------ *)
+(* Witness-validation funnel                                          *)
+(* ------------------------------------------------------------------ *)
+
+(** Every way a witness (LLM) response can be refused, as one classification
+    so callers write one validation-failure artifact shape for all stages
+    (skills/self-measure/SKILL.md §4: "a refused witness is a recorded fact").
+
+    Stages, in checking order:
+    - [`Parse]             raw text is not a JSON object (includes fenced
+                           ```json blocks and prose around the object)
+    - [`Base_schema]       JSON object missing/mistyping a base contract
+                           field (target, scores, evidence, ...)
+    - [`Prohibited_fields] response carries computed coherence — the witness
+                           estimates deltas; the engine computes Coh/C_sigma
+    - [`Target_mismatch]   response's [target] is not the measured target
+    - [`V32_delta]         strict v3.2 delta validation failed *)
+type witness_failure_stage =
+  [ `Parse | `Base_schema | `Prohibited_fields | `Target_mismatch | `V32_delta ]
+
+type witness_failure = {
+  wf_stage : witness_failure_stage;
+  wf_errors : string list;
+  (* Populated for the [`V32_delta] stage; empty otherwise. *)
+  wf_missing_fields : string list;
+  wf_invalid_fields : (string * string) list;
+}
+
+let witness_stage_to_string = function
+  | `Parse             -> "parse"
+  | `Base_schema       -> "base_schema"
+  | `Prohibited_fields -> "prohibited_fields"
+  | `Target_mismatch   -> "target_mismatch"
+  | `V32_delta         -> "v3_2_delta"
+
+(** Top-level fields the witness must never emit: computed coherence.
+    The scoring instruction (§3) reserves the barrier transform and
+    aggregation for the engine. Explicit key list — no substring matching,
+    so legitimate fields can never be caught by accident. *)
+let prohibited_top_level_fields =
+  [ "coh"; "Coh";
+    "c_sigma"; "C_sigma";
+    "c_sigma_num"; "C_sigma_num";
+    "c_sigma_math"; "C_sigma_math";
+    "coherence" ]
+
+let find_prohibited_fields = function
+  | `Assoc fields ->
+    List.filter (fun k -> List.mem_assoc k fields) prohibited_top_level_fields
+  | _ -> []
+
+let witness_failure ?(missing = []) ?(invalid = []) stage errors =
+  { wf_stage = stage;
+    wf_errors = errors;
+    wf_missing_fields = missing;
+    wf_invalid_fields = invalid }
+
+(** Validate a raw witness response end to end.
+
+    [expected_target] is the measured target's kind string
+    ("spec" | "engine" | "repo") — the same value the prompt metadata
+    carried, and the value the output contract requires in [target].
+
+    Returns [Ok (result, (d_ab, d_bg, d_ga))] only when every stage passes;
+    otherwise the first failing stage, classified. No stage falls back. *)
+let validate_witness_response ~expected_target raw =
+  match parse_json raw with
+  | Error e -> Error (witness_failure `Parse [e])
+  | Ok json ->
+    match validate_result json with
+    | Error e -> Error (witness_failure `Base_schema [e])
+    | Ok result ->
+      match find_prohibited_fields json with
+      | _ :: _ as keys ->
+        Error (witness_failure `Prohibited_fields
+                 (List.map
+                    (Printf.sprintf
+                       "field '%s' carries computed coherence; the engine \
+                        applies the barrier transform and aggregation")
+                    keys))
+      | [] ->
+        if result.result_target <> expected_target then
+          Error (witness_failure `Target_mismatch
+                   [Printf.sprintf
+                      "response target '%s' does not match measured target '%s'"
+                      result.result_target expected_target])
+        else
+          match validate_v32_deltas json with
+          | Error err ->
+            Error (witness_failure `V32_delta
+                     ~missing:err.missing_fields
+                     ~invalid:err.invalid_fields
+                     [])
+          | Ok deltas -> Ok (result, deltas)
+
+(** Render a witness failure as a single-line human string (stderr). *)
+let format_witness_failure wf =
+  let stage = witness_stage_to_string wf.wf_stage in
+  let details =
+    match wf.wf_stage with
+    | `V32_delta ->
+      let parts = ref [] in
+      if wf.wf_missing_fields <> [] then
+        parts := Printf.sprintf "missing: %s"
+            (String.concat ", " wf.wf_missing_fields) :: !parts;
+      if wf.wf_invalid_fields <> [] then
+        parts := Printf.sprintf "invalid: %s"
+            (String.concat ", "
+               (List.map (fun (k, v) -> k ^ "=" ^ v) wf.wf_invalid_fields))
+          :: !parts;
+      String.concat "; " (List.rev !parts)
+    | _ -> String.concat "; " wf.wf_errors
+  in
+  Printf.sprintf "stage=%s: %s" stage details
+
 (** Render a v3.2 delta validation error as a single-line human string.
     Used for stderr; the durable artifact uses the structured shape. *)
 let format_v32_validation_error err =

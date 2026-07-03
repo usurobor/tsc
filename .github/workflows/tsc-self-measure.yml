@@ -79,9 +79,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tsc-self-mechanical-${{ github.sha }}
-          path: .tsc/self/
+          path: .tsc/self/**
+          # .tsc/self is under a dot-directory; without this the
+          # default (include-hidden-files: false) uploads nothing.
+          include-hidden-files: true
           retention-days: 90
-          if-no-files-found: ignore
+          # A missing mechanical report is a failure, not an ignorable
+          # condition — this job is the always-on measurement surface.
+          if-no-files-found: error
 
   # LLM witness: the single delegated cognitive step, run per target via
   # the Claude CLI, gated by the TSC_LLM_ENABLED repo variable. The engine
@@ -91,11 +96,24 @@ jobs:
   llm-witness:
     if: ${{ vars.TSC_LLM_ENABLED == 'true' }}
     runs-on: ubuntu-22.04
+    env:
+      # Job-level indirection: secrets cannot be referenced in `if:`
+      # conditions, so the preflight step checks this env binding.
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
         target: [spec, engine, repo]
     steps:
+      # TSC_LLM_ENABLED=true declares intent to run the witness; a missing
+      # secret is then a configuration error, not a silent skip
+      # (skills/self-measure/SKILL.md section 6).
+      - name: Require Claude token when the witness is enabled
+        if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN == '' }}
+        run: |
+          echo "::error::TSC_LLM_ENABLED=true but the CLAUDE_CODE_OAUTH_TOKEN secret is not configured"
+          exit 1
+
       - uses: actions/checkout@v4
 
       - name: Install system depexts (libcurl for ezcurl)
@@ -180,8 +198,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tsc-self-llm-${{ matrix.target }}-${{ github.sha }}
+          # Reports, witness responses, and validation-failure artifacts —
+          # but never the emitted prompts (full bundle text).
           path: |
-            .tsc/self/
-            !.tsc/self/prompt/
+            .tsc/self/**
+            !.tsc/self/prompt/**
+          # .tsc/self is under a dot-directory; without this the
+          # default (include-hidden-files: false) uploads nothing.
+          include-hidden-files: true
           retention-days: 90
-          if-no-files-found: ignore
+          # If the witness ran, something durable must exist (report or
+          # validation-failure artifact + raw response).
+          if-no-files-found: error

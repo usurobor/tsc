@@ -366,22 +366,22 @@ let build_bundle_from_files ~root ~globs =
     ~files
 
 (* ------------------------------------------------------------------ *)
-(* v3.2 validation-failure artifact (cycle/51 AC2)                     *)
+(* Witness validation-failure artifact (cycle/51 AC2; review round 2)  *)
 (*
-   When --mode llm / --mode hybrid receives a provider response that
-   parses as JSON but fails strict v3.2 delta validation, this helper
-   writes a durable diagnostic artifact and exits non-zero. The raw
-   provider response must already have been written to disk by the
-   caller. No coherence report is rendered. There is no mechanical
-   fallback (AC3). *)
+   Every refused witness response — parse failure, base-schema failure,
+   prohibited computed-coherence fields, target mismatch, or strict v3.2
+   delta failure — funnels through this one writer. The raw provider
+   response must already have been written to disk by the caller. No
+   coherence report is rendered. There is no mechanical fallback (AC3). *)
 
 let write_validation_failure_artifact
     ~output_dir
     ~target
     ~ts
-    ~(err : Response_schema.v32_validation_error) =
+    ~raw_path
+    ~(wf : Response_schema.witness_failure) =
   let missing_json =
-    `List (List.map (fun s -> `String s) err.missing_fields)
+    `List (List.map (fun s -> `String s) wf.wf_missing_fields)
   in
   let invalid_json =
     `List (List.map (fun (k, v) ->
@@ -390,15 +390,19 @@ let write_validation_failure_artifact
         ("observed_value", `String v);
         ("expected_range", `String "[0, 1]");
       ]
-    ) err.invalid_fields)
+    ) wf.wf_invalid_fields)
   in
   let artifact = `Assoc [
     ("kind",                    `String "validation_failure");
     ("schema",                  `String "tsc-llm-response/v3.2");
     ("status",                  `String "error");
+    ("target",                  `String target);
+    ("stage",                   `String (Response_schema.witness_stage_to_string wf.wf_stage));
+    ("errors",                  `List (List.map (fun e -> `String e) wf.wf_errors));
     ("missing_required_fields", missing_json);
     ("invalid_fields",          invalid_json);
-    ("message",                 `String "v3.2 LLM response failed required pairwise discrepancy validation; coherence report not rendered.");
+    ("raw_response_path",       `String raw_path);
+    ("message",                 `String "witness response failed validation; coherence report not rendered (no mechanical fallback).");
   ] in
   let path =
     Filename.concat output_dir
@@ -406,6 +410,35 @@ let write_validation_failure_artifact
   in
   write_file path (Yojson.Safe.pretty_to_string artifact);
   path
+
+(** Validate a raw witness response; on any failure, write the durable
+    validation-failure artifact and exit non-zero. Shared by run_llm and
+    run_hybrid so no refusal path can diverge between modes. *)
+let validate_witness_or_exit ~args ~bundle ~ts ~raw_path raw_response =
+  let expected_target =
+    Prompt.target_kind_to_string bundle.bundle_target_kind
+  in
+  match
+    Response_schema.validate_witness_response ~expected_target raw_response
+  with
+  | Ok (result, deltas) ->
+    Printf.eprintf "Response validated.\n%!";
+    (result, deltas)
+  | Error wf ->
+    Printf.eprintf "Error: witness response failed validation: %s\n"
+      (Response_schema.format_witness_failure wf);
+    let artifact_path =
+      write_validation_failure_artifact
+        ~output_dir:args.cli_output_dir
+        ~target:bundle.bundle_target_name
+        ~ts
+        ~raw_path
+        ~wf
+    in
+    Printf.eprintf "Raw response preserved at %s\n" raw_path;
+    Printf.eprintf "Validation failure artifact: %s\n" artifact_path;
+    Printf.eprintf "No coherence report rendered (no mechanical fallback).\n";
+    exit 1
 
 (* ------------------------------------------------------------------ *)
 (* Mode execution *)
@@ -494,52 +527,27 @@ let run_llm ~args ~bundle ~ts =
     meta_model    = provider_model;
     meta_timestamp = ts;
   } in
-  match Response_schema.parse_json raw_response with
-  | Error e ->
-    Printf.eprintf "Error: response is not valid JSON: %s\n" e;
-    Printf.eprintf "Raw response preserved at %s\n" raw_path;
-    exit 1
-  | Ok j ->
-    (match Response_schema.validate_result j with
-     | Error e ->
-       Printf.eprintf "Error: response did not pass schema validation: %s\n" e;
-       Printf.eprintf "Raw response preserved at %s\n" raw_path;
-       exit 1
-     | Ok result ->
-       (* Strict v3.2 delta validation (cycle/51 AC1/AC2): required
-          delta fields must all be present and in [0, 1]. *)
-       (match Response_schema.validate_v32_deltas j with
-        | Error err ->
-          Printf.eprintf
-            "Error: v3.2 LLM response failed required delta validation: %s\n"
-            (Response_schema.format_v32_validation_error err);
-          let artifact_path =
-            write_validation_failure_artifact
-              ~output_dir:args.cli_output_dir
-              ~target:bundle.bundle_target_name
-              ~ts
-              ~err
-          in
-          Printf.eprintf "Raw response preserved at %s\n" raw_path;
-          Printf.eprintf "Validation failure artifact: %s\n" artifact_path;
-          exit 1
-        | Ok (d_ab, d_bg, d_ga) ->
-          Printf.eprintf "Response validated.\n%!";
-          let json_path =
-            Filename.concat args.cli_output_dir
-              (Printf.sprintf "tsc-%s-%s.json" bundle.bundle_target_name ts)
-          in
-          write_file json_path (Report.to_json ~result ~metadata ~mode:"llm"
-            ~delta_alpha_beta:(Some d_ab)
-            ~delta_beta_gamma:(Some d_bg)
-            ~delta_gamma_alpha:(Some d_ga) ());
-          let text_path =
-            Filename.concat args.cli_output_dir
-              (Printf.sprintf "tsc-%s-%s.txt" bundle.bundle_target_name ts)
-          in
-          write_file text_path (Report.to_text ~result ~metadata ~mode:"llm" ());
-          Printf.printf "Done. LLM reports:\n  %s\n  %s\n  %s\n"
-            raw_path json_path text_path))
+  (* Witness-validation funnel: every refusal stage (parse, base schema,
+     prohibited fields, target mismatch, v3.2 delta) writes the same
+     validation-failure artifact and exits (cycle/51 AC1/AC2/AC3). *)
+  let result, (d_ab, d_bg, d_ga) =
+    validate_witness_or_exit ~args ~bundle ~ts ~raw_path raw_response
+  in
+  let json_path =
+    Filename.concat args.cli_output_dir
+      (Printf.sprintf "tsc-%s-%s.json" bundle.bundle_target_name ts)
+  in
+  write_file json_path (Report.to_json ~result ~metadata ~mode:"llm"
+    ~delta_alpha_beta:(Some d_ab)
+    ~delta_beta_gamma:(Some d_bg)
+    ~delta_gamma_alpha:(Some d_ga) ());
+  let text_path =
+    Filename.concat args.cli_output_dir
+      (Printf.sprintf "tsc-%s-%s.txt" bundle.bundle_target_name ts)
+  in
+  write_file text_path (Report.to_text ~result ~metadata ~mode:"llm" ());
+  Printf.printf "Done. LLM reports:\n  %s\n  %s\n  %s\n"
+    raw_path json_path text_path
 
 let run_hybrid ~args ~bundle ~ts =
   Printf.eprintf "Running hybrid scoring (mechanical + LLM)...\n%!";
@@ -564,38 +572,10 @@ let run_hybrid ~args ~bundle ~ts =
       (Printf.sprintf "tsc-%s-%s-raw.txt" bundle.bundle_target_name ts)
   in
   write_file raw_path raw_response;
-  let llm_result =
-    match Response_schema.parse_json raw_response with
-    | Error e ->
-      Printf.eprintf "Error: LLM response is not valid JSON: %s\n" e;
-      Printf.eprintf "Raw response preserved at %s\n" raw_path;
-      exit 1
-    | Ok j ->
-      match Response_schema.validate_result j with
-      | Error e ->
-        Printf.eprintf "Error: LLM response failed schema validation: %s\n" e;
-        Printf.eprintf "Raw response preserved at %s\n" raw_path;
-        exit 1
-      | Ok r ->
-        (* Strict v3.2 delta validation (cycle/51 AC1/AC2). *)
-        (match Response_schema.validate_v32_deltas j with
-         | Error err ->
-           Printf.eprintf
-             "Error: v3.2 LLM response failed required delta validation: %s\n"
-             (Response_schema.format_v32_validation_error err);
-           let artifact_path =
-             write_validation_failure_artifact
-               ~output_dir:args.cli_output_dir
-               ~target:bundle.bundle_target_name
-               ~ts
-               ~err
-           in
-           Printf.eprintf "Raw response preserved at %s\n" raw_path;
-           Printf.eprintf "Validation failure artifact: %s\n" artifact_path;
-           Printf.eprintf
-             "Hybrid report not rendered (no post-response mechanical fallback).\n";
-           exit 1
-         | Ok _ -> r)
+  (* Same witness-validation funnel as run_llm — the refusal contract
+     cannot diverge between modes (cycle/51 AC1/AC2/AC3). *)
+  let llm_result, _deltas =
+    validate_witness_or_exit ~args ~bundle ~ts ~raw_path raw_response
   in
   let hybrid =
     Hybrid_scoring.combine ~target:bundle.bundle_target_name mech_result llm_result

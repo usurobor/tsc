@@ -90,10 +90,12 @@ self_measure:
         output anything except the JSON object required by the scoring
         instruction's output contract
     validation: >-
-      engine/ocaml/lib/response_schema.ml — strict v3.2 delta validation;
-      a missing or out-of-range delta field produces a durable
-      validation-failure artifact, no coherence report, and no mechanical
-      fallback
+      engine/ocaml/lib/response_schema.ml (validate_witness_response) —
+      one funnel for every refusal stage: parse, base_schema,
+      prohibited_fields (computed Coh/C_sigma), target_mismatch,
+      v3_2_delta. Any refusal produces a durable validation-failure
+      artifact naming its stage, preserves the raw response, renders no
+      coherence report, and never falls back to mechanical scoring
     providers:
       local: >-
         engine HTTP route — LLM_PROVIDER / LLM_MODEL / LLM_API_KEY
@@ -265,17 +267,24 @@ The model must not:
 
 - **compute Coh or C_Σ** — it reports δ; the engine applies
   φ(δ) = δ/(1−δ) and Coh = exp(−λ·φ(δ)) deterministically. A response
-  that carries computed coherence in place of the required δ fields fails
-  validation.
+  carrying any computed-coherence field (`C_sigma`, `coh`, ...) is
+  refused outright.
 - **see anything beyond the bundle** — no repo access, no outside
   knowledge, no inferred missing files.
 - **produce anything beyond the JSON** — no prose, no fences.
 
-Validation is unconditional: `response_schema.ml` enforces the full
-response contract, including strict v3.2 delta validation. On failure the
-engine writes a durable validation-failure artifact, preserves the raw
-response, renders **no** report, and does **not** fall back to mechanical
-scoring. A refused witness is a recorded fact, not a silent downgrade.
+Validation is unconditional and single-funneled
+(`response_schema.ml`, `validate_witness_response`). Every way a response
+can fail is classified into a stage — `parse` (prose, fenced JSON,
+malformed text), `base_schema` (missing/mistyped contract fields),
+`prohibited_fields` (computed coherence), `target_mismatch` (response
+names a different target than was measured), `v3_2_delta` (missing or
+out-of-range δ) — and **every** stage writes the same durable
+validation-failure artifact naming its stage, preserves the raw response,
+renders **no** report, and does **not** fall back to mechanical scoring.
+A refused witness is a recorded fact, not a silent downgrade. The
+per-stage fixtures live in `fixtures/invalid/` and the CI smoke replays
+each of them on every run.
 
 `hybrid` mode runs both backends on the same bundle and preserves both
 results; the `final` sub-object names which backend authored the
@@ -332,9 +341,11 @@ In CI (`tsc-self-measure.yml`):
 
 - **mechanical job** — always runs on changes to `spec/`, `engine/ocaml/`,
   `targets/`, `runtime/`, `skills/`. No secrets, no gate.
-- **llm-witness job** — runs only when the repo variable
-  `TSC_LLM_ENABLED` is `'true'` and the `CLAUDE_CODE_OAUTH_TOKEN` secret
-  is configured. One matrix job per target.
+- **llm-witness job** — gated by the repo variable `TSC_LLM_ENABLED`.
+  When the variable is `'true'` but the `CLAUDE_CODE_OAUTH_TOKEN` secret
+  is missing, a preflight step fails the job loudly — enabling the
+  witness without its credential is a configuration error, never a
+  silent skip. One matrix job per target.
 
 Both jobs upload their `.tsc/self/` reports as artifacts and write a
 step-summary table.
@@ -364,8 +375,10 @@ describe one system — nothing more.
 - **Skill drifts from engine.** A signal code declared here but absent
   from `mechanical_scoring.ml` (or an estimate field absent from
   `runtime/SELF-MEASURE.md`) fails `scripts/ci/validate-skill-frontmatter.sh`.
-- **Witness response invalid.** Validation-failure artifact, no report,
-  no fallback — by design. Fix the route or the model, re-run.
+- **Witness response invalid.** Whatever the failure shape — prose,
+  fenced JSON, missing fields, computed coherence, wrong target, bad
+  δ — one validation-failure artifact records the stage; no report, no
+  fallback — by design. Fix the route or the model, re-run.
 - **LLM job silently skipped.** The gate is a repo variable; when unset,
   the job does not run and only mechanical reports exist. Absence of a
   hybrid report is visible, not masked.

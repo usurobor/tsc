@@ -116,6 +116,9 @@ jobs:
         with:
           version: v0.13.2
 
+      - name: Install Python deps (explicit — runner preinstall is not a contract)
+        run: python3 -m pip install --disable-pip-version-check PyYAML
+
       - name: Schema self-test (positive + negative fixtures)
         run: ./scripts/ci/validate-skill-frontmatter.sh --self-test
 

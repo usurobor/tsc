@@ -288,9 +288,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tsc-self-mechanical-${{{{ github.sha }}}}
-          path: {output_root}/
+          path: {output_root}/**
+          # {output_root} is under a dot-directory; without this the
+          # default (include-hidden-files: false) uploads nothing.
+          include-hidden-files: true
           retention-days: 90
-          if-no-files-found: ignore
+          # A missing mechanical report is a failure, not an ignorable
+          # condition — this job is the always-on measurement surface.
+          if-no-files-found: error
 
   # LLM witness: the single delegated cognitive step, run per target via
   # the Claude CLI, gated by the {gate_var} repo variable. The engine
@@ -300,11 +305,24 @@ jobs:
   llm-witness:
     if: ${{{{ vars.{gate_var} == 'true' }}}}
     runs-on: ubuntu-22.04
+    env:
+      # Job-level indirection: secrets cannot be referenced in `if:`
+      # conditions, so the preflight step checks this env binding.
+      {llm_secret}: ${{{{ secrets.{llm_secret} }}}}
     strategy:
       fail-fast: false
       matrix:
         target: [{matrix}]
     steps:
+      # {gate_var}=true declares intent to run the witness; a missing
+      # secret is then a configuration error, not a silent skip
+      # (skills/self-measure/SKILL.md section 6).
+      - name: Require Claude token when the witness is enabled
+        if: ${{{{ env.{llm_secret} == '' }}}}
+        run: |
+          echo "::error::{gate_var}=true but the {llm_secret} secret is not configured"
+          exit 1
+
 {build_steps}
 
       - name: Emit witness prompt (deterministic)
@@ -354,11 +372,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tsc-self-llm-${{{{ matrix.target }}}}-${{{{ github.sha }}}}
+          # Reports, witness responses, and validation-failure artifacts —
+          # but never the emitted prompts (full bundle text).
           path: |
-            {output_root}/
-            !{output_root}/prompt/
+            {output_root}/**
+            !{output_root}/prompt/**
+          # {output_root} is under a dot-directory; without this the
+          # default (include-hidden-files: false) uploads nothing.
+          include-hidden-files: true
           retention-days: 90
-          if-no-files-found: ignore
+          # If the witness ran, something durable must exist (report or
+          # validation-failure artifact + raw response).
+          if-no-files-found: error
 """
 
 # --- write (idempotent) ---------------------------------------------------
