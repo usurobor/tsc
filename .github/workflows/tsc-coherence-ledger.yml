@@ -90,12 +90,15 @@ jobs:
             export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
             unset CLAUDE_CODE_OAUTH_TOKEN
           fi
-          cat > "$RUNNER_TEMP/witness-settings.json" <<'SETTINGS'
+          # Permission rules must be filesystem-absolute (// prefix): the
+          # settings file lives in RUNNER_TEMP, so relative rules would
+          # resolve there and the workspace write would be denied.
+          cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
           {
             "permissions": {
               "allow": [
-                "Read(.tsc/self/prompt/**)",
-                "Write(.tsc/self/response/**)"
+                "Read(//${PWD#/}/.tsc/self/prompt/**)",
+                "Write(//${PWD#/}/.tsc/self/response/**)"
               ]
             }
           }
@@ -156,12 +159,15 @@ jobs:
             export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
             unset CLAUDE_CODE_OAUTH_TOKEN
           fi
-          cat > "$RUNNER_TEMP/witness-settings.json" <<'SETTINGS'
+          # Permission rules must be filesystem-absolute (// prefix): the
+          # settings file lives in RUNNER_TEMP, so relative rules would
+          # resolve there and the workspace write would be denied.
+          cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
           {
             "permissions": {
               "allow": [
-                "Read(.tsc/self/prompt/**)",
-                "Write(.tsc/self/response/**)"
+                "Read(//${PWD#/}/.tsc/self/prompt/**)",
+                "Write(//${PWD#/}/.tsc/self/response/**)"
               ]
             }
           }
@@ -222,12 +228,15 @@ jobs:
             export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
             unset CLAUDE_CODE_OAUTH_TOKEN
           fi
-          cat > "$RUNNER_TEMP/witness-settings.json" <<'SETTINGS'
+          # Permission rules must be filesystem-absolute (// prefix): the
+          # settings file lives in RUNNER_TEMP, so relative rules would
+          # resolve there and the workspace write would be denied.
+          cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
           {
             "permissions": {
               "allow": [
-                "Read(.tsc/self/prompt/**)",
-                "Write(.tsc/self/response/**)"
+                "Read(//${PWD#/}/.tsc/self/prompt/**)",
+                "Write(//${PWD#/}/.tsc/self/response/**)"
               ]
             }
           }

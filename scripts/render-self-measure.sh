@@ -258,12 +258,15 @@ def cli_witness_run(prompt_text):
 {ind}  export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
 {ind}  unset CLAUDE_CODE_OAUTH_TOKEN
 {ind}fi
-{ind}cat > "$RUNNER_TEMP/witness-settings.json" <<'SETTINGS'
+{ind}# Permission rules must be filesystem-absolute (// prefix): the
+{ind}# settings file lives in RUNNER_TEMP, so relative rules would
+{ind}# resolve there and the workspace write would be denied.
+{ind}cat > "$RUNNER_TEMP/witness-settings.json" <<SETTINGS
 {ind}{{
 {ind}  "permissions": {{
 {ind}    "allow": [
-{ind}      "Read({output_root}/prompt/**)",
-{ind}      "Write({output_root}/response/**)"
+{ind}      "Read(//${{PWD#/}}/{output_root}/prompt/**)",
+{ind}      "Write(//${{PWD#/}}/{output_root}/response/**)"
 {ind}    ]
 {ind}  }}
 {ind}}}

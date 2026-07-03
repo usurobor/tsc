@@ -186,10 +186,13 @@ let resolve_direct_files ~root globs =
 (* ------------------------------------------------------------------ *)
 (* Timestamp *)
 
+(* The timestamp lands in report FILENAMES, so it uses ISO-8601 basic
+   time (no colons): a colon in a file name is rejected by NTFS-safe
+   tooling — GitHub artifact upload refuses the whole report set. *)
 let timestamp () =
   let t = Unix.gettimeofday () in
   let tm = Unix.gmtime t in
-  Printf.sprintf "%04d-%02d-%02dT%02d:%02d:%02dZ"
+  Printf.sprintf "%04d-%02d-%02dT%02d%02d%02dZ"
     (tm.Unix.tm_year + 1900) (tm.Unix.tm_mon + 1) tm.Unix.tm_mday
     tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
 
