@@ -146,6 +146,16 @@ system. This skill declares how TSC turns that instrument on itself — and
 draws the exact line between the parts a machine computes and the one part
 a model estimates.
 
+This is the **0th coherence methodology**: the tsc-repo CM applied to its
+own repo. The typed contract it satisfies —
+[`#CoherenceMethodology`](../../schemas/skill.cue) — is deliberately
+general: a methodology names its corpus (registry + targets), its
+mechanical signal inventory, its LLM estimate contract and prohibitions,
+its output and ledger conventions. Anyone can supply their own CM (a
+software-tool-repo methodology, a paper-corpus methodology, ...) by
+conforming to that schema; `coh` consuming a supplied methodology is the
+declared direction of travel.
+
 The declaration is executable.
 [scripts/render-self-measure.sh](../../scripts/render-self-measure.sh)
 renders the frontmatter above into three artifacts, each carrying a

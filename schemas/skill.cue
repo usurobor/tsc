@@ -40,27 +40,24 @@ package skill
 	...
 }
 
-// #SelfMeasure — typed self-measurement module schema.
-//
-// The self-measurement skill is a typed SKILL.md whose frontmatter carries a
-// `self_measure:` block and whose body is the canonical human-readable
-// account of how tsc measures itself. The `#SelfMeasure` definition
-// validates the block's shape; the renderer (scripts/render-self-measure.sh)
-// consumes it and materializes the substrate artifacts (the `coh-self`
-// command and the tsc-self-measure workflow).
+// #CoherenceMethodology — the COMPARABLE contract for a coherence
+// methodology (CM): a CUE-typed skill block describing how to measure
+// the coherence of a presented thing. Anyone can supply their own CM —
+// a skill whose typed block satisfies this definition — and a conforming
+// consumer (`coh` with a methodology input; the renderer) can execute it.
+// tsc's self-measurement is the 0th methodology: the tsc-repo CM applied
+// to tsc itself. A more generic "software tool repo CM" would be another
+// instance of this same definition with its own corpus and prompts.
 //
 // Authority split (mirrors cnos wake-provider §3):
-// - Skill authority: what self-measurement IS — targets, registry, scoring
-//   instruction, the mechanical signal inventory, the LLM estimate contract
-//   and its prohibitions, output conventions, CI gating intent.
+// - Methodology authority: what the measurement IS — targets, registry,
+//   scoring instruction, the mechanical signal inventory, the LLM
+//   estimate contract and its prohibitions, output conventions, ledger
+//   cadence, CI gating intent.
 // - Renderer authority: substrate encoding — YAML structure, action
 //   versions, runner image, secret-name bindings, tool allowlists,
-//   step layout.
-#SelfMeasure: #Skill & {
-	artifact_class: "measurement"
-	scope:          "repo"
-
-	self_measure: {
+//   step layout, commit mechanics.
+#CoherenceMethodology: {
 		// Rendered command basename. The engine dispatches `coh self` to
 		// this executable (git-style external subcommand).
 		command: string & =~"^[a-z][a-z0-9-]*$"
@@ -147,7 +144,18 @@ package skill
 			...
 		}
 
-		// Open: renderer fields not yet in #SelfMeasure pass through.
-		...
-	}
+	// Open: methodology extensions pass through.
+	...
+}
+
+// #SelfMeasure — the 0th coherence methodology: tsc's repo CM applied to
+// tsc itself. The skill's frontmatter carries the methodology under the
+// `self_measure:` key; its body is the human-readable authority. The
+// renderer (scripts/render-self-measure.sh) consumes it and materializes
+// the substrate artifacts (coh-self command, measurement workflow,
+// ledger workflow).
+#SelfMeasure: #Skill & {
+	artifact_class: "measurement"
+	scope:          "repo"
+	self_measure:   #CoherenceMethodology
 }
