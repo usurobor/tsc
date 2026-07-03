@@ -1,0 +1,14 @@
+{
+  "anchor_id": "hx-01",
+  "challenger": "basename-gamer",
+  "scorer_sha256": "f5df9b594a4ea3266a2f6763a65513335a957f4da61ba19390297ba9d7ddff64",
+  "score": 0.99,
+  "score_band": [
+    0.85,
+    1.0
+  ],
+  "hit": true,
+  "loss": 0.0,
+  "standing_scope": "house-authored-heldout-anchors",
+  "note": "commit-reveal proves ordering (unmemorizability); the label is house judgment \u2014 externality requires a non-house anchor author"
+}
