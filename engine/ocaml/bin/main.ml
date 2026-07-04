@@ -472,8 +472,9 @@ let build_bundle_from_files ~root ~globs =
 (* Witness validation-failure artifact (cycle/51 AC2; review round 2)  *)
 (*
    Every refused witness response — parse failure, base-schema failure,
-   prohibited computed-coherence fields, target mismatch, or strict v3.2
-   delta failure — funnels through this one writer. The raw provider
+   prohibited computed-coherence fields, target mismatch, strict v3.2
+   delta failure, checklist-walk failure, or defect-card failure —
+   funnels through this one writer. The raw provider
    response must already have been written to disk by the caller. No
    coherence report is rendered. There is no mechanical fallback (AC3). *)
 
@@ -629,8 +630,9 @@ let run_llm ~args ~bundle ~ts =
     meta_timestamp = ts;
   } in
   (* Witness-validation funnel: every refusal stage (parse, base schema,
-     prohibited fields, target mismatch, v3.2 delta) writes the same
-     validation-failure artifact and exits (cycle/51 AC1/AC2/AC3). *)
+     prohibited fields, target mismatch, v3.2 delta, checklist,
+     defect_cards) writes the same validation-failure artifact and
+     exits (cycle/51 AC1/AC2/AC3; stages 6-7 added by v3.2.3/v3.2.4). *)
   let result, (d_ab, d_bg, d_ga) =
     validate_witness_or_exit ~args ~bundle ~ts ~raw_path raw_response
   in
