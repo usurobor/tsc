@@ -64,7 +64,7 @@ ______________________________________________________________________
 
 **A4 (Self-Articulation Stability):** Aₐ ∘ Aₐ ≅ Aₐ (idempotent up to noise).
 
-**Note:** Formal noise model deferred to implementation guidance (§12).
+**Note:** No formal noise model is specified in this document; ≅ is read operationally. §12's implementation notes give numerical-stability practice, not a noise model.
 
 ______________________________________________________________________
 
