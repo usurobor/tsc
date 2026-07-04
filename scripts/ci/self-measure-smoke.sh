@@ -91,10 +91,20 @@ for fixture in skills/self-measure/fixtures/invalid/*.json; do
   echo "ok: refused $case_name (stage=$stage, artifact, no report)"
 done
 
-# 5. Medoid-of-k adjudication election (v3.2.3) — deterministic rules:
-#    outlier loses, ties break earliest, unparseable samples excluded.
-python3 scripts/witness-medoid.py --self-test >/dev/null \
-  || fail "witness-medoid self-test failed"
-echo "ok: witness-medoid election self-test"
+# 5. Medoid-of-k adjudication election (v3.2.3) — the rules live in the
+#    engine (lib/witness_medoid.ml, pinned by test_consistency.ml); here
+#    the CLI surface is exercised: outlier loses, election is visible.
+MEDOID_DIR="$(mktemp -d)"
+for n in 1 2 3; do
+  a=0.9; [[ "$n" == 1 ]] && a=0.1
+  jq -n --argjson a "$a" '{alpha:$a, beta:0.5, gamma:0.5,
+    delta_alpha_beta:0.1, delta_beta_gamma:0.1, delta_gamma_alpha:0.1,
+    confidence:0.8}' > "$MEDOID_DIR/r$n.json"
+done
+picked="$("$COH_BIN" witness-medoid "$MEDOID_DIR"/r1.json "$MEDOID_DIR"/r2.json "$MEDOID_DIR"/r3.json)"
+[[ "$picked" == "$MEDOID_DIR/r2.json" ]] \
+  || fail "witness-medoid CLI: expected r2 (outlier loses), got $picked"
+rm -rf "$MEDOID_DIR"
+echo "ok: witness-medoid election (engine CLI)"
 
 echo "self-measure-smoke: pass"

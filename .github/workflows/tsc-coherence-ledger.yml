@@ -149,7 +149,7 @@ jobs:
           # a real witness response, not first-sample order luck. All samples
           # still feed the consistency spread.
           if ls "$BASE".r*.json >/dev/null 2>&1; then
-            cp "$(python3 scripts/witness-medoid.py "$BASE".r*.json)" "$RESP"
+            cp "$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid "$BASE".r*.json)" "$RESP"
           fi
           ls -l "$(dirname "$RESP")" || true
 
@@ -269,7 +269,7 @@ jobs:
           # a real witness response, not first-sample order luck. All samples
           # still feed the consistency spread.
           if ls "$BASE".r*.json >/dev/null 2>&1; then
-            cp "$(python3 scripts/witness-medoid.py "$BASE".r*.json)" "$RESP"
+            cp "$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid "$BASE".r*.json)" "$RESP"
           fi
           ls -l "$(dirname "$RESP")" || true
 
@@ -389,7 +389,7 @@ jobs:
           # a real witness response, not first-sample order luck. All samples
           # still feed the consistency spread.
           if ls "$BASE".r*.json >/dev/null 2>&1; then
-            cp "$(python3 scripts/witness-medoid.py "$BASE".r*.json)" "$RESP"
+            cp "$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid "$BASE".r*.json)" "$RESP"
           fi
           ls -l "$(dirname "$RESP")" || true
 

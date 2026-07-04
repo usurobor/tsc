@@ -110,7 +110,8 @@ cm_of_cms:
       engine/ocaml/lib/response_schema.ml (validate_witness_response) —
       one funnel for every refusal stage: parse, base_schema,
       prohibited_fields (computed Coh/C_sigma), target_mismatch,
-      v3_2_delta. Any refusal produces a durable validation-failure
+      v3_2_delta, checklist (v3.2.3 defect walk missing or malformed).
+      Any refusal produces a durable validation-failure
       artifact naming its stage, preserves the raw response, renders no
       coherence report, and never falls back to mechanical scoring
     providers:
