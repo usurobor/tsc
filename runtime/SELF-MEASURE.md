@@ -264,7 +264,9 @@ grows with k by construction. Hence v3.2.4, not pooled findings.
 primary-axis precedence rule + structured `defect_cards` (machine-
 validated against the checklist) + the k-fair mean-pairwise statistic
 (reported alongside max-pairwise, same barrier). Baseline (v3.2.3,
-k=5, post-hygiene tree, mean-pairwise form): BASELINE_KFAIR_NUMBERS.
+k=5, post-hygiene tree 7d9c3f0, run 28697625576, mean-pairwise form):
+spec 0.833574, engine 0.899250, repo 0.883737 (min: spec); yield 5/5
+on all three targets.
 Pre-registered pass conditions: full sample yield on every target
 (declared == validated); min Coh_consistency_mean_pairwise ≥ 0.85 AND
 ≥ +0.03 over that baseline; ≥ 80% primary-axis agreement on defect
