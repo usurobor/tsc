@@ -91,6 +91,7 @@ cm_of_cms:
       - confidence
       - summary
       - axis_evidence
+      - defect_cards
       - unresolved_ambiguity
       - next_fixes
     must_not:
@@ -110,7 +111,9 @@ cm_of_cms:
       engine/ocaml/lib/response_schema.ml (validate_witness_response) —
       one funnel for every refusal stage: parse, base_schema,
       prohibited_fields (computed Coh/C_sigma), target_mismatch,
-      v3_2_delta, checklist (v3.2.3 defect walk missing or malformed).
+      v3_2_delta, checklist (v3.2.3 defect walk missing or malformed),
+      defect_cards (v3.2.4 structured cards missing, malformed, or
+      disagreeing with the checklist).
       Any refusal produces a durable validation-failure
       artifact naming its stage, preserves the raw response, renders no
       coherence report, and never falls back to mechanical scoring

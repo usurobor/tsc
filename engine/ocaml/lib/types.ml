@@ -120,4 +120,4 @@ type run_metadata = {
     Distinct from the REPORT schema version (report.ml, "v3.2.0"): that
     names the shape of emitted report JSON, which did not change across
     witness-protocol revisions. *)
-let self_measure_protocol_version = "SELF-MEASURE/3.2.3"
+let self_measure_protocol_version = "SELF-MEASURE/3.2.4"

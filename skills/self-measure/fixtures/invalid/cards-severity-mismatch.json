@@ -113,7 +113,7 @@
       "id": "D2",
       "primary_axis": "beta",
       "category": "authority-conflict",
-      "severity": "isolated",
+      "severity": "cosmetic",
       "evidence": "fixture:2",
       "summary": "authority gap (fixture)",
       "secondary_axes": [

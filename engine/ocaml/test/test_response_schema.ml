@@ -187,6 +187,7 @@ let witness_raw ?(delta_ab = "0.1") ?(extra = "")
     ?(alpha_checklist = clean_checklist alpha_cats)
     ?(beta_checklist = clean_checklist beta_cats)
     ?(gamma_checklist = clean_checklist gamma_cats)
+    ?(defect_cards = "[]")
     () = Printf.sprintf {|{
   "target": "spec",
   "alpha": 0.9, "beta": 0.8, "gamma": 0.7,
@@ -200,8 +201,9 @@ let witness_raw ?(delta_ab = "0.1") ?(extra = "")
     "gamma": {"positive": ["p"], "negative": ["n"], "reason": "r", "checklist": %s}
   },
   "unresolved_ambiguity": [],
-  "next_fixes": []%s
-}|} delta_ab alpha_checklist beta_checklist gamma_checklist extra
+  "next_fixes": [],
+  "defect_cards": %s%s
+}|} delta_ab alpha_checklist beta_checklist gamma_checklist defect_cards extra
 
 let valid_witness_raw = witness_raw ()
 
@@ -303,8 +305,19 @@ let test_funnel_severity_count_mismatch () =
          "unstable-boundary": {"count": 0, "severity": "none"}}|} ())
     "checklist"
 
+let nonzero_beta_cards = {|[
+  {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+   "severity": "isolated", "evidence": "f:1", "summary": "ref one"},
+  {"id": "D2", "primary_axis": "beta", "category": "broken-reference",
+   "severity": "cosmetic", "evidence": "f:2", "summary": "ref two"},
+  {"id": "D3", "primary_axis": "beta", "category": "fact-drift",
+   "severity": "cosmetic", "evidence": "f:3", "summary": "drift one",
+   "secondary_axes": ["gamma"]}
+]|}
+
 let test_funnel_accepts_nonzero_walk () =
   let raw = witness_raw
+    ~defect_cards:nonzero_beta_cards
     ~beta_checklist:{|{"broken-reference": {"count": 2, "severity": "isolated"},
       "authority-conflict": {"count": 0, "severity": "none"},
       "fact-drift": {"count": 1, "severity": "cosmetic"},
@@ -317,6 +330,58 @@ let test_funnel_accepts_nonzero_walk () =
   | Error wf ->
     fail ("funnel positive: non-zero walk refused: "
           ^ Response_schema.format_witness_failure wf)
+
+(* v3.2.4 defect-card stage: cards are required when the walk counts
+   defects, and must reconcile with the checklist. *)
+
+let nonzero_beta_checklist =
+  {|{"broken-reference": {"count": 2, "severity": "isolated"},
+    "authority-conflict": {"count": 0, "severity": "none"},
+    "fact-drift": {"count": 1, "severity": "cosmetic"},
+    "undeclared-relationship": {"count": 0, "severity": "none"}}|}
+
+let test_funnel_cards_missing_with_defects () =
+  expect_stage "funnel negative: walk counts defects but no cards"
+    ~expected_target:"spec"
+    (witness_raw ~beta_checklist:nonzero_beta_checklist ())
+    "defect_cards"
+
+let test_funnel_cards_duplicate_id () =
+  let cards = {|[
+    {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+     "severity": "isolated", "evidence": "f:1", "summary": "ref one"},
+    {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+     "severity": "cosmetic", "evidence": "f:2", "summary": "ref two"},
+    {"id": "D3", "primary_axis": "beta", "category": "fact-drift",
+     "severity": "cosmetic", "evidence": "f:3", "summary": "drift"}
+  ]|} in
+  expect_stage "funnel negative: duplicate card id"
+    ~expected_target:"spec"
+    (witness_raw ~defect_cards:cards
+       ~beta_checklist:nonzero_beta_checklist ())
+    "defect_cards"
+
+let test_funnel_cards_two_primary_axes () =
+  (* identical evidence+summary filed under two primary axes *)
+  let cards = {|[
+    {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+     "severity": "isolated", "evidence": "same", "summary": "same defect"},
+    {"id": "D2", "primary_axis": "beta", "category": "broken-reference",
+     "severity": "cosmetic", "evidence": "f:2", "summary": "ref two"},
+    {"id": "D3", "primary_axis": "beta", "category": "fact-drift",
+     "severity": "cosmetic", "evidence": "f:3", "summary": "drift"},
+    {"id": "D4", "primary_axis": "alpha", "category": "internal-contradiction",
+     "severity": "isolated", "evidence": "same", "summary": "same defect"}
+  ]|} in
+  let alpha = {|{"naming-drift": {"count": 0, "severity": "none"},
+    "duplicate-definition": {"count": 0, "severity": "none"},
+    "internal-contradiction": {"count": 1, "severity": "isolated"},
+    "unstable-boundary": {"count": 0, "severity": "none"}}|} in
+  expect_stage "funnel negative: one defect under two primary axes"
+    ~expected_target:"spec"
+    (witness_raw ~defect_cards:cards ~alpha_checklist:alpha
+       ~beta_checklist:nonzero_beta_checklist ())
+    "defect_cards"
 
 let test_funnel_delta_failure_classified () =
   (* Base-valid response with one delta out of range: must be classified as
@@ -352,4 +417,7 @@ let () =
   test_funnel_unknown_category ();
   test_funnel_severity_count_mismatch ();
   test_funnel_accepts_nonzero_walk ();
+  test_funnel_cards_missing_with_defects ();
+  test_funnel_cards_duplicate_id ();
+  test_funnel_cards_two_primary_axes ();
   Printf.printf "All response_schema v3.2 strict validation tests passed.\n%!"

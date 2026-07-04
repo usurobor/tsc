@@ -98,36 +98,5 @@
       "axis": "gamma",
       "fix": "test fixture"
     }
-  ],
-  "defect_cards": [
-    {
-      "id": "D1",
-      "primary_axis": "alpha",
-      "category": "naming-drift",
-      "severity": "cosmetic",
-      "evidence": "fixture:1",
-      "summary": "minor naming drift (fixture)",
-      "secondary_axes": []
-    },
-    {
-      "id": "D2",
-      "primary_axis": "beta",
-      "category": "authority-conflict",
-      "severity": "isolated",
-      "evidence": "fixture:2",
-      "summary": "authority gap (fixture)",
-      "secondary_axes": [
-        "alpha"
-      ]
-    },
-    {
-      "id": "D3",
-      "primary_axis": "gamma",
-      "category": "missing-migration-rule",
-      "severity": "isolated",
-      "evidence": "fixture:3",
-      "summary": "migration thin (fixture)",
-      "secondary_axes": []
-    }
   ]
 }

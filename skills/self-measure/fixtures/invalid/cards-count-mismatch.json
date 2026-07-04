@@ -119,15 +119,6 @@
       "secondary_axes": [
         "alpha"
       ]
-    },
-    {
-      "id": "D3",
-      "primary_axis": "gamma",
-      "category": "missing-migration-rule",
-      "severity": "isolated",
-      "evidence": "fixture:3",
-      "summary": "migration thin (fixture)",
-      "secondary_axes": []
     }
   ]
 }
