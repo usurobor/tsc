@@ -289,6 +289,27 @@ PYEOF
     fi
   fi
 
+  # 4e. If the declared LLM validation surface is the witness funnel
+  #     (response_schema.ml), the validation prose must name EVERY refusal
+  #     stage the engine can classify — witness_stage_to_string is the
+  #     source of truth. Catches the drift class where a new funnel stage
+  #     lands in the engine but the skill still describes the old funnel.
+  local validation_prose funnel_src
+  validation_prose=$(jq -r ".${block}.llm.validation // \"\"" "$json_path")
+  funnel_src="$REPO_ROOT/engine/ocaml/lib/response_schema.ml"
+  if [[ "$validation_prose" == *"response_schema.ml"* && -f "$funnel_src" ]]; then
+    local stage
+    while IFS= read -r stage; do
+      [[ -z "$stage" ]] && continue
+      if [[ "$validation_prose" != *"$stage"* ]]; then
+        emit_finding "$rel" "${block}.llm.validation" "refusal-stage-named" \
+          "engine funnel stage '$stage' (witness_stage_to_string) not named in the validation prose"
+        ok=1
+      fi
+    done < <(awk '/let witness_stage_to_string/,/^$/' "$funnel_src" \
+               | grep -o '"[a-z_0-9]*"' | tr -d '"')
+  fi
+
   return $ok
 }
 

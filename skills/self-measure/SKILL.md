@@ -108,7 +108,8 @@ self_measure:
       engine/ocaml/lib/response_schema.ml (validate_witness_response) —
       one funnel for every refusal stage: parse, base_schema,
       prohibited_fields (computed Coh/C_sigma), target_mismatch,
-      v3_2_delta. Any refusal produces a durable validation-failure
+      v3_2_delta, checklist (v3.2.3 defect walk missing or malformed).
+      Any refusal produces a durable validation-failure
       artifact naming its stage, preserves the raw response, renders no
       coherence report, and never falls back to mechanical scoring
     providers:
@@ -335,7 +336,9 @@ can fail is classified into a stage — `parse` (prose, fenced JSON,
 malformed text), `base_schema` (missing/mistyped contract fields),
 `prohibited_fields` (computed coherence), `target_mismatch` (response
 names a different target than was measured), `v3_2_delta` (missing or
-out-of-range δ) — and **every** stage writes the same durable
+out-of-range δ), `checklist` (v3.2.3 defect walk missing, wrong
+category set, or severity/count inconsistent) — and **every** stage
+writes the same durable
 validation-failure artifact naming its stage, preserves the raw response,
 renders **no** report, and does **not** fall back to mechanical scoring.
 A refused witness is a recorded fact, not a silent downgrade. The
