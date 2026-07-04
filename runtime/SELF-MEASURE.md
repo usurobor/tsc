@@ -272,8 +272,30 @@ Pre-registered pass conditions: full sample yield on every target
 ≥ +0.03 over that baseline; ≥ 80% primary-axis agreement on defect
 clusters found by ≥ 3/5 witnesses; mechanical cross within 0.005;
 max-pairwise fields still reported; no standing promotion. A miss on
-any condition marks the meter-loop counter 2/2. Result recorded here
-when measured.
+any condition marks the meter-loop counter 2/2.
+
+**Result (measured, k=5 run 28703325203 on tree b377ac2): FAILED —
+meter-loop counter 2/2.** Mean-pairwise: spec 0.800520 (−0.033),
+engine 0.912376 (+0.013), repo 0.724998 (−0.159, k=4/5). Conditions
+missed: yield (repo 4/5 — and the incidental PR-event run on the same
+tree drew spec 3/5, two samples omitting the checklist walk
+entirely); min ≥ 0.85 (0.725); +0.03 margin (two targets moved
+NEGATIVE). Axis agreement on ≥3/5 clusters was mixed (spec:
+ε-miscitation 4/4 β, "witness" overload 3/3 α, but oper §7.3-vs-§8
+split α/γ/γ — one witness applied the precedence rule, two filed the
+same defect as a stale marker). Mechanical A/B bit-identical;
+max-pairwise reported; no standing promotion — those three held.
+Interpretation: structured cards did not reduce filing variance, and
+the longer contract REDUCED sample yield; one repo witness returned
+checklist counts an order of magnitude beyond its peers, which
+mean-pairwise dampens but cannot absorb. The defect-card funnel stage
+and dual-statistic reporting are retained as contract hardening (no
+consistency claim); llm_repeats reverts to 3. Two pipeline defects
+this run exposed: witness-medoid elects among numerically-complete
+samples without funnel validity (an invalid sample can be
+adjudicated, failing ingest), and three v3.2.4 error strings in
+response_schema.ml carry baked multi-space runs. The loop counter is
+exhausted; next protocol change requires operator dispatch.
 
 **Confidence rubric**: 0.9 — you read every file and your findings are
 all directly cited; 0.75 — some claims reference material outside the
