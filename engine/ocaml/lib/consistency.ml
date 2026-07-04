@@ -5,18 +5,22 @@
     through the canonical barrier phi(delta) = delta/(1-delta) to
     Coh_consistency = exp(-phi) (tsc-core §3.2, lambda = 1).
 
-    This module is the engine home of that mapping — the barrier is
-    sourced HERE for consistency reports, never re-implemented in
-    scripts (the P1 migration: scripts/cm-consistency.sh delegates). *)
+    The barrier itself is NOT defined here: Coherence.phi /
+    Coherence.coherence_link are the one source of the transform
+    (engine/ocaml/lib/coherence.ml), and this module routes through
+    them. The k=5 characterization pass caught the first draft of this
+    module re-implementing the formula locally — the exact
+    second-source-of-truth defect the P1 migration existed to remove;
+    a smoke grep now guards against the regression. *)
 
-(** The barrier transform phi(delta) = delta / (1 - delta).
-    Defined on [0, 1); callers map delta >= 1 to Coh 0 directly. *)
-let barrier delta = delta /. (1.0 -. delta)
+(** The canonical barrier, routed: phi(delta) = delta / (1 - delta),
+    +infinity at delta >= 1 (Coherence.phi's convention). *)
+let barrier = Coherence.phi
 
-(** Coh_consistency from a spread delta: exp(-phi(delta)); 0 when the
-    spread saturates (delta >= 1 — the barrier diverges). *)
-let coh_from_delta delta =
-  if delta >= 1.0 then 0.0 else Float.exp (-.(barrier delta))
+(** Coh_consistency from a spread delta: the canonical link
+    Coh = exp(-lambda * phi(delta)) at lambda = 1 (tsc-core §3.2);
+    0 when the spread saturates (delta >= 1). *)
+let coh_from_delta delta = Coherence.coherence_link ~lambda:1.0 ~delta
 
 (* Round to 6 decimals — the report convention the Python
    implementation used (values stay raw; spreads and headline numbers

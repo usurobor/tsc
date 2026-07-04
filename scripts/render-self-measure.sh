@@ -3,11 +3,13 @@
 # its substrate artifacts.
 #
 # Consumes skills/self-measure/SKILL.md (frontmatter `self_measure:` block,
-# validated by schemas/skill.cue #SelfMeasure) and materializes:
+# validated by schemas/skill.cue #SelfMeasure) and materializes THREE
+# artifacts, each carrying a DO-NOT-EDIT header:
 #
-#   - scripts/coh-self                          the local command
-#                                               (`coh self` dispatches to it)
-#   - .github/workflows/tsc-self-measure.yml    the CI surface
+#   - scripts/coh-self                            the local command
+#                                                 (`coh self` dispatches to it)
+#   - .github/workflows/tsc-self-measure.yml      the measurement CI surface
+#   - .github/workflows/tsc-coherence-ledger.yml  the release-ledger CI surface
 #
 # Authority split (pattern imported from cnos cn-install-wake):
 # - Skill authority: what self-measurement IS — targets, registry,
@@ -254,6 +256,14 @@ with open(os.path.join(repo_root, "skills/cm-of-cms/SKILL.md")) as f:
     cm0 = yaml.safe_load(f.read().split("---\n", 2)[1])
 llm_consistency_floor = cm0["cm_of_cms"]["standing"]["llm_consistency_floor"]
 
+# Sample counts are skill authority, never renderer constants: the
+# measurement route samples consistency.llm_repeats per target; the
+# ledger (release) route samples ledger.semantic_samples. The two are
+# independent knobs — an experimental k bump on the measure route must
+# not change what a release row costs or claims.
+measure_k = int(req(sm, "consistency.llm_repeats"))
+ledger_k  = int(req(sm, "ledger.semantic_samples"))
+
 
 def consistency_standing_run(t_expr):
     """Run-block body for the per-target consistency + standing step,
@@ -276,6 +286,12 @@ def consistency_standing_run(t_expr):
 {ind}  fi
 {ind}done
 {ind}n=$(echo $valid | wc -w)
+{ind}# Defect-overlap observability: per validated sample, the checklist
+{ind}# counts and negative findings, one JSON line each — job logs carry
+{ind}# enough to cluster findings across samples without artifact access.
+{ind}for r in $valid; do
+{ind}  jq -c '{{sample: input_filename, checklist: (.axis_evidence | map_values(.checklist)), negative: (.axis_evidence | map_values(.negative))}}' "$r" || true
+{ind}done
 {ind}coh_c="0"
 {ind}if [ "$n" -ge 2 ]; then
 {ind}  COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
@@ -493,11 +509,11 @@ jobs:
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
             {command_out} --emit-prompt ${{{{ matrix.target }}}} --output {output_root}
 
-      - name: Estimate deltas and evidence (LLM witness — Claude CLI, k=3 samples)
+      - name: Estimate deltas and evidence (LLM witness — Claude CLI, k={measure_k} samples)
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{{{ secrets.{llm_secret} }}}}
         run: |
-{cli_witness_run(prompt_body, k=3, resp=witness_resp)}
+{cli_witness_run(prompt_body, k=measure_k, resp=witness_resp)}
 
       - name: Validate and ingest witness response (deterministic)
         env:
@@ -512,7 +528,7 @@ jobs:
       # spread of the validated samples maps through the barrier. The
       # result is a STANDING gate, not a publishing gate — a failing
       # spread never blocks the report, it scopes its standing.
-      - name: Witness consistency (k=3 spread) and standing scope
+      - name: Witness consistency (k={measure_k} spread) and standing scope
         if: always()
         run: |
 {matrix_consistency}
@@ -572,19 +588,19 @@ def ledger_witness_steps():
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
             {command_out} --emit-prompt {t} --output {output_root}
 
-      - name: Estimate deltas and evidence ({t} — Claude CLI witness, k=3 samples)
+      - name: Estimate deltas and evidence ({t} — Claude CLI witness, k={ledger_k} samples)
         if: ${{{{ env.{llm_secret} != '' }}}}
         # The ledger contract (skill section 6): mechanical is the
         # explicit, labeled fallback. A witness that cannot run (bad
         # credential, provider outage) must not leave the release
         # rowless — the step stays visibly red via the warning
         # annotation, and the row's Mode column says mechanical. The
-        # ledger takes the SAME k=3 sampled route as the measurement
+        # ledger takes the SAME sampled route as the measurement
         # workflow: a release row is never a single-sample semantic
         # reading.
         continue-on-error: true
         run: |
-{cli_witness_run(ci_prompt.replace("{target}", t), k=3, resp=f"{output_root}/response/{t}.json")}
+{cli_witness_run(ci_prompt.replace("{target}", t), k=ledger_k, resp=f"{output_root}/response/{t}.json")}
 
       - name: Validate and ingest witness response ({t})
         if: ${{{{ env.{llm_secret} != '' }}}}
@@ -596,7 +612,7 @@ def ledger_witness_steps():
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
             {command_out} --ingest {t} --output {output_root}
 
-      - name: Witness consistency ({t}, k=3 spread) and standing scope
+      - name: Witness consistency ({t}, k={ledger_k} spread) and standing scope
         if: ${{{{ env.{llm_secret} != '' }}}}
         continue-on-error: true
         run: |

@@ -107,4 +107,12 @@ picked="$("$COH_BIN" witness-medoid "$MEDOID_DIR"/r1.json "$MEDOID_DIR"/r2.json 
 rm -rf "$MEDOID_DIR"
 echo "ok: witness-medoid election (engine CLI)"
 
+# 6. Source-of-truth guard (Issue A / F1): the consistency module must
+#    route the barrier through Coherence.phi, never define it locally.
+#    The k=5 pass caught exactly this regression once; grep keeps it dead.
+if grep -nE '1\.0 -\. delta|1\. -\. delta' engine/ocaml/lib/consistency.ml; then
+  fail "consistency.ml re-implements the barrier locally (must route through Coherence.phi)"
+fi
+echo "ok: consistency barrier routed through Coherence (no local duplicate)"
+
 echo "self-measure-smoke: pass"

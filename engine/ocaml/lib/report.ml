@@ -124,6 +124,11 @@ let to_json ~result ~metadata ?(mode = "llm")
     `Assoc [
       ("target", `String result.result_target);
       ("mode", `String mode);
+      (* REPORT-shape version: the structure of this JSON (fields,
+         provenance layout), pinned at the v3.2.0 cutover. Deliberately
+         NOT the witness protocol version — that lives in
+         Types.self_measure_protocol_version and revs with
+         runtime/SELF-MEASURE.md while this shape stays stable. *)
       ("schema_version", `String "v3.2.0");
       ("alpha", `Float result.result_alpha);
       ("beta", `Float result.result_beta);

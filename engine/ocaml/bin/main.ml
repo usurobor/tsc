@@ -17,6 +17,12 @@
                                (git-style external subcommand; the procedure
                                is declared by the skill, not by this binary)
 
+    Consistency protocol (skills/cm-of-cms/SKILL.md §3):
+      coh consistency-spread --target <t> <resp.json>... [--output <f>]
+                               k-sample spread report (lib/consistency.ml)
+      coh witness-medoid <resp.json>...
+                               medoid-of-k adjudication (lib/witness_medoid.ml)
+
     External provider route (skills/self-measure/SKILL.md §LLM contract):
       --emit-prompt <path>     write the exact LLM prompt (instruction +
                                target metadata + file bundle) to <path> and
@@ -593,7 +599,7 @@ let run_llm ~args ~bundle ~ts =
     meta_target = bundle.bundle_target_name;
     meta_file_hashes =
       List.map (fun f -> (f.file_path, f.file_hash)) bundle.bundle_files;
-    meta_prompt_version = "SELF-MEASURE/3.2.3";
+    meta_prompt_version = Tsc_engine.Types.self_measure_protocol_version;
     meta_provider = provider_name;
     meta_model    = provider_model;
     meta_timestamp = ts;

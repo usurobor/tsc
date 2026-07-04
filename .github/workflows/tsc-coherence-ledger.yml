@@ -83,7 +83,7 @@ jobs:
         # credential, provider outage) must not leave the release
         # rowless — the step stays visibly red via the warning
         # annotation, and the row's Mode column says mechanical. The
-        # ledger takes the SAME k=3 sampled route as the measurement
+        # ledger takes the SAME sampled route as the measurement
         # workflow: a release row is never a single-sample semantic
         # reading.
         continue-on-error: true
@@ -180,6 +180,12 @@ jobs:
             fi
           done
           n=$(echo $valid | wc -w)
+          # Defect-overlap observability: per validated sample, the checklist
+          # counts and negative findings, one JSON line each — job logs carry
+          # enough to cluster findings across samples without artifact access.
+          for r in $valid; do
+            jq -c '{sample: input_filename, checklist: (.axis_evidence | map_values(.checklist)), negative: (.axis_evidence | map_values(.negative))}' "$r" || true
+          done
           coh_c="0"
           if [ "$n" -ge 2 ]; then
             COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
@@ -203,7 +209,7 @@ jobs:
         # credential, provider outage) must not leave the release
         # rowless — the step stays visibly red via the warning
         # annotation, and the row's Mode column says mechanical. The
-        # ledger takes the SAME k=3 sampled route as the measurement
+        # ledger takes the SAME sampled route as the measurement
         # workflow: a release row is never a single-sample semantic
         # reading.
         continue-on-error: true
@@ -300,6 +306,12 @@ jobs:
             fi
           done
           n=$(echo $valid | wc -w)
+          # Defect-overlap observability: per validated sample, the checklist
+          # counts and negative findings, one JSON line each — job logs carry
+          # enough to cluster findings across samples without artifact access.
+          for r in $valid; do
+            jq -c '{sample: input_filename, checklist: (.axis_evidence | map_values(.checklist)), negative: (.axis_evidence | map_values(.negative))}' "$r" || true
+          done
           coh_c="0"
           if [ "$n" -ge 2 ]; then
             COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
@@ -323,7 +335,7 @@ jobs:
         # credential, provider outage) must not leave the release
         # rowless — the step stays visibly red via the warning
         # annotation, and the row's Mode column says mechanical. The
-        # ledger takes the SAME k=3 sampled route as the measurement
+        # ledger takes the SAME sampled route as the measurement
         # workflow: a release row is never a single-sample semantic
         # reading.
         continue-on-error: true
@@ -420,6 +432,12 @@ jobs:
             fi
           done
           n=$(echo $valid | wc -w)
+          # Defect-overlap observability: per validated sample, the checklist
+          # counts and negative findings, one JSON line each — job logs carry
+          # enough to cluster findings across samples without artifact access.
+          for r in $valid; do
+            jq -c '{sample: input_filename, checklist: (.axis_evidence | map_values(.checklist)), negative: (.axis_evidence | map_values(.negative))}' "$r" || true
+          done
           coh_c="0"
           if [ "$n" -ge 2 ]; then
             COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
