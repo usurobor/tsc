@@ -1,0 +1,102 @@
+{
+  "target": "spec",
+  "alpha": 0.91,
+  "beta": 0.84,
+  "gamma": 0.78,
+  "delta_alpha_beta": 0.12,
+  "delta_beta_gamma": 0.22,
+  "delta_gamma_alpha": 0.18,
+  "bottleneck_axis": "gamma",
+  "confidence": 0.8,
+  "summary": "fixture response for external provider route verification",
+  "axis_evidence": {
+    "alpha": {
+      "positive": [
+        "stable terms"
+      ],
+      "negative": [
+        "minor drift"
+      ],
+      "reason": "test",
+      "checklist": {
+        "naming-drift": {
+          "count": 1,
+          "severity": "cosmetic"
+        },
+        "duplicate-definition": {
+          "count": 0,
+          "severity": "none"
+        },
+        "internal-contradiction": {
+          "count": 0,
+          "severity": "none"
+        },
+        "unstable-boundary": {
+          "count": 0,
+          "severity": "none"
+        }
+      }
+    },
+    "beta": {
+      "positive": [
+        "cross-refs hold"
+      ],
+      "negative": [
+        "authority gaps"
+      ],
+      "reason": "test",
+      "checklist": {
+        "broken-reference": {
+          "count": 0,
+          "severity": "none"
+        },
+        "authority-conflict": {
+          "count": 1,
+          "severity": "isolated"
+        },
+        "fact-drift": {
+          "count": 0,
+          "severity": "none"
+        },
+        "undeclared-relationship": {
+          "count": 0,
+          "severity": "none"
+        }
+      }
+    },
+    "gamma": {
+      "positive": [
+        "versioned"
+      ],
+      "negative": [
+        "migration thin"
+      ],
+      "reason": "test",
+      "checklist": {
+        "unowned-change-path": {
+          "count": 0,
+          "severity": "systemic"
+        },
+        "generated-canonical-confusion": {
+          "count": 0,
+          "severity": "none"
+        },
+        "missing-migration-rule": {
+          "count": 1,
+          "severity": "isolated"
+        },
+        "stale-transitional-marker": {
+          "count": 0,
+          "severity": "none"
+        }
+      }
+    }
+  },
+  "unresolved_ambiguity": [],
+  "next_fixes": [
+    {
+      "axis": "gamma",
+      "fix": "test fixture"
+    }
+  ]
+}

@@ -164,8 +164,30 @@ let test_mixed_missing_and_invalid () =
    base fields, computed coherence, wrong target, bad deltas. *)
 
 (* A base-valid witness response for target "spec", parameterized on the
-   delta_alpha_beta value and an optional extra top-level field. *)
-let witness_raw ?(delta_ab = "0.1") ?(extra = "") () = Printf.sprintf {|{
+   delta_alpha_beta value, an optional extra top-level field, and the
+   per-axis checklists (v3.2.3 walk). The default checklists are the
+   clean walk: every category present, count 0, severity "none". *)
+let clean_checklist cats =
+  "{" ^ String.concat ", "
+    (List.map (fun c ->
+      Printf.sprintf {|"%s": {"count": 0, "severity": "none"}|} c) cats)
+  ^ "}"
+
+let alpha_cats =
+  ["naming-drift"; "duplicate-definition";
+   "internal-contradiction"; "unstable-boundary"]
+let beta_cats =
+  ["broken-reference"; "authority-conflict";
+   "fact-drift"; "undeclared-relationship"]
+let gamma_cats =
+  ["unowned-change-path"; "generated-canonical-confusion";
+   "missing-migration-rule"; "stale-transitional-marker"]
+
+let witness_raw ?(delta_ab = "0.1") ?(extra = "")
+    ?(alpha_checklist = clean_checklist alpha_cats)
+    ?(beta_checklist = clean_checklist beta_cats)
+    ?(gamma_checklist = clean_checklist gamma_cats)
+    () = Printf.sprintf {|{
   "target": "spec",
   "alpha": 0.9, "beta": 0.8, "gamma": 0.7,
   "delta_alpha_beta": %s, "delta_beta_gamma": 0.2, "delta_gamma_alpha": 0.15,
@@ -173,13 +195,13 @@ let witness_raw ?(delta_ab = "0.1") ?(extra = "") () = Printf.sprintf {|{
   "confidence": 0.8,
   "summary": "funnel fixture",
   "axis_evidence": {
-    "alpha": {"positive": ["p"], "negative": ["n"], "reason": "r"},
-    "beta":  {"positive": ["p"], "negative": ["n"], "reason": "r"},
-    "gamma": {"positive": ["p"], "negative": ["n"], "reason": "r"}
+    "alpha": {"positive": ["p"], "negative": ["n"], "reason": "r", "checklist": %s},
+    "beta":  {"positive": ["p"], "negative": ["n"], "reason": "r", "checklist": %s},
+    "gamma": {"positive": ["p"], "negative": ["n"], "reason": "r", "checklist": %s}
   },
   "unresolved_ambiguity": [],
   "next_fixes": []%s
-}|} delta_ab extra
+}|} delta_ab alpha_checklist beta_checklist gamma_checklist extra
 
 let valid_witness_raw = witness_raw ()
 
@@ -231,6 +253,71 @@ let test_funnel_target_mismatch () =
   expect_stage "funnel negative: wrong target refused"
     ~expected_target:"engine" valid_witness_raw "target_mismatch"
 
+(* v3.2.3 checklist stage: the forced walk is required and shape-checked
+   AFTER the delta stage — a response valid to v3.2.2 but without the
+   walk is refused at "checklist", never silently accepted. *)
+
+let test_funnel_missing_checklist () =
+  expect_stage "funnel negative: missing checklist refused (v3.2.3 walk)"
+    ~expected_target:"spec"
+    (witness_raw ~alpha_checklist:"{}" ())
+    "checklist"
+
+let test_funnel_absent_checklist_object () =
+  (* No checklist key at all on one axis: base schema tolerates it
+     (parse-level), the checklist stage refuses it. *)
+  let raw = Printf.sprintf {|{
+  "target": "spec",
+  "alpha": 0.9, "beta": 0.8, "gamma": 0.7,
+  "delta_alpha_beta": 0.1, "delta_beta_gamma": 0.2, "delta_gamma_alpha": 0.15,
+  "bottleneck_axis": "gamma",
+  "confidence": 0.8,
+  "summary": "funnel fixture",
+  "axis_evidence": {
+    "alpha": {"positive": ["p"], "negative": ["n"], "reason": "r"},
+    "beta":  {"positive": ["p"], "negative": ["n"], "reason": "r", "checklist": %s},
+    "gamma": {"positive": ["p"], "negative": ["n"], "reason": "r", "checklist": %s}
+  },
+  "unresolved_ambiguity": [],
+  "next_fixes": []
+}|} (clean_checklist beta_cats) (clean_checklist gamma_cats) in
+  expect_stage "funnel negative: axis without checklist key refused"
+    ~expected_target:"spec" raw "checklist"
+
+let test_funnel_unknown_category () =
+  expect_stage "funnel negative: unknown checklist category refused"
+    ~expected_target:"spec"
+    (witness_raw
+       ~alpha_checklist:(clean_checklist
+         ["naming-drift"; "duplicate-definition";
+          "internal-contradiction"; "vibes"]) ())
+    "checklist"
+
+let test_funnel_severity_count_mismatch () =
+  expect_stage "funnel negative: count 0 with non-none severity refused"
+    ~expected_target:"spec"
+    (witness_raw
+       ~alpha_checklist:{|{"naming-drift": {"count": 0, "severity": "systemic"},
+         "duplicate-definition": {"count": 0, "severity": "none"},
+         "internal-contradiction": {"count": 0, "severity": "none"},
+         "unstable-boundary": {"count": 0, "severity": "none"}}|} ())
+    "checklist"
+
+let test_funnel_accepts_nonzero_walk () =
+  let raw = witness_raw
+    ~beta_checklist:{|{"broken-reference": {"count": 2, "severity": "isolated"},
+      "authority-conflict": {"count": 0, "severity": "none"},
+      "fact-drift": {"count": 1, "severity": "cosmetic"},
+      "undeclared-relationship": {"count": 0, "severity": "none"}}|} () in
+  match Response_schema.validate_witness_response ~expected_target:"spec" raw with
+  | Ok (result, _) ->
+    let bl = result.Tsc_engine.Types.result_beta_evidence.evidence_checklist in
+    check (List.assoc "broken-reference" bl = (2, "isolated"))
+      "funnel positive: non-zero walk accepted and parsed"
+  | Error wf ->
+    fail ("funnel positive: non-zero walk refused: "
+          ^ Response_schema.format_witness_failure wf)
+
 let test_funnel_delta_failure_classified () =
   (* Base-valid response with one delta out of range: must be classified as
      the v3.2 delta stage, and name the offending field. *)
@@ -260,4 +347,9 @@ let () =
   test_funnel_prohibited_coherence ();
   test_funnel_target_mismatch ();
   test_funnel_delta_failure_classified ();
+  test_funnel_missing_checklist ();
+  test_funnel_absent_checklist_object ();
+  test_funnel_unknown_category ();
+  test_funnel_severity_count_mismatch ();
+  test_funnel_accepts_nonzero_walk ();
   Printf.printf "All response_schema v3.2 strict validation tests passed.\n%!"

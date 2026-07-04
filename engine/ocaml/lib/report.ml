@@ -10,12 +10,50 @@
 
 open Types
 
-(** Build axis evidence as Yojson value. *)
+(** Build axis evidence as Yojson value. The v3.2.3 defect walk is
+    emitted when present; a pre-v3.2.3 result renders without it. *)
 let evidence_to_yojson ev =
-  `Assoc [
+  let base = [
     ("positive", `List (List.map (fun s -> `String s) ev.evidence_positive));
     ("negative", `List (List.map (fun s -> `String s) ev.evidence_negative));
     ("reason", `String ev.evidence_reason);
+  ] in
+  let checklist =
+    match ev.evidence_checklist with
+    | [] -> []
+    | entries ->
+      [("checklist", `Assoc (List.map (fun (cat, (count, severity)) ->
+          (cat, `Assoc [("count", `Int count);
+                        ("severity", `String severity)]))
+          entries))]
+  in
+  `Assoc (base @ checklist)
+
+(** Per-axis defect totals from the v3.2.3 walk: total defect count and
+    count of categories at each severity. Null-shaped (all zeros) for a
+    pre-v3.2.3 result — the funnel refuses those on the witness path,
+    but the report renderer stays total. *)
+let defect_summary_to_yojson result =
+  let axis ev =
+    let total =
+      List.fold_left (fun acc (_, (c, _)) -> acc + c) 0 ev.evidence_checklist in
+    let sev_count s =
+      List.length
+        (List.filter (fun (_, (_, sev)) -> sev = s) ev.evidence_checklist) in
+    `Assoc [
+      ("defects", `Int total);
+      ("systemic", `Int (sev_count "systemic"));
+      ("isolated", `Int (sev_count "isolated"));
+      ("cosmetic", `Int (sev_count "cosmetic"));
+    ]
+  in
+  `Assoc [
+    ("alpha", axis result.result_alpha_evidence);
+    ("beta", axis result.result_beta_evidence);
+    ("gamma", axis result.result_gamma_evidence);
+    ("unresolved_ambiguity_count",
+      `Int (List.length result.result_unresolved_ambiguity));
+    ("confidence", `Float result.result_confidence);
   ]
 
 (** Build the canonical v3.2 provenance sub-object for an LLM/hybrid report.
@@ -98,6 +136,7 @@ let to_json ~result ~metadata ?(mode = "llm")
         ("beta", evidence_to_yojson result.result_beta_evidence);
         ("gamma", evidence_to_yojson result.result_gamma_evidence);
       ]);
+      ("defect_summary", defect_summary_to_yojson result);
       ("unresolved_ambiguity",
         `List (List.map (fun s -> `String s) result.result_unresolved_ambiguity));
       ("next_fixes",

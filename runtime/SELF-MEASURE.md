@@ -1,4 +1,4 @@
-# Self-Measure v3.2.2
+# Self-Measure v3.2.3
 
 You are evaluating a TSC target bundle.
 
@@ -172,22 +172,34 @@ Also estimate:
 - **s_beta** ∈ [0, 1]: relational coherence score (β axis cross-file fit)
 - **s_gamma** ∈ [0, 1]: process coherence score (γ axis temporal / evolution stability)
 
-**Count first** (v3.2.1, retained): for each axis, enumerate your
-findings as a list of DEFECTS (contradictions, broken references,
-drift, unowned change paths), each with its severity: *cosmetic* (a
-reader is never misled), *isolated* (a reader of one section is
-misled; ≤ 2 sites), or *systemic* (repeated pattern, or a load-bearing
-claim contradicted). List every enumerated defect in `axis_evidence`
-with its severity — the enumeration is part of the record, not a
-private step.
+**Walk the checklist first** (v3.2.3): for each axis, walk its FIXED
+defect checklist — every category answered, none skipped. The
+categories are interpretation buckets, not exclusion filters: a defect
+that does not fit a category cleanly goes into the CLOSEST category,
+never dropped. For each category report the count of distinct defects
+found and the severity of the WORST instance: *none* (count is 0),
+*cosmetic* (a reader is never misled), *isolated* (a reader of one
+section is misled; ≤ 2 sites), or *systemic* (repeated pattern, or a
+load-bearing claim contradicted).
+
+| Axis | Checklist categories |
+|------|----------------------|
+| α | `naming-drift` (one concept, drifting names) · `duplicate-definition` (same thing defined twice, versions disagree or may) · `internal-contradiction` (two claims in the bundle cannot both hold) · `unstable-boundary` (a concept's scope shifts between files) |
+| β | `broken-reference` (a file/anchor/section referenced that the bundle does not bear out) · `authority-conflict` (two files claim or assign authority inconsistently) · `fact-drift` (one fact repeated with diverging values) · `undeclared-relationship` (a dependency asserted or required but not evidenced) |
+| γ | `unowned-change-path` (no owner or rule for how a surface evolves) · `generated-canonical-confusion` (derived artifacts not distinguished from canonical ones) · `missing-migration-rule` (version/format transitions unspecified) · `stale-transitional-marker` (something marked temporary with no exit path) |
+
+Report the walk in `axis_evidence.<axis>.checklist` (contract in §7) —
+the walk is part of the record, not a private step. Also list the
+individual defects (with severities) in the axis's `negative`
+evidence, as before.
 
 **Map continuously, guided by the bands** (v3.2.2): use this table as
 INTERPRETATION, not quantization — report any value in the range that
 your enumerated list supports:
 
-| Range | Condition |
-|-------|-----------|
-| 0.90–1.00 | no defects found after an explicit search |
+| Range | Condition (over the axis's checklist totals) |
+|-------|-----------------------------------------------|
+| 0.90–1.00 | all categories count 0 after the full walk |
 | 0.80–0.90 | cosmetic defects only |
 | 0.70–0.80 | 1–2 isolated defects, bounded scope |
 | 0.50–0.70 | 3+ isolated defects, or 1 systemic defect |
@@ -204,8 +216,31 @@ targets (spec Coh_consistency 0.815→0.618, engine 0.873→0.618, repo
 variance is in FINDING defects, not in mapping them — quantization
 chunked the disagreement instead of reducing it. The enumeration
 discipline and confidence rubric are retained; the snap is withdrawn.
-Reducing finding-variance (a per-axis defect checklist) is the next
-protocol experiment, versioned when it lands.
+
+**Experiment record (v3.2.2 → v3.2.3).** The fixed per-axis checklist
+is the finding-variance experiment v3.2.2 queued. Baseline (release
+0.11.0, k=3, v3.2.2): worst per-target Coh_consistency 0.7037.
+Prediction: the forced walk narrows what "finding" means, so the worst
+per-target k=3 Coh_consistency rises by ≥ +0.10 absolute (or crosses
+the 0.90 standing floor). Falsified if it does not. The adjudication
+change shipped alongside (medoid-of-k replaces first-sample) cannot
+move this number — spread is computed over all validated samples — so
+the consistency delta measures the checklist alone.
+
+**Result (measured, k=3 CI run on the candidate): FALSIFIED.**
+spec 0.7165 (δ 0.25), engine 0.8612 (δ 0.13), repo 0.7666 (δ 0.21) —
+worst 0.7165, a +0.0128 move against a +0.10 gate: noise-level. Every
+sample passed the checklist funnel stage, so the walk itself is
+followed; the spread survives it because the variance is in DISCOVERY,
+not reporting — the three witnesses found DIFFERENT defects in the
+same bundle (two found a τ_lip verdict-rule contradiction, the third
+found a broken cross-reference instead) and mapped their own findings
+honestly. A checklist disciplines the map; it cannot make independent
+readers encounter the same defects in a multi-thousand-line bundle.
+The checklist and the walk-validating funnel stage are retained as
+contract hardening; the next variance experiment must target discovery
+(pooled-findings adjudication: a second witness phase that re-scores
+against the union of all samples' enumerated defects).
 
 **Confidence rubric**: 0.9 — you read every file and your findings are
 all directly cited; 0.75 — some claims reference material outside the
@@ -292,17 +327,35 @@ Return JSON only.
     "alpha": {
       "positive": ["..."],
       "negative": ["..."],
-      "reason": "..."
+      "reason": "...",
+      "checklist": {
+        "naming-drift":           {"count": 0, "severity": "none"},
+        "duplicate-definition":   {"count": 0, "severity": "none"},
+        "internal-contradiction": {"count": 0, "severity": "none"},
+        "unstable-boundary":      {"count": 0, "severity": "none"}
+      }
     },
     "beta": {
       "positive": ["..."],
       "negative": ["..."],
-      "reason": "..."
+      "reason": "...",
+      "checklist": {
+        "broken-reference":        {"count": 0, "severity": "none"},
+        "authority-conflict":      {"count": 0, "severity": "none"},
+        "fact-drift":              {"count": 0, "severity": "none"},
+        "undeclared-relationship": {"count": 0, "severity": "none"}
+      }
     },
     "gamma": {
       "positive": ["..."],
       "negative": ["..."],
-      "reason": "..."
+      "reason": "...",
+      "checklist": {
+        "unowned-change-path":            {"count": 0, "severity": "none"},
+        "generated-canonical-confusion":  {"count": 0, "severity": "none"},
+        "missing-migration-rule":         {"count": 0, "severity": "none"},
+        "stale-transitional-marker":      {"count": 0, "severity": "none"}
+      }
     }
   },
   "unresolved_ambiguity": ["..."],
@@ -319,6 +372,12 @@ No markdown.
 No prose before or after the JSON.
 
 **Key difference from v3.1:** The three `delta_*` fields are **required**. They carry normalized discrepancy δ ∈ [0, 1] for each pair. The engine applies the barrier transform to obtain Coh values — do not compute Coh yourself.
+
+**Key difference from v3.2.2:** each axis's `checklist` is **required**,
+with exactly the categories in §3.2 — every category present, `count`
+a non-negative integer, `severity` one of `none|cosmetic|isolated|systemic`,
+and `severity: "none"` exactly when `count` is 0. The engine refuses a
+response whose walk is missing or malformed.
 
 ---
 

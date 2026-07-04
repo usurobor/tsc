@@ -144,9 +144,13 @@ jobs:
               --max-turns 50 || true
             if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
           done
-          # The first sample is the adjudicated response; all samples feed
-          # the consistency spread.
-          if [ -f "$BASE.r1.json" ]; then cp "$BASE.r1.json" "$RESP"; fi
+          # Medoid-of-k adjudication (v3.2.3): the adjudicated response is
+          # the sample nearest the others over the numeric contract fields —
+          # a real witness response, not first-sample order luck. All samples
+          # still feed the consistency spread.
+          if ls "$BASE".r*.json >/dev/null 2>&1; then
+            cp "$(python3 scripts/witness-medoid.py "$BASE".r*.json)" "$RESP"
+          fi
           ls -l "$(dirname "$RESP")" || true
 
       - name: Validate and ingest witness response (spec)
@@ -260,9 +264,13 @@ jobs:
               --max-turns 50 || true
             if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
           done
-          # The first sample is the adjudicated response; all samples feed
-          # the consistency spread.
-          if [ -f "$BASE.r1.json" ]; then cp "$BASE.r1.json" "$RESP"; fi
+          # Medoid-of-k adjudication (v3.2.3): the adjudicated response is
+          # the sample nearest the others over the numeric contract fields —
+          # a real witness response, not first-sample order luck. All samples
+          # still feed the consistency spread.
+          if ls "$BASE".r*.json >/dev/null 2>&1; then
+            cp "$(python3 scripts/witness-medoid.py "$BASE".r*.json)" "$RESP"
+          fi
           ls -l "$(dirname "$RESP")" || true
 
       - name: Validate and ingest witness response (engine)
@@ -376,9 +384,13 @@ jobs:
               --max-turns 50 || true
             if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
           done
-          # The first sample is the adjudicated response; all samples feed
-          # the consistency spread.
-          if [ -f "$BASE.r1.json" ]; then cp "$BASE.r1.json" "$RESP"; fi
+          # Medoid-of-k adjudication (v3.2.3): the adjudicated response is
+          # the sample nearest the others over the numeric contract fields —
+          # a real witness response, not first-sample order luck. All samples
+          # still feed the consistency spread.
+          if ls "$BASE".r*.json >/dev/null 2>&1; then
+            cp "$(python3 scripts/witness-medoid.py "$BASE".r*.json)" "$RESP"
+          fi
           ls -l "$(dirname "$RESP")" || true
 
       - name: Validate and ingest witness response (repo)
