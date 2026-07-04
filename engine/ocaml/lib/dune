@@ -13,6 +13,9 @@
   mechanical_scoring
   hybrid_scoring
   coherence
+  consistency
+  witness_numeric
+  witness_medoid
   cross_target
   lipschitz
   ood

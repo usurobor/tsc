@@ -294,8 +294,8 @@ def cli_witness_run(prompt_text, k=1, resp=None):
     (consistency protocol, cm-of-cms skill section 3): each sample is
     moved aside as .rN.json and the MEDOID sample (minimum total L1
     distance to the others over the numeric contract fields —
-    scripts/witness-medoid.py) is restored as the response the ingest
-    step adjudicates. All samples still feed the consistency spread;
+    `coh witness-medoid`, lib/witness_medoid.ml) is restored as the
+    response the ingest step adjudicates. All samples still feed the consistency spread;
     the medoid changes which real response is adjudicated, never the
     spread (v3.2.3: first-sample order luck removed)."""
     ind = "          "
@@ -316,7 +316,7 @@ def cli_witness_run(prompt_text, k=1, resp=None):
 {ind}# a real witness response, not first-sample order luck. All samples
 {ind}# still feed the consistency spread.
 {ind}if ls "$BASE".r*.json >/dev/null 2>&1; then
-{ind}  cp "$(python3 scripts/witness-medoid.py "$BASE".r*.json)" "$RESP"
+{ind}  cp "$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid "$BASE".r*.json)" "$RESP"
 {ind}fi
 {ind}ls -l "$(dirname "$RESP")" || true"""
     else:

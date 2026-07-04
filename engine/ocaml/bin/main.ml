@@ -256,6 +256,70 @@ let () =
        exit 127)
   end
 
+(* `coh consistency-spread` / `coh witness-medoid` — the meter's
+   consistency-protocol semantics, in-engine (P1 of the Python-removal
+   master issue). Exit codes: 0 success; 2 precondition or malformed
+   input. Malformed inputs produce a visible error on stderr, never a
+   silent exclusion (witness-medoid's named compatibility policy —
+   election-side exclusion with first-argument fallback — lives in
+   lib/witness_medoid.ml and is pinned by tests). *)
+let () =
+  if Array.length Sys.argv >= 2 && Sys.argv.(1) = "consistency-spread" then begin
+    let target = ref "" and output = ref "" and files = ref [] in
+    let rec eat i =
+      if i >= Array.length Sys.argv then ()
+      else match Sys.argv.(i) with
+        | "--target" when i + 1 < Array.length Sys.argv ->
+          target := Sys.argv.(i + 1); eat (i + 2)
+        | "--output" when i + 1 < Array.length Sys.argv ->
+          output := Sys.argv.(i + 1); eat (i + 2)
+        | f -> files := f :: !files; eat (i + 1)
+    in
+    eat 2;
+    let files = List.rev !files in
+    if !target = "" || files = [] then begin
+      prerr_endline
+        "usage: coh consistency-spread --target <target> <response.json>... \
+         [--output <report.json>]";
+      exit 2
+    end;
+    (match Tsc_engine.Consistency.llm_spread_report ~target:!target ~files with
+     | Error e ->
+       Printf.eprintf "coh consistency-spread: %s\n" e;
+       exit 2
+     | Ok report ->
+       let text = Yojson.Safe.pretty_to_string report ^ "\n" in
+       (match report with
+        | `Assoc kv ->
+          let f k = match List.assoc_opt k kv with
+            | Some (`Float x) -> x | _ -> 0.0 in
+          if !output <> "" then begin
+            let oc = open_out !output in
+            output_string oc text; close_out oc
+          end else print_string text;
+          Printf.printf
+            "cm-consistency: %s llm-spread over %d repeats -> delta %.4f, \
+             Coh_consistency %.4f%s\n"
+            !target (List.length files)
+            (f "delta_consistency") (f "coh_consistency")
+            (if !output <> "" then " -> " ^ !output else "")
+        | _ -> ());
+       exit 0)
+  end
+
+let () =
+  if Array.length Sys.argv >= 2 && Sys.argv.(1) = "witness-medoid" then begin
+    let files =
+      Array.to_list (Array.sub Sys.argv 2 (Array.length Sys.argv - 2))
+    in
+    match Tsc_engine.Witness_medoid.choose files with
+    | Ok path -> print_endline path; exit 0
+    | Error e ->
+      Printf.eprintf "coh witness-medoid: %s\n" e;
+      prerr_endline "usage: coh witness-medoid <response.json>...";
+      exit 2
+  end
+
 let parse_args () =
   let mode_s    = ref "auto" in
   let targets   = ref [] in

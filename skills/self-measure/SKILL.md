@@ -52,7 +52,7 @@ self_measure:
       medoid-of-k (v3.2.3): the adjudicated response is the validated
       sample with minimum total L1 distance to the other samples over
       the same numeric fields the spread is computed on
-      (scripts/witness-medoid.py) — a real witness response, never
+      (coh witness-medoid, engine/ocaml/lib/witness_medoid.ml) — a real witness response, never
       first-sample order luck; adjudication never changes the spread
     script: scripts/cm-consistency.sh
   mechanical:

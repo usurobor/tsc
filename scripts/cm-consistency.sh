@@ -50,19 +50,10 @@ resolve_coh() {
 # measurement. Volatile metadata (timestamps, run paths) is excluded so
 # the comparison tests determinism of the MEASUREMENT, not of the clock.
 score_subset() {
-  python3 - "$1" <<'PYEOF'
-import json, sys
-d = json.load(open(sys.argv[1]))
-subset = {
-    "target": d["target"], "mode": d["mode"],
-    "alpha": d["alpha"], "beta": d["beta"], "gamma": d["gamma"],
-    "bottleneck_axis": d["bottleneck_axis"], "confidence": d["confidence"],
-    "aggregate_math": d["provenance"]["aggregate_math"],
-    "aggregate_numeric": d["provenance"]["aggregate_numeric"],
-    "axis_detail": d["axis_detail"],
-}
-print(json.dumps(subset, sort_keys=True))
-PYEOF
+  jq -cS '{target, mode, alpha, beta, gamma, bottleneck_axis, confidence,
+           aggregate_math: .provenance.aggregate_math,
+           aggregate_numeric: .provenance.aggregate_numeric,
+           axis_detail}' "$1"
 }
 
 mechanical_arm() {
@@ -83,8 +74,8 @@ mechanical_arm() {
       first="$subset"
     elif [ "$subset" != "$first" ]; then
       identical=0
-      diff <(printf '%s' "$first" | python3 -m json.tool) \
-           <(printf '%s' "$subset" | python3 -m json.tool) | head -20 >&2 || true
+      diff <(printf '%s' "$first" | jq .) \
+           <(printf '%s' "$subset" | jq .) | head -20 >&2 || true
     fi
     echo "cm-consistency: $target mechanical run $i/$runs" >&2
   done
@@ -98,53 +89,27 @@ mechanical_arm() {
     # a falsified determinism claim. delta = 1 (maximal), Coh = 0.
     delta="1.0"; coh_c="0.0"; verdict="divergent"; status=1
   fi
-  python3 - "$OUT_DIR/$target.mechanical.json" "$target" "$runs" "$verdict" "$delta" "$coh_c" <<'PYEOF'
-import json, sys
-path, target, runs, verdict, delta, coh = sys.argv[1:7]
-json.dump({
-    "kind": "cm_consistency_report", "arm": "mechanical", "target": target,
-    "runs": int(runs), "verdict": verdict,
-    "delta_consistency": float(delta), "coh_consistency": float(coh),
-    "protocol": "skills/cm-of-cms/SKILL.md section 3",
-}, open(path, "w"), indent=2)
-PYEOF
+  jq -n --arg target "$target" --argjson runs "$runs" --arg verdict "$verdict" \
+        --argjson delta "$delta" --argjson coh "$coh_c" \
+        '{kind: "cm_consistency_report", arm: "mechanical", target: $target,
+          runs: $runs, verdict: $verdict,
+          delta_consistency: $delta, coh_consistency: $coh,
+          protocol: "skills/cm-of-cms/SKILL.md section 3"}' \
+        > "$OUT_DIR/$target.mechanical.json"
   echo "cm-consistency: $target mechanical -> $verdict (Coh_consistency $coh_c) -> $OUT_DIR/$target.mechanical.json"
   return "$status"
 }
 
+# The LLM arm's semantics (numeric field list, spread, barrier) live in
+# the engine — one source of truth (lib/witness_numeric.ml,
+# lib/consistency.ml). This shim only resolves the binary and the
+# report path.
 llm_spread_arm() {
   local target="$1"; shift
-  [ "$#" -ge 2 ] || { echo "cm-consistency: llm-spread needs >= 2 response files" >&2; exit 2; }
-  for f in "$@"; do
-    [ -f "$f" ] || { echo "cm-consistency: no such response: $f" >&2; exit 2; }
-  done
+  local coh; coh="$(resolve_coh)"
   mkdir -p "$OUT_DIR"
-  python3 - "$OUT_DIR/$target.llm.json" "$target" "$@" <<'PYEOF'
-import itertools, json, math, sys
-out_path, target = sys.argv[1], sys.argv[2]
-files = sys.argv[3:]
-FIELDS = ["alpha", "beta", "gamma",
-          "delta_alpha_beta", "delta_beta_gamma", "delta_gamma_alpha",
-          "confidence"]
-responses = [json.load(open(f)) for f in files]
-per_field = {}
-for field in FIELDS:
-    vals = [float(r[field]) for r in responses]
-    spread = max(abs(a - b) for a, b in itertools.combinations(vals, 2))
-    per_field[field] = {"values": vals, "spread": round(spread, 6)}
-delta = max(v["spread"] for v in per_field.values())
-coh = 0.0 if delta >= 1.0 else math.exp(-(delta / (1.0 - delta)))
-report = {
-    "kind": "cm_consistency_report", "arm": "llm", "target": target,
-    "repeats": len(files), "fields": per_field,
-    "delta_consistency": round(delta, 6),
-    "coh_consistency": round(coh, 6),
-    "protocol": "skills/cm-of-cms/SKILL.md section 3",
-}
-json.dump(report, open(out_path, "w"), indent=2)
-print("cm-consistency: %s llm-spread over %d repeats -> delta %.4f, "
-      "Coh_consistency %.4f -> %s" % (target, len(files), delta, coh, out_path))
-PYEOF
+  "$coh" consistency-spread --target "$target" \
+    --output "$OUT_DIR/$target.llm.json" "$@"
 }
 
 case "${1:-}" in
