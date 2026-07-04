@@ -6,7 +6,9 @@
       mechanical  — structural-proxy scoring, no credentials required
       llm         — semantic scoring via SELF-MEASURE.md (default before v0.5.0)
       hybrid      — run both backends, produce unified report
-      auto        — hybrid when credentials are present, else mechanical
+      auto        — hybrid when the FULL provider configuration
+                    (LLM_PROVIDER, LLM_MODEL, LLM_API_KEY) is present;
+                    partial sets warn and fall back to mechanical
 
     Inputs:
       --target <name> --registry <path>    named target (any mode); repeatable
@@ -914,10 +916,23 @@ let () =
         Hybrid
       end
       else if Tsc_engine.Credentials.has_llm_credentials () then begin
-        Printf.eprintf "Auto mode: credentials found — running hybrid.\n%!";
+        Printf.eprintf
+          "Auto mode: full provider configuration found — running hybrid.\n%!";
         Hybrid
       end else begin
-        Printf.eprintf "Auto mode: no credentials — running mechanical.\n%!";
+        (* A partial provider configuration is a misconfiguration, not
+           a credential: hybrid would fail downstream after claiming
+           the semantic path. Say exactly what is missing, then run
+           the honest fallback. *)
+        if Tsc_engine.Credentials.partial_llm_credentials () then
+          Printf.eprintf
+            "Auto mode: partial LLM configuration (missing %s) — running \
+             mechanical. Set all of %s for hybrid.\n%!"
+            (String.concat ", "
+               (Tsc_engine.Credentials.missing_llm_credentials ()))
+            (String.concat ", " Tsc_engine.Credentials.provider_env_vars)
+        else
+          Printf.eprintf "Auto mode: no credentials — running mechanical.\n%!";
         Mechanical
       end
     | m -> m

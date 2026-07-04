@@ -46,7 +46,7 @@ See the [operator manual](docs/beta/guides/OPERATOR-MANUAL.md) for configuration
 | `mechanical` | No | Deterministic structural-proxy scoring. Works offline and in CI. |
 | `llm` | Yes | Semantic scoring via `runtime/SELF-MEASURE.md`. |
 | `hybrid` | Yes | Runs both backends; report contains `mechanical`, `llm`, and `final` sub-objects. |
-| `auto` | Optional | `hybrid` when credentials are present; `mechanical` otherwise. (Default.) |
+| `auto` | Optional | `hybrid` when the full provider configuration (`LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`) is present; `mechanical` otherwise — a partial set warns with the missing names and falls back. (Default.) |
 
 Direct file input (`--files <glob>`) works with any mode. Named targets (`--target`) require `--registry`.
 
@@ -56,7 +56,7 @@ TSC measures itself:
 
 ```bash
 coh self --mode mechanical   # deterministic, offline, no credentials
-coh self                     # auto: hybrid when LLM credentials are present
+coh self                     # auto: hybrid when the full LLM provider config is present
 ```
 
 The whole procedure — which steps are fully mechanical and exactly what

@@ -331,20 +331,51 @@ let test_hybrid_preserves_both () =
 (* AC8: Auto-mode fallback (Sub 2 AC11) *)
 
 let test_auto_mode_fallback () =
-  let saved = Sys.getenv_opt "LLM_API_KEY" in
+  (* Table-driven env-resolution contract (Issue C): "credentials
+     present" = the FULL provider triple; a partial set is flagged as
+     partial (auto warns + falls back), never treated as present.
+     ANTHROPIC_API_KEY is not part of the local contract. *)
+  let vars = Tsc_engine.Credentials.provider_env_vars in
+  let saved = List.map (fun v -> (v, Sys.getenv_opt v)) vars in
   let restore () =
-    match saved with
-    | Some v -> Unix.putenv "LLM_API_KEY" v
-    | None   -> Unix.putenv "LLM_API_KEY" ""
+    List.iter (fun (v, ov) ->
+      Unix.putenv v (match ov with Some x -> x | None -> "")) saved
   in
-  (* No credentials: credential check must return false *)
-  Unix.putenv "LLM_API_KEY" "";
-  check (not (Tsc_engine.Credentials.has_llm_credentials ()))
-    "AC8: empty LLM_API_KEY → no credentials (auto falls back to mechanical)";
-  (* With a non-empty key: credential check must return true *)
-  Unix.putenv "LLM_API_KEY" "test-key-abc";
-  check (Tsc_engine.Credentials.has_llm_credentials ())
-    "AC8: non-empty LLM_API_KEY → credentials present (auto takes hybrid path)";
+  let set_env provider model key =
+    Unix.putenv "LLM_PROVIDER" provider;
+    Unix.putenv "LLM_MODEL" model;
+    Unix.putenv "LLM_API_KEY" key
+  in
+  let cases = [
+    (* provider, model, key,       has,   partial, label *)
+    ("",          "",      "",      false, false,
+     "no env -> mechanical (not partial)");
+    ("anthropic", "claude", "sk-x", true,  false,
+     "full triple -> hybrid");
+    ("",          "",      "sk-x",  false, true,
+     "LLM_API_KEY only -> partial, NOT accidental hybrid");
+    ("anthropic", "claude", "",     false, true,
+     "provider+model without key -> partial, mechanical");
+    ("anthropic", "",      "",      false, true,
+     "provider only -> partial, mechanical");
+  ] in
+  List.iter (fun (pv, m, k, want_has, want_partial, label) ->
+    set_env pv m k;
+    check (Tsc_engine.Credentials.has_llm_credentials () = want_has)
+      (Printf.sprintf "AC8/IssueC has: %s" label);
+    check (Tsc_engine.Credentials.partial_llm_credentials () = want_partial)
+      (Printf.sprintf "AC8/IssueC partial: %s" label)
+  ) cases;
+  (* ANTHROPIC_API_KEY alone is explicitly unsupported for the local
+     route: it must not flip detection in any direction. *)
+  set_env "" "" "";
+  let saved_ant = Sys.getenv_opt "ANTHROPIC_API_KEY" in
+  Unix.putenv "ANTHROPIC_API_KEY" "sk-ant-test";
+  check (not (Tsc_engine.Credentials.has_llm_credentials ())
+         && not (Tsc_engine.Credentials.partial_llm_credentials ()))
+    "AC8/IssueC: ANTHROPIC_API_KEY alone is not a local credential";
+  Unix.putenv "ANTHROPIC_API_KEY"
+    (match saved_ant with Some x -> x | None -> "");
   restore ();
   (* Mechanical scorer always returns Mechanical mode regardless of env *)
   let r = Mechanical_scoring.score_files sample_files in
