@@ -10,7 +10,7 @@ Changelog: `CHANGELOG.md` § Spec releases
 Normative dependencies:
     C≡ v3.1.0
     TSC Core v3.2.0
-    TSC Operational v3.2.1
+    TSC Operational v3.2.2
 
 Compatibility note for v3.2.0 dependency uplift:
     TSC Core v3.2.0 introduces the Barrier-Coherence Link

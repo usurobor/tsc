@@ -1,6 +1,6 @@
-# TSC Operational v3.2.1
+# TSC Operational v3.2.2
 
-**Version:** 3.2.1\
+**Version:** 3.2.2\
 **Status:** Normative\
 **Foundation:** TSC Core v3.2.0\
 **Changelog:** `CHANGELOG.md` § Spec releases
@@ -101,7 +101,7 @@ where L_link is the link-Lipschitz constant for the barrier+exponential coherenc
 **Test:**
 
 - Variance: Ensemble agreement high (variance low)
-- Lipschitz: Contraction condition satisfied (κ < 1)
+- Lipschitz: Contraction margin satisfied (κ ≤ τ_lip; τ_lip < 1, so passing implies contraction)
 
 **Purpose:** Detect unstable alignments (high variance) or non-contractive updates.
 
@@ -220,7 +220,7 @@ ______________________________________________________________________
 3b. w_gauge_spread ≤ τ_gauge_spread                  (permutation-insensitive)
 4. w_scale ≤ τ_scale                                 (scale equivariance)
 5. w_var ≤ τ_var                                     (ensemble stability)
-6. w_lip < 1                                         (contraction; w_lip uses L_link)
+6. w_lip ≤ τ_lip                                     (contraction with margin; w_lip uses L_link)
 7. CIₕᵢ - CIₗₒ ≤ δ_CI                                (precision)
 8. Zₜ < Zcᵣᵢₜ                                        (distribution stability)
 ```
@@ -243,12 +243,13 @@ ______________________________________________________________________
 
 ### Compatibility Note (Notation Migration)
 
-For one minor release cycle (through v3.1), implementations MAY emit both:
-
-- **Canonical keys:** `s_alpha`, `s_beta`, `s_gamma` (required)
-- **Legacy keys:** `alpha_c`, `beta_c`, `gamma_c` (optional, for backward compatibility)
-
-Consumers MUST read canonical keys; MAY fall back to legacy keys if canonical absent. All new implementations MUST use canonical notation.
+**Historical (window closed with v3.1):** for one minor release cycle
+(through v3.1), implementations were permitted to emit both canonical
+keys (`s_alpha`, `s_beta`, `s_gamma`) and legacy keys (`alpha_c`,
+`beta_c`, `gamma_c`). That window is closed: implementations MUST emit
+canonical keys only (the canonical engine never emitted legacy keys).
+Consumers reading pre-v3.2 reports MAY still fall back to legacy keys
+when canonical keys are absent.
 
 ## 6 · Provenance Bundle
 
@@ -488,4 +489,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**End — TSC Operational v3.2.1**
+**End — TSC Operational v3.2.2**

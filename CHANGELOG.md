@@ -4,6 +4,17 @@
 
 The spec lineage (C≡, TSC Core, TSC Operational, TSC Glossary, TSC Observation Dynamics) versions independently from the engine. Spec releases are theory work with no binary deployment; validation is mathematical reproduction and cross-spec consistency.
 
+### Spec v3.2.2 (2026-07-04) — τ_lip Verdict Consistency + Notation-Window Closure
+
+Coherence delta: docs-only patch · **Level:** L6
+
+Two correctness defects in `spec/tsc-oper.md`, both surfaced repeatedly by the self-measurement witness (τ_lip found by 4/5 witnesses at k=5; the stale window by 5/5 — the corpus's most consistently discovered defects):
+
+1. **τ_lip verdict contradiction.** §5 Verdict Logic condition 6 read `w_lip < 1` while §2's floor table (and the glossary) require `w_lip ≤ τ_lip = 0.95` — the two disagreed on PASS/FAIL for κ ∈ (0.95, 1). Condition 6 and §1's witness-suite summary now state the floor rule (`w_lip ≤ τ_lip`; τ_lip < 1, so passing implies contraction). The floor table was already normative; no threshold value changed.
+2. **Stale notation-migration window.** §5's Compatibility Note granted legacy-key emission "through v3.1" inside a document versioned past that window. The note is now explicitly historical: the emission window is closed (the canonical engine never emitted legacy keys); consumer-side fallback for pre-v3.2 reports remains documented.
+
+**Affected:** `spec/tsc-oper.md` (header v3.2.1 → v3.2.2; §1, §5 verdict logic, §5 compatibility note; end-marker), `spec/tsc-glossary.md` (corresponds-to, read-guide, migration note), `spec/tsc-observation-dynamics.md` (corresponds-to). `spec/tsc-core.md` and C≡ unchanged. Content correctness fix — not a meter-improvement iteration; no score claim.
+
 ### Spec v3.2.1 (2026-05-09) — Cross-Target Aggregate Canonicalization
 
 Coherence delta: docs-only patch · **Level:** L6
