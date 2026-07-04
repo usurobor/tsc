@@ -73,6 +73,52 @@ let get_checklist sub =
      | Some _ -> Error "field 'checklist' is not an object")
   | _ -> Error "expected JSON object"
 
+(** Parse the optional defect_cards array (v3.2.4). Absent -> Ok []
+    (base schema tolerates pre-v3.2.4 shapes; the funnel's defect_cards
+    stage refuses absence). Present but structurally malformed
+    (non-array, non-object card, missing/mistyped required field)
+    -> Error. Semantic checks (uniqueness, axis/category validity,
+    checklist reconciliation) belong to the funnel stage. *)
+let get_defect_cards json =
+  match json with
+  | `Assoc fields ->
+    (match List.assoc_opt "defect_cards" fields with
+     | None -> Ok []
+     | Some (`List items) ->
+       let str card k =
+         match List.assoc_opt k card with
+         | Some (`String s) when String.length s > 0 -> Ok s
+         | Some _ -> Error (Printf.sprintf "card field '%s' must be a non-empty string" k)
+         | None -> Error (Printf.sprintf "card missing field '%s'" k)
+       in
+       let rec collect acc = function
+         | [] -> Ok (List.rev acc)
+         | `Assoc card :: rest ->
+           (match str card "id", str card "primary_axis",
+                  str card "category", str card "severity",
+                  str card "evidence", str card "summary" with
+            | Ok id, Ok ax, Ok cat, Ok sev, Ok ev, Ok su ->
+              let secondary =
+                match List.assoc_opt "secondary_axes" card with
+                | Some (`List xs) ->
+                  List.filter_map
+                    (function `String s -> Some s | _ -> None) xs
+                | _ -> []
+              in
+              collect ({ card_id = id; card_primary_axis = ax;
+                         card_category = cat; card_severity = sev;
+                         card_evidence = ev; card_summary = su;
+                         card_secondary_axes = secondary } :: acc) rest
+            | Error e, _, _, _, _, _ | _, Error e, _, _, _, _
+            | _, _, Error e, _, _, _ | _, _, _, Error e, _, _
+            | _, _, _, _, Error e, _ | _, _, _, _, _, Error e ->
+              Error e)
+         | _ :: _ -> Error "defect_cards items must be objects"
+       in
+       collect [] items
+     | Some _ -> Error "field 'defect_cards' is not an array")
+  | _ -> Error "expected JSON object"
+
 (** Extract axis_evidence from a JSON sub-object. *)
 let get_axis_evidence key json =
   match json with
@@ -165,12 +211,13 @@ let validate_result json =
     get_axis_evidence "beta" axis_evidence_obj,
     get_axis_evidence "gamma" axis_evidence_obj,
     get_string_list "unresolved_ambiguity" json,
-    get_fixes "next_fixes" json
+    get_fixes "next_fixes" json,
+    get_defect_cards json
   with
   | Ok target, Ok alpha, Ok beta, Ok gamma,
     Ok bottleneck, Ok confidence, Ok summary,
     Ok alpha_ev, Ok beta_ev, Ok gamma_ev,
-    Ok ambiguity, Ok fixes ->
+    Ok ambiguity, Ok fixes, Ok cards ->
     (match validate_score "alpha" alpha,
            validate_score "beta" beta,
            validate_score "gamma" gamma,
@@ -189,21 +236,23 @@ let validate_result json =
          result_gamma_evidence = gamma_ev;
          result_unresolved_ambiguity = ambiguity;
          result_next_fixes = fixes;
+         result_defect_cards = cards;
        }
      | Error e, _, _, _ | _, Error e, _, _
      | _, _, Error e, _ | _, _, _, Error e -> Error e)
-  | Error e, _, _, _, _, _, _, _, _, _, _, _
-  | _, Error e, _, _, _, _, _, _, _, _, _, _
-  | _, _, Error e, _, _, _, _, _, _, _, _, _
-  | _, _, _, Error e, _, _, _, _, _, _, _, _
-  | _, _, _, _, Error e, _, _, _, _, _, _, _
-  | _, _, _, _, _, Error e, _, _, _, _, _, _
-  | _, _, _, _, _, _, Error e, _, _, _, _, _
-  | _, _, _, _, _, _, _, Error e, _, _, _, _
-  | _, _, _, _, _, _, _, _, Error e, _, _, _
-  | _, _, _, _, _, _, _, _, _, Error e, _, _
-  | _, _, _, _, _, _, _, _, _, _, Error e, _
-  | _, _, _, _, _, _, _, _, _, _, _, Error e -> Error e
+  | Error e, _, _, _, _, _, _, _, _, _, _, _, _
+  | _, Error e, _, _, _, _, _, _, _, _, _, _, _
+  | _, _, Error e, _, _, _, _, _, _, _, _, _, _
+  | _, _, _, Error e, _, _, _, _, _, _, _, _, _
+  | _, _, _, _, Error e, _, _, _, _, _, _, _, _
+  | _, _, _, _, _, Error e, _, _, _, _, _, _, _
+  | _, _, _, _, _, _, Error e, _, _, _, _, _, _
+  | _, _, _, _, _, _, _, Error e, _, _, _, _, _
+  | _, _, _, _, _, _, _, _, Error e, _, _, _, _
+  | _, _, _, _, _, _, _, _, _, Error e, _, _, _
+  | _, _, _, _, _, _, _, _, _, _, Error e, _, _
+  | _, _, _, _, _, _, _, _, _, _, _, Error e, _
+  | _, _, _, _, _, _, _, _, _, _, _, _, Error e -> Error e
 
 (** Extract per-pair delta values from a v3.2.0 LLM response.
     Returns (delta_alpha_beta, delta_beta_gamma, delta_gamma_alpha) — each
@@ -314,10 +363,14 @@ let validate_v32_deltas json =
     - [`V32_delta]         strict v3.2 delta validation failed
     - [`Checklist]         v3.2.3 per-axis defect walk missing or malformed
                            (wrong category set, bad severity, none/count
-                           inconsistency) *)
+                           inconsistency)
+    - [`Defect_cards]      v3.2.4 structured defect cards missing,
+                           malformed, or inconsistent with the checklist
+                           (duplicate id, category not of the primary
+                           axis, count/severity reconciliation failed) *)
 type witness_failure_stage =
   [ `Parse | `Base_schema | `Prohibited_fields | `Target_mismatch
-  | `V32_delta | `Checklist ]
+  | `V32_delta | `Checklist | `Defect_cards ]
 
 type witness_failure = {
   wf_stage : witness_failure_stage;
@@ -334,6 +387,7 @@ let witness_stage_to_string = function
   | `Target_mismatch   -> "target_mismatch"
   | `V32_delta         -> "v3_2_delta"
   | `Checklist         -> "checklist"
+  | `Defect_cards      -> "defect_cards"
 
 (* ------------------------------------------------------------------ *)
 (* v3.2.3 per-axis defect checklist (runtime/SELF-MEASURE.md §3.2)    *)
@@ -393,6 +447,93 @@ let validate_axis_checklist axis (checklist : (string * (int * string)) list) =
       else Hashtbl.add seen cat ()
     ) checklist
   end;
+  List.rev !errors
+
+(* ------------------------------------------------------------------ *)
+(* v3.2.4 defect cards (runtime/SELF-MEASURE.md §3.2/§7)              *)
+(* ------------------------------------------------------------------ *)
+
+let card_severities = [ "cosmetic"; "isolated"; "systemic" ]
+
+let severity_rank = function
+  | "cosmetic" -> 1 | "isolated" -> 2 | "systemic" -> 3 | _ -> 0
+
+(** Validate the defect-card surface against the instruction's rules
+    AND reconcile it with the per-axis checklist: the checklist is the
+    per-category aggregate VIEW of the cards, and the two must agree.
+    Returns human-readable errors (empty = valid). *)
+let validate_result_defect_cards result =
+  let errors = ref [] in
+  let err fmt = Printf.ksprintf (fun s -> errors := s :: !errors) fmt in
+  let cards = result.result_defect_cards in
+  let axes = [ ("alpha", result.result_alpha_evidence);
+               ("beta", result.result_beta_evidence);
+               ("gamma", result.result_gamma_evidence) ] in
+  let total_checklist_defects =
+    List.fold_left (fun acc (_, ev) ->
+      List.fold_left (fun a (_, (c, _)) -> a + c) acc
+        ev.evidence_checklist) 0 axes
+  in
+  if cards = [] && total_checklist_defects > 0 then
+    err "defect_cards missing while the checklist counts %d defect(s) — \
+         the v3.2.4 card surface is required" total_checklist_defects;
+  (* Per-card shape rules. *)
+  let seen_ids = Hashtbl.create 16 in
+  let seen_content = Hashtbl.create 16 in
+  List.iter (fun c ->
+    if Hashtbl.mem seen_ids c.card_id then
+      err "duplicate defect card id '%s'" c.card_id
+    else Hashtbl.add seen_ids c.card_id ();
+    (* One defect, one primary axis: identical evidence+summary under
+       two different primary axes is the same defect filed twice. *)
+    let content_key = c.card_evidence ^ "\x00" ^ c.card_summary in
+    (match Hashtbl.find_opt seen_content content_key with
+     | Some other_axis when other_axis <> c.card_primary_axis ->
+       err "card '%s' duplicates a defect already filed under primary \
+            axis '%s' — a defect has exactly one primary axis"
+         c.card_id other_axis
+     | _ -> Hashtbl.replace seen_content content_key c.card_primary_axis);
+    if not (List.mem c.card_primary_axis [ "alpha"; "beta"; "gamma" ]) then
+      err "card '%s': unknown primary_axis '%s'" c.card_id c.card_primary_axis
+    else if not (List.mem c.card_category
+                   (checklist_categories c.card_primary_axis)) then
+      err "card '%s': category '%s' is not a %s-axis checklist category"
+        c.card_id c.card_category c.card_primary_axis;
+    if not (List.mem c.card_severity card_severities) then
+      err "card '%s': severity '%s' invalid (no 'none' cards — a card \
+           IS a defect)" c.card_id c.card_severity;
+    List.iter (fun sa ->
+      if not (List.mem sa [ "alpha"; "beta"; "gamma" ]) then
+        err "card '%s': unknown secondary axis '%s'" c.card_id sa;
+      if sa = c.card_primary_axis then
+        err "card '%s': primary axis repeated in secondary_axes" c.card_id)
+      c.card_secondary_axes
+  ) cards;
+  (* Reconciliation: checklist (axis, category) count == card count;
+     checklist worst severity == worst card severity; none iff zero. *)
+  List.iter (fun (axis, ev) ->
+    List.iter (fun (cat, (count, severity)) ->
+      let matching =
+        List.filter (fun c ->
+          c.card_primary_axis = axis && c.card_category = cat) cards
+      in
+      let n = List.length matching in
+      if n <> count then
+        err "%s/%s: checklist count %d but %d defect card(s)"
+          axis cat count n;
+      if n > 0 then begin
+        let worst =
+          List.fold_left (fun acc c ->
+            if severity_rank c.card_severity > severity_rank acc
+            then c.card_severity else acc)
+            "cosmetic" matching
+        in
+        if severity <> worst then
+          err "%s/%s: checklist severity '%s' but worst card severity '%s'"
+            axis cat severity worst
+      end
+    ) ev.evidence_checklist
+  ) axes;
   List.rev !errors
 
 (** Validate the full three-axis walk on a parsed result. *)
@@ -461,8 +602,12 @@ let validate_witness_response ~expected_target raw =
                      [])
           | Ok deltas ->
             match validate_result_checklists result with
-            | [] -> Ok (result, deltas)
-            | errors -> Error (witness_failure `Checklist errors)
+            | errors when errors <> [] ->
+              Error (witness_failure `Checklist errors)
+            | _ ->
+              match validate_result_defect_cards result with
+              | [] -> Ok (result, deltas)
+              | errors -> Error (witness_failure `Defect_cards errors)
 
 (** Render a witness failure as a single-line human string (stderr). *)
 let format_witness_failure wf =

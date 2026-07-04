@@ -47,13 +47,24 @@ self_measure:
       max absolute pairwise difference over the response contract's
       numeric fields; delta_consistency maps through the barrier
       phi(delta) = delta/(1-delta) to Coh_consistency = exp(-phi)
-      (tsc-core section 3.2, lambda = 1)
+      (tsc-core section 3.2, lambda = 1). Reported alongside (A/B
+      labeled, Issue D): the k-fair companion — MEAN absolute pairwise
+      difference per field, max across fields, same barrier — under
+      *_mean_pairwise names; max-pairwise stays the conservative
+      standing metric unless separately promoted. A report also
+      carries declared/validated/refused sample counts and refusal
+      stage counts; a short yield fails the k-fair experiment
+      regardless of score
     adjudication: >-
-      medoid-of-k (v3.2.3): the adjudicated response is the validated
-      sample with minimum total L1 distance to the other samples over
-      the same numeric fields the spread is computed on
-      (coh witness-medoid, engine/ocaml/lib/witness_medoid.ml) — a real witness response, never
-      first-sample order luck; adjudication never changes the spread
+      medoid-of-k (v3.2.3): the adjudicated response is the FUNNEL-VALID
+      sample with minimum total L1 distance to the other valid samples
+      over the same numeric fields the spread is computed on
+      (coh witness-medoid --target, engine/ocaml/lib/witness_medoid.ml)
+      — a real witness response, never first-sample order luck, never a
+      sample the funnel refuses; zero valid samples withholds
+      adjudication and records a no_valid_witness_samples artifact
+      instead of failing the pipeline; adjudication never changes the
+      spread
     script: scripts/cm-consistency.sh
   mechanical:
     backend: engine/ocaml/lib/mechanical_scoring.ml
@@ -89,6 +100,7 @@ self_measure:
       - confidence
       - summary
       - axis_evidence
+      - defect_cards
       - unresolved_ambiguity
       - next_fixes
     must_not:
@@ -108,7 +120,9 @@ self_measure:
       engine/ocaml/lib/response_schema.ml (validate_witness_response) —
       one funnel for every refusal stage: parse, base_schema,
       prohibited_fields (computed Coh/C_sigma), target_mismatch,
-      v3_2_delta, checklist (v3.2.3 defect walk missing or malformed).
+      v3_2_delta, checklist (v3.2.3 defect walk missing or malformed),
+      defect_cards (v3.2.4 structured cards missing, malformed, or
+      disagreeing with the checklist).
       Any refusal produces a durable validation-failure
       artifact naming its stage, preserves the raw response, renders no
       coherence report, and never falls back to mechanical scoring
@@ -337,7 +351,9 @@ malformed text), `base_schema` (missing/mistyped contract fields),
 `prohibited_fields` (computed coherence), `target_mismatch` (response
 names a different target than was measured), `v3_2_delta` (missing or
 out-of-range δ), `checklist` (v3.2.3 defect walk missing, wrong
-category set, or severity/count inconsistent) — and **every** stage
+category set, or severity/count inconsistent), `defect_cards` (v3.2.4
+structured cards missing, malformed, or disagreeing with the
+checklist) — and **every** stage
 writes the same durable
 validation-failure artifact naming its stage, preserves the raw response,
 renders **no** report, and does **not** fall back to mechanical scoring.

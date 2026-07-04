@@ -187,6 +187,7 @@ let witness_raw ?(delta_ab = "0.1") ?(extra = "")
     ?(alpha_checklist = clean_checklist alpha_cats)
     ?(beta_checklist = clean_checklist beta_cats)
     ?(gamma_checklist = clean_checklist gamma_cats)
+    ?(defect_cards = "[]")
     () = Printf.sprintf {|{
   "target": "spec",
   "alpha": 0.9, "beta": 0.8, "gamma": 0.7,
@@ -200,8 +201,9 @@ let witness_raw ?(delta_ab = "0.1") ?(extra = "")
     "gamma": {"positive": ["p"], "negative": ["n"], "reason": "r", "checklist": %s}
   },
   "unresolved_ambiguity": [],
-  "next_fixes": []%s
-}|} delta_ab alpha_checklist beta_checklist gamma_checklist extra
+  "next_fixes": [],
+  "defect_cards": %s%s
+}|} delta_ab alpha_checklist beta_checklist gamma_checklist defect_cards extra
 
 let valid_witness_raw = witness_raw ()
 
@@ -303,8 +305,19 @@ let test_funnel_severity_count_mismatch () =
          "unstable-boundary": {"count": 0, "severity": "none"}}|} ())
     "checklist"
 
+let nonzero_beta_cards = {|[
+  {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+   "severity": "isolated", "evidence": "f:1", "summary": "ref one"},
+  {"id": "D2", "primary_axis": "beta", "category": "broken-reference",
+   "severity": "cosmetic", "evidence": "f:2", "summary": "ref two"},
+  {"id": "D3", "primary_axis": "beta", "category": "fact-drift",
+   "severity": "cosmetic", "evidence": "f:3", "summary": "drift one",
+   "secondary_axes": ["gamma"]}
+]|}
+
 let test_funnel_accepts_nonzero_walk () =
   let raw = witness_raw
+    ~defect_cards:nonzero_beta_cards
     ~beta_checklist:{|{"broken-reference": {"count": 2, "severity": "isolated"},
       "authority-conflict": {"count": 0, "severity": "none"},
       "fact-drift": {"count": 1, "severity": "cosmetic"},
@@ -318,6 +331,58 @@ let test_funnel_accepts_nonzero_walk () =
     fail ("funnel positive: non-zero walk refused: "
           ^ Response_schema.format_witness_failure wf)
 
+(* v3.2.4 defect-card stage: cards are required when the walk counts
+   defects, and must reconcile with the checklist. *)
+
+let nonzero_beta_checklist =
+  {|{"broken-reference": {"count": 2, "severity": "isolated"},
+    "authority-conflict": {"count": 0, "severity": "none"},
+    "fact-drift": {"count": 1, "severity": "cosmetic"},
+    "undeclared-relationship": {"count": 0, "severity": "none"}}|}
+
+let test_funnel_cards_missing_with_defects () =
+  expect_stage "funnel negative: walk counts defects but no cards"
+    ~expected_target:"spec"
+    (witness_raw ~beta_checklist:nonzero_beta_checklist ())
+    "defect_cards"
+
+let test_funnel_cards_duplicate_id () =
+  let cards = {|[
+    {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+     "severity": "isolated", "evidence": "f:1", "summary": "ref one"},
+    {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+     "severity": "cosmetic", "evidence": "f:2", "summary": "ref two"},
+    {"id": "D3", "primary_axis": "beta", "category": "fact-drift",
+     "severity": "cosmetic", "evidence": "f:3", "summary": "drift"}
+  ]|} in
+  expect_stage "funnel negative: duplicate card id"
+    ~expected_target:"spec"
+    (witness_raw ~defect_cards:cards
+       ~beta_checklist:nonzero_beta_checklist ())
+    "defect_cards"
+
+let test_funnel_cards_two_primary_axes () =
+  (* identical evidence+summary filed under two primary axes *)
+  let cards = {|[
+    {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+     "severity": "isolated", "evidence": "same", "summary": "same defect"},
+    {"id": "D2", "primary_axis": "beta", "category": "broken-reference",
+     "severity": "cosmetic", "evidence": "f:2", "summary": "ref two"},
+    {"id": "D3", "primary_axis": "beta", "category": "fact-drift",
+     "severity": "cosmetic", "evidence": "f:3", "summary": "drift"},
+    {"id": "D4", "primary_axis": "alpha", "category": "internal-contradiction",
+     "severity": "isolated", "evidence": "same", "summary": "same defect"}
+  ]|} in
+  let alpha = {|{"naming-drift": {"count": 0, "severity": "none"},
+    "duplicate-definition": {"count": 0, "severity": "none"},
+    "internal-contradiction": {"count": 1, "severity": "isolated"},
+    "unstable-boundary": {"count": 0, "severity": "none"}}|} in
+  expect_stage "funnel negative: one defect under two primary axes"
+    ~expected_target:"spec"
+    (witness_raw ~defect_cards:cards ~alpha_checklist:alpha
+       ~beta_checklist:nonzero_beta_checklist ())
+    "defect_cards"
+
 let test_funnel_delta_failure_classified () =
   (* Base-valid response with one delta out of range: must be classified as
      the v3.2 delta stage, and name the offending field. *)
@@ -328,6 +393,69 @@ let test_funnel_delta_failure_classified () =
     check (Response_schema.witness_stage_to_string wf.wf_stage = "v3_2_delta"
         && List.mem_assoc "delta_alpha_beta" wf.wf_invalid_fields)
       "funnel negative: out-of-range delta classified as v3_2_delta with field named"
+
+(* ------------------------------------------------------------------ *)
+(* Funnel-valid medoid election (post-loop stabilization Issue 1).
+   A sample can be NUMERICALLY complete yet funnel-invalid (e.g. a
+   duplicate defect-card id): Witness_medoid.choose_valid must never
+   elect it, and zero funnel-valid samples must be an explicit Error,
+   never a fallback to an invalid sample. *)
+
+let write_tmp name content =
+  let path = Filename.concat (Filename.get_temp_dir_name ()) name in
+  let oc = open_out path in
+  output_string oc content; close_out oc; path
+
+let numerically_complete_invalid_raw =
+  (* duplicate card id — refused at the defect_cards stage, but every
+     numeric contract field is present and parseable *)
+  witness_raw
+    ~defect_cards:{|[
+      {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+       "severity": "isolated", "evidence": "f:1", "summary": "ref one"},
+      {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+       "severity": "cosmetic", "evidence": "f:2", "summary": "ref two"},
+      {"id": "D3", "primary_axis": "beta", "category": "fact-drift",
+       "severity": "cosmetic", "evidence": "f:3", "summary": "drift"}
+    ]|}
+    ~beta_checklist:nonzero_beta_checklist ()
+
+let test_medoid_choose_valid_excludes_funnel_invalid () =
+  let invalid = write_tmp "cv_invalid.json" numerically_complete_invalid_raw in
+  (* Sanity: the invalid sample IS numerically complete — the legacy
+     numeric election alone would consider it. *)
+  (match Witness_numeric.of_json_file invalid with
+   | Ok _ -> pass "choose_valid setup: invalid sample is numerically complete"
+   | Error e -> fail ("choose_valid setup: invalid sample not numeric: " ^ e));
+  let valid1 = write_tmp "cv_valid1.json" (witness_raw ()) in
+  let valid2 = write_tmp "cv_valid2.json" (witness_raw ~delta_ab:"0.12" ()) in
+  (* Positive: election runs over the funnel-valid pair only; the
+     invalid sample is listed first and must never win. *)
+  (match Witness_medoid.choose_valid ~expected_target:"spec"
+           [ invalid; valid1; valid2 ] with
+   | Ok p ->
+     check (p = valid1 || p = valid2)
+       "choose_valid: funnel-invalid sample never elected";
+     check (p <> invalid)
+       "choose_valid: canonical response is a funnel-valid sample"
+   | Error e -> fail ("choose_valid: valid pair errored: " ^ e));
+  (* Negative: zero funnel-valid samples -> explicit Error, no
+     first-argument fallback (the legacy numeric mode would have
+     returned the invalid sample here). *)
+  (match Witness_medoid.choose_valid ~expected_target:"spec" [ invalid ] with
+   | Error _ -> pass "choose_valid: zero valid samples is an explicit Error"
+   | Ok p -> fail ("choose_valid: zero-valid case elected " ^ p));
+  (* Contrast pin: the legacy numeric election DOES admit the invalid
+     sample — the two modes must stay distinguishable. *)
+  (match Witness_medoid.choose [ invalid ] with
+   | Ok p ->
+     check (p = invalid)
+       "choose (legacy numeric): still admits numerically complete samples"
+   | Error e -> fail ("choose legacy contrast errored: " ^ e));
+  (* Empty input refused in valid mode too. *)
+  (match Witness_medoid.choose_valid ~expected_target:"spec" [] with
+   | Error _ -> pass "choose_valid: empty input refused"
+   | Ok _ -> fail "choose_valid: empty input accepted")
 
 (* ------------------------------------------------------------------ *)
 
@@ -352,4 +480,8 @@ let () =
   test_funnel_unknown_category ();
   test_funnel_severity_count_mismatch ();
   test_funnel_accepts_nonzero_walk ();
+  test_funnel_cards_missing_with_defects ();
+  test_funnel_cards_duplicate_id ();
+  test_funnel_cards_two_primary_axes ();
+  test_medoid_choose_valid_excludes_funnel_invalid ();
   Printf.printf "All response_schema v3.2 strict validation tests passed.\n%!"

@@ -265,7 +265,7 @@ measure_k = int(req(sm, "consistency.llm_repeats"))
 ledger_k  = int(req(sm, "ledger.semantic_samples"))
 
 
-def consistency_standing_run(t_expr):
+def consistency_standing_run(t_expr, declared_k):
     """Run-block body for the per-target consistency + standing step,
     shared by the measurement workflow (matrix target) and the ledger
     workflow (literal target). Every extra sample is validated through
@@ -286,21 +286,57 @@ def consistency_standing_run(t_expr):
 {ind}  fi
 {ind}done
 {ind}n=$(echo $valid | wc -w)
+{ind}declared={declared_k}
+{ind}refused=$((declared - n))
+{ind}# Refusal-stage counts from the validation-failure artifacts the
+{ind}# funnel wrote for the samples that did not validate.
+{ind}stage_counts=$(cat "{output_root}"/validate/tsc-$T-*-validation-failure.json 2>/dev/null \\
+{ind}  | jq -cs 'map(.stage) | group_by(.) | map({{(.[0]): length}}) | add // {{}}' 2>/dev/null || echo '{{}}')
 {ind}# Defect-overlap observability: per validated sample, the checklist
 {ind}# counts and negative findings, one JSON line each — job logs carry
 {ind}# enough to cluster findings across samples without artifact access.
 {ind}for r in $valid; do
 {ind}  jq -c '{{sample: input_filename, checklist: (.axis_evidence | map_values(.checklist)), negative: (.axis_evidence | map_values(.negative))}}' "$r" || true
 {ind}done
-{ind}coh_c="0"
+{ind}coh_c="0"; coh_kfair="0"
 {ind}if [ "$n" -ge 2 ]; then
 {ind}  COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
-{ind}  coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+{ind}  coh_c=$(jq -r '.coh_consistency_max_pairwise' ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+{ind}  coh_kfair=$(jq -r '.coh_consistency_mean_pairwise' ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
 {ind}  cp ".tsc/cm/consistency/$T.llm.json" "{output_root}/consistency-$T.json" 2>/dev/null || true
 {ind}fi
-{ind}gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= {llm_consistency_floor} else 'failed')" "$coh_c")
-{ind}python3 -c "import json,sys; json.dump({{'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': {llm_consistency_floor}, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}}, open('{output_root}/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
-{ind}echo \"consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)\""""
+{ind}# Standing gate: legacy max-pairwise vs the floor (conservative,
+{ind}# unchanged). kfair_experiment_gate: the yield PRECONDITION only —
+{ind}# a short sample set fails the k-fair experiment regardless of
+{ind}# score; the numeric comparison vs baseline happens at close-out.
+{ind}gate=$(awk -v c="$coh_c" 'BEGIN {{ if (c >= {llm_consistency_floor}) print "passed"; else print "failed" }}')
+{ind}yield_gate=$([ "$n" -eq "$declared" ] && echo passed || echo failed)
+{ind}# Zero funnel-valid samples: explicit artifact (post-loop Issue 1).
+{ind}# No hybrid report exists, standing below records validated 0 —
+{ind}# expected witness invalidity stays green; only a pipeline failure
+{ind}# (this artifact unwritable) may redden the job.
+{ind}if [ "$n" -eq 0 ]; then
+{ind}  jq -n --arg target "$T" --argjson declared "$declared" \\
+{ind}        --argjson refused "$refused" --argjson stages "$stage_counts" \\
+{ind}        '{{target: $target, status: "no_valid_witness_samples",
+{ind}          declared_samples: $declared, validated_samples: 0,
+{ind}          refused_samples: $refused, refusal_stage_counts: $stages}}' \\
+{ind}        > "{output_root}/no-valid-witness-samples-$T.json"
+{ind}fi
+{ind}jq -n --arg target "$T" --argjson declared "$declared" --argjson n "$n" \\
+{ind}      --argjson refused "$refused" --argjson stages "$stage_counts" \\
+{ind}      --argjson coh "$coh_c" --argjson kfair "$coh_kfair" \\
+{ind}      --arg gate "$gate" --arg ygate "$yield_gate" \\
+{ind}      '{{standing_scope: "house-authored-public-commons", admissibility: "public-only",
+{ind}        heldout_status: "none", external_anchor_count: 0,
+{ind}        llm_consistency_gate: $gate, llm_consistency_floor: {llm_consistency_floor},
+{ind}        coh_consistency: $coh,
+{ind}        coh_consistency_max_pairwise: $coh, coh_consistency_mean_pairwise: $kfair,
+{ind}        declared_samples: $declared, validated_samples: $n,
+{ind}        refused_samples: $refused, refusal_stage_counts: $stages,
+{ind}        kfair_experiment_gate: $ygate, target: $target}}' \\
+{ind}      > "{output_root}/standing-$T.json"
+{ind}echo \"consistency: $T k=$n/$declared Coh_max=$coh_c Coh_kfair=$coh_kfair gate=$gate yield=$yield_gate (standing gate, never a publishing gate)\""""
 
 def cli_witness_run(prompt_text, k=1, resp=None):
     """Run-block body for a CLI witness step. Every emitted line sits at
@@ -310,16 +346,20 @@ def cli_witness_run(prompt_text, k=1, resp=None):
     (consistency protocol, cm-of-cms skill section 3): each sample is
     moved aside as .rN.json and the MEDOID sample (minimum total L1
     distance to the others over the numeric contract fields —
-    `coh witness-medoid`, lib/witness_medoid.ml) is restored as the
-    response the ingest step adjudicates. All samples still feed the consistency spread;
-    the medoid changes which real response is adjudicated, never the
-    spread (v3.2.3: first-sample order luck removed)."""
+    `coh witness-medoid --target`, lib/witness_medoid.ml) is restored
+    as the response the ingest step adjudicates. Only FUNNEL-VALID
+    samples are electable (post-loop Issue 1); zero valid samples
+    withholds adjudication so the ingest step skips green. All valid
+    samples still feed the consistency spread; the medoid changes which
+    real response is adjudicated, never the spread (v3.2.3:
+    first-sample order luck removed)."""
     ind = "          "
     prompt_block = "\n".join(
         (ind + line).rstrip() for line in prompt_text.rstrip("\n").split("\n")
     )
     if k > 1:
         claude_call = f"""{ind}RESP="{resp}"; BASE="${{RESP%.json}}"
+{ind}T="$(basename "$RESP" .json)"
 {ind}for i in $(seq 1 {k}); do
 {ind}  claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \\
 {ind}    --settings "$RUNNER_TEMP/witness-settings.json" \\
@@ -327,12 +367,20 @@ def cli_witness_run(prompt_text, k=1, resp=None):
 {ind}    --max-turns 50 || true
 {ind}  if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
 {ind}done
-{ind}# Medoid-of-k adjudication (v3.2.3): the adjudicated response is
-{ind}# the sample nearest the others over the numeric contract fields —
-{ind}# a real witness response, not first-sample order luck. All samples
-{ind}# still feed the consistency spread.
+{ind}# Medoid-of-k adjudication (v3.2.3; funnel-valid election, post-loop
+{ind}# Issue 1): --target makes only samples that pass the COMPLETE
+{ind}# witness funnel electable — the same set the consistency spread is
+{ind}# computed over — so an invalid sample can never be adjudicated into
+{ind}# a guaranteed ingest failure. Zero funnel-valid samples leaves the
+{ind}# canonical response absent: the ingest step skips, and the
+{ind}# consistency step records the explicit no-valid-samples artifact
+{ind}# (expected witness invalidity is DATA, not a pipeline failure).
 {ind}if ls "$BASE".r*.json >/dev/null 2>&1; then
-{ind}  cp "$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid "$BASE".r*.json)" "$RESP"
+{ind}  if elected="$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid --target "$T" "$BASE".r*.json)"; then
+{ind}    cp "$elected" "$RESP"
+{ind}  else
+{ind}    echo "witness-medoid: no funnel-valid sample for $T — adjudication withheld"
+{ind}  fi
 {ind}fi
 {ind}ls -l "$(dirname "$RESP")" || true"""
     else:
@@ -373,7 +421,7 @@ def cli_witness_run(prompt_text, k=1, resp=None):
 {ind}# repo witness mid-read (run 3).
 {claude_call}"""
 
-matrix_consistency = consistency_standing_run("${{ matrix.target }}")
+matrix_consistency = consistency_standing_run("${{ matrix.target }}", measure_k)
 
 build_steps = """      - uses: actions/checkout@v4
 
@@ -520,8 +568,16 @@ jobs:
           LLM_PROVIDER: claude-cli
           LLM_MODEL: claude-code-cli@{CLAUDE_CLI_VERSION}
         run: |
-          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
-            {command_out} --ingest ${{{{ matrix.target }}}} --output {output_root}
+          # Absent response = zero funnel-valid samples (adjudication
+          # withheld upstream). That is witness data, not a pipeline
+          # failure: skip green; the consistency step records the
+          # no-valid-samples artifact and failed standing.
+          if [ -f "{output_root}/response/${{{{ matrix.target }}}}.json" ]; then
+            COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+              {command_out} --ingest ${{{{ matrix.target }}}} --output {output_root}
+          else
+            echo "no funnel-valid witness samples — ingest skipped"
+          fi
 
       # Consistency protocol, LLM arm (cm-of-cms skill section 3): every
       # extra sample is validated through the same witness funnel; the
@@ -609,14 +665,21 @@ def ledger_witness_steps():
           LLM_PROVIDER: claude-cli
           LLM_MODEL: claude-code-cli@{CLAUDE_CLI_VERSION}
         run: |
-          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
-            {command_out} --ingest {t} --output {output_root}
+          # Same skip-green rule as the measurement route: an absent
+          # response means zero funnel-valid samples, recorded by the
+          # consistency step — not a pipeline failure.
+          if [ -f "{output_root}/response/{t}.json" ]; then
+            COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+              {command_out} --ingest {t} --output {output_root}
+          else
+            echo "no funnel-valid witness samples — ingest skipped"
+          fi
 
       - name: Witness consistency ({t}, k={ledger_k} spread) and standing scope
         if: ${{{{ env.{llm_secret} != '' }}}}
         continue-on-error: true
         run: |
-{consistency_standing_run(t)}""")
+{consistency_standing_run(t, ledger_k)}""")
     return "\n\n".join(blocks)
 
 ledger_witness = ledger_witness_steps()

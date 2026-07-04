@@ -248,6 +248,7 @@ let test_hybrid_json_schema () =
     result_gamma_evidence = { evidence_positive = ["good g"]; evidence_negative = []; evidence_reason = "test"; evidence_checklist = [] };
     result_unresolved_ambiguity = [];
     result_next_fixes = [];
+    result_defect_cards = [];
   } in
   let mech_result = Mechanical_scoring.score_files sample_files in
   let hybrid = Hybrid_scoring.combine ~target:"test" mech_result llm_result in
@@ -298,6 +299,7 @@ let test_hybrid_preserves_both () =
     result_beta_evidence  = { evidence_positive = []; evidence_negative = []; evidence_reason = ""; evidence_checklist = [] };
     result_gamma_evidence = { evidence_positive = []; evidence_negative = []; evidence_reason = ""; evidence_checklist = [] };
     result_unresolved_ambiguity = []; result_next_fixes = [];
+    result_defect_cards = [];
   } in
   let mech_result = Mechanical_scoring.score_files sample_files in
   let hybrid = Hybrid_scoring.combine ~target:"test" mech_result llm_result in
@@ -426,6 +428,7 @@ let test_hybrid_aggregate_uses_coherence_helper () =
     result_beta_evidence  = { evidence_positive = []; evidence_negative = []; evidence_reason = ""; evidence_checklist = [] };
     result_gamma_evidence = { evidence_positive = []; evidence_negative = []; evidence_reason = ""; evidence_checklist = [] };
     result_unresolved_ambiguity = []; result_next_fixes = [];
+    result_defect_cards = [];
   } in
   let mech_result = Mechanical_scoring.score_files sample_files in
   let hybrid = Hybrid_scoring.combine ~target:"test" mech_result llm_result in

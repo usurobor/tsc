@@ -49,14 +49,27 @@ let llm_spread_report ~target ~files : (Yojson.Safe.t, string) result =
     | Error e -> Error e
     | Ok vectors ->
       let per_field = Witness_numeric.per_field_spread vectors in
+      let mean_pairwise = Witness_numeric.per_field_mean_pairwise vectors in
       let delta = Witness_numeric.max_spread vectors in
       let coh = coh_from_delta delta in
+      (* k-fair companion (Issue D): mean-pairwise per field, then max
+         across fields; same barrier, same lambda. Reported under NEW
+         names — the legacy max-pairwise fields stay untouched for
+         history continuity and remain the conservative standing
+         metric unless separately promoted. *)
+      let delta_kfair = Witness_numeric.max_mean_pairwise vectors in
+      let coh_kfair = coh_from_delta delta_kfair in
       let fields_json =
         `Assoc (List.map (fun (f, vals, spread) ->
+          let mean =
+            match List.assoc_opt f mean_pairwise with
+            | Some d -> d | None -> 0.0
+          in
           (Witness_numeric.field_name f,
            `Assoc [
              ("values", `List (List.map (fun x -> `Float x) vals));
              ("spread", `Float (round6 spread));
+             ("mean_pairwise", `Float (round6 mean));
            ]))
           per_field)
       in
@@ -68,5 +81,13 @@ let llm_spread_report ~target ~files : (Yojson.Safe.t, string) result =
         ("fields", fields_json);
         ("delta_consistency", `Float (round6 delta));
         ("coh_consistency", `Float (round6 coh));
+        ("delta_consistency_max_pairwise", `Float (round6 delta));
+        ("coh_consistency_max_pairwise", `Float (round6 coh));
+        ("delta_consistency_mean_pairwise", `Float (round6 delta_kfair));
+        ("coh_consistency_mean_pairwise", `Float (round6 coh_kfair));
+        ("statistic", `Assoc [
+          ("legacy", `String "max_pairwise");
+          ("kfair", `String "mean_pairwise");
+        ]);
         ("protocol", `String "skills/cm-of-cms/SKILL.md section 3");
       ])

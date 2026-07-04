@@ -1,4 +1,4 @@
-# Self-Measure v3.2.3
+# Self-Measure v3.2.4
 
 You are evaluating a TSC target bundle.
 
@@ -131,7 +131,7 @@ Do not punish `repo` only because one layer is unfinished if the bundle already 
 
 ---
 
-## 3. Scoring rules — v3.2.3 protocol
+## 3. Scoring rules — v3.2.4 protocol
 
 **Do not output Coh (coherence) values directly. Output normalized discrepancy δ values in [0,1] per pair.**
 
@@ -188,10 +188,26 @@ load-bearing claim contradicted).
 | β | `broken-reference` (a file/anchor/section referenced that the bundle does not bear out) · `authority-conflict` (two files claim or assign authority inconsistently) · `fact-drift` (one fact repeated with diverging values) · `undeclared-relationship` (a dependency asserted or required but not evidenced) |
 | γ | `unowned-change-path` (no owner or rule for how a surface evolves) · `generated-canonical-confusion` (derived artifacts not distinguished from canonical ones) · `missing-migration-rule` (version/format transitions unspecified) · `stale-transitional-marker` (something marked temporary with no exit path) |
 
-Report the walk in `axis_evidence.<axis>.checklist` (contract in §7) —
-the walk is part of the record, not a private step. Also list the
-individual defects (with severities) in the axis's `negative`
-evidence, as before.
+**File each defect under exactly ONE primary axis** (v3.2.4): when a
+defect plausibly fits more than one axis, the FIRST matching rule
+decides the primary axis; every other plausible axis goes in the
+card's `secondary_axes`, never as a second filing:
+
+1. A same-document logical contradiction (two claims in one file
+   cannot both hold) → `alpha` / `internal-contradiction`.
+2. A cross-file claim/source mismatch — authority, citation, path, or
+   repeated-fact divergence between files → `beta` / the matching
+   β category.
+3. A lifecycle defect — version window, migration rule, stale
+   transitional marker, unowned change path → `gamma` / the matching
+   γ category.
+
+Report every defect as a structured card in `defect_cards` (contract
+in §7); the per-axis `checklist` is the aggregate VIEW of those cards
+and the engine refuses a response where the two disagree (counts per
+category; worst severity per category; `none` exactly when no card).
+Also list the defects in the axis's `negative` evidence, as before —
+that remains the human-readable projection.
 
 **Map continuously, guided by the bands** (v3.2.2): use this table as
 INTERPRETATION, not quantization — report any value in the range that
@@ -238,9 +254,48 @@ found a broken cross-reference instead) and mapped their own findings
 honestly. A checklist disciplines the map; it cannot make independent
 readers encounter the same defects in a multi-thousand-line bundle.
 The checklist and the walk-validating funnel stage are retained as
-contract hardening; the next variance experiment must target discovery
-(pooled-findings adjudication: a second witness phase that re-scores
-against the union of all samples' enumerated defects).
+contract hardening. The k=5 characterization pass then showed the
+variance is not primarily in discovery either: witnesses converge on a
+shared defect core (top clusters found by 60–100% of samples) but FILE
+the same defects under different axes, and the max-pairwise statistic
+grows with k by construction. Hence v3.2.4, not pooled findings.
+
+**Experiment record (v3.2.3 → v3.2.4).** Candidate: the §3.2
+primary-axis precedence rule + structured `defect_cards` (machine-
+validated against the checklist) + the k-fair mean-pairwise statistic
+(reported alongside max-pairwise, same barrier). Baseline (v3.2.3,
+k=5, post-hygiene tree 7d9c3f0, run 28697625576, mean-pairwise form):
+spec 0.833574, engine 0.899250, repo 0.883737 (min: spec); yield 5/5
+on all three targets.
+Pre-registered pass conditions: full sample yield on every target
+(declared == validated); min Coh_consistency_mean_pairwise ≥ 0.85 AND
+≥ +0.03 over that baseline; ≥ 80% primary-axis agreement on defect
+clusters found by ≥ 3/5 witnesses; mechanical cross within 0.005;
+max-pairwise fields still reported; no standing promotion. A miss on
+any condition marks the meter-loop counter 2/2.
+
+**Result (measured, k=5 run 28703325203 on tree b377ac2): FAILED —
+meter-loop counter 2/2.** Mean-pairwise: spec 0.800520 (−0.033),
+engine 0.912376 (+0.013), repo 0.724998 (−0.159, k=4/5). Conditions
+missed: yield (repo 4/5 — and the incidental PR-event run on the same
+tree drew spec 3/5, two samples omitting the checklist walk
+entirely); min ≥ 0.85 (0.725); +0.03 margin (two targets moved
+NEGATIVE). Axis agreement on ≥3/5 clusters was mixed (spec:
+ε-miscitation 4/4 β, "witness" overload 3/3 α, but oper §7.3-vs-§8
+split α/γ/γ — one witness applied the precedence rule, two filed the
+same defect as a stale marker). Mechanical A/B bit-identical;
+max-pairwise reported; no standing promotion — those three held.
+Interpretation: structured cards did not reduce filing variance, and
+the longer contract REDUCED sample yield; one repo witness returned
+checklist counts an order of magnitude beyond its peers, which
+mean-pairwise dampens but cannot absorb. The defect-card funnel stage
+and dual-statistic reporting are retained as contract hardening (no
+consistency claim); llm_repeats reverts to 3. Two pipeline defects
+this run exposed: witness-medoid elects among numerically-complete
+samples without funnel validity (an invalid sample can be
+adjudicated, failing ingest), and three v3.2.4 error strings in
+response_schema.ml carry baked multi-space runs. The loop counter is
+exhausted; next protocol change requires operator dispatch.
 
 **Confidence rubric**: 0.9 — you read every file and your findings are
 all directly cited; 0.75 — some claims reference material outside the
@@ -358,6 +413,17 @@ Return JSON only.
       }
     }
   },
+  "defect_cards": [
+    {
+      "id": "D1",
+      "primary_axis": "alpha",
+      "category": "internal-contradiction",
+      "severity": "systemic",
+      "evidence": "path or §-citation the defect is visible at",
+      "summary": "one-sentence statement of the defect",
+      "secondary_axes": ["beta"]
+    }
+  ],
   "unresolved_ambiguity": ["..."],
   "next_fixes": [
     {
@@ -372,6 +438,16 @@ No markdown.
 No prose before or after the JSON.
 
 **Key difference from v3.1:** The three `delta_*` fields are **required**. They carry normalized discrepancy δ ∈ [0, 1] for each pair. The engine applies the barrier transform to obtain Coh values — do not compute Coh yourself.
+
+**Key difference from v3.2.3:** `defect_cards` is **required** whenever
+the walk counts any defect (it MAY be an empty array only when every
+category counts 0). Each card carries `id` (unique), `primary_axis`
+(exactly one, by the §3.2 precedence), `category` (a checklist category
+OF that axis), `severity` (`cosmetic|isolated|systemic` — never `none`:
+a card IS a defect), `evidence`, `summary`, and optional
+`secondary_axes`. The engine refuses duplicate ids, a defect filed
+under two primary axes, categories foreign to the primary axis, and
+any card/checklist disagreement.
 
 **Key difference from v3.2.2:** each axis's `checklist` is **required**,
 with exactly the categories in §3.2 — every category present, `count`

@@ -103,7 +103,7 @@
     {
       "id": "D1",
       "primary_axis": "alpha",
-      "category": "naming-drift",
+      "category": "broken-reference",
       "severity": "cosmetic",
       "evidence": "fixture:1",
       "summary": "minor naming drift (fixture)",

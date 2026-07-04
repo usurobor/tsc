@@ -55,8 +55,8 @@
           "severity": "isolated"
         },
         "fact-drift": {
-          "count": 0,
-          "severity": "none"
+          "count": 1,
+          "severity": "cosmetic"
         },
         "undeclared-relationship": {
           "count": 0,
@@ -127,6 +127,15 @@
       "severity": "isolated",
       "evidence": "fixture:3",
       "summary": "migration thin (fixture)",
+      "secondary_axes": []
+    },
+    {
+      "id": "D9",
+      "primary_axis": "beta",
+      "category": "fact-drift",
+      "severity": "cosmetic",
+      "evidence": "fixture:1",
+      "summary": "minor naming drift (fixture)",
       "secondary_axes": []
     }
   ]
