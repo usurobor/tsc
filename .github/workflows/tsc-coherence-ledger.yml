@@ -180,21 +180,45 @@ jobs:
             fi
           done
           n=$(echo $valid | wc -w)
+          declared=3
+          refused=$((declared - n))
+          # Refusal-stage counts from the validation-failure artifacts the
+          # funnel wrote for the samples that did not validate.
+          stage_counts=$(cat ".tsc/self"/validate/tsc-$T-*-validation-failure.json 2>/dev/null \
+            | jq -cs 'map(.stage) | group_by(.) | map({(.[0]): length}) | add // {}' 2>/dev/null || echo '{}')
           # Defect-overlap observability: per validated sample, the checklist
           # counts and negative findings, one JSON line each — job logs carry
           # enough to cluster findings across samples without artifact access.
           for r in $valid; do
             jq -c '{sample: input_filename, checklist: (.axis_evidence | map_values(.checklist)), negative: (.axis_evidence | map_values(.negative))}' "$r" || true
           done
-          coh_c="0"
+          coh_c="0"; coh_kfair="0"
           if [ "$n" -ge 2 ]; then
             COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
-            coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            coh_c=$(jq -r '.coh_consistency_max_pairwise' ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            coh_kfair=$(jq -r '.coh_consistency_mean_pairwise' ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
             cp ".tsc/cm/consistency/$T.llm.json" ".tsc/self/consistency-$T.json" 2>/dev/null || true
           fi
-          gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= 0.9 else 'failed')" "$coh_c")
-          python3 -c "import json,sys; json.dump({'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': 0.9, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}, open('.tsc/self/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
-          echo "consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)"
+          # Standing gate: legacy max-pairwise vs the floor (conservative,
+          # unchanged). kfair_experiment_gate: the yield PRECONDITION only —
+          # a short sample set fails the k-fair experiment regardless of
+          # score; the numeric comparison vs baseline happens at close-out.
+          gate=$(awk -v c="$coh_c" 'BEGIN { if (c >= 0.9) print "passed"; else print "failed" }')
+          yield_gate=$([ "$n" -eq "$declared" ] && echo passed || echo failed)
+          jq -n --arg target "$T" --argjson declared "$declared" --argjson n "$n" \
+                --argjson refused "$refused" --argjson stages "$stage_counts" \
+                --argjson coh "$coh_c" --argjson kfair "$coh_kfair" \
+                --arg gate "$gate" --arg ygate "$yield_gate" \
+                '{standing_scope: "house-authored-public-commons", admissibility: "public-only",
+                  heldout_status: "none", external_anchor_count: 0,
+                  llm_consistency_gate: $gate, llm_consistency_floor: 0.9,
+                  coh_consistency: $coh,
+                  coh_consistency_max_pairwise: $coh, coh_consistency_mean_pairwise: $kfair,
+                  declared_samples: $declared, validated_samples: $n,
+                  refused_samples: $refused, refusal_stage_counts: $stages,
+                  kfair_experiment_gate: $ygate, target: $target}' \
+                > ".tsc/self/standing-$T.json"
+          echo "consistency: $T k=$n/$declared Coh_max=$coh_c Coh_kfair=$coh_kfair gate=$gate yield=$yield_gate (standing gate, never a publishing gate)"
 
       - name: Emit witness prompt (engine)
         if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
@@ -306,21 +330,45 @@ jobs:
             fi
           done
           n=$(echo $valid | wc -w)
+          declared=3
+          refused=$((declared - n))
+          # Refusal-stage counts from the validation-failure artifacts the
+          # funnel wrote for the samples that did not validate.
+          stage_counts=$(cat ".tsc/self"/validate/tsc-$T-*-validation-failure.json 2>/dev/null \
+            | jq -cs 'map(.stage) | group_by(.) | map({(.[0]): length}) | add // {}' 2>/dev/null || echo '{}')
           # Defect-overlap observability: per validated sample, the checklist
           # counts and negative findings, one JSON line each — job logs carry
           # enough to cluster findings across samples without artifact access.
           for r in $valid; do
             jq -c '{sample: input_filename, checklist: (.axis_evidence | map_values(.checklist)), negative: (.axis_evidence | map_values(.negative))}' "$r" || true
           done
-          coh_c="0"
+          coh_c="0"; coh_kfair="0"
           if [ "$n" -ge 2 ]; then
             COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
-            coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            coh_c=$(jq -r '.coh_consistency_max_pairwise' ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            coh_kfair=$(jq -r '.coh_consistency_mean_pairwise' ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
             cp ".tsc/cm/consistency/$T.llm.json" ".tsc/self/consistency-$T.json" 2>/dev/null || true
           fi
-          gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= 0.9 else 'failed')" "$coh_c")
-          python3 -c "import json,sys; json.dump({'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': 0.9, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}, open('.tsc/self/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
-          echo "consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)"
+          # Standing gate: legacy max-pairwise vs the floor (conservative,
+          # unchanged). kfair_experiment_gate: the yield PRECONDITION only —
+          # a short sample set fails the k-fair experiment regardless of
+          # score; the numeric comparison vs baseline happens at close-out.
+          gate=$(awk -v c="$coh_c" 'BEGIN { if (c >= 0.9) print "passed"; else print "failed" }')
+          yield_gate=$([ "$n" -eq "$declared" ] && echo passed || echo failed)
+          jq -n --arg target "$T" --argjson declared "$declared" --argjson n "$n" \
+                --argjson refused "$refused" --argjson stages "$stage_counts" \
+                --argjson coh "$coh_c" --argjson kfair "$coh_kfair" \
+                --arg gate "$gate" --arg ygate "$yield_gate" \
+                '{standing_scope: "house-authored-public-commons", admissibility: "public-only",
+                  heldout_status: "none", external_anchor_count: 0,
+                  llm_consistency_gate: $gate, llm_consistency_floor: 0.9,
+                  coh_consistency: $coh,
+                  coh_consistency_max_pairwise: $coh, coh_consistency_mean_pairwise: $kfair,
+                  declared_samples: $declared, validated_samples: $n,
+                  refused_samples: $refused, refusal_stage_counts: $stages,
+                  kfair_experiment_gate: $ygate, target: $target}' \
+                > ".tsc/self/standing-$T.json"
+          echo "consistency: $T k=$n/$declared Coh_max=$coh_c Coh_kfair=$coh_kfair gate=$gate yield=$yield_gate (standing gate, never a publishing gate)"
 
       - name: Emit witness prompt (repo)
         if: ${{ env.CLAUDE_CODE_OAUTH_TOKEN != '' }}
@@ -432,21 +480,45 @@ jobs:
             fi
           done
           n=$(echo $valid | wc -w)
+          declared=3
+          refused=$((declared - n))
+          # Refusal-stage counts from the validation-failure artifacts the
+          # funnel wrote for the samples that did not validate.
+          stage_counts=$(cat ".tsc/self"/validate/tsc-$T-*-validation-failure.json 2>/dev/null \
+            | jq -cs 'map(.stage) | group_by(.) | map({(.[0]): length}) | add // {}' 2>/dev/null || echo '{}')
           # Defect-overlap observability: per validated sample, the checklist
           # counts and negative findings, one JSON line each — job logs carry
           # enough to cluster findings across samples without artifact access.
           for r in $valid; do
             jq -c '{sample: input_filename, checklist: (.axis_evidence | map_values(.checklist)), negative: (.axis_evidence | map_values(.negative))}' "$r" || true
           done
-          coh_c="0"
+          coh_c="0"; coh_kfair="0"
           if [ "$n" -ge 2 ]; then
             COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
-            coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            coh_c=$(jq -r '.coh_consistency_max_pairwise' ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+            coh_kfair=$(jq -r '.coh_consistency_mean_pairwise' ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
             cp ".tsc/cm/consistency/$T.llm.json" ".tsc/self/consistency-$T.json" 2>/dev/null || true
           fi
-          gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= 0.9 else 'failed')" "$coh_c")
-          python3 -c "import json,sys; json.dump({'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': 0.9, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}, open('.tsc/self/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
-          echo "consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)"
+          # Standing gate: legacy max-pairwise vs the floor (conservative,
+          # unchanged). kfair_experiment_gate: the yield PRECONDITION only —
+          # a short sample set fails the k-fair experiment regardless of
+          # score; the numeric comparison vs baseline happens at close-out.
+          gate=$(awk -v c="$coh_c" 'BEGIN { if (c >= 0.9) print "passed"; else print "failed" }')
+          yield_gate=$([ "$n" -eq "$declared" ] && echo passed || echo failed)
+          jq -n --arg target "$T" --argjson declared "$declared" --argjson n "$n" \
+                --argjson refused "$refused" --argjson stages "$stage_counts" \
+                --argjson coh "$coh_c" --argjson kfair "$coh_kfair" \
+                --arg gate "$gate" --arg ygate "$yield_gate" \
+                '{standing_scope: "house-authored-public-commons", admissibility: "public-only",
+                  heldout_status: "none", external_anchor_count: 0,
+                  llm_consistency_gate: $gate, llm_consistency_floor: 0.9,
+                  coh_consistency: $coh,
+                  coh_consistency_max_pairwise: $coh, coh_consistency_mean_pairwise: $kfair,
+                  declared_samples: $declared, validated_samples: $n,
+                  refused_samples: $refused, refusal_stage_counts: $stages,
+                  kfair_experiment_gate: $ygate, target: $target}' \
+                > ".tsc/self/standing-$T.json"
+          echo "consistency: $T k=$n/$declared Coh_max=$coh_c Coh_kfair=$coh_kfair gate=$gate yield=$yield_gate (standing gate, never a publishing gate)"
 
       - name: Append ledger row and push
         run: |

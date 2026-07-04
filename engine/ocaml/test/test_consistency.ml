@@ -163,6 +163,53 @@ let test_spread_report () =
      | _ -> fail "spread: fields object missing")
   | Ok _ -> fail "spread: report is not an object"
 
+(* k-fair companion statistic (Issue D): mean absolute pairwise
+   difference per field, max across fields; legacy max-pairwise fields
+   unchanged; both routed through the same barrier. *)
+let test_kfair_statistic () =
+  let r1 = write_response "k1.json" [ ("alpha", 0.62) ] in
+  let r2 = write_response "k2.json" [ ("alpha", 0.66) ] in
+  let r3 = write_response "k3.json" [ ("alpha", 0.87) ] in
+  (* pairwise |diffs| on alpha: 0.04, 0.25, 0.21 -> mean 0.5/3 *)
+  let expected_mean = (0.04 +. 0.25 +. 0.21) /. 3.0 in
+  (match Consistency.llm_spread_report ~target:"spec" ~files:[ r1; r2; r3 ] with
+   | Ok (`Assoc kv) ->
+     let num k = match List.assoc_opt k kv with
+       | Some (`Float x) -> x | _ -> nan in
+     check_close ~tol:1e-6 "kfair: delta_consistency_mean_pairwise"
+       (num "delta_consistency_mean_pairwise") expected_mean;
+     check_close ~tol:1e-6 "kfair: coh via the same canonical barrier"
+       (num "coh_consistency_mean_pairwise")
+       (Coherence.coherence_link ~lambda:1.0
+          ~delta:(Float.round (expected_mean *. 1e6) /. 1e6));
+     check (num "delta_consistency_max_pairwise" = num "delta_consistency"
+            && num "coh_consistency_max_pairwise" = num "coh_consistency")
+       "kfair: legacy fields preserved verbatim under both names";
+     check_close ~tol:1e-9 "kfair: legacy max-pairwise still 0.25"
+       (num "delta_consistency") 0.25;
+     (match List.assoc_opt "statistic" kv with
+      | Some (`Assoc st) ->
+        check (List.assoc_opt "legacy" st = Some (`String "max_pairwise")
+               && List.assoc_opt "kfair" st = Some (`String "mean_pairwise"))
+          "kfair: statistic labels present"
+      | _ -> fail "kfair: statistic block missing")
+   | Ok _ -> fail "kfair: report not an object"
+   | Error e -> fail ("kfair: report errored: " ^ e));
+  (* k-fairness itself: duplicating an agreeing sample LOWERS the mean
+     statistic while the max stays put — more agreeing samples must
+     never read as worse. *)
+  let r4 = write_response "k4.json" [ ("alpha", 0.66) ] in
+  match Consistency.llm_spread_report ~target:"spec"
+          ~files:[ r1; r2; r3; r4 ] with
+  | Ok (`Assoc kv) ->
+    let num k = match List.assoc_opt k kv with
+      | Some (`Float x) -> x | _ -> nan in
+    check (num "delta_consistency_max_pairwise" = 0.25)
+      "kfair: max-pairwise unchanged by an agreeing 4th sample";
+    check (num "delta_consistency_mean_pairwise" < expected_mean)
+      "kfair: mean-pairwise falls with an agreeing 4th sample"
+  | _ -> fail "kfair: 4-sample report failed"
+
 let test_spread_refusals () =
   let r1 = write_response "one.json" [] in
   (match Consistency.llm_spread_report ~target:"spec" ~files:[ r1 ] with
@@ -248,6 +295,7 @@ let () =
   Printf.printf "=== TSC consistency + medoid tests (Python-removal P1) ===\n%!";
   test_barrier ();
   test_spread_report ();
+  test_kfair_statistic ();
   test_spread_refusals ();
   test_medoid ();
   test_protocol_version_pin ();

@@ -98,3 +98,31 @@ let per_field_spread (vs : vector list) : (field * float list * float) list =
 let max_spread (vs : vector list) : float =
   List.fold_left (fun acc (_, _, s) -> Float.max acc s)
     0.0 (per_field_spread vs)
+
+(** Per-field MEAN absolute pairwise difference — the k-fair companion
+    statistic (Issue D): unlike the max, the mean of all m(m-1)/2
+    pairwise differences does not grow monotonically with sample count,
+    so k=3 and k=5 readings are comparable. Returns entries in
+    [all_fields] order. Requires >= 2 vectors (0.0 per field otherwise
+    is never emitted — callers enforce the arity upstream). *)
+let per_field_mean_pairwise (vs : vector list) : (field * float) list =
+  List.mapi (fun i f ->
+    let vals = List.map (fun v -> v.(i)) vs in
+    let total = ref 0.0 and pairs = ref 0 in
+    let rec walk = function
+      | [] -> ()
+      | a :: rest ->
+        List.iter (fun b ->
+          total := !total +. Float.abs (a -. b);
+          incr pairs) rest;
+        walk rest
+    in
+    walk vals;
+    (f, if !pairs = 0 then 0.0 else !total /. Float.of_int !pairs)
+  ) all_fields
+
+(** The k-fair consistency delta: max over fields of the per-field
+    mean pairwise difference. *)
+let max_mean_pairwise (vs : vector list) : float =
+  List.fold_left (fun acc (_, d) -> Float.max acc d)
+    0.0 (per_field_mean_pairwise vs)

@@ -265,7 +265,7 @@ measure_k = int(req(sm, "consistency.llm_repeats"))
 ledger_k  = int(req(sm, "ledger.semantic_samples"))
 
 
-def consistency_standing_run(t_expr):
+def consistency_standing_run(t_expr, declared_k):
     """Run-block body for the per-target consistency + standing step,
     shared by the measurement workflow (matrix target) and the ledger
     workflow (literal target). Every extra sample is validated through
@@ -286,21 +286,45 @@ def consistency_standing_run(t_expr):
 {ind}  fi
 {ind}done
 {ind}n=$(echo $valid | wc -w)
+{ind}declared={declared_k}
+{ind}refused=$((declared - n))
+{ind}# Refusal-stage counts from the validation-failure artifacts the
+{ind}# funnel wrote for the samples that did not validate.
+{ind}stage_counts=$(cat "{output_root}"/validate/tsc-$T-*-validation-failure.json 2>/dev/null \\
+{ind}  | jq -cs 'map(.stage) | group_by(.) | map({{(.[0]): length}}) | add // {{}}' 2>/dev/null || echo '{{}}')
 {ind}# Defect-overlap observability: per validated sample, the checklist
 {ind}# counts and negative findings, one JSON line each — job logs carry
 {ind}# enough to cluster findings across samples without artifact access.
 {ind}for r in $valid; do
 {ind}  jq -c '{{sample: input_filename, checklist: (.axis_evidence | map_values(.checklist)), negative: (.axis_evidence | map_values(.negative))}}' "$r" || true
 {ind}done
-{ind}coh_c="0"
+{ind}coh_c="0"; coh_kfair="0"
 {ind}if [ "$n" -ge 2 ]; then
 {ind}  COH_BIN="$COH" scripts/cm-consistency.sh llm-spread "$T" $valid || true
-{ind}  coh_c=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['coh_consistency'])" ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+{ind}  coh_c=$(jq -r '.coh_consistency_max_pairwise' ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
+{ind}  coh_kfair=$(jq -r '.coh_consistency_mean_pairwise' ".tsc/cm/consistency/$T.llm.json" 2>/dev/null || echo 0)
 {ind}  cp ".tsc/cm/consistency/$T.llm.json" "{output_root}/consistency-$T.json" 2>/dev/null || true
 {ind}fi
-{ind}gate=$(python3 -c "import sys; print('passed' if float(sys.argv[1]) >= {llm_consistency_floor} else 'failed')" "$coh_c")
-{ind}python3 -c "import json,sys; json.dump({{'standing_scope': 'house-authored-public-commons', 'admissibility': 'public-only', 'heldout_status': 'none', 'external_anchor_count': 0, 'llm_consistency_gate': sys.argv[4], 'llm_consistency_floor': {llm_consistency_floor}, 'coh_consistency': float(sys.argv[3]), 'validated_samples': int(sys.argv[2]), 'target': sys.argv[1]}}, open('{output_root}/standing-' + sys.argv[1] + '.json', 'w'), indent=2)" "$T" "$n" "$coh_c" "$gate"
-{ind}echo \"consistency: $T k=$n Coh_consistency=$coh_c gate=$gate (standing gate, never a publishing gate)\""""
+{ind}# Standing gate: legacy max-pairwise vs the floor (conservative,
+{ind}# unchanged). kfair_experiment_gate: the yield PRECONDITION only —
+{ind}# a short sample set fails the k-fair experiment regardless of
+{ind}# score; the numeric comparison vs baseline happens at close-out.
+{ind}gate=$(awk -v c="$coh_c" 'BEGIN {{ if (c >= {llm_consistency_floor}) print "passed"; else print "failed" }}')
+{ind}yield_gate=$([ "$n" -eq "$declared" ] && echo passed || echo failed)
+{ind}jq -n --arg target "$T" --argjson declared "$declared" --argjson n "$n" \\
+{ind}      --argjson refused "$refused" --argjson stages "$stage_counts" \\
+{ind}      --argjson coh "$coh_c" --argjson kfair "$coh_kfair" \\
+{ind}      --arg gate "$gate" --arg ygate "$yield_gate" \\
+{ind}      '{{standing_scope: "house-authored-public-commons", admissibility: "public-only",
+{ind}        heldout_status: "none", external_anchor_count: 0,
+{ind}        llm_consistency_gate: $gate, llm_consistency_floor: {llm_consistency_floor},
+{ind}        coh_consistency: $coh,
+{ind}        coh_consistency_max_pairwise: $coh, coh_consistency_mean_pairwise: $kfair,
+{ind}        declared_samples: $declared, validated_samples: $n,
+{ind}        refused_samples: $refused, refusal_stage_counts: $stages,
+{ind}        kfair_experiment_gate: $ygate, target: $target}}' \\
+{ind}      > "{output_root}/standing-$T.json"
+{ind}echo \"consistency: $T k=$n/$declared Coh_max=$coh_c Coh_kfair=$coh_kfair gate=$gate yield=$yield_gate (standing gate, never a publishing gate)\""""
 
 def cli_witness_run(prompt_text, k=1, resp=None):
     """Run-block body for a CLI witness step. Every emitted line sits at
@@ -373,7 +397,7 @@ def cli_witness_run(prompt_text, k=1, resp=None):
 {ind}# repo witness mid-read (run 3).
 {claude_call}"""
 
-matrix_consistency = consistency_standing_run("${{ matrix.target }}")
+matrix_consistency = consistency_standing_run("${{ matrix.target }}", measure_k)
 
 build_steps = """      - uses: actions/checkout@v4
 
@@ -616,7 +640,7 @@ def ledger_witness_steps():
         if: ${{{{ env.{llm_secret} != '' }}}}
         continue-on-error: true
         run: |
-{consistency_standing_run(t)}""")
+{consistency_standing_run(t, ledger_k)}""")
     return "\n\n".join(blocks)
 
 ledger_witness = ledger_witness_steps()

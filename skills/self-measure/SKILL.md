@@ -42,12 +42,19 @@ self_measure:
   default_mode: auto
   consistency:
     mechanical: identical
-    llm_repeats: 3
+    llm_repeats: 5
     llm_spread: >-
       max absolute pairwise difference over the response contract's
       numeric fields; delta_consistency maps through the barrier
       phi(delta) = delta/(1-delta) to Coh_consistency = exp(-phi)
-      (tsc-core section 3.2, lambda = 1)
+      (tsc-core section 3.2, lambda = 1). Reported alongside (A/B
+      labeled, Issue D): the k-fair companion — MEAN absolute pairwise
+      difference per field, max across fields, same barrier — under
+      *_mean_pairwise names; max-pairwise stays the conservative
+      standing metric unless separately promoted. A report also
+      carries declared/validated/refused sample counts and refusal
+      stage counts; a short yield fails the k-fair experiment
+      regardless of score
     adjudication: >-
       medoid-of-k (v3.2.3): the adjudicated response is the validated
       sample with minimum total L1 distance to the other samples over
