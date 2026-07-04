@@ -42,7 +42,7 @@ self_measure:
   default_mode: auto
   consistency:
     mechanical: identical
-    llm_repeats: 3
+    llm_repeats: 5
     llm_spread: >-
       max absolute pairwise difference over the response contract's
       numeric fields; delta_consistency maps through the barrier
