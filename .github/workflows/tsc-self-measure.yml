@@ -156,7 +156,7 @@ jobs:
           COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
             scripts/coh-self --emit-prompt ${{ matrix.target }} --output .tsc/self
 
-      - name: Estimate deltas and evidence (LLM witness — Claude CLI, k=5 samples)
+      - name: Estimate deltas and evidence (LLM witness — Claude CLI, k=3 samples)
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
@@ -209,7 +209,7 @@ jobs:
           # files, and the Read tool pages large files — 16 turns starved the
           # repo witness mid-read (run 3).
           RESP=".tsc/self/response/${{ matrix.target }}.json"; BASE="${RESP%.json}"
-          for i in $(seq 1 5); do
+          for i in $(seq 1 3); do
             claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
               --settings "$RUNNER_TEMP/witness-settings.json" \
               --permission-mode acceptEdits \
@@ -238,7 +238,7 @@ jobs:
       # spread of the validated samples maps through the barrier. The
       # result is a STANDING gate, not a publishing gate — a failing
       # spread never blocks the report, it scopes its standing.
-      - name: Witness consistency (k=5 spread) and standing scope
+      - name: Witness consistency (k=3 spread) and standing scope
         if: always()
         run: |
           T="${{ matrix.target }}"

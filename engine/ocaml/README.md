@@ -35,8 +35,12 @@ declared in `skills/self-measure/SKILL.md`, not here.
 | [lib/ood.ml](lib/ood.ml) | Out-of-distribution tracking over rolling aggregates. |
 | [lib/lipschitz.ml](lib/lipschitz.ml) | Link-Lipschitz constant (Operational §7.1). |
 | [lib/report.ml](lib/report.ml) | JSON + text report emission. |
-| [lib/types.ml](lib/types.ml) | Shared result types. |
-| [bin/main.ml](bin/main.ml) | CLI entrypoint: mode dispatch, external witness route (`--emit-prompt`, `--llm-response`), `coh self` dispatch. |
+| [lib/consistency.ml](lib/consistency.ml) | Consistency protocol, LLM arm: k-sample spread report, routed through `Coherence.phi` (backs `coh consistency-spread`). |
+| [lib/witness_numeric.ml](lib/witness_numeric.ml) | The seven-field numeric witness contract vector — shared by the spread and the medoid. |
+| [lib/witness_medoid.ml](lib/witness_medoid.ml) | Medoid-of-k adjudication election (backs `coh witness-medoid`). |
+| [lib/credentials.ml](lib/credentials.ml) | Local LLM credential detection for auto-mode. |
+| [lib/types.ml](lib/types.ml) | Shared result types + the witness protocol version constant. |
+| [bin/main.ml](bin/main.ml) | CLI entrypoint: mode dispatch, external witness route (`--emit-prompt`, `--llm-response`), `coh self` dispatch, `consistency-spread` / `witness-medoid` subcommands. |
 | [bin/provider.ml](bin/provider.ml) | HTTP provider transport (Anthropic / OpenAI-compatible). |
 | [bin/dotenv.ml](bin/dotenv.ml) | `.tsc/.env` credential loading. |
 

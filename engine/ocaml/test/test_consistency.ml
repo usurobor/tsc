@@ -74,7 +74,56 @@ let test_barrier () =
     (Consistency.coh_from_delta 1.0) 0.0;
   check_close "barrier: coh(1.5) = 0 (beyond saturation)"
     (Consistency.coh_from_delta 1.5) 0.0;
-  check_close "barrier: phi(0.5) = 1" (Consistency.barrier 0.5) 1.0
+  check_close "barrier: phi(0.5) = 1" (Consistency.barrier 0.5) 1.0;
+  (* AC2 (Issue A): Consistency routes through the canonical link —
+     bit-equal to Coherence.coherence_link at lambda 1, no local
+     duplicate formula. *)
+  List.iter (fun d ->
+    check (Consistency.coh_from_delta d
+           = Coherence.coherence_link ~lambda:1.0 ~delta:d)
+      (Printf.sprintf
+         "canonical routing: coh_from_delta %.2f == coherence_link" d))
+    [0.0; 0.12; 0.17; 0.22; 0.9999; 1.0];
+  check (Consistency.barrier 0.3 = Coherence.phi 0.3)
+    "canonical routing: barrier IS Coherence.phi"
+
+(* ------------------------------------------------------------------ *)
+(* Protocol-version pin: the engine constant, the instruction title,
+   and the instruction's section-3 header must carry ONE version.
+   Kills the stale-header drift class (k=5 finding F2). *)
+
+let repo_root = lazy (
+  let rec up d =
+    if Sys.file_exists (Filename.concat d "targets/registry.tsc") then d
+    else let p = Filename.dirname d in
+      if p = d then failwith "repo root not found" else up p
+  in
+  up (Sys.getcwd ()))
+
+let test_protocol_version_pin () =
+  let root = Lazy.force repo_root in
+  let ic = open_in (Filename.concat root "runtime/SELF-MEASURE.md") in
+  let text =
+    Fun.protect ~finally:(fun () -> close_in ic) (fun () ->
+      really_input_string ic (in_channel_length ic))
+  in
+  let version =
+    (* "SELF-MEASURE/3.2.3" -> "3.2.3" *)
+    match String.split_on_char '/' Types.self_measure_protocol_version with
+    | [ _; v ] -> v
+    | _ -> failwith "protocol constant is not NAME/VERSION shaped"
+  in
+  let contains hay needle =
+    let nl = String.length needle and hl = String.length hay in
+    let rec go i = i + nl <= hl
+      && (String.sub hay i nl = needle || go (i + 1)) in
+    go 0
+  in
+  check (contains text ("# Self-Measure v" ^ version))
+    (Printf.sprintf "protocol pin: instruction title is v%s" version);
+  check (contains text
+           (Printf.sprintf "## 3. Scoring rules — v%s protocol" version))
+    (Printf.sprintf "protocol pin: section-3 header is v%s" version)
 
 (* ------------------------------------------------------------------ *)
 (* Spread report semantics                                             *)
@@ -201,6 +250,7 @@ let () =
   test_spread_report ();
   test_spread_refusals ();
   test_medoid ();
+  test_protocol_version_pin ();
   if !failures > 0 then begin
     Printf.printf "=== %d FAILURES ===\n%!" !failures;
     exit 1

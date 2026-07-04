@@ -3,11 +3,13 @@
 # its substrate artifacts.
 #
 # Consumes skills/self-measure/SKILL.md (frontmatter `self_measure:` block,
-# validated by schemas/skill.cue #SelfMeasure) and materializes:
+# validated by schemas/skill.cue #SelfMeasure) and materializes THREE
+# artifacts, each carrying a DO-NOT-EDIT header:
 #
-#   - scripts/coh-self                          the local command
-#                                               (`coh self` dispatches to it)
-#   - .github/workflows/tsc-self-measure.yml    the CI surface
+#   - scripts/coh-self                            the local command
+#                                                 (`coh self` dispatches to it)
+#   - .github/workflows/tsc-self-measure.yml      the measurement CI surface
+#   - .github/workflows/tsc-coherence-ledger.yml  the release-ledger CI surface
 #
 # Authority split (pattern imported from cnos cn-install-wake):
 # - Skill authority: what self-measurement IS — targets, registry,

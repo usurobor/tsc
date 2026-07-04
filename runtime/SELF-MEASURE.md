@@ -131,7 +131,7 @@ Do not punish `repo` only because one layer is unfinished if the bundle already 
 
 ---
 
-## 3. Scoring rules — v3.2.2 protocol
+## 3. Scoring rules — v3.2.3 protocol
 
 **Do not output Coh (coherence) values directly. Output normalized discrepancy δ values in [0,1] per pair.**
 
