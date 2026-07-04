@@ -395,6 +395,69 @@ let test_funnel_delta_failure_classified () =
       "funnel negative: out-of-range delta classified as v3_2_delta with field named"
 
 (* ------------------------------------------------------------------ *)
+(* Funnel-valid medoid election (post-loop stabilization Issue 1).
+   A sample can be NUMERICALLY complete yet funnel-invalid (e.g. a
+   duplicate defect-card id): Witness_medoid.choose_valid must never
+   elect it, and zero funnel-valid samples must be an explicit Error,
+   never a fallback to an invalid sample. *)
+
+let write_tmp name content =
+  let path = Filename.concat (Filename.get_temp_dir_name ()) name in
+  let oc = open_out path in
+  output_string oc content; close_out oc; path
+
+let numerically_complete_invalid_raw =
+  (* duplicate card id — refused at the defect_cards stage, but every
+     numeric contract field is present and parseable *)
+  witness_raw
+    ~defect_cards:{|[
+      {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+       "severity": "isolated", "evidence": "f:1", "summary": "ref one"},
+      {"id": "D1", "primary_axis": "beta", "category": "broken-reference",
+       "severity": "cosmetic", "evidence": "f:2", "summary": "ref two"},
+      {"id": "D3", "primary_axis": "beta", "category": "fact-drift",
+       "severity": "cosmetic", "evidence": "f:3", "summary": "drift"}
+    ]|}
+    ~beta_checklist:nonzero_beta_checklist ()
+
+let test_medoid_choose_valid_excludes_funnel_invalid () =
+  let invalid = write_tmp "cv_invalid.json" numerically_complete_invalid_raw in
+  (* Sanity: the invalid sample IS numerically complete — the legacy
+     numeric election alone would consider it. *)
+  (match Witness_numeric.of_json_file invalid with
+   | Ok _ -> pass "choose_valid setup: invalid sample is numerically complete"
+   | Error e -> fail ("choose_valid setup: invalid sample not numeric: " ^ e));
+  let valid1 = write_tmp "cv_valid1.json" (witness_raw ()) in
+  let valid2 = write_tmp "cv_valid2.json" (witness_raw ~delta_ab:"0.12" ()) in
+  (* Positive: election runs over the funnel-valid pair only; the
+     invalid sample is listed first and must never win. *)
+  (match Witness_medoid.choose_valid ~expected_target:"spec"
+           [ invalid; valid1; valid2 ] with
+   | Ok p ->
+     check (p = valid1 || p = valid2)
+       "choose_valid: funnel-invalid sample never elected";
+     check (p <> invalid)
+       "choose_valid: canonical response is a funnel-valid sample"
+   | Error e -> fail ("choose_valid: valid pair errored: " ^ e));
+  (* Negative: zero funnel-valid samples -> explicit Error, no
+     first-argument fallback (the legacy numeric mode would have
+     returned the invalid sample here). *)
+  (match Witness_medoid.choose_valid ~expected_target:"spec" [ invalid ] with
+   | Error _ -> pass "choose_valid: zero valid samples is an explicit Error"
+   | Ok p -> fail ("choose_valid: zero-valid case elected " ^ p));
+  (* Contrast pin: the legacy numeric election DOES admit the invalid
+     sample — the two modes must stay distinguishable. *)
+  (match Witness_medoid.choose [ invalid ] with
+   | Ok p ->
+     check (p = invalid)
+       "choose (legacy numeric): still admits numerically complete samples"
+   | Error e -> fail ("choose legacy contrast errored: " ^ e));
+  (* Empty input refused in valid mode too. *)
+  (match Witness_medoid.choose_valid ~expected_target:"spec" [] with
+   | Error _ -> pass "choose_valid: empty input refused"
+   | Ok _ -> fail "choose_valid: empty input accepted")
+
+(* ------------------------------------------------------------------ *)
 
 let () =
   test_valid_v32_deltas ();
@@ -420,4 +483,5 @@ let () =
   test_funnel_cards_missing_with_defects ();
   test_funnel_cards_duplicate_id ();
   test_funnel_cards_two_primary_axes ();
+  test_medoid_choose_valid_excludes_funnel_invalid ();
   Printf.printf "All response_schema v3.2 strict validation tests passed.\n%!"

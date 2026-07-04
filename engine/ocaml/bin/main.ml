@@ -22,8 +22,10 @@
     Consistency protocol (skills/cm-of-cms/SKILL.md §3):
       coh consistency-spread --target <t> <resp.json>... [--output <f>]
                                k-sample spread report (lib/consistency.ml)
-      coh witness-medoid <resp.json>...
-                               medoid-of-k adjudication (lib/witness_medoid.ml)
+      coh witness-medoid [--target <t>] <resp.json>...
+                               medoid-of-k adjudication (lib/witness_medoid.ml);
+                               with --target only funnel-valid samples are
+                               candidates and zero valid samples exits 2
 
     External provider route (skills/self-measure/SKILL.md §LLM contract):
       --emit-prompt <path>     write the exact LLM prompt (instruction +
@@ -268,9 +270,10 @@ let () =
    consistency-protocol semantics, in-engine (P1 of the Python-removal
    master issue). Exit codes: 0 success; 2 precondition or malformed
    input. Malformed inputs produce a visible error on stderr, never a
-   silent exclusion (witness-medoid's named compatibility policy —
-   election-side exclusion with first-argument fallback — lives in
-   lib/witness_medoid.ml and is pinned by tests). *)
+   silent exclusion. witness-medoid's two election modes (numeric
+   compatibility mode with first-argument fallback; funnel-valid mode
+   under --target with an explicit zero-valid error) live in
+   lib/witness_medoid.ml and are pinned by tests. *)
 let () =
   if Array.length Sys.argv >= 2 && Sys.argv.(1) = "consistency-spread" then begin
     let target = ref "" and output = ref "" and files = ref [] in
@@ -317,14 +320,33 @@ let () =
 
 let () =
   if Array.length Sys.argv >= 2 && Sys.argv.(1) = "witness-medoid" then begin
-    let files =
-      Array.to_list (Array.sub Sys.argv 2 (Array.length Sys.argv - 2))
+    let target = ref "" and files = ref [] in
+    let rec eat i =
+      if i >= Array.length Sys.argv then ()
+      else match Sys.argv.(i) with
+        | "--target" when i + 1 < Array.length Sys.argv ->
+          target := Sys.argv.(i + 1); eat (i + 2)
+        | f -> files := f :: !files; eat (i + 1)
     in
-    match Tsc_engine.Witness_medoid.choose files with
+    eat 2;
+    let files = List.rev !files in
+    (* With --target the election is funnel-aware: only samples that
+       pass the complete witness-validation funnel are candidates, and
+       zero valid samples is an explicit exit 2 (the workflow records a
+       no-valid-samples artifact instead of adjudicating an invalid
+       sample into a guaranteed ingest failure). Without --target the
+       legacy numeric-completeness election applies. *)
+    let result =
+      if !target <> "" then
+        Tsc_engine.Witness_medoid.choose_valid ~expected_target:!target files
+      else Tsc_engine.Witness_medoid.choose files
+    in
+    match result with
     | Ok path -> print_endline path; exit 0
     | Error e ->
       Printf.eprintf "coh witness-medoid: %s\n" e;
-      prerr_endline "usage: coh witness-medoid <response.json>...";
+      prerr_endline
+        "usage: coh witness-medoid [--target <target>] <response.json>...";
       exit 2
   end
 

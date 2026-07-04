@@ -209,6 +209,7 @@ jobs:
           # files, and the Read tool pages large files — 16 turns starved the
           # repo witness mid-read (run 3).
           RESP=".tsc/self/response/${{ matrix.target }}.json"; BASE="${RESP%.json}"
+          T="$(basename "$RESP" .json)"
           for i in $(seq 1 3); do
             claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \
               --settings "$RUNNER_TEMP/witness-settings.json" \
@@ -216,12 +217,20 @@ jobs:
               --max-turns 50 || true
             if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
           done
-          # Medoid-of-k adjudication (v3.2.3): the adjudicated response is
-          # the sample nearest the others over the numeric contract fields —
-          # a real witness response, not first-sample order luck. All samples
-          # still feed the consistency spread.
+          # Medoid-of-k adjudication (v3.2.3; funnel-valid election, post-loop
+          # Issue 1): --target makes only samples that pass the COMPLETE
+          # witness funnel electable — the same set the consistency spread is
+          # computed over — so an invalid sample can never be adjudicated into
+          # a guaranteed ingest failure. Zero funnel-valid samples leaves the
+          # canonical response absent: the ingest step skips, and the
+          # consistency step records the explicit no-valid-samples artifact
+          # (expected witness invalidity is DATA, not a pipeline failure).
           if ls "$BASE".r*.json >/dev/null 2>&1; then
-            cp "$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid "$BASE".r*.json)" "$RESP"
+            if elected="$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid --target "$T" "$BASE".r*.json)"; then
+              cp "$elected" "$RESP"
+            else
+              echo "witness-medoid: no funnel-valid sample for $T — adjudication withheld"
+            fi
           fi
           ls -l "$(dirname "$RESP")" || true
 
@@ -230,8 +239,16 @@ jobs:
           LLM_PROVIDER: claude-cli
           LLM_MODEL: claude-code-cli@2.1.199
         run: |
-          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
-            scripts/coh-self --ingest ${{ matrix.target }} --output .tsc/self
+          # Absent response = zero funnel-valid samples (adjudication
+          # withheld upstream). That is witness data, not a pipeline
+          # failure: skip green; the consistency step records the
+          # no-valid-samples artifact and failed standing.
+          if [ -f ".tsc/self/response/${{ matrix.target }}.json" ]; then
+            COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+              scripts/coh-self --ingest ${{ matrix.target }} --output .tsc/self
+          else
+            echo "no funnel-valid witness samples — ingest skipped"
+          fi
 
       # Consistency protocol, LLM arm (cm-of-cms skill section 3): every
       # extra sample is validated through the same witness funnel; the
@@ -279,6 +296,18 @@ jobs:
           # score; the numeric comparison vs baseline happens at close-out.
           gate=$(awk -v c="$coh_c" 'BEGIN { if (c >= 0.9) print "passed"; else print "failed" }')
           yield_gate=$([ "$n" -eq "$declared" ] && echo passed || echo failed)
+          # Zero funnel-valid samples: explicit artifact (post-loop Issue 1).
+          # No hybrid report exists, standing below records validated 0 —
+          # expected witness invalidity stays green; only a pipeline failure
+          # (this artifact unwritable) may redden the job.
+          if [ "$n" -eq 0 ]; then
+            jq -n --arg target "$T" --argjson declared "$declared" \
+                  --argjson refused "$refused" --argjson stages "$stage_counts" \
+                  '{target: $target, status: "no_valid_witness_samples",
+                    declared_samples: $declared, validated_samples: 0,
+                    refused_samples: $refused, refusal_stage_counts: $stages}' \
+                  > ".tsc/self/no-valid-witness-samples-$T.json"
+          fi
           jq -n --arg target "$T" --argjson declared "$declared" --argjson n "$n" \
                 --argjson refused "$refused" --argjson stages "$stage_counts" \
                 --argjson coh "$coh_c" --argjson kfair "$coh_kfair" \

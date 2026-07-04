@@ -56,11 +56,15 @@ self_measure:
       stage counts; a short yield fails the k-fair experiment
       regardless of score
     adjudication: >-
-      medoid-of-k (v3.2.3): the adjudicated response is the validated
-      sample with minimum total L1 distance to the other samples over
-      the same numeric fields the spread is computed on
-      (coh witness-medoid, engine/ocaml/lib/witness_medoid.ml) — a real witness response, never
-      first-sample order luck; adjudication never changes the spread
+      medoid-of-k (v3.2.3): the adjudicated response is the FUNNEL-VALID
+      sample with minimum total L1 distance to the other valid samples
+      over the same numeric fields the spread is computed on
+      (coh witness-medoid --target, engine/ocaml/lib/witness_medoid.ml)
+      — a real witness response, never first-sample order luck, never a
+      sample the funnel refuses; zero valid samples withholds
+      adjudication and records a no_valid_witness_samples artifact
+      instead of failing the pipeline; adjudication never changes the
+      spread
     script: scripts/cm-consistency.sh
   mechanical:
     backend: engine/ocaml/lib/mechanical_scoring.ml

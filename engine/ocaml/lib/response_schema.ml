@@ -475,7 +475,8 @@ let validate_result_defect_cards result =
         ev.evidence_checklist) 0 axes
   in
   if cards = [] && total_checklist_defects > 0 then
-    err "defect_cards missing while the checklist counts %d defect(s) —          the v3.2.4 card surface is required" total_checklist_defects;
+    err "defect_cards missing while the checklist counts %d defect(s) — \
+         the v3.2.4 card surface is required" total_checklist_defects;
   (* Per-card shape rules. *)
   let seen_ids = Hashtbl.create 16 in
   let seen_content = Hashtbl.create 16 in
@@ -488,7 +489,8 @@ let validate_result_defect_cards result =
     let content_key = c.card_evidence ^ "\x00" ^ c.card_summary in
     (match Hashtbl.find_opt seen_content content_key with
      | Some other_axis when other_axis <> c.card_primary_axis ->
-       err "card '%s' duplicates a defect already filed under primary             axis '%s' — a defect has exactly one primary axis"
+       err "card '%s' duplicates a defect already filed under primary \
+            axis '%s' — a defect has exactly one primary axis"
          c.card_id other_axis
      | _ -> Hashtbl.replace seen_content content_key c.card_primary_axis);
     if not (List.mem c.card_primary_axis [ "alpha"; "beta"; "gamma" ]) then
@@ -498,7 +500,8 @@ let validate_result_defect_cards result =
       err "card '%s': category '%s' is not a %s-axis checklist category"
         c.card_id c.card_category c.card_primary_axis;
     if not (List.mem c.card_severity card_severities) then
-      err "card '%s': severity '%s' invalid (no 'none' cards — a card IS            a defect)" c.card_id c.card_severity;
+      err "card '%s': severity '%s' invalid (no 'none' cards — a card \
+           IS a defect)" c.card_id c.card_severity;
     List.iter (fun sa ->
       if not (List.mem sa [ "alpha"; "beta"; "gamma" ]) then
         err "card '%s': unknown secondary axis '%s'" c.card_id sa;

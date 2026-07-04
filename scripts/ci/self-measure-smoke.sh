@@ -81,7 +81,7 @@ for fixture in skills/self-measure/fixtures/invalid/*.json; do
   fi
   artifact=$(ls "$OUT_INVALID"/tsc-spec-*-validation-failure.json 2>/dev/null | head -1)
   [[ -n "$artifact" ]] || fail "no validation-failure artifact: $case_name"
-  stage=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['stage'])" "$artifact")
+  stage=$(jq -r '.stage' "$artifact")
   [[ "$stage" == "$expect_stage" ]] \
     || fail "$case_name: stage '$stage' != expected '$expect_stage'"
   if ls "$OUT_INVALID"/tsc-spec-*.json 2>/dev/null | grep -v raw | grep -qv validation-failure; then
@@ -107,6 +107,28 @@ picked="$("$COH_BIN" witness-medoid "$MEDOID_DIR"/r1.json "$MEDOID_DIR"/r2.json 
 rm -rf "$MEDOID_DIR"
 echo "ok: witness-medoid election (engine CLI)"
 
+# 5b. Funnel-valid medoid election (post-loop Issue 1): with --target,
+#     a NUMERICALLY complete but funnel-invalid sample must never be
+#     adjudicated, and zero funnel-valid samples must exit 2 (the
+#     workflow then records the no-valid-samples artifact instead of
+#     hard-failing ingest on a sample the funnel already refused).
+VALID_DIR="$(mktemp -d)"
+cp skills/self-measure/fixtures/witness-response-valid.json "$VALID_DIR/v1.json"
+cp skills/self-measure/fixtures/witness-response-valid.json "$VALID_DIR/v2.json"
+cp skills/self-measure/fixtures/invalid/cards-duplicate-id.json "$VALID_DIR/bad.json"
+# Positive: invalid sample listed FIRST still loses; a valid sample is
+# elected (tie between identical valids breaks earliest).
+picked="$("$COH_BIN" witness-medoid --target spec \
+  "$VALID_DIR"/bad.json "$VALID_DIR"/v1.json "$VALID_DIR"/v2.json)"
+[[ "$picked" == "$VALID_DIR/v1.json" || "$picked" == "$VALID_DIR/v2.json" ]] \
+  || fail "witness-medoid --target: funnel-invalid sample elected: $picked"
+# Negative: zero funnel-valid samples -> exit 2, nothing on stdout.
+if picked="$("$COH_BIN" witness-medoid --target spec "$VALID_DIR"/bad.json 2>/dev/null)"; then
+  fail "witness-medoid --target: zero-valid case succeeded with: $picked"
+fi
+rm -rf "$VALID_DIR"
+echo "ok: witness-medoid funnel-valid election (invalid never adjudicated, zero-valid exits 2)"
+
 # 6. Source-of-truth guard (Issue A / F1): the consistency module must
 #    route the barrier through Coherence.phi, never define it locally.
 #    The k=5 pass caught exactly this regression once; grep keeps it dead.
@@ -114,5 +136,16 @@ if grep -nE '1\.0 -\. delta|1\. -\. delta' engine/ocaml/lib/consistency.ml; then
   fail "consistency.ml re-implements the barrier locally (must route through Coherence.phi)"
 fi
 echo "ok: consistency barrier routed through Coherence (no local duplicate)"
+
+# 7. Error-string hygiene guard (post-loop Issue 2): refusal messages
+#    are an operator-visible surface; a multi-space run baked inside a
+#    single-line string literal is an editing artifact (an engine
+#    witness found three in the v3.2.4 card errors). Multi-line string
+#    continuations (backslash-newline) are fine — OCaml eats the
+#    continuation whitespace — so only single-line literals are checked.
+if grep -nE '"[^"]*[^ "]  +[^ "][^"]*"' engine/ocaml/lib/response_schema.ml; then
+  fail "response_schema.ml: multi-space run inside a string literal (editing artifact)"
+fi
+echo "ok: response_schema error strings carry no baked multi-space runs"
 
 echo "self-measure-smoke: pass"

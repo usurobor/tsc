@@ -311,6 +311,18 @@ def consistency_standing_run(t_expr, declared_k):
 {ind}# score; the numeric comparison vs baseline happens at close-out.
 {ind}gate=$(awk -v c="$coh_c" 'BEGIN {{ if (c >= {llm_consistency_floor}) print "passed"; else print "failed" }}')
 {ind}yield_gate=$([ "$n" -eq "$declared" ] && echo passed || echo failed)
+{ind}# Zero funnel-valid samples: explicit artifact (post-loop Issue 1).
+{ind}# No hybrid report exists, standing below records validated 0 —
+{ind}# expected witness invalidity stays green; only a pipeline failure
+{ind}# (this artifact unwritable) may redden the job.
+{ind}if [ "$n" -eq 0 ]; then
+{ind}  jq -n --arg target "$T" --argjson declared "$declared" \\
+{ind}        --argjson refused "$refused" --argjson stages "$stage_counts" \\
+{ind}        '{{target: $target, status: "no_valid_witness_samples",
+{ind}          declared_samples: $declared, validated_samples: 0,
+{ind}          refused_samples: $refused, refusal_stage_counts: $stages}}' \\
+{ind}        > "{output_root}/no-valid-witness-samples-$T.json"
+{ind}fi
 {ind}jq -n --arg target "$T" --argjson declared "$declared" --argjson n "$n" \\
 {ind}      --argjson refused "$refused" --argjson stages "$stage_counts" \\
 {ind}      --argjson coh "$coh_c" --argjson kfair "$coh_kfair" \\
@@ -334,16 +346,20 @@ def cli_witness_run(prompt_text, k=1, resp=None):
     (consistency protocol, cm-of-cms skill section 3): each sample is
     moved aside as .rN.json and the MEDOID sample (minimum total L1
     distance to the others over the numeric contract fields —
-    `coh witness-medoid`, lib/witness_medoid.ml) is restored as the
-    response the ingest step adjudicates. All samples still feed the consistency spread;
-    the medoid changes which real response is adjudicated, never the
-    spread (v3.2.3: first-sample order luck removed)."""
+    `coh witness-medoid --target`, lib/witness_medoid.ml) is restored
+    as the response the ingest step adjudicates. Only FUNNEL-VALID
+    samples are electable (post-loop Issue 1); zero valid samples
+    withholds adjudication so the ingest step skips green. All valid
+    samples still feed the consistency spread; the medoid changes which
+    real response is adjudicated, never the spread (v3.2.3:
+    first-sample order luck removed)."""
     ind = "          "
     prompt_block = "\n".join(
         (ind + line).rstrip() for line in prompt_text.rstrip("\n").split("\n")
     )
     if k > 1:
         claude_call = f"""{ind}RESP="{resp}"; BASE="${{RESP%.json}}"
+{ind}T="$(basename "$RESP" .json)"
 {ind}for i in $(seq 1 {k}); do
 {ind}  claude -p "$(cat "$RUNNER_TEMP/witness-prompt.md")" \\
 {ind}    --settings "$RUNNER_TEMP/witness-settings.json" \\
@@ -351,12 +367,20 @@ def cli_witness_run(prompt_text, k=1, resp=None):
 {ind}    --max-turns 50 || true
 {ind}  if [ -f "$RESP" ]; then mv "$RESP" "$BASE.r$i.json"; fi
 {ind}done
-{ind}# Medoid-of-k adjudication (v3.2.3): the adjudicated response is
-{ind}# the sample nearest the others over the numeric contract fields —
-{ind}# a real witness response, not first-sample order luck. All samples
-{ind}# still feed the consistency spread.
+{ind}# Medoid-of-k adjudication (v3.2.3; funnel-valid election, post-loop
+{ind}# Issue 1): --target makes only samples that pass the COMPLETE
+{ind}# witness funnel electable — the same set the consistency spread is
+{ind}# computed over — so an invalid sample can never be adjudicated into
+{ind}# a guaranteed ingest failure. Zero funnel-valid samples leaves the
+{ind}# canonical response absent: the ingest step skips, and the
+{ind}# consistency step records the explicit no-valid-samples artifact
+{ind}# (expected witness invalidity is DATA, not a pipeline failure).
 {ind}if ls "$BASE".r*.json >/dev/null 2>&1; then
-{ind}  cp "$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid "$BASE".r*.json)" "$RESP"
+{ind}  if elected="$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid --target "$T" "$BASE".r*.json)"; then
+{ind}    cp "$elected" "$RESP"
+{ind}  else
+{ind}    echo "witness-medoid: no funnel-valid sample for $T — adjudication withheld"
+{ind}  fi
 {ind}fi
 {ind}ls -l "$(dirname "$RESP")" || true"""
     else:
@@ -544,8 +568,16 @@ jobs:
           LLM_PROVIDER: claude-cli
           LLM_MODEL: claude-code-cli@{CLAUDE_CLI_VERSION}
         run: |
-          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
-            {command_out} --ingest ${{{{ matrix.target }}}} --output {output_root}
+          # Absent response = zero funnel-valid samples (adjudication
+          # withheld upstream). That is witness data, not a pipeline
+          # failure: skip green; the consistency step records the
+          # no-valid-samples artifact and failed standing.
+          if [ -f "{output_root}/response/${{{{ matrix.target }}}}.json" ]; then
+            COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+              {command_out} --ingest ${{{{ matrix.target }}}} --output {output_root}
+          else
+            echo "no funnel-valid witness samples — ingest skipped"
+          fi
 
       # Consistency protocol, LLM arm (cm-of-cms skill section 3): every
       # extra sample is validated through the same witness funnel; the
@@ -633,8 +665,15 @@ def ledger_witness_steps():
           LLM_PROVIDER: claude-cli
           LLM_MODEL: claude-code-cli@{CLAUDE_CLI_VERSION}
         run: |
-          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
-            {command_out} --ingest {t} --output {output_root}
+          # Same skip-green rule as the measurement route: an absent
+          # response means zero funnel-valid samples, recorded by the
+          # consistency step — not a pipeline failure.
+          if [ -f "{output_root}/response/{t}.json" ]; then
+            COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+              {command_out} --ingest {t} --output {output_root}
+          else
+            echo "no funnel-valid witness samples — ingest skipped"
+          fi
 
       - name: Witness consistency ({t}, k={ledger_k} spread) and standing scope
         if: ${{{{ env.{llm_secret} != '' }}}}
