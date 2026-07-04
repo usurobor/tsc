@@ -8,7 +8,7 @@ This manual covers building, configuring, and running the TSC engine.
 
 The engine measures triadic self-coherence of a target in one of four
 modes — `mechanical` | `llm` | `hybrid` | `auto` (the default: `hybrid`
-when LLM credentials are present, `mechanical` otherwise). It:
+when the full provider configuration — `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY` — is present, `mechanical` otherwise; a partial set warns with the missing variable names and falls back). It:
 
 1. Resolves input — a named target from the registry, direct file globs
    (`--files`), or a kata (`--kata`)
