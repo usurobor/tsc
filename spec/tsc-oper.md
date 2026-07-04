@@ -435,8 +435,8 @@ ______________________________________________________________________
 **Release artifacts:**
 
 - Updated spec files
-- Self-coherence report (docs/self-coherence-v3.0.1.md)
-- Provenance bundle (coherence_report.json)
+- Self-coherence report (`docs/alpha/doctrine/{version}/SELF-COHERENCE.md`, per §7.3)
+- Provenance bundle (generated into `.tsc/self/` by the self-measurement surface, per §7.3)
 - Implementation reference (if updated)
 
 **Version increment:**

@@ -3,7 +3,7 @@ Formal Specification of Observer Construction, Verification, Epistemic Refinemen
 
 Version: v1.0.13
 Status: Proposed Extension Specification
-Status consequence: verdict-bearing measurement (Core §5, Operational §5) does not depend on this extension; engines MAY implement its witnesses (the canonical engine emits the W2 gauge witness in provenance). Promotion to Normative follows the spec-release process (`CHANGELOG.md` § Spec releases).
+Status consequence: verdict-bearing measurement (Core §5, Operational §5) does not depend on this extension; engines MAY implement this extension's witnesses (e.g. BudgetGroundingWitness, Definition 13.46). The W2 gauge witness the canonical engine emits in provenance is an Operational §1 witness, not one of this extension's. Promotion to Normative follows the spec-release process (`CHANGELOG.md` § Spec releases).
 Artifact: Specification
 Changelog: `CHANGELOG.md` § Spec releases
 

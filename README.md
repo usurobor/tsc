@@ -107,7 +107,7 @@ CC-BY-4.0
   title   = {TSC: Triadic Self-Coherence Framework},
   author  = {Peter Lisovin},
   year    = {2026},
-  version = {v0.3.1},
+  version = {v0.11.0},
   url     = {https://github.com/usurobor/tsc}
 }
 ```

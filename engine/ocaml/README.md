@@ -80,8 +80,10 @@ Explicit and bounded; tracked here until closed:
   cross aggregate script-side (same §7.4 geometric mean). Target: extend
   `cross_target` to accept hybrid per-target reports so the engine owns
   that aggregation everywhere.
-- **Witness-contract version constant.** The SELF-MEASURE protocol
-  version appears as a literal in `bin/main.ml` metadata and as prose in
-  the instruction; bumping the protocol requires coordinated edits with
-  no compiler error if one is missed. Target: one shared constant
-  consumed by prompt metadata and the response validator.
+- **Witness-contract version prose.** The engine side is single-sourced
+  (`Types.self_measure_protocol_version`, consumed by prompt metadata
+  and the validator), but the instruction's own title and §3 header are
+  prose: a protocol bump that edits one surface and misses the other
+  compiles cleanly and is caught only at test time
+  (`test_protocol_version_pin` greps both). Residual: no
+  compile-time link between constant and instruction text.

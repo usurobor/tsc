@@ -1003,7 +1003,7 @@ What's not okay: silently changing parameters mid-stream and pretending measurem
 
 Think of it like changing the ruler while measuring. If you measure something as 10 inches, then change to a centimeter ruler and measure 25, you can't say "it grew from 10 to 25." You changed the measurement units.
 
-Same with TSC parameters. Change them if needed, but **declare** the change. (See TSC Core §2.1, Operational §6)
+Same with TSC parameters. Change them if needed, but **declare** the change. (See TSC Core §1 Parameters, Operational §6)
 
 ______________________________________________________________________
 
@@ -1016,8 +1016,8 @@ ______________________________________________________________________
 | λ_ab      | Pairwise sensitivity                | tuned        | Core §3            |
 | φ         | Barrier transform δ → D             | δ/(1−δ)      | Core §3.2          |
 | η_φ       | Barrier clip near δ=1               | 10⁻¹²        | Core §3.2, §12     |
-| ε         | Numerical floor                     | 10⁻⁵         | Core §5            |
-| M         | α evaluator cap (≥ 3)               | 10 (example) | C≡ §3.1            |
+| ε         | Numerical floor (Core: ε>0 only)    | 10⁻⁵ (engine default) | Core §1, §5; engine `Coherence.epsilon_default` |
+| M         | α evaluator cap                     | ≥ 3 (no default; 10 illustrative) | C≡ §3.1            |
 | **Θ**     | **Decision threshold**              | **0.75**     | **Operational §5** |
 | δ_CI      | CI width tolerance                  | 0.20         | Operational §5     |
 | Z_crit    | OOD threshold                       | 2.5          | Operational §5     |

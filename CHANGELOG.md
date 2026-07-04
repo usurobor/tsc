@@ -37,6 +37,41 @@ Discrepancy → coherence link refactored as a typed transformation chain `δ �
 
 ---
 
+## Witness-protocol releases (SELF-MEASURE)
+
+The witness scoring instruction (`runtime/SELF-MEASURE.md`) versions
+independently from both the spec lineage and the engine; its detailed
+experiment records (predictions, baselines, measured results,
+falsifications) live inside the instruction itself. This index exists
+so protocol migrations are recorded at the repository's designated
+process-history location.
+
+### SELF-MEASURE v3.2.4 (2026-07-04) — Defect cards + k-fair statistic (experiment FAILED)
+
+Structured `defect_cards` with a primary-axis precedence rule,
+machine-validated against the v3.2.3 checklist (new `defect_cards`
+funnel stage), plus the k-fair mean-pairwise consistency statistic
+reported beside the unchanged max-pairwise standing metric, and
+sample-yield observability. The pre-registered consistency-improvement
+gate FAILED (missed yield, min ≥ 0.85, and the +0.03 margin; two
+targets moved negative) — meter-loop counter 2/2, loop stopped. The
+card surface and dual-statistic reporting are retained as contract
+hardening with no consistency claim. A temporary k=5 sampling window
+(experiment scope only) opened with the v3.2.3 baseline run and closed
+with the verdict; the measurement route is k=3 again, as the 0.11.0
+ledger row states.
+
+### SELF-MEASURE v3.2.3 (2026-07-04) — Per-axis defect checklist + medoid-of-k (consistency claim falsified)
+
+Per-axis 4-category defect checklist with severities (new `checklist`
+funnel stage) and medoid-of-k adjudication replacing first-sample
+selection. The pre-registered claim (per-target k=3 Coh_consistency
++0.10) was FALSIFIED (+0.0128, noise-level) — meter-loop counter 1/2.
+Checklist and funnel stage retained as contract hardening; the
+falsification is recorded in the instruction's experiment record.
+
+---
+
 ## Engine releases
 
 ## Release Coherence Ledger

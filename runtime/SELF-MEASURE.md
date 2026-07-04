@@ -295,7 +295,9 @@ this run exposed: witness-medoid elects among numerically-complete
 samples without funnel validity (an invalid sample can be
 adjudicated, failing ingest), and three v3.2.4 error strings in
 response_schema.ml carry baked multi-space runs. The loop counter is
-exhausted; next protocol change requires operator dispatch.
+exhausted; next protocol change requires operator dispatch — the
+binding stop rule, rejected line, and re-entry condition are recorded
+in docs/beta/governance/METER-LOOP-DECISION.md.
 
 **Confidence rubric**: 0.9 — you read every file and your findings are
 all directly cited; 0.75 — some claims reference material outside the

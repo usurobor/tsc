@@ -102,7 +102,7 @@ ranking = ["glider", "random-soup"]
 | `[expected].ranking` | string[] | for comparative katas | Component ids ordered highest `C_sigma_num` first; runner asserts observed ranking matches |
 | `[expected.score_range].min` | float | for pass | Minimum acceptable `C_sigma_num` (0.0–1.0; geometric, canonical v3.2) |
 | `[expected.score_range].max` | float | for fail | Maximum `C_sigma_num` for a fail verdict (0.0–1.0; geometric) |
-| `bottleneck_axis` | string | no | Axis that most limits the score; used for diagnostic output |
+| `[expected.score_range].bottleneck_axis` | string | no | Axis that most limits the score; informational diagnostic (runner does not consult it) — lives inside `[expected.score_range]` in existing katas |
 | `[baseline]` | table | no | v0.10.0 (cycle #54) baseline provenance block — `baseline_engine_commit`, `baseline_engine_version`, `baseline_command`, `mode`, `config_hash`, `input_file_hashes`, α, β, γ, `c_sigma_math`, `c_sigma_num`, `zero_component_present`, `numeric_floor_applied`, `rationale_category` (`aggregate-correction`/`scorer-improvement`/`frontier-tightening`). Informational; runner does not consult it. |
 
 ### Comparative katas (Phase 2)
@@ -122,7 +122,6 @@ Quick reference for the `kata.toml` fields, each with type and example:
 - `id` — string; example: `"01-glider"`. Unique kata identifier; matches directory name.
 - `difficulty` — integer 1–5; example: `1`. Ordering key; 1=basic, 5=advanced.
 - `prerequisites` — string[]; example: `["01-glider"]`. Kata IDs that must pass first.
-- `tests` — string[]; example: `["mechanical_basic", "threshold_discrimination"]`. Surfaces exercised.
 - `mode` — string; example: `"mechanical"`. Engine mode for this kata.
 - `description` — string; example: `"Positive control..."`. One-line purpose statement.
 - `input.files` — string[]; example: `["input/glider.md"]`. Input files relative to kata dir (single-bundle katas).
@@ -130,7 +129,7 @@ Quick reference for the `kata.toml` fields, each with type and example:
 - `expected.verdict` — string; example: `"pass"`. Expected outcome: `pass` or `fail`.
 - `expected.ranking` — string[]; example: `["glider", "random-soup"]`. Comparative-kata ranking, highest C_Σ first (Phase 2).
 - `expected.score_range` — object; example: `{ min = 0.87, max = 1.0 }`. C_Σ bounds (single-bundle katas).
-- `expected.bottleneck_axis` — string; example: `"gamma"`. Optional axis diagnostic.
+- `expected.score_range.bottleneck_axis` — string; example: `"gamma"`. Optional axis diagnostic (informational; runner does not consult it).
 
 ## Runner invocation
 

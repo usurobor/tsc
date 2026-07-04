@@ -9,8 +9,9 @@
 // Convention imported from cnos (schemas/skill.cue there): schemas are
 // open (`...` at the end) so package-local extension keys pass through —
 // loaders MUST ignore unknown keys. Hard-gate fields fail validation if
-// missing; there is no exception ledger in tsc (one skill today — add a
-// ledger only when debt actually exists).
+// missing; there is no exception ledger in tsc (two skills today,
+// #SelfMeasure and #CMOfCMs — add a ledger only when debt actually
+// exists).
 
 package skill
 

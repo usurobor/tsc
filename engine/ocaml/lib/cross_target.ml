@@ -13,14 +13,16 @@
     mechanical-only for this cycle; the engine CLI rejects LLM/hybrid/auto
     multi-target requests with an explicit message.
 
-    Strategy: this module does NOT depend on the shape of
-    [Mechanical_scoring.result] gaining new aggregate fields (that is the
-    job of sub-issue #50). Instead, given a [Mechanical_scoring.result]
-    we derive [C_sigma_num] / [C_sigma_math] / degeneracy flags inline by
-    calling [Coherence.aggregate] over the (alpha, beta, gamma) axes of
-    each per-target result. When #50 lands, this module's per-target
-    derivation will route through the canonical result fields; the
-    cross-target math and emitted JSON shape do not change. *)
+    Strategy note (historical + current): this module predates
+    [Mechanical_scoring.result] carrying aggregate fields and derives
+    [C_sigma_num] / [C_sigma_math] / degeneracy flags inline via
+    [Coherence.aggregate] over the (alpha, beta, gamma) axes.
+    [Mechanical_scoring.result] now DOES expose an [aggregate] record
+    (same [Coherence.aggregate], computed once), so this inline
+    derivation is a deliberate second computation of the same values —
+    kept because the cross-target row also honors a caller-supplied
+    [?epsilon]. Routing rows through [r.aggregate] and dropping the
+    re-derivation is the named follow-up. *)
 
 (* ------------------------------------------------------------------ *)
 (* Per-target inline derivation (Option (b) — see self-coherence) *)
@@ -35,9 +37,10 @@ type target_row = {
   tr_numeric_floor_applied  : bool;
 }
 
-(** Canonical epsilon for the numeric aggregate floor. Matches
-    [Coherence.aggregate]'s default and the v3.2.0 provenance contract. *)
-let default_epsilon = 1e-5
+(** Canonical epsilon for the numeric aggregate floor — routes to
+    [Coherence.epsilon_default] (one source, like the scoring modules'
+    [aggregate_epsilon] aliases), per the v3.2.0 provenance contract. *)
+let default_epsilon = Coherence.epsilon_default
 
 (** Derive a [target_row] from a mechanical scoring result.
 
