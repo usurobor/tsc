@@ -141,6 +141,18 @@ let to_json ~result ~metadata ?(mode = "llm")
         ("beta", evidence_to_yojson result.result_beta_evidence);
         ("gamma", evidence_to_yojson result.result_gamma_evidence);
       ]);
+      ("defect_cards",
+        `List (List.map (fun c ->
+          `Assoc [
+            ("id", `String c.card_id);
+            ("primary_axis", `String c.card_primary_axis);
+            ("category", `String c.card_category);
+            ("severity", `String c.card_severity);
+            ("evidence", `String c.card_evidence);
+            ("summary", `String c.card_summary);
+            ("secondary_axes",
+              `List (List.map (fun s -> `String s) c.card_secondary_axes));
+          ]) result.result_defect_cards));
       ("defect_summary", defect_summary_to_yojson result);
       ("unresolved_ambiguity",
         `List (List.map (fun s -> `String s) result.result_unresolved_ambiguity));

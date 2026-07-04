@@ -65,6 +65,21 @@ type axis_evidence = {
   evidence_checklist : (string * (int * string)) list;
 }
 
+(** A structured defect card (SELF-MEASURE v3.2.4): the canonical
+    machine-readable defect surface. Every defect is filed under
+    EXACTLY ONE primary axis by the instruction's precedence rule;
+    other plausible axes are secondary. axis_evidence.negative remains
+    the human-readable projection. *)
+type defect_card = {
+  card_id : string;
+  card_primary_axis : string;           (* alpha | beta | gamma *)
+  card_category : string;               (* a category of that axis *)
+  card_severity : string;               (* cosmetic|isolated|systemic *)
+  card_evidence : string;               (* path:line or section citation *)
+  card_summary : string;
+  card_secondary_axes : string list;
+}
+
 (** A suggested fix. *)
 type suggested_fix = {
   fix_axis : string;
@@ -85,6 +100,7 @@ type measure_result = {
   result_gamma_evidence : axis_evidence;
   result_unresolved_ambiguity : string list;
   result_next_fixes : suggested_fix list;
+  result_defect_cards : defect_card list;
 }
 
 (** Run metadata for reproducibility. *)
