@@ -20,6 +20,16 @@ TSC v3.2.0 measures itself with the v3.2.0-conformant OCaml engine. Three canoni
 
 Aggregate C_Σ = (0.898 × 0.521 × 0.660)^(1/3) = **0.675** — grade C+. The bottleneck is β across two of three targets. The dominant gap is in the engine target (β = 0.225), driven by build artifacts in the corpus.
 
+> **Erratum (2026-07-04, annotation only — measurements unchanged).**
+> The C_Σ column above is the arithmetic-mean reading the engine of
+> this era reported in mechanical mode; the geometric forms
+> (C_Σ^math / C_Σ^num: spec 0.895, engine 0.465, repo 0.621) are in
+> the Aggregate Flags table below, whose trailing note records the
+> distinction. The two tables describe the SAME frozen run in two
+> aggregate forms; this note exists because a witness run flagged the
+> unlabeled column as a same-document contradiction. The v3.2
+> canonical aggregate is the geometric form.
+
 ---
 
 ## Per-Target Results

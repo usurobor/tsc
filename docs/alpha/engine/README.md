@@ -25,6 +25,12 @@ below link the changelog for those.
 
 | Version | Record | Note |
 |---------|--------|------|
+| 0.11.0 | [CHANGELOG.md](../../../CHANGELOG.md) | Official release consolidating the 0.10.1–0.10.5 self-measurement + CM² wave; SELF-MEASURE v3.2.2; held-out commit-reveal standing. |
+| 0.10.5 | [CHANGELOG.md](../../../CHANGELOG.md) | Witness-contract calibration wave (SELF-MEASURE v3.2.1, refuted and withdrawn in v3.2.2). |
+| 0.10.4 | [CHANGELOG.md](../../../CHANGELOG.md) | Release ledger learns k=3 sampling: per-target consistency columns, single-sample rows migrated. |
+| 0.10.3 | [CHANGELOG.md](../../../CHANGELOG.md) | Standing-scope wave: admissibility v2, displacement thresholds, challenger registration, `standing_scope` typed, k=3 witness sampling in measurement CI. |
+| 0.10.2 | [CHANGELOG.md](../../../CHANGELOG.md) | CM² wave: methodologies as measurable objects; new targets `methodology` and `cm-of-cms`. |
+| 0.10.1 | [CHANGELOG.md](../../../CHANGELOG.md) | Self-measurement platformization: `coh self`, witness funnel, external witness route, per-release coherence ledger. |
 | 0.10.0 | [CHANGELOG.md](../../../CHANGELOG.md) | Canonical v3.2 scoring cutover: geometric `C_Σ^math` / `C_Σ^num` under `provenance`; strict v3.2 LLM δ validation; cross-target report surface (#49 wave). |
 | 0.9.0 | [CHANGELOG.md](../../../CHANGELOG.md) | Phase 2 kata progression: comparative, philosophical, adversarial katas; `[[components]]` + ranking runner. |
 | 0.8.0 | [CHANGELOG.md](../../../CHANGELOG.md) | Process enforcement: CHANGELOG release gate in release scripts. |

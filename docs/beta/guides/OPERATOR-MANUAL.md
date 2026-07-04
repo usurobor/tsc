@@ -187,8 +187,13 @@ coh-self --ingest spec       # validate + ingest a witness response
 | `spec` | theory | Canonical theory surface (`spec/**/*.md`) |
 | `engine` | implementation | OCaml engine (`engine/ocaml/**/*.ml`, build files) |
 | `repo` | aggregate | Full repository: includes `spec` + `engine` targets plus integration surfaces |
+| `methodology` | aggregate | The self-measurement methodology as a corpus: skill declaration, schema, validators, renderer, rendered surfaces, scoring instruction |
+| `cm-of-cms` | aggregate | The 0th coherence methodology as a corpus: CM-of-CMs declaration, comparable schema, instruments, calibration-commons contract |
 
 Targets are declared in `targets/*.tsc` and registered in `targets/registry.tsc`.
+The default self-measurement run (`coh self`, CI) drives `spec`, `engine`,
+and `repo`; `methodology` and `cm-of-cms` are measured on demand
+(`coh --target methodology ...`).
 
 ### Using make
 
