@@ -12,6 +12,7 @@
   types
   mechanical_scoring
   factorized_beta
+  factorized_beta_gate
   hybrid_scoring
   coherence
   consistency

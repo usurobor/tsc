@@ -1,0 +1,315 @@
+# factorized-beta-measure.yml — the VERDICT cell of the factorized-β wave
+# (Sub-2 of #73, issue #75). Runs the FROZEN experiment
+# (docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md rev 4) over the
+# five held-out targets and emits the terminal PASS | FAIL | NO-DECISION
+# against the pre-registered A/B/C gate.
+#
+# This is NOT rendered from a skill (it is the measurement harness, not the
+# scalar self-measure surface); it does not touch the α/γ scalar path,
+# tsc-self-measure.yml, or scripts/coh-self.
+#
+# Witness gating mirrors tsc-self-measure.yml: the factorized/baseline
+# witnesses and the B3 label-agreement run only when CLAUDE_CODE_OAUTH_TOKEN
+# is present. The B1/B2 discrimination guards need no credential.
+
+name: factorized-beta-measure
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'engine/ocaml/**'
+      - 'docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md'
+      - 'docs/beta/governance/fixtures/factorized-beta-controls.json'
+      - 'scripts/factorized-beta-measure.sh'
+      - '.github/workflows/factorized-beta-measure.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  # Secret presence -> job-gating output (secrets cannot appear in job-level
+  # `if:`; a one-step job projects presence into an output).
+  witness-gate:
+    runs-on: ubuntu-22.04
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check witness credential
+        id: check
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "${CLAUDE_CODE_OAUTH_TOKEN}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "witness: CLAUDE_CODE_OAUTH_TOKEN present — factorized-β witnesses run"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "witness: CLAUDE_CODE_OAUTH_TOKEN absent — witness arms skipped (B1/B2 guards still run)"
+          fi
+
+  # B — discrimination guards. No credential. B1 kata non-regression +
+  # B2 admissibility matrix non-regression.
+  guards:
+    runs-on: ubuntu-22.04
+    outputs:
+      kata_b1: ${{ steps.b.outputs.kata_b1 }}
+      adm_b2: ${{ steps.b.outputs.adm_b2 }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+      - name: B1 (katas) + B2 (admissibility)
+        id: b
+        run: |
+          COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+          # B1: the two kata VERDICTS are unchanged — kata-01 (glider) still
+          # scores in its PASS range, kata-02 (random soup) still scores in
+          # its FAIL range. `coh --kata <id>` exits 0 iff that kata's declared
+          # expectation holds, so B1 passes iff BOTH exit 0.
+          b1=fail
+          if "$COH" --kata 01-glider --mode mechanical >/dev/null 2>&1; then
+            if "$COH" --kata 02-random-soup --mode mechanical >/dev/null 2>&1; then
+              b1=pass
+            else
+              echo "B1: kata-02 (random soup) verdict changed — discrimination regressed"
+            fi
+          else
+            echo "B1: kata-01 (glider) verdict changed — discrimination regressed"
+          fi
+          # B2: the five-attacker admissibility matrix must hold (exit 0).
+          b2=fail
+          if scripts/cm-admissibility.sh --self-test; then b2=pass; fi
+          echo "kata_b1=$b1" >> "$GITHUB_OUTPUT"
+          echo "adm_b2=$b2" >> "$GITHUB_OUTPUT"
+          echo "B1=$b1 B2=$b2"
+
+  # A — the consistency objective. Per held-out target: emit inventory +
+  # adjudication prompt, run k=3 factorized-β witnesses, measure the
+  # same-tree free-witness scalar β baseline, aggregate β_factorized into
+  # the per-target measurement record.
+  measure:
+    needs: witness-gate
+    if: ${{ needs.witness-gate.outputs.enabled == 'true' }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [spec, engine, repo, methodology, cm-of-cms]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+      - name: Measure ${{ matrix.target }} (factorized + free-witness baseline, k=3)
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          npm install -g @anthropic-ai/claude-code@2.1.199
+          # Route by shape: an sk-ant-api key belongs in ANTHROPIC_API_KEY.
+          if [ "${CLAUDE_CODE_OAUTH_TOKEN#sk-ant-api}" != "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
+            unset CLAUDE_CODE_OAUTH_TOKEN
+          fi
+          # acceptEdits is the load-bearing grant: writes under .tsc/fb
+          # auto-accept, everything else stays denied; the engine funnel
+          # enforces content + target downstream.
+          export SETTINGS="$RUNNER_TEMP/fb-settings.json"
+          cat > "$SETTINGS" <<SET
+          { "permissions": { "allow": [
+              "Read(.tsc/fb/**)", "Write(.tsc/fb/**)",
+              "Read(//${PWD#/}/.tsc/fb/**)", "Write(//${PWD#/}/.tsc/fb/**)"
+          ] } }
+          SET
+          # Generic witness runner: read the prompt file, follow ITS
+          # instruction (factorized adjudication or scalar SELF-MEASURE),
+          # write only the JSON to the response path. The prompt carries the
+          # specific contract; the wrapper stays neutral so both arms share it.
+          cat > "$RUNNER_TEMP/fb-witness.sh" <<'WIT'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          PROMPT="$1"; RESP="$2"; mkdir -p "$(dirname "$RESP")"
+          claude -p "Read the file $PROMPT and follow its instruction exactly. Write ONLY the JSON object or array that instruction specifies — no markdown fences, no prose — to $RESP. Do not read or write any other file." \
+            --settings "$SETTINGS" --permission-mode acceptEdits --max-turns 50 || true
+          WIT
+          chmod +x "$RUNNER_TEMP/fb-witness.sh"
+          export WITNESS_CMD="$RUNNER_TEMP/fb-witness.sh"
+          export COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe"
+          export OUTPUT=".tsc/fb" K=3
+          scripts/factorized-beta-measure.sh ${{ matrix.target }}
+          echo "### measure ${{ matrix.target }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat ".tsc/fb/measure/${{ matrix.target }}.json" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo '(no measure record)' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload measurement artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fb-artifacts-${{ matrix.target }}-${{ github.sha }}
+          # Everything EXCEPT the emitted prompts (full bundle text).
+          path: |
+            .tsc/fb/**
+            !.tsc/fb/prompt/**
+            !.tsc/fb/scalar-prompt/**
+          include-hidden-files: true
+          retention-days: 90
+          if-no-files-found: error
+
+  # B3 — the discrimination gate: the labeled β local controls. Typed rules
+  # + witness label agreement over the frozen fixture oracle.
+  b3-controls:
+    needs: witness-gate
+    if: ${{ needs.witness-gate.outputs.enabled == 'true' }}
+    runs-on: ubuntu-22.04
+    outputs:
+      b3: ${{ steps.run.outputs.b3 }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+      - name: B3 controls (typed rules + witness label agreement)
+        id: run
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          npm install -g @anthropic-ai/claude-code@2.1.199
+          if [ "${CLAUDE_CODE_OAUTH_TOKEN#sk-ant-api}" != "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            export ANTHROPIC_API_KEY="$CLAUDE_CODE_OAUTH_TOKEN"
+            unset CLAUDE_CODE_OAUTH_TOKEN
+          fi
+          COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+          mkdir -p .tsc/fb
+          export SETTINGS="$RUNNER_TEMP/fb-settings.json"
+          cat > "$SETTINGS" <<SET
+          { "permissions": { "allow": [
+              "Read(.tsc/fb/**)", "Write(.tsc/fb/**)",
+              "Read(//${PWD#/}/.tsc/fb/**)", "Write(//${PWD#/}/.tsc/fb/**)"
+          ] } }
+          SET
+          "$COH" factorized-beta-controls-prompt --output .tsc/fb/controls-prompt.md
+          claude -p "Read the file .tsc/fb/controls-prompt.md and follow its instruction exactly. Write ONLY the JSON array it specifies — no markdown fences, no prose — to .tsc/fb/controls-response.json. Do not read or write any other file." \
+            --settings "$SETTINGS" --permission-mode acceptEdits --max-turns 40 || true
+          b3=fail
+          if [ -f .tsc/fb/controls-response.json ]; then
+            v="$("$COH" factorized-beta-controls-check \
+                  --response .tsc/fb/controls-response.json \
+                  --output .tsc/fb/b3-result.json | tail -1 || echo fail)"
+            [ "$v" = "pass" ] && b3=pass
+          else
+            echo "B3: no controls response produced — B3 miss"
+          fi
+          echo "b3=$b3" >> "$GITHUB_OUTPUT"
+          echo "B3=$b3"
+      - name: Upload B3 artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fb-b3-${{ github.sha }}
+          path: |
+            .tsc/fb/b3-result.json
+            .tsc/fb/controls-response.json
+          include-hidden-files: true
+          retention-days: 90
+          if-no-files-found: warn
+
+  # C — the gate. Combine the five per-target measurements + B1/B2/B3 into
+  # the A/B/C verdict and emit the single terminal token.
+  gate:
+    needs: [witness-gate, guards, measure, b3-controls]
+    if: ${{ needs.witness-gate.outputs.enabled == 'true' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system depexts (libcurl for ezcurl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+      - name: Install dependencies
+        working-directory: engine/ocaml
+        run: opam install . --deps-only -y
+      - name: Build engine
+        working-directory: engine/ocaml
+        run: opam exec -- dune build
+      - name: Download per-target measurement artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fb-artifacts-*-${{ github.sha }}
+          path: dl
+          merge-multiple: true
+      - name: Evaluate the A/B/C gate -> terminal verdict
+        env:
+          KATA_B1: ${{ needs.guards.outputs.kata_b1 }}
+          ADM_B2: ${{ needs.guards.outputs.adm_b2 }}
+          B3: ${{ needs.b3-controls.outputs.b3 }}
+        run: |
+          COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+          mkdir -p gate-out
+          # The measurement records land at dl/measure/<target>.json.
+          MDIR="dl/measure"
+          [ -d "$MDIR" ] || { echo "no measurement records downloaded"; MDIR="dl"; }
+          set +e
+          OUT="$("$COH" factorized-beta-gate --measure-dir "$MDIR" \
+            --kata-b1 "${KATA_B1:-fail}" --admissibility-b2 "${ADM_B2:-fail}" \
+            --b3 "${B3:-fail}" --output gate-out/gate-summary.json)"
+          set -e
+          echo "$OUT"
+          VERDICT="$(printf '%s\n' "$OUT" | tail -1)"
+          {
+            echo "## factorized-β gate"
+            echo ""
+            echo '```'
+            printf '%s\n' "$OUT"
+            echo '```'
+            echo ""
+            echo "### Terminal verdict: **$VERDICT**"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "FACTORIZED_BETA_VERDICT=$VERDICT"
+      - name: Upload gate summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fb-gate-summary-${{ github.sha }}
+          path: gate-out/**
+          retention-days: 90
+          if-no-files-found: error
