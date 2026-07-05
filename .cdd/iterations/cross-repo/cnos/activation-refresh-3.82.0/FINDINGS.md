@@ -3,7 +3,34 @@
 Date: 2026-07-05
 Author: κ (Herald) — surfacing, not resolving. Resolution is γ/cell or operator work.
 
-## F1 — pre-activation cycles 53/54 fail the 3.82.0 pre-merge gate (BLOCKER for merge-to-main)
+## F1 — RESOLVED (operator decision 2026-07-05: migrate)
+
+**Resolution: migrate, not legacy-cutoff, not backfill.** Operator-approved.
+
+Audit: all five `unreleased/` cycles (50, 51, 52, 53, 54) reference master **#49
+/ v0.10.0** — the shipped wave (`releases/0.10.0/49/`). Confirmed shipped, so all
+five migrated (not only the two that tripped the gate — per "do not leave
+known-shipped cycles in unreleased/"):
+
+```
+.cdd/unreleased/50 → .cdd/releases/0.10.0/50   (git mv, history preserved)
+.cdd/unreleased/51 → .cdd/releases/0.10.0/51
+.cdd/unreleased/52 → .cdd/releases/0.10.0/52
+.cdd/unreleased/53 → .cdd/releases/0.10.0/53
+.cdd/unreleased/54 → .cdd/releases/0.10.0/54
+```
+
+`.cdd/unreleased/` is now empty; `validate-release-gate.sh --mode {pre-merge,release}`
+both pass. No closeout artifacts were fabricated; this is historical placement
+repair only. The gate itself is unchanged (not weakened).
+
+Durable guard added alongside: `scripts/verify-skill-bundle.sh` now enforces the
+`.cdd/CDD-VERSION` pin format (40-char SHA line 1; optional non-empty tag line 2;
+≤2 lines) so the one-line-pin regression cannot return.
+
+---
+
+### F1 (original finding, for the record) — pre-activation cycles 53/54 failed the 3.82.0 pre-merge gate
 
 **What.** `scripts/validate-release-gate.sh --mode pre-merge` (the gate the new
 `cdd-artifact-validate.yml` runs) fails:
