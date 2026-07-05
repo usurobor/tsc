@@ -46,6 +46,29 @@ falsifications) live inside the instruction itself. This index exists
 so protocol migrations are recorded at the repository's designated
 process-history location.
 
+### Factorized-β experiment (2026-07-05) — FAILED (freedom-seam factorization)
+
+Not a `SELF-MEASURE` version — a distinct operator-dispatched re-entry
+against the stopped meter loop, pre-registered in
+`docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md` (rev 4) and
+run as CDD wave #73 (engine #74, measurement harness #75). The engine
+enumerated the same β loci for every witness, the LLM adjudicated each
+resolved locus with a bounded `supports | contradicts | insufficient`
+verdict (never a scalar), and the engine aggregated `β_factorized`
+mechanically. Credentialed CI measurement (`factorized-beta-measure.yml`,
+k=3, five held-out targets): **verdict FAIL** — A1/A2/A3 (consistency)
+missed; B1/B2/B3 (discrimination) held. Decisive datum **A3**: under
+fixed loci and a bounded verdict, independent witnesses still disagree
+> 10% on the local semantic relation itself — the residual variance is
+genuine semantic judgment over under-specified citation relations, not
+the structural freedom the seam removed. Third and strongest
+falsification of consistency-improvement; **terminal** (no v3.2.5, no
+re-run without a fresh operator dispatch); does not reset the meter-loop
+counter. Harness + engine retained as measurement infrastructure with no
+consistency claim. Successor line: #76 (semantic ambiguity queue). See
+the prereg's "Experiment result" section and
+`docs/beta/governance/METER-LOOP-DECISION.md` (2026-07-05 update).
+
 ### SELF-MEASURE v3.2.4 (2026-07-04) — Defect cards + k-fair statistic (experiment FAILED)
 
 Structured `defect_cards` with a primary-axis precedence rule,

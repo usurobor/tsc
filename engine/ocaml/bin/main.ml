@@ -469,6 +469,337 @@ let build_bundle_from_files ~root ~globs =
     ~files
 
 (* ------------------------------------------------------------------ *)
+(* Factorized-β measurement harness subcommands (Sub-2 of #73, #75)     *)
+(*
+   The engine drives the FROZEN factorized-β experiment. Three
+   deterministic halves + two B3-control halves, each git-style
+   external-subcommand style (mirrors consistency-spread / witness-medoid),
+   all pure-core-in-library / thin-binary:
+
+     factorized-beta-inventory  — emit the pre-witness inventory artifact +
+                                   the bounded adjudication prompt for a target.
+     factorized-beta-target     — ingest k witness responses -> validate ->
+                                   per-sample β_factorized -> β Coh_consistency
+                                   (barrier reused) -> A3 agreement -> per-target
+                                   measurement record.
+     factorized-beta-gate       — read the per-target measurements + B1/B2/B3
+                                   flags -> A/B/C gate -> terminal
+                                   PASS | FAIL | NO-DECISION token.
+     factorized-beta-controls-prompt / -check
+                                — the B3 discrimination controls: emit the
+                                  adjudication prompt over the labeled controls,
+                                  then check witness verdicts against the frozen
+                                  oracle labels (+ the typed-fixture gate).
+
+   The α/γ scalar path (Prompt / Response_schema / the scalar subcommands)
+   is untouched; this is a separate β-adjudication surface. *)
+
+let () =
+  if Array.length Sys.argv >= 2 && Sys.argv.(1) = "factorized-beta-inventory" then begin
+    let n = Array.length Sys.argv in
+    let target = ref "" and registry = ref "targets/registry.tsc"
+    and root = ref "." and output = ref ".tsc/fb" in
+    let rec eat i =
+      if i >= n then ()
+      else match Sys.argv.(i) with
+        | "--target"   when i + 1 < n -> target := Sys.argv.(i + 1); eat (i + 2)
+        | "--registry" when i + 1 < n -> registry := Sys.argv.(i + 1); eat (i + 2)
+        | "--root"     when i + 1 < n -> root := Sys.argv.(i + 1); eat (i + 2)
+        | "--output"   when i + 1 < n -> output := Sys.argv.(i + 1); eat (i + 2)
+        | _ -> eat (i + 1)
+    in
+    eat 2;
+    if !target = "" then begin
+      prerr_endline
+        "usage: coh factorized-beta-inventory --target <t> [--registry <r>] \
+         [--root <dir>] [--output <dir>]";
+      exit 2
+    end;
+    let bundle =
+      build_bundle_from_target ~root:!root
+        ~registry_path:(Filename.concat !root !registry)
+        ~target_name:!target
+    in
+    let loci = Factorized_beta.inventory bundle.bundle_files in
+    let inv_json = Factorized_beta.inventory_to_json ~target:!target loci in
+    let prompt = Factorized_beta.adjudication_instruction loci in
+    let inv_path =
+      Filename.concat !output (Printf.sprintf "inventory/%s.json" !target) in
+    let prompt_path =
+      Filename.concat !output (Printf.sprintf "prompt/%s.md" !target) in
+    write_file inv_path (Yojson.Safe.pretty_to_string inv_json);
+    write_file prompt_path prompt;
+    let eligible =
+      List.length
+        (List.filter (fun (l : Factorized_beta.locus) ->
+           l.Factorized_beta.mechanical_status = Factorized_beta.Resolved) loci)
+    in
+    Printf.printf
+      "factorized-β inventory: %s N=%d E=%d locus_sparse=%b\n  %s\n  %s\n"
+      !target (List.length loci) eligible (eligible < 5) inv_path prompt_path;
+    exit 0
+  end
+
+let () =
+  if Array.length Sys.argv >= 2 && Sys.argv.(1) = "factorized-beta-target" then begin
+    let n = Array.length Sys.argv in
+    let target = ref "" and registry = ref "targets/registry.tsc"
+    and root = ref "." and output = ref ".tsc/fb"
+    and declared = ref 3 and baseline = ref "" and responses = ref [] in
+    let rec eat i =
+      if i >= n then ()
+      else match Sys.argv.(i) with
+        | "--target"    when i + 1 < n -> target := Sys.argv.(i + 1); eat (i + 2)
+        | "--registry"  when i + 1 < n -> registry := Sys.argv.(i + 1); eat (i + 2)
+        | "--root"      when i + 1 < n -> root := Sys.argv.(i + 1); eat (i + 2)
+        | "--output"    when i + 1 < n -> output := Sys.argv.(i + 1); eat (i + 2)
+        | "--declared"  when i + 1 < n ->
+          declared := (try int_of_string Sys.argv.(i + 1) with _ -> 3); eat (i + 2)
+        | "--baseline-beta-coh" when i + 1 < n ->
+          baseline := Sys.argv.(i + 1); eat (i + 2)
+        | "--response"  when i + 1 < n ->
+          responses := Sys.argv.(i + 1) :: !responses; eat (i + 2)
+        | _ -> eat (i + 1)
+    in
+    eat 2;
+    let responses = List.rev !responses in
+    if !target = "" then begin
+      prerr_endline
+        "usage: coh factorized-beta-target --target <t> [--baseline-beta-coh <f>] \
+         --response <r.json> [--response <r.json>...] [--declared 3] \
+         [--registry <r>] [--root <dir>] [--output <dir>]";
+      exit 2
+    end;
+    let bundle =
+      build_bundle_from_target ~root:!root
+        ~registry_path:(Filename.concat !root !registry)
+        ~target_name:!target
+    in
+    let loci = Factorized_beta.inventory bundle.bundle_files in
+    (* Per response: parse -> validate_sample -> β_factorized. A refused
+       sample is a recorded fact that counts against A0 (refuse, don't
+       skip). *)
+    let validated = ref [] and refused = ref 0 in
+    List.iter (fun rf ->
+      match read_file rf with
+      | Error e -> Printf.eprintf "  refused %s: %s\n%!" rf e; incr refused
+      | Ok raw ->
+        (match (try Ok (Yojson.Safe.from_string raw)
+                with Yojson.Json_error e -> Error e) with
+         | Error e -> Printf.eprintf "  refused %s: bad JSON: %s\n%!" rf e; incr refused
+         | Ok json ->
+           (match Factorized_beta.parse_locus_responses json with
+            | Error e -> Printf.eprintf "  refused %s: %s\n%!" rf e; incr refused
+            | Ok resps ->
+              (match Factorized_beta.validate_sample ~loci ~responses:resps with
+               | Error rs ->
+                 Printf.eprintf "  refused %s: %s\n%!" rf
+                   (String.concat "; "
+                      (List.map Factorized_beta.refusal_to_string rs));
+                 incr refused
+               | Ok verdicts ->
+                 let agg = Factorized_beta.beta_of_verdicts loci verdicts in
+                 validated :=
+                   (verdicts, agg.Factorized_beta.beta_factorized) :: !validated)))
+    ) responses;
+    let validated = List.rev !validated in
+    let betas = List.map snd validated in
+    let samples = List.map fst validated in
+    let eligible_ids =
+      List.filter_map (fun (l : Factorized_beta.locus) ->
+        if l.Factorized_beta.mechanical_status = Factorized_beta.Resolved
+        then Some l.Factorized_beta.locus_id else None) loci
+    in
+    let eligible = List.length eligible_ids in
+    let beta_coh = Factorized_beta_gate.beta_coh_consistency betas in
+    let agreement = Factorized_beta_gate.locus_agreement ~eligible_ids ~samples in
+    let baseline_present = !baseline <> "" in
+    let baseline_coh =
+      if baseline_present then (try float_of_string !baseline with _ -> 0.0)
+      else 0.0
+    in
+    let tm = { Factorized_beta_gate.
+      tm_target = !target;
+      tm_beta_loci = List.length loci;
+      tm_eligible_loci = eligible;
+      tm_locus_sparse = eligible < 5;
+      tm_declared_samples = !declared;
+      tm_validated_samples = List.length validated;
+      tm_refused_samples = !refused;
+      tm_sample_betas = betas;
+      tm_beta_coh = beta_coh;
+      tm_agreement = agreement;
+      tm_baseline_beta_coh = baseline_coh;
+      tm_baseline_present = baseline_present } in
+    let path =
+      Filename.concat !output (Printf.sprintf "measure/%s.json" !target) in
+    write_file path
+      (Yojson.Safe.pretty_to_string
+         (Factorized_beta_gate.target_measure_to_json tm));
+    Printf.printf
+      "factorized-β target %s: N=%d E=%d sparse=%b validated=%d/%d refused=%d \
+       β_coh=%.4f agree=%.4f baseline=%.4f -> %s\n"
+      !target (List.length loci) eligible (eligible < 5)
+      (List.length validated) !declared !refused beta_coh agreement baseline_coh path;
+    exit 0
+  end
+
+let () =
+  if Array.length Sys.argv >= 2 && Sys.argv.(1) = "factorized-beta-gate" then begin
+    let n = Array.length Sys.argv in
+    let measure_dir = ref "" and output = ref ""
+    and kata = ref "" and adm = ref "" and b3 = ref "" and declared = ref 3 in
+    let rec eat i =
+      if i >= n then ()
+      else match Sys.argv.(i) with
+        | "--measure-dir"      when i + 1 < n -> measure_dir := Sys.argv.(i + 1); eat (i + 2)
+        | "--output"           when i + 1 < n -> output := Sys.argv.(i + 1); eat (i + 2)
+        | "--kata-b1"          when i + 1 < n -> kata := Sys.argv.(i + 1); eat (i + 2)
+        | "--admissibility-b2" when i + 1 < n -> adm := Sys.argv.(i + 1); eat (i + 2)
+        | "--b3"               when i + 1 < n -> b3 := Sys.argv.(i + 1); eat (i + 2)
+        | "--declared"         when i + 1 < n ->
+          declared := (try int_of_string Sys.argv.(i + 1) with _ -> 3); eat (i + 2)
+        | _ -> eat (i + 1)
+    in
+    eat 2;
+    if !measure_dir = "" then begin
+      prerr_endline
+        "usage: coh factorized-beta-gate --measure-dir <dir> [--kata-b1 pass|fail] \
+         [--admissibility-b2 pass|fail] [--b3 pass|fail] [--declared 3] \
+         [--output <f>]";
+      exit 2
+    end;
+    let files =
+      (try Array.to_list (Sys.readdir !measure_dir) with Sys_error _ -> [])
+      |> List.filter (fun f -> Filename.check_suffix f ".json")
+      |> List.sort String.compare
+      |> List.map (fun f -> Filename.concat !measure_dir f)
+    in
+    let targets =
+      List.filter_map (fun f ->
+        match read_file f with
+        | Error e -> Printf.eprintf "gate: skip %s: %s\n%!" f e; None
+        | Ok raw ->
+          (match (try Ok (Yojson.Safe.from_string raw)
+                  with Yojson.Json_error e -> Error e) with
+           | Error e -> Printf.eprintf "gate: skip %s: %s\n%!" f e; None
+           | Ok j ->
+             (match Factorized_beta_gate.target_measure_of_json j with
+              | Ok tm -> Some tm
+              | Error e -> Printf.eprintf "gate: skip %s: %s\n%!" f e; None)))
+        files
+    in
+    let flag s =
+      let s = String.lowercase_ascii s in
+      s = "pass" || s = "passed" || s = "true"
+    in
+    let gi = { Factorized_beta_gate.
+      gi_targets = targets;
+      gi_kata_b1 = flag !kata;
+      gi_admissibility_b2 = flag !adm;
+      gi_b3 = flag !b3;
+      gi_a1_floor = Factorized_beta_gate.default_a1_floor;
+      gi_a2_margin = Factorized_beta_gate.default_a2_margin;
+      gi_a3_floor = Factorized_beta_gate.default_a3_floor;
+      gi_declared = !declared } in
+    let gr = Factorized_beta_gate.evaluate_gate gi in
+    let summary = Factorized_beta_gate.gate_result_to_json gr in
+    let out =
+      if !output <> "" then !output
+      else Filename.concat !measure_dir "gate-summary.json" in
+    write_file out (Yojson.Safe.pretty_to_string summary);
+    List.iter (fun (c : Factorized_beta_gate.check) ->
+      Printf.printf "  [%s] %s — %s\n"
+        (if c.Factorized_beta_gate.chk_passed then "PASS" else "MISS")
+        c.Factorized_beta_gate.chk_id c.Factorized_beta_gate.chk_detail)
+      gr.Factorized_beta_gate.gr_checks;
+    Printf.printf
+      "targets scored: %d; locus_sparse: %d; summary artifact: %s\n"
+      (List.length gr.Factorized_beta_gate.gr_scored)
+      gr.Factorized_beta_gate.gr_sparse_count out;
+    (* The single terminal token on its own final line — CI reads this. *)
+    print_endline
+      (Factorized_beta_gate.string_of_verdict_token
+         gr.Factorized_beta_gate.gr_verdict);
+    exit 0
+  end
+
+let () =
+  if Array.length Sys.argv >= 2 && Sys.argv.(1) = "factorized-beta-controls-prompt" then begin
+    let n = Array.length Sys.argv in
+    let fixtures =
+      ref "docs/beta/governance/fixtures/factorized-beta-controls.json"
+    and output = ref "" in
+    let rec eat i =
+      if i >= n then ()
+      else match Sys.argv.(i) with
+        | "--fixtures" when i + 1 < n -> fixtures := Sys.argv.(i + 1); eat (i + 2)
+        | "--output"   when i + 1 < n -> output := Sys.argv.(i + 1); eat (i + 2)
+        | _ -> eat (i + 1)
+    in
+    eat 2;
+    let raw = match read_file !fixtures with
+      | Ok r -> r | Error e -> Printf.eprintf "%s\n" e; exit 2 in
+    let json = try Yojson.Safe.from_string raw
+      with Yojson.Json_error e -> Printf.eprintf "bad fixture JSON: %s\n" e; exit 2 in
+    (match Factorized_beta_gate.controls_prompt json with
+     | Error e -> Printf.eprintf "controls-prompt: %s\n" e; exit 2
+     | Ok prompt ->
+       if !output <> "" then begin
+         write_file !output prompt;
+         Printf.printf "controls prompt -> %s\n" !output
+       end else print_string prompt);
+    exit 0
+  end
+
+let () =
+  if Array.length Sys.argv >= 2 && Sys.argv.(1) = "factorized-beta-controls-check" then begin
+    let n = Array.length Sys.argv in
+    let fixtures =
+      ref "docs/beta/governance/fixtures/factorized-beta-controls.json"
+    and response = ref "" and output = ref "" in
+    let rec eat i =
+      if i >= n then ()
+      else match Sys.argv.(i) with
+        | "--fixtures" when i + 1 < n -> fixtures := Sys.argv.(i + 1); eat (i + 2)
+        | "--response" when i + 1 < n -> response := Sys.argv.(i + 1); eat (i + 2)
+        | "--output"   when i + 1 < n -> output := Sys.argv.(i + 1); eat (i + 2)
+        | _ -> eat (i + 1)
+    in
+    eat 2;
+    if !response = "" then begin
+      prerr_endline
+        "usage: coh factorized-beta-controls-check --response <r.json> \
+         [--fixtures <f>] [--output <f>]";
+      exit 2
+    end;
+    let fraw = match read_file !fixtures with
+      | Ok r -> r | Error e -> Printf.eprintf "%s\n" e; exit 2 in
+    let fjson = try Yojson.Safe.from_string fraw
+      with Yojson.Json_error e -> Printf.eprintf "bad fixture JSON: %s\n" e; exit 2 in
+    let rraw = match read_file !response with
+      | Ok r -> r | Error e -> Printf.eprintf "%s\n" e; exit 2 in
+    let rjson = try Yojson.Safe.from_string rraw
+      with Yojson.Json_error e -> Printf.eprintf "bad response JSON: %s\n" e; exit 2 in
+    (match Factorized_beta_gate.controls_check
+             ~fixtures_json:fjson ~responses_json:rjson with
+     | Error e -> Printf.eprintf "controls-check: %s\n" e; exit 2
+     | Ok b3 ->
+       if !output <> "" then
+         write_file !output
+           (Yojson.Safe.pretty_to_string
+              (Factorized_beta_gate.b3_result_to_json b3));
+       Printf.printf
+         "B3 controls: called=%d agreements=%d typed_ok=%b -> %s\n"
+         b3.Factorized_beta_gate.b3_total b3.Factorized_beta_gate.b3_agreements
+         b3.Factorized_beta_gate.b3_typed_ok
+         (if b3.Factorized_beta_gate.b3_passed then "pass" else "fail");
+       (* Terminal token for the CI B3 step. *)
+       print_endline (if b3.Factorized_beta_gate.b3_passed then "pass" else "fail"));
+    exit 0
+  end
+
+(* ------------------------------------------------------------------ *)
 (* Witness validation-failure artifact (cycle/51 AC2; review round 2)  *)
 (*
    Every refused witness response — parse failure, base-schema failure,
