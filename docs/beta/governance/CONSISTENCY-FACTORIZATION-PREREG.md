@@ -1,10 +1,10 @@
 # Pre-registration: consistency by task factorization (the freedom seam)
 
 Date: 2026-07-05
-Revision: 3 (operator review 2026-07-05 rev 2 → REQUEST CHANGES;
-`repeated_fact` cut, B3 fixture manifest committed, A3 made
-formula-exact, locus-sparsity given a pre-witness inventory + a
-NO-DECISION guard)
+Revision: 4 (operator review 2026-07-05 rev 3 → REQUEST CHANGES;
+fixture pretty-printed + jq-provable, expected_verdict typed,
+deterministic locus enumerators added per kind, target_file_fit aligned
+to the real filename/H1 signal, A0-vs-sparsity table made exact)
 Status: PRE-REGISTRATION — awaiting operator review of the revised gate.
 No code, instrument, engine, runtime, or workflow change is authorized
 by this note.
@@ -96,9 +96,9 @@ enumerator cannot be invented after seeing target behaviour:
 
 | `kind`               | mechanical anchor (β config)                          |
 |----------------------|-------------------------------------------------------|
-| `citation_bears_claim` | `cross_reference_consistency` + `source_of_truth_alignment` (internal link + anchor resolution) |
-| `authority_claim`      | `authority_alignment` (authority self-claim detection) |
-| `target_file_fit`      | `target_file_fit` (target declaration / H1 vs content) |
+| `citation_bears_claim` | `cross_reference_consistency` + `source_of_truth_alignment` (internal Markdown link + anchor resolution) |
+| `authority_claim`      | `authority_alignment` (self-claim phrase detection: `"is authoritative"`, `"is the source of truth"`, `"this is canonical"`, …) |
+| `target_file_fit`      | `target_file_fit` (H1 heading words vs filename stem — NOT manifest parsing) |
 
 **`repeated_fact` is OUT of scope for this experiment (F1).** There is
 no deterministic repeated-fact extractor in `mechanical_scoring.ml`
@@ -118,13 +118,17 @@ extractor.
   "target_path": "spec/tsc-core.md",
   "target_span": "line/section cite of the cited target",
   "question": "Does the cited target support the claim the source makes about it?",
-  "mechanical_status": "resolved | unresolved | ambiguous"
+  "mechanical_status": "resolved | unresolved"
 }
 ```
 
 `unresolved` = the mechanical link/anchor does not resolve (a broken
-reference the engine already detects; scored without an LLM call).
-`ambiguous` / `resolved` = present; the LLM judges semantic bearing.
+reference the engine already detects; scored `d=1.0` without an LLM
+call). `resolved` = the site resolves to a readable document target; the
+LLM judges semantic bearing. There is no third bucket — a link that
+resolves to a non-document (directory or non-`.md`) is simply not
+enumerated as a locus (see enumerators), so `mechanical_status` is
+exactly two-valued.
 
 ## LLM locus-response schema
 
@@ -141,6 +145,73 @@ verdict, mandatory evidence:
 }
 ```
 
+## β locus enumerators — deterministic, locked before code
+
+The enumerator is the anti-freedom core: it fixes *which* loci exist, so
+the implementer cannot choose the locus set. Each rule is faithful to
+the named mechanical signal; no rule invents a surface the engine does
+not already compute. Loci are emitted in a canonical order (below) and
+`locus_id` is assigned by that order, so the set is reproducible.
+
+**`citation_bears_claim`** — anchored on `cross_reference_consistency` /
+`source_of_truth_alignment`.
+- **One locus per internal Markdown link** extracted from document files
+  by the existing `extract_md_links` + `normalize_link` rules (the same
+  links `cross_reference_consistency` scores). External links (`http`,
+  mailto) are not loci.
+- `source_path` = the linking document. `source_span` = the full
+  Markdown line containing the link.
+- `target_path` = the resolved link path. `target_span`: if the link
+  carries a `#fragment` resolving to a heading (via `doc_slug_map`), the
+  target heading line through the next heading of equal-or-higher level;
+  if it resolves to a document with no fragment, the target H1 plus its
+  first paragraph.
+- A link that resolves to a **non-document** (a directory, or a
+  non-`.md` file) has no readable `target_span` for a "does the target
+  support this claim" question and is therefore **not enumerated as a
+  locus** at all — not scored, not counted. This keeps
+  `mechanical_status` two-valued and removes the fuzzy middle bucket.
+- `mechanical_status`: **`unresolved`** if `link_resolves` is false
+  (path or anchor does not resolve) — scored `d=1.0`, **no LLM call**;
+  else **`resolved`** (targets a document fragment/H1; the LLM judges
+  bearing).
+
+**`authority_claim`** — anchored on `authority_alignment`.
+- **One locus per authority self-claim phrase occurrence that carries an
+  inline Markdown link** in the same sentence. The phrase set is exactly
+  `authority_alignment`'s (`"is authoritative"`, `"is the source of
+  truth"`, the `"this is/document is/file is/spec is canonical"`
+  variants), matched over `strip_emphasis` content. **A self-claim with
+  no inline link emits no locus** — with no linked surface there is no
+  two-sided site to adjudicate, and inventing one is exactly the freedom
+  this experiment removes.
+- `source_path` = the claiming document. `source_span` = the sentence
+  (or line) containing the self-claim phrase and its link.
+- `target_path` = the linked surface. `target_span` = that surface's H1
+  plus first paragraph (or the anchored section, same rule as
+  `citation_bears_claim`).
+- `mechanical_status`: `unresolved` if the inline link does not resolve
+  (`d=1.0`, no LLM); else `resolved` (LLM judges whether the linked
+  target bears out the claimed authority relationship).
+
+**`target_file_fit`** — anchored on `target_file_fit` (the real signal:
+H1 words vs filename stem).
+- **One locus per document that has an H1.** This is a one-sided,
+  same-file locus: it compares the file's own identity to its own H1.
+- `source_path` = `target_path` = the document. `source_span` = the
+  filename stem (or, for `readme`/`skill` basenames, the parent
+  directory words — the existing convention). `target_span` = the H1
+  heading line.
+- `mechanical_status`: always `resolved` (both the stem and an H1 are
+  present by construction; the mechanical overlap is the proxy, the LLM
+  judges whether the H1 names the same subject as the file's identity).
+  Documents with no H1 emit no locus.
+
+Order: loci are emitted per document in file order of the bundle, then
+within a document by source line number, `citation_bears_claim` then
+`authority_claim` then `target_file_fit`. `locus_id` = `beta.<kind
+short>.<zero-padded ordinal>`.
+
 ## Aggregation formula — locked before code
 
 **Locus inventory (deterministic, pre-witness).** For target T the
@@ -148,8 +219,8 @@ engine enumerates its β loci BEFORE any witness call and uploads the
 inventory artifact (cited in the close-out). Define:
 
 - **N(T)** = all enumerated β loci.
-- **E(T)** = LLM-eligible loci = `mechanical_status ∈ {resolved,
-  ambiguous}` (the sites where the seam is actually exercised).
+- **E(T)** = LLM-eligible loci = `mechanical_status = resolved` (the
+  sites where the seam is actually exercised — an LLM call is made).
 
 Per-locus **defect weight** `d`:
 
@@ -184,8 +255,9 @@ clamped to [0,1]. Degenerate / malformed handling (declared):
   trivially 1.0 and must not count as a seam pass. Sparsity is
   determined by the pre-witness inventory artifact, never discovered
   after LLM results. A `locus_sparse` target is **excluded from
-  A1/A2/A3** and reported as observation; it is still counted in A0
-  yield if any witness call is made.
+  A1/A2/A3** and reported as observation; its A0 applicability follows
+  the A0 table (`E=0` → not_applicable, no calls; `0<E<5` → A0 must
+  pass).
 - **missing / duplicate locus answer**: the SAMPLE is refused by the
   funnel (malformed → not scored, matching the engine's "refuse, don't
   skip" contract). A refused sample counts against yield (A0).
@@ -203,9 +275,21 @@ Two-sided; both sides must pass, per target.
 
 ### A — consistency objective
 
-- **A0. Full yield.** `declared_samples == validated_samples == 3` on
-  every held-out target; every sample answers every required `locus_id`
-  exactly once.
+- **A0. Full yield.** Yield applicability is fixed by the pre-witness
+  inventory (the LLM-eligible count `E(T)`), so it cannot shift with
+  results:
+
+  | `E(T)` (pre-witness) | LLM calls | A0            | A1/A2/A3        |
+  |----------------------|-----------|---------------|-----------------|
+  | `E = 0`              | none      | not_applicable | excluded (sparse) |
+  | `0 < E < 5`          | k=3       | must pass     | excluded (sparse) |
+  | `E ≥ 5`              | k=3       | must pass     | all apply        |
+
+  Where A0 applies it requires `declared_samples == validated_samples ==
+  3` and every sample answers every required `resolved` `locus_id`
+  exactly once (missing/duplicate → sample refused, per Aggregation).
+  The NO-DECISION guard (C4) still fires if more than one held-out
+  target is `locus_sparse`.
 - **A1. β consistency floor.** per-target β
   `Coh_consistency_max_pairwise ≥ 0.90` on every non-`locus_sparse`
   held-out target.
@@ -245,7 +329,18 @@ Two-sided; both sides must pass, per target.
   implementation PR except to fix a syntax error caught before any
   measurement run) must pass. Each fixture carries: `id`, `kind`,
   `source_text`, `target_text`, `source_path`, `target_path`,
-  `mechanical_status`, `expected_verdict`, `required_evidence_sides`.
+  `mechanical_status`, `expected_verdict`, `required_evidence_sides`,
+  `llm_called`. Typed fixture rules (checked before any run):
+  - the file parses: `jq -e . docs/beta/governance/fixtures/factorized-beta-controls.json`;
+  - `kind ∈ {citation_bears_claim, authority_claim, target_file_fit}`;
+  - `expected_verdict ∈ {supports, contradicts, insufficient, unresolved}`;
+  - `expected_verdict = unresolved` **iff** `mechanical_status =
+    unresolved`, and such a fixture has `llm_called = false` (no LLM
+    call);
+  - every LLM-called fixture (`llm_called = true`) has `expected_verdict
+    ∈ {supports, contradicts, insufficient}`;
+  - every `contradicts` fixture has `required_evidence_sides =
+    ["source","target"]`.
   Required: **all hard controls pass while n < 20**; once **n ≥ 20**,
   **≥ 95% label agreement**; **every negative verdict cites both source
   and target evidence** (`required_evidence_sides` honored).
