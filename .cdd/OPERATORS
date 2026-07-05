@@ -1,6 +1,8 @@
 # CDD Operator Registry
-# Columns: handle | identity-email | role-scopes-permitted | added-cycle
+# Columns: handle | identity-email | role-scopes-permitted | added-cycle | notification-access
+# (notification-access per cdd/activation/SKILL.md §19; `none` until the operator
+#  sets a real channel invite. tsc is a non-cnos tenant → {role}@tsc.cdd.cnos form.)
 #
-alpha    | alpha@tsc.cdd.cnos    | alpha               | 0
-beta     | beta@tsc.cdd.cnos     | beta                | 0
-gamma    | gamma@tsc.cdd.cnos    | gamma               | 0
+alpha    | alpha@tsc.cdd.cnos    | alpha               | 0    | none
+beta     | beta@tsc.cdd.cnos     | beta                | 0    | none
+gamma    | gamma@tsc.cdd.cnos    | gamma               | 0    | none

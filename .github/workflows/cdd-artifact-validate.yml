@@ -1,0 +1,50 @@
+# cdd-artifact-validate.yml — CDD artifact presence + skill-bundle integrity
+#
+# Brought in at the cnos 3.82.0 activation refresh (cdd/activation/SKILL.md §9
+# Layer 1 + §16). Adapted from
+# cnos:src/packages/cnos.cdd/skills/cdd/activation/templates/github-actions/cdd-artifact-validate.yml
+# (cnos SHA fd1d654e8d6361f0db2a6407f19e573a96d1054d).
+#
+# artifact-validate: on every push to cycle/* and main, runs
+#   scripts/validate-release-gate.sh to verify required CDD lifecycle artifacts
+#   are present in .cdd/unreleased/. Fails with a named error if absent.
+# skill-bundle-integrity: verifies the vendored .cdd/skills/ tree matches its
+#   committed manifest (no drift from the pinned cnos SHA).
+
+name: CDD Artifact Validate
+
+on:
+  push:
+    branches:
+      - 'cycle/**'
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  artifact-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check validate-release-gate.sh exists
+        run: |
+          if [[ ! -f "scripts/validate-release-gate.sh" ]]; then
+            echo "ERROR: validate-release-gate.sh not found at scripts/validate-release-gate.sh" >&2
+            exit 1
+          fi
+          echo "scripts/validate-release-gate.sh found"
+
+      - name: Validate CDD artifact presence (pre-merge gate)
+        env:
+          VALIDATE_MODE: pre-merge
+        run: bash scripts/validate-release-gate.sh --mode "$VALIDATE_MODE"
+
+  skill-bundle-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify vendored CDD skill bundle matches manifest (§16)
+        run: bash scripts/verify-skill-bundle.sh
