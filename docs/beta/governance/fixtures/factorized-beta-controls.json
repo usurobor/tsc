@@ -1,0 +1,103 @@
+{
+  "kind": "factorized_beta_control_fixtures",
+  "schema_version": "1",
+  "note": "B3 discrimination gate for CONSISTENCY-FACTORIZATION-PREREG.md. Frozen before implementation; may not be edited in the implementation PR except to fix a syntax error caught before any measurement run. Snippets are synthetic; the expected_verdict labels are the reviewable oracle. Allowed kinds only: citation_bears_claim, authority_claim, target_file_fit. mechanical_status=unresolved fixtures take no LLM call (engine-determined). required_evidence_sides lists the citation sides a valid verdict must carry; every negative (contradicts) verdict must carry both.",
+  "controls": [
+    {
+      "id": "ctrl.citation.supports.01",
+      "kind": "citation_bears_claim",
+      "hard": true,
+      "source_path": "README.md",
+      "target_path": "spec/core.md",
+      "source_text": "The composite is the geometric mean of the three axes (see spec/core.md#composite).",
+      "target_text": "## Composite\nC_sigma is defined as the geometric mean (alpha * beta * gamma)^(1/3).",
+      "mechanical_status": "resolved",
+      "expected_verdict": "supports",
+      "required_evidence_sides": ["source", "target"]
+    },
+    {
+      "id": "ctrl.citation.contradicts.01",
+      "kind": "citation_bears_claim",
+      "hard": true,
+      "source_path": "README.md",
+      "target_path": "spec/core.md",
+      "source_text": "The composite is the arithmetic mean of the three axes (see spec/core.md#composite).",
+      "target_text": "## Composite\nC_sigma is defined as the geometric mean (alpha * beta * gamma)^(1/3); it is explicitly NOT an average.",
+      "mechanical_status": "resolved",
+      "expected_verdict": "contradicts",
+      "required_evidence_sides": ["source", "target"]
+    },
+    {
+      "id": "ctrl.citation.insufficient.01",
+      "kind": "citation_bears_claim",
+      "hard": true,
+      "source_path": "README.md",
+      "target_path": "spec/core.md",
+      "source_text": "The composite uses epsilon-flooring with the standard tolerance (see spec/core.md#composite).",
+      "target_text": "## Composite\nC_sigma is the geometric mean of the three axes.",
+      "mechanical_status": "resolved",
+      "expected_verdict": "insufficient",
+      "required_evidence_sides": ["source"]
+    },
+    {
+      "id": "ctrl.citation.unresolved.01",
+      "kind": "citation_bears_claim",
+      "hard": true,
+      "source_path": "README.md",
+      "target_path": "spec/core.md",
+      "source_text": "The verdict logic is specified in spec/core.md#verdict-logic.",
+      "target_text": "## Composite\n(no section named 'verdict-logic' exists in this target)",
+      "mechanical_status": "unresolved",
+      "expected_verdict": "unresolved",
+      "required_evidence_sides": []
+    },
+    {
+      "id": "ctrl.authority.supports.01",
+      "kind": "authority_claim",
+      "hard": true,
+      "source_path": "README.md",
+      "target_path": "skills/self-measure/SKILL.md",
+      "source_text": "The self-measure skill is the authority for what 'self' means; the engine only renders it.",
+      "target_text": "This skill is the authority: its frontmatter is validated and rendered into the coh-self command.",
+      "mechanical_status": "resolved",
+      "expected_verdict": "supports",
+      "required_evidence_sides": ["source", "target"]
+    },
+    {
+      "id": "ctrl.authority.contradicts.01",
+      "kind": "authority_claim",
+      "hard": true,
+      "source_path": "README.md",
+      "target_path": "runtime/SELF-MEASURE.md",
+      "source_text": "runtime/SELF-MEASURE.md is generated output; the skill is its only source of truth.",
+      "target_text": "This file is the canonical, hand-authored source of the witness contract and owns its own versioning.",
+      "mechanical_status": "resolved",
+      "expected_verdict": "contradicts",
+      "required_evidence_sides": ["source", "target"]
+    },
+    {
+      "id": "ctrl.targetfit.supports.01",
+      "kind": "target_file_fit",
+      "hard": true,
+      "source_path": "targets/spec.tsc",
+      "target_path": "spec/tsc-core.md",
+      "source_text": "target spec declares surface = spec/tsc-core.md (TSC Core theory).",
+      "target_text": "# TSC Core\nThe canonical theory of the triadic composite.",
+      "mechanical_status": "resolved",
+      "expected_verdict": "supports",
+      "required_evidence_sides": ["source", "target"]
+    },
+    {
+      "id": "ctrl.targetfit.contradicts.01",
+      "kind": "target_file_fit",
+      "hard": true,
+      "source_path": "targets/spec.tsc",
+      "target_path": "spec/tsc-core.md",
+      "source_text": "target spec declares surface = spec/tsc-core.md (TSC Core theory).",
+      "target_text": "# Release Checklist\nSteps for cutting a tag and updating the ledger.",
+      "mechanical_status": "resolved",
+      "expected_verdict": "contradicts",
+      "required_evidence_sides": ["source", "target"]
+    }
+  ]
+}
