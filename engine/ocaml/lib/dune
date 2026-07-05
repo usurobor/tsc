@@ -11,6 +11,7 @@
   report
   types
   mechanical_scoring
+  factorized_beta
   hybrid_scoring
   coherence
   consistency
