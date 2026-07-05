@@ -121,10 +121,13 @@ val validate_sample :
 (** {1 JSON serialization} *)
 
 val locus_to_json : ?target:string -> locus -> Yojson.Safe.t
+(** One locus as JSON, optionally tagged with its target (AC2 fields). *)
+
 val inventory_to_json : target:string -> locus list -> Yojson.Safe.t
 (** The pre-witness inventory artifact (AC2 fields: target, locus_id, kind,
     source_path, source_span, target_path, target_span, mechanical_status,
     llm_called). *)
+
 val aggregate_to_json : beta_aggregate -> Yojson.Safe.t
 
 (** {1 Adjudication prompt surface} *)
