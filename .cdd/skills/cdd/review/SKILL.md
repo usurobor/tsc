@@ -1,0 +1,303 @@
+---
+name: review
+description: Orchestrate β review in phases — contract integrity, then implementation, then verdict. Each phase loads its own sub-skill.
+artifact_class: skill
+kata_surface: external
+governing_question: Is the branch coherent enough to merge, or what specific incoherence must be named and fixed?
+visibility: internal
+parent: cdd
+triggers:
+  - review
+  - pr
+  - approve
+  - request changes
+scope: task-local
+inputs:
+  - branch
+  - issue
+  - diff
+  - .cdd/unreleased/{N}/ artifacts
+outputs:
+  - beta-review.md
+requires:
+  - β completed intake and skill loading
+  - canonical CDD.md loaded
+calls:
+  - review/contract/SKILL.md
+  - review/issue-contract/SKILL.md
+  - review/diff-context/SKILL.md
+  - review/architecture/SKILL.md
+calls_dynamic:
+  - source: project design constraints
+kata_ref: src/packages/cnos.cdd.kata/katas/M2-review/
+---
+
+# Review — Orchestrator
+
+## Core Principle
+
+A review is a witnessed judgment, not a rubber stamp. The reviewer owes the same honesty discipline as the implementer: name what is wrong, trace it to evidence, and state what must change.
+
+```text
+Review = tri(contract truth, implementation/projection evidence, witnessed verdict)
+```
+
+The review proceeds in three phases. **Each phase loads its own sub-skill.** Do not attempt all phases from memory — the sub-skills contain the detail.
+
+---
+
+## Phases
+
+### Phase 1: Contract integrity
+
+**Load:** `review/contract/SKILL.md`
+
+Before reading the diff for implementation correctness, verify that the work contract (issue + PR body + branch summary) is internally consistent, truthful about status, and non-contradictory.
+
+Complete the Contract Integrity table. If any row is "no," the review cannot approve unless the row is explicitly out of scope and the reviewer names why.
+
+### Phase 2: Implementation review
+
+Phase 2 runs three sub-skills sequentially. Load each in order:
+
+1. **`review/issue-contract/SKILL.md`** — issue contract walk (AC coverage, named doc updates, CDD artifact contract, active skill consistency)
+2. **`review/diff-context/SKILL.md`** — diff and context inspection (structural closure, multi-format parity, snapshot consistency, stale paths, authority conflicts, architecture leverage, design constraints)
+3. **`review/architecture/SKILL.md`** — architecture and design check (7 questions A–G; load `cnos.core/skills/design/SKILL.md` when active)
+
+Walk the issue contract (ACs, named docs, CDD artifacts). Read the diff and its neighbors. Apply mechanical scans, architecture checks, and evidence-bound findings.
+
+### Phase 3: Verdict
+
+Return to this file for verdict rules and output format.
+
+---
+
+## Verdict Rules
+
+3.1. **Every claim traces to evidence**
+  - No "seems wrong." Point to a line, commit, file, artifact, or behavior.
+
+3.2. **Name the severity**
+  - D — blocker, demonstrable incoherence
+  - C — significant incoherence, non-blocking
+  - B — improvement opportunity
+  - A — polish
+
+3.3. **All findings must be resolved before merge**
+  - **APPROVED is a conjunction:** `APPROVED` means (a) all issue ACs are met **and** (b) zero findings at any severity remain unresolved. A verdict with unresolved C, B, or A findings is internally contradictory — the Severity table declares all of C/B/A "not merge-ready until fixed." APPROVED+unresolved-finding is not a valid verdict form.
+  - There is no "approved with follow-up."
+  - D findings block merge. C/B/A findings must be fixed on-branch before merge.
+  - Only exception: finding requires a design decision outside issue scope → "deferred by design scope," author files issue before merge.
+
+3.4. **Verdict before details**
+  - Lead with APPROVED / REQUEST CHANGES.
+
+3.4a. **Verdict-shape lint**
+
+  Three invalid verdict shapes — each auto-RC:
+
+  - **`APPROVED` + unresolved findings at any severity** — contradicts 3.3 (all D/C/B/A must be fixed on-branch).
+  - **`APPROVED` + conditional qualifier** — `conditional`, `pending`, `modulo`, `subject to`, `assuming`, `provisional on`, `with follow-up` smuggle in an unresolved finding 3.3 forbids.
+  - **Split verdicts** — two terminal verdicts in one round (e.g. `APPROVED` for scope X, `REQUEST CHANGES` for scope Y). One round, one decision.
+
+  **Recovery**: any conditional or split shape becomes `REQUEST CHANGES`; each named condition is reformatted as a required-fix finding at its severity. The reviewer re-emits a single terminal verdict in the next round once findings clear.
+
+  *Derives from: tsc #53 β@S4 — "APPROVED with 3 unresolved C findings + conditional language." Rules 3.3/3.4 banned the shape implicitly; no explicit lint enumerated the conditional qualifiers or the split-verdict form.*
+
+3.5. **No phantom blockers**
+  - Only block on incoherence you can demonstrate.
+
+3.6. **Approve when coherent, not when perfect**
+  - The bar is coherence, not taste.
+
+3.7. **Close the search space on approval**
+  - Approval explicitly states that no remaining blocker was found in the relevant contract.
+
+3.8. **Evidence depth matches claim strength**
+  - structural claim → unit/schema proof may suffice
+  - runtime behavior claim → path/integration proof required
+  - operator contract claim → output/projection/state artifact required
+
+3.9. **Specify regression pairs for D-level findings**
+  - Every D-level finding includes positive case + negative case.
+
+3.10. **CI-green gate (binding)**
+  - β must verify required CI/build checks are green on review SHA before emitting verdict APPROVED.
+  - Run `gh run list --branch <review-SHA> --json status,conclusion,workflow_name` (or equivalent) and verify every *required* workflow has `conclusion == "success"`.
+  - If any required workflow is red/pending/missing on review SHA → verdict is RC, finding B-severity, classification `ci-status`.
+  - Document the check in `beta-review.md` §CI status: one-line citation of run + conclusion.
+  - Required workflows determined by GitHub branch protection rules; fallback to "every workflow that runs on cycle branch" if no protection rules configured.
+
+3.11. **Merge instruction is explicit**
+  - Names the exact branch and merge action with `Closes #N` in the merge commit.
+
+3.11b. **γ artifact completeness gate (binding)**
+  - β must verify `.cdd/unreleased/{N}/gamma-scaffold.md` exists on the cycle branch before emitting verdict APPROVED.
+  - If gamma-scaffold.md is missing → verdict is RC, finding D-severity, classification `protocol-compliance`.
+  - **Rationale**: Prevents protocol bypass where δ dispatches α→β directly without γ coordination. Missing γ artifacts indicate the cycle did not follow the canonical triadic protocol (`cnos.cds/skills/cds/CDS.md` §"Field 6: Actor collapse rule").
+  - **Scope**: This gate applies to all cycles except explicit protocol exemptions.
+  - **Exemption discoverability**: An exemption satisfies 3.11b only if it appears in one of the following auditable surfaces:
+    - **(i) Sub-issue body (canonical §5.1 dispatch)** — the body of the cycle's own issue, or the body of any issue γ links from the dispatch prompt as authority for the cycle. A comment on a parent / master / tracking issue does NOT satisfy exemption discoverability on this path: β reviews the sub-issue β was dispatched against, not the parent tree, and master comments are not part of the cycle's load surface. *Derives from: tsc #49 F2 — four β subagents diverged on a cycle where the exemption lived as a parent-issue comment; β@S1 read 3.11b literally (D-severity RC), β@S2/S3/S4 accepted the master comment (B non-blocker). The rule did not specify which issue body counts, so divergence was structural, not careless.*
+    - **(ii) Wave manifest under §5.2 wave-mode** — for any cycle running as a sub of a wave under `operator/SKILL.md` §5.2 wave-mode (γ=δ collapse permitted; per `cnos.cds/skills/cds/CDS.md` §"Field 6: Actor collapse rule" with γ-coordinator and δ-operator fused), the canonical γ-artifact-of-record is the wave manifest at `.cdd/waves/{wave-id}/manifest.md` plus the wave status (per `operator/SKILL.md` §10.2). β recognizes the wave manifest as discharging the same γ-artifact-of-record duty `.cdd/unreleased/{N}/gamma-scaffold.md` discharges under §5.1 — provided the **discoverability link** from sub-issue to wave manifest is itself auditable: either (a) the sub-issue body cites the wave by id (e.g. names `.cdd/waves/{wave-id}/manifest.md` or the wave title in `## Wave` / `## Source` / `## Related` prose), OR (b) the master tracking issue named by the wave manifest links to the sub-issue (e.g. via GitHub sub-issue relations, a wave-tracking comment thread, or an explicit `Issues:` table in the manifest itself naming the sub). When (a) or (b) holds, the wave manifest's `γ = δ permitted` declaration (or equivalent wave-mode exemption text), pinned file-paths forward-reference contract, standing permissions, and timeout budgets satisfy the γ-artifact-of-record duty for every sub of that wave. *Derives from: cph cdr-refactor wave 2026-05-18 (master `usurobor/cph#11`; subs `cph#12, #13, #14, #15`) — four-of-four sub-uniform §5.2 configuration with zero per-sub `gamma-scaffold.md`; β produced three distinct substantive-read justifications across the four subs (`cph#12 beta-review.md §3.11b L133–158`: wave-manifest-as-γ-artifact; `cph#13 §Contract Integrity row 11`: sub-issue-body exemption line; `cph#14 §2.5 L187–195`: cph-canonical-model three-part justification; `cph#15 §2.0.0 row L29`: uniform §5.2 wave-exempt). Three distinct β reads of the same wave-uniform configuration is a discoverability gap, not a β skill issue. `cph#15` β-closeout L55 names the patch axis explicitly; wave-iteration F1 at `usurobor/cph:.cdd/iterations/wave-2026-05-18.md` consolidates the pattern.*
+  - **Recovery paths when 3.11b RC fires**: either (a) γ (or δ-as-γ) authors the missing `.cdd/unreleased/{N}/gamma-scaffold.md` on the cycle branch before β re-dispatch, OR (b) γ amends the sub-issue body to add an explicit `## Protocol exemption` section naming the reason (e.g. emergency patch, infrastructure-only change with operator override) and β re-dispatches against the amended body, OR (c) under §5.2 wave-mode, γ ensures the wave manifest at `.cdd/waves/{wave-id}/manifest.md` exists with a wave-mode exemption declaration AND establishes the sub-issue ↔ wave-manifest discoverability link per (ii) above. Path (a) is canonical for §5.1 dispatch; path (b) is the escape valve for cycles that legitimately bypass γ scaffolding; path (c) is canonical for §5.2 wave-mode dispatch and does not require per-sub scaffolds.
+  - Document the check in `beta-review.md` §Artifact completeness: citation of gamma-scaffold.md presence/absence under §5.1, OR — under §5.2 wave-mode — citation of the wave manifest path AND the discoverability-link surface (sub-issue body wave-id cite OR master-tracking-issue link to sub); if a 3.11b exemption is claimed via sub-issue body §Protocol exemption section, cite that section.
+
+3.12. **Review divergence is a skill gap**
+  - When two reviewers diverge, the fix is a patch to the review skill, not "be more careful."
+
+3.13. **Honest-claim verification**
+
+  Documents claim things; β verifies the claims are backed by code, data, or canonical source. Three sub-checks, all binding:
+
+  - **(a) Reproducibility** — Every measurement quoted in a doc must be reproducible from artifacts in this commit. If the doc says "engine output = 0.83", the run that produced 0.83 must be runnable from the diff with provenance attached. A measurement with no reproduction path is a D-level finding.
+  - **(b) Source-of-truth alignment** — Every term used in a non-spec doc must trace to its canonical definition. Drift between informal and normative usage is a D-level finding (e.g. "W2 spread" used inconsistently with `cnos.cdd/skills/.../W2` spec definition).
+  - **(c) Wiring claims** — If a module documents "X is wired into Y", β grep-checks that X actually appears in Y's call graph. A doc lying about wiring is the most expensive class of bug to find late, because consumers trust the doc and stop reading the code.
+  - **(d) Gap claims** — γ peer-enumeration rule applies symmetrically to α honest-claim verification. When β finds an existing surface that the cycle's §Gap claimed didn't exist, the finding is binding (B-severity minimum) and attributes to γ axis, not α. Gap-side claims ("X does not exist") must be backed by grep-evidence per `gamma/SKILL.md` §2.2a peer-enumeration discipline.
+
+  Failure mode this rule catches: α produces a narrative document (release note, self-coherence report, post-release assessment, runtime spec) whose prose is internally consistent but whose claims are not backed by what the cycle actually shipped. The supercycle in cnos-tsc surfaced this pattern across multiple cycles — three of four findings on the v3.2.0 self-coherence report cycle were honest-claim violations (undeclared artifact, score discrepancy, missing provenance attachment).
+
+---
+
+## Finding Taxonomy
+
+| Type | Definition | Examples |
+|------|-----------|----------|
+| **mechanical** | Caught by grep/diff/script | stale path, wrong branch name, broken link |
+| **judgment** | Requires design/coherence assessment | missing AC, authority conflict, design trade-off |
+| **contract** | Work contract is incoherent | issue contradiction, PR overclaim, draft-as-current, exception contradicts hard gate, proof plan missing |
+| **honest-claim** | Doc claims something code/data doesn't back (rule 3.13) | non-reproducible measurement, term used inconsistently with spec, wiring claim that grep disproves |
+
+Contract and honest-claim findings may overlap with mechanical or judgment — tag both when applicable.
+
+Mechanical findings reaching review are **process bugs**. If >20% of findings in a cycle are mechanical, file a process issue.
+
+---
+
+## Severity
+
+| Sev | Meaning | Merge readiness |
+|-----|---------|-----------------|
+| D | Demonstrable incoherence | not merge-ready |
+| C | Real incoherence, locally non-blocking | not merge-ready until fixed |
+| B | Improvement opportunity | not merge-ready until fixed |
+| A | Polish | not merge-ready until fixed |
+
+---
+
+## Output Format
+
+Written to `.cdd/unreleased/{N}/beta-review.md` **incrementally**. Each review pass (contract, implementation, verdict) is a separate commit+push to the cycle branch. Do not write the entire review in one generation — stream timeouts will discard partial work.
+
+**Incremental write discipline:**
+1. Write each pass as a separate operation (§2.0.0 Contract → §2.1 Implementation → Verdict)
+2. Commit and push after each pass
+3. If resuming after a failure, read what exists on the branch and continue from the last committed pass
+
+Each round appends a new section.
+
+```markdown
+**Verdict:** APPROVED / REQUEST CHANGES
+
+**Round:** N
+**Fixed this round:** {commit hashes} closes {prior findings}
+**Branch CI state:** green / provisional
+**Merge instruction:** `git merge {branch}` into main with `Closes #{issue}`
+
+## §2.0.0 Contract Integrity
+
+| Check | Result | Notes |
+|---|---|---|
+| Status truth preserved | yes / no / n/a | |
+| Canonical sources/paths verified | yes / no / n/a | |
+| Scope/non-goals consistent | yes / no / n/a | |
+| Constraint strata consistent | yes / no / n/a | |
+| Exceptions field-specific/reasoned | yes / no / n/a | |
+| Path resolution base explicit | yes / no / n/a | |
+| Proof shape adequate | yes / no / n/a | |
+| Cross-surface projections updated | yes / no / n/a | |
+| No witness theater / false closure | yes / no / n/a | |
+| PR body matches branch files | yes / no / n/a | |
+| γ artifacts present (gamma-scaffold.md) | yes / no / n/a | rule 3.11b compliance |
+
+## §2.0 Issue Contract
+
+### AC Coverage
+| # | AC | In diff? | Status | Notes |
+|---|----|----------|--------|-------|
+
+### Named Doc Updates
+| Doc / File | In diff? | Status | Notes |
+|------------|----------|--------|-------|
+
+### CDD Artifact Contract
+| Artifact | Required? | Present? | Notes |
+|----------|-----------|----------|-------|
+
+### Active Skill Consistency
+| Skill | Required by | Loaded? | Applied? | Notes |
+|-------|-------------|---------|----------|-------|
+
+## Findings
+
+| # | Finding | Evidence | Severity | Type |
+|---|---------|----------|----------|------|
+
+## Regressions Required (D-level only)
+
+## Notes
+```
+
+---
+
+## Checklist
+
+Before submitting a review:
+
+- [ ] Phase 1 (contract integrity) completed before Phase 2
+- [ ] §2.0.0 Contract integrity table filled
+- [ ] Status truth checked: shipped/current/draft/planned/non-goal not conflated
+- [ ] Source-of-truth paths resolve and match canonical docs
+- [ ] Issue/PR examples obey their own rules
+- [ ] Hard gates do not appear in exception examples
+- [ ] Path resolution base verified where paths are validated
+- [ ] Proof plan includes oracle, positive, negative where required
+- [ ] New CI/check/status surfaces update operator-visible projections
+- [ ] PR body matches corrected branch files
+- [ ] No witness theater: structure backed by rejection mechanism or honest caveat
+- [ ] Every issue AC verified (met, partial, missing, deferred)
+- [ ] Required named docs/files checked
+- [ ] CDD artifacts exist and are internally consistent
+- [ ] Mechanical diff scan: duplicates, branch names, snapshot plausibility
+- [ ] Every claim traces to evidence
+- [ ] Honest-claim verification (3.13a): every quoted measurement reproducible from this commit
+- [ ] Honest-claim verification (3.13b): every term used in a non-spec doc traces to canonical source
+- [ ] Honest-claim verification (3.13c): every wiring claim grep-verified
+- [ ] Severity assigned to every finding
+- [ ] Type assigned to every finding (mechanical / judgment / contract / honest-claim)
+- [ ] D-level findings include regression test pairs
+- [ ] CI/build checks green on review SHA (binding gate per rule 3.10)
+- [ ] Approval explicitly closes the search space
+- [ ] Merge instruction names branch and merge action
+- [ ] Verdict stated first
+- [ ] Verdict-shape lint passed (no `APPROVED` + unresolved findings; no conditional qualifier; no split verdict) per rule 3.4a
+
+---
+
+## After Review
+
+- **Approved:** β merges branch into main with `Closes #N`, pushes, proceeds to release per `release/SKILL.md`.
+- **Changes requested:** α fixes on branch, appends to `self-coherence.md`; β narrows on next round.
+
+### Review identity
+
+β uses a different git identity than α — different role names in the email local part. The canonical form is `{role}@{project}.cdd.cnos` (or the cnos elision `{role}@cdd.cnos`); see `operator/SKILL.md` §Git identity for role actors for the full prescription, rationale, and worked examples. The role separation is git-observable. The two-level form from cycle #287 is deprecated as of cycle #343.
+
+---
+
+## External kata
+
+Practice and evaluation for this review skill live in:
+
+`src/packages/cnos.cdd.kata/katas/M2-review/`
+
+That kata exercises the contract-integrity preflight, implementation review, architecture check, finding taxonomy, active-skill consistency, and evidence-depth rules. The frontmatter `kata_ref` field above carries the same path for machine-readable linkage.
