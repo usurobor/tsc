@@ -1,0 +1,122 @@
+{
+  "kind": "factorized_beta_control_fixtures",
+  "schema_version": "2",
+  "note": [
+    "B3 discrimination gate for CONSISTENCY-FACTORIZATION-PREREG.md.",
+    "Frozen before implementation; may not be edited in the implementation PR",
+    "except to fix a syntax error caught before any measurement run.",
+    "Snippets are synthetic; the expected_verdict labels are the reviewable oracle.",
+    "Allowed kinds only: citation_bears_claim, authority_claim, target_file_fit,",
+    "each constructed by the deterministic enumerator declared in the prereg.",
+    "expected_verdict is one of supports|contradicts|insufficient|unresolved;",
+    "unresolved is allowed iff mechanical_status = unresolved, and such a fixture",
+    "takes NO LLM call. required_evidence_sides lists the citation sides a valid",
+    "verdict must carry; every contradicts verdict must carry both sides."
+  ],
+  "controls": [
+    {
+      "id": "ctrl.citation.supports.01",
+      "kind": "citation_bears_claim",
+      "hard": true,
+      "llm_called": true,
+      "source_path": "README.md",
+      "target_path": "spec/core.md",
+      "source_text": "The composite is the geometric mean of the three axes ([composite](spec/core.md#composite)).",
+      "target_text": "## Composite\nC_sigma is defined as the geometric mean (alpha * beta * gamma)^(1/3).",
+      "mechanical_status": "resolved",
+      "expected_verdict": "supports",
+      "required_evidence_sides": ["source", "target"]
+    },
+    {
+      "id": "ctrl.citation.contradicts.01",
+      "kind": "citation_bears_claim",
+      "hard": true,
+      "llm_called": true,
+      "source_path": "README.md",
+      "target_path": "spec/core.md",
+      "source_text": "The composite is the arithmetic mean of the three axes ([composite](spec/core.md#composite)).",
+      "target_text": "## Composite\nC_sigma is the geometric mean (alpha * beta * gamma)^(1/3); it is explicitly NOT an average.",
+      "mechanical_status": "resolved",
+      "expected_verdict": "contradicts",
+      "required_evidence_sides": ["source", "target"]
+    },
+    {
+      "id": "ctrl.citation.insufficient.01",
+      "kind": "citation_bears_claim",
+      "hard": true,
+      "llm_called": true,
+      "source_path": "README.md",
+      "target_path": "spec/core.md",
+      "source_text": "The composite uses epsilon-flooring with the standard tolerance ([composite](spec/core.md#composite)).",
+      "target_text": "## Composite\nC_sigma is the geometric mean of the three axes.",
+      "mechanical_status": "resolved",
+      "expected_verdict": "insufficient",
+      "required_evidence_sides": ["source"]
+    },
+    {
+      "id": "ctrl.citation.unresolved.01",
+      "kind": "citation_bears_claim",
+      "hard": true,
+      "llm_called": false,
+      "source_path": "README.md",
+      "target_path": "spec/core.md",
+      "source_text": "The verdict logic is specified in [verdict logic](spec/core.md#verdict-logic).",
+      "target_text": "## Composite\n(no heading slug 'verdict-logic' exists in this target)",
+      "mechanical_status": "unresolved",
+      "expected_verdict": "unresolved",
+      "required_evidence_sides": []
+    },
+    {
+      "id": "ctrl.authority.supports.01",
+      "kind": "authority_claim",
+      "hard": true,
+      "llm_called": true,
+      "source_path": "README.md",
+      "target_path": "skills/self-measure/SKILL.md",
+      "source_text": "The self-measure skill [is authoritative](skills/self-measure/SKILL.md) for what 'self' means; this overview only summarizes it.",
+      "target_text": "This skill is the authority: its frontmatter is validated and rendered into the coh-self command.",
+      "mechanical_status": "resolved",
+      "expected_verdict": "supports",
+      "required_evidence_sides": ["source", "target"]
+    },
+    {
+      "id": "ctrl.authority.contradicts.01",
+      "kind": "authority_claim",
+      "hard": true,
+      "llm_called": true,
+      "source_path": "README.md",
+      "target_path": "runtime/SELF-MEASURE.md",
+      "source_text": "This overview is the source of truth for the witness contract ([contract](runtime/SELF-MEASURE.md)).",
+      "target_text": "This file is the canonical, hand-authored source of the witness contract and owns its own versioning.",
+      "mechanical_status": "resolved",
+      "expected_verdict": "contradicts",
+      "required_evidence_sides": ["source", "target"]
+    },
+    {
+      "id": "ctrl.targetfit.supports.01",
+      "kind": "target_file_fit",
+      "hard": true,
+      "llm_called": true,
+      "source_path": "spec/tsc-core.md",
+      "target_path": "spec/tsc-core.md",
+      "source_text": "filename stem: tsc-core",
+      "target_text": "# TSC Core",
+      "mechanical_status": "resolved",
+      "expected_verdict": "supports",
+      "required_evidence_sides": ["source", "target"]
+    },
+    {
+      "id": "ctrl.targetfit.contradicts.01",
+      "kind": "target_file_fit",
+      "hard": true,
+      "llm_called": true,
+      "source_path": "spec/tsc-core.md",
+      "target_path": "spec/tsc-core.md",
+      "source_text": "filename stem: tsc-core",
+      "target_text": "# Release Checklist",
+      "mechanical_status": "resolved",
+      "expected_verdict": "contradicts",
+      "required_evidence_sides": ["source", "target"]
+    }
+  ]
+}
