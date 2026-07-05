@@ -1,0 +1,32 @@
+# one-off-labels.yml — one-off: create the six CDD activation labels.
+# Fires on push to this throwaway branch (dispatch is unavailable to session
+# creds). Remove after use by deleting the chore/one-off-labels branch — the
+# workflow never reaches main.
+name: one-off-create-cdd-labels
+
+on:
+  push:
+    branches: ['chore/one-off-labels']
+
+permissions:
+  issues: write
+
+jobs:
+  labels:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create CDD labels (idempotent, --force upserts)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mk() { gh label create "$1" --color "$2" --description "$3" --force; }
+          mk cdd 0075ca "Applied to every issue that runs a CDD cycle"
+          mk mca e4e669 "Multi-cycle architecture — issues spanning >=2 cycles"
+          mk P0  d73a4a "Critical priority"
+          mk P1  e99695 "High priority"
+          mk P2  f9d0c4 "Medium priority"
+          mk P3  fef2c0 "Low / informational"
+          echo "=== labels now present ==="
+          gh label list
