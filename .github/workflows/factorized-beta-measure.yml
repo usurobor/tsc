@@ -15,16 +15,15 @@
 name: factorized-beta-measure
 
 on:
+  # Manual only. This is a single-shot, terminal pre-registered experiment
+  # (a FAIL/NO-DECISION is terminal absent a fresh operator dispatch) — NOT a
+  # per-commit check and NOT a per-release gate. Run it deliberately from the
+  # Actions tab or `gh workflow run factorized-beta-measure.yml --ref <branch>`.
+  # The every-engine-push auto-run was retired (operator directive 2026-07-05)
+  # to avoid ~15 credentialed witness calls per OCaml push. If β-factorized
+  # ever graduates to a standing release gate, wire `on: release: [published]`
+  # then — not the every-push trigger.
   workflow_dispatch:
-  push:
-    branches:
-      - '**'
-    paths:
-      - 'engine/ocaml/**'
-      - 'docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md'
-      - 'docs/beta/governance/fixtures/factorized-beta-controls.json'
-      - 'scripts/factorized-beta-measure.sh'
-      - '.github/workflows/factorized-beta-measure.yml'
 
 permissions:
   contents: read
