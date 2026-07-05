@@ -64,9 +64,14 @@ type verdict_token = Pass | Fail | No_decision
 val string_of_verdict_token : verdict_token -> string
 (** ["PASS"] | ["FAIL"] | ["NO-DECISION"]. *)
 
-val default_a1_floor : float   (** 0.90 *)
-val default_a2_margin : float  (** 0.10 *)
-val default_a3_floor : float   (** 0.90 *)
+(** A1 β-consistency floor (0.90). *)
+val default_a1_floor : float
+
+(** A2 improvement margin over the free-witness baseline (0.10). *)
+val default_a2_margin : float
+
+(** A3 locus-verdict agreement floor (0.90). *)
+val default_a3_floor : float
 
 type gate_input = {
   gi_targets          : target_measure list;
