@@ -1,0 +1,142 @@
+# fixtures/preregs/valid/factorized-beta.yaml
+#
+# The consistency-by-task-factorization prereg
+# (docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md rev-4) typed
+# as a first-class compile object. Round-trip fixture: it MUST validate
+# against schemas/prereg.cue.
+#
+# status: failed — the experiment was measured 2026-07-05 and recorded a
+# TERMINAL FAIL. It is typed here only as a fixture; its FAIL is unchanged
+# and NOT re-run. This proves the schema can express a real executed prereg
+# including its terminal verdict and post-result rule.
+#
+# Validate:  cue vet -d '#Prereg' schemas/prereg.cue fixtures/preregs/valid/factorized-beta.yaml
+
+id: consistency-factorization-beta
+title: "Consistency by task factorization (the freedom seam)"
+axis: beta
+status: failed
+
+human_intent:
+  claim: >-
+    Deterministic locus enumeration plus mechanical counting/aggregation
+    reduces witness β variance while preserving semantic discrimination.
+  why_it_matters: >-
+    Witness β variance undermines the meter's standing as an instrument;
+    an instrument that cannot agree with itself is incoherent as an
+    instrument.
+
+hypothesis:
+  variance_source: >-
+    Unbounded locus selection/counting and scalar aggregation inside the
+    witness task — not reporting structure, and not primarily discovery
+    overlap (a source not already falsified by v3.2.3/v3.2.4).
+  intervention: >-
+    Remove the scalar judgment from the LLM: the engine enumerates the β
+    loci, the LLM adjudicates each resolved locus with a bounded
+    evidence-anchored verdict, and the engine counts/aggregates the
+    verdicts into β by a pre-registered formula.
+
+factorization:
+  inventory_owner: engine
+  judgment_owner: llm
+  aggregation_owner: engine
+  loci:
+    - kind: citation_bears_claim
+      enumerator: >-
+        One locus per internal Markdown link (extract_md_links +
+        normalize_link), anchored on cross_reference_consistency /
+        source_of_truth_alignment. External links emit no locus; a link to
+        a non-document is not enumerated.
+      source_span: "the full Markdown line containing the link"
+      target_span: >-
+        the anchored heading section (via doc_slug_map) or, with no
+        fragment, the target H1 plus its first paragraph
+    - kind: authority_claim
+      enumerator: >-
+        One locus per authority self-claim phrase occurrence carrying an
+        inline Markdown link in the same sentence, anchored on
+        authority_alignment. A self-claim with no inline link emits no
+        locus.
+      source_span: "the sentence containing the self-claim phrase and its link"
+      target_span: "the linked surface's H1 plus first paragraph (or anchored section)"
+    - kind: target_file_fit
+      enumerator: >-
+        One locus per document that has an H1, anchored on target_file_fit
+        (H1 words vs filename stem). One-sided, same-file. Documents with
+        no H1 emit no locus.
+      source_span: "the filename stem (or parent-directory words for readme/skill basenames)"
+      target_span: "the H1 heading line"
+
+judgment_contract:
+  allowed_labels:
+    - supports
+    - insufficient
+    - contradicts
+  evidence_required: >-
+    source cite + target cite; both required on a negative (contradicts)
+    verdict. Exactly one response per resolved locus_id.
+  refusal: >-
+    A missing or duplicate locus answer refuses the SAMPLE (malformed ->
+    not scored, per the engine's refuse-don't-skip contract); a refused
+    sample counts against A0 yield.
+
+aggregation:
+  formula: "beta_factorized = 1 - ( sum_i w(kind_i) * d(verdict_i) ) / ( sum_i w(kind_i) ), clamped to [0,1]"
+  label_weights:
+    supports: 0.0
+    insufficient: 0.5
+    contradicts: 1.0
+  kind_weights:
+    citation_bears_claim: 1.0
+    authority_claim: 1.0
+    target_file_fit: 0.5
+
+consistency_gate:
+  samples: 3
+  agreement_floor: 0.90
+  standing_effect: >-
+    Same-route LLM consistency is a standing gate; a per-target β
+    Coh_consistency_max_pairwise below 0.90 publishes without off-diagonal
+    standing. No standing promotion; standing_scope stays
+    house-authored-public-commons.
+
+discrimination_gate:
+  controls: >-
+    docs/beta/governance/fixtures/factorized-beta-controls.json — the
+    frozen B3 labeled β local semantic controls (typed rules + label
+    agreement; every negative verdict cites both source and target).
+
+no_decision:
+  condition: "more than one of the five held-out targets is locus_sparse (E(T) < 5)"
+  consequence: >-
+    Record NO-DECISION (not pass, not fail): the β seam did not have
+    enough surface across the held-out set to be tested; no implementation
+    promotion occurs.
+
+success:
+  all_of:
+    - "A0: full yield — declared == validated == 3 samples on every applicable target"
+    - "A1: per-target beta Coh_consistency_max_pairwise >= 0.90 on every non-sparse target"
+    - "A2: per-target beta >= same-tree free-witness baseline + 0.10 absolute"
+    - "A3: locus-level verdict agreement >= 0.90 on every non-sparse target"
+    - "B1: kata non-regression (glider PASS, random soup FAIL)"
+    - "B2: admissibility matrix unchanged, exit 0"
+    - "B3: beta local semantic controls pass (typed rules + label agreement)"
+
+failure:
+  any_of:
+    - "A0 miss on any scored held-out target"
+    - "A1 miss on any non-sparse held-out target"
+    - "A2 miss on any non-sparse held-out target"
+    - "A3 miss on any non-sparse held-out target"
+    - "B1/B2/B3 discrimination regression"
+
+post_result_rule:
+  on_failure: record_failed_experiment
+  on_success: "may justify a separate gamma pre-registration; does not reset the meter-loop counter"
+  forbidden:
+    - "re-run without a fresh operator dispatch"
+    - "re-tweak the gate and re-measure (no iterate-until-it-passes)"
+    - "cut v3.2.5 on this line"
+    - "reset the meter-loop counter"

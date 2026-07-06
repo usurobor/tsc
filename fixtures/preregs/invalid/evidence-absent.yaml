@@ -1,0 +1,61 @@
+# INVALID — expected reason: judgment evidence requirement absent.
+# `judgment_contract.evidence_required` must be non-empty. An empty
+# requirement means the bounded verdict is not anchored to a citation ->
+# the judgment is not adjudicable. `cue vet` fails: evidence_required is
+# "" which conflicts with `!=""`.
+
+id: evidence-absent-probe
+title: "A probe whose verdict cites nothing"
+axis: beta
+status: proposed
+
+human_intent:
+  claim: "some claim"
+  why_it_matters: "some reason"
+
+hypothesis:
+  variance_source: "unbounded selection"
+  intervention: "engine enumerates; LLM adjudicates"
+
+factorization:
+  inventory_owner: engine
+  judgment_owner: llm
+  aggregation_owner: engine
+  loci:
+    - kind: citation_bears_claim
+      enumerator: "one locus per internal link"
+      source_span: "the linking line"
+      target_span: "the target section"
+
+judgment_contract:
+  allowed_labels: [bears, does_not_bear]
+  evidence_required: ""   # <-- the defect: no evidence anchor required
+  refusal: "missing/duplicate refuses the sample"
+
+aggregation:
+  formula: "beta = 1 - sum(w*d)/sum(w)"
+  label_weights: {bears: 0.0, does_not_bear: 1.0}
+  kind_weights: {citation_bears_claim: 1.0}
+
+consistency_gate:
+  samples: 3
+  agreement_floor: 0.90
+  standing_effect: "a miss publishes without standing"
+
+discrimination_gate:
+  controls: "controls.json"
+
+no_decision:
+  condition: "more than one sparse target"
+  consequence: "record NO-DECISION"
+
+success:
+  all_of: ["floor met"]
+
+failure:
+  any_of: ["floor missed"]
+
+post_result_rule:
+  on_failure: record_failed_experiment
+  on_success: "promote"
+  forbidden: ["re-tune and re-run"]

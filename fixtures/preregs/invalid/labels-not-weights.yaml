@@ -1,0 +1,66 @@
+# INVALID — expected reason: allowed_labels != label_weights keys.
+# allowed_labels = [supports, insufficient, contradicts] but label_weights
+# omits `insufficient` and adds an extra `unresolved`. The engine
+# aggregation cannot weight a label the judgment may emit, and cannot weight
+# a label the judgment may not emit. `cue vet` fails two ways: the forward
+# check (insufficient has no weight -> incomplete) and the reverse check
+# (_extra_labels = ["unresolved"] unified with [] -> length conflict).
+
+id: labels-weights-mismatch-probe
+title: "A probe whose labels and weights disagree"
+axis: beta
+status: proposed
+
+human_intent:
+  claim: "some claim"
+  why_it_matters: "some reason"
+
+hypothesis:
+  variance_source: "unbounded selection"
+  intervention: "engine enumerates; LLM adjudicates"
+
+factorization:
+  inventory_owner: engine
+  judgment_owner: llm
+  aggregation_owner: engine
+  loci:
+    - kind: citation_bears_claim
+      enumerator: "one locus per internal link"
+      source_span: "the linking line"
+      target_span: "the target section"
+
+judgment_contract:
+  allowed_labels: [supports, insufficient, contradicts]
+  evidence_required: "source + target on contradicts"
+  refusal: "missing/duplicate refuses the sample"
+
+aggregation:
+  formula: "beta = 1 - sum(w*d)/sum(w)"
+  label_weights:            # <-- the defect: keys != allowed_labels
+    supports: 0.0
+    contradicts: 1.0
+    unresolved: 1.0
+  kind_weights: {citation_bears_claim: 1.0}
+
+consistency_gate:
+  samples: 3
+  agreement_floor: 0.90
+  standing_effect: "a miss publishes without standing"
+
+discrimination_gate:
+  controls: "controls.json"
+
+no_decision:
+  condition: "more than one sparse target"
+  consequence: "record NO-DECISION"
+
+success:
+  all_of: ["floor met"]
+
+failure:
+  any_of: ["floor missed"]
+
+post_result_rule:
+  on_failure: record_failed_experiment
+  on_success: "promote"
+  forbidden: ["re-tune and re-run"]

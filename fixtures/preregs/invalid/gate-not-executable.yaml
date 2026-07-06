@@ -1,0 +1,62 @@
+# INVALID — expected reason: consistency gate not executable.
+# `consistency_gate.agreement_floor` is omitted, so the gate has no numeric
+# threshold to compare against — it cannot be evaluated by a command or an
+# explicit numeric comparison (the prereg's own rejection mechanism). Also,
+# a gate with samples < 2 cannot produce a spread. `cue vet` fails:
+# agreement_floor not present.
+
+id: gate-not-executable-probe
+title: "A probe whose consistency gate has no threshold"
+axis: beta
+status: proposed
+
+human_intent:
+  claim: "some claim"
+  why_it_matters: "some reason"
+
+hypothesis:
+  variance_source: "unbounded selection"
+  intervention: "engine enumerates; LLM adjudicates"
+
+factorization:
+  inventory_owner: engine
+  judgment_owner: llm
+  aggregation_owner: engine
+  loci:
+    - kind: citation_bears_claim
+      enumerator: "one locus per internal link"
+      source_span: "the linking line"
+      target_span: "the target section"
+
+judgment_contract:
+  allowed_labels: [bears, does_not_bear]
+  evidence_required: "source + target on does_not_bear"
+  refusal: "missing/duplicate refuses the sample"
+
+aggregation:
+  formula: "beta = 1 - sum(w*d)/sum(w)"
+  label_weights: {bears: 0.0, does_not_bear: 1.0}
+  kind_weights: {citation_bears_claim: 1.0}
+
+consistency_gate:
+  samples: 3
+  # agreement_floor: OMITTED   <-- the defect: no numeric threshold
+  standing_effect: "a miss publishes without standing"
+
+discrimination_gate:
+  controls: "controls.json"
+
+no_decision:
+  condition: "more than one sparse target"
+  consequence: "record NO-DECISION"
+
+success:
+  all_of: ["floor met"]
+
+failure:
+  any_of: ["floor missed"]
+
+post_result_rule:
+  on_failure: record_failed_experiment
+  on_success: "promote"
+  forbidden: ["re-tune and re-run"]

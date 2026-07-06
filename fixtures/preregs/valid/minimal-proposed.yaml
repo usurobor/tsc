@@ -1,0 +1,75 @@
+# fixtures/preregs/valid/minimal-proposed.yaml
+#
+# A minimal, still-executable prereg in `proposed` status. Demonstrates
+# that #Prereg validates a contract before it is run — every required
+# stage is declared, the label vocabulary matches the weight keys, and all
+# three factorization owners are named. Two labels (not three) to show the
+# label<->weight match is enforced by set, not by count.
+#
+# Validate:  cue vet -d '#Prereg' schemas/prereg.cue fixtures/preregs/valid/minimal-proposed.yaml
+
+id: link-bearing-binary
+title: "Binary link-bearing adjudication (probe)"
+axis: beta
+status: proposed
+
+human_intent:
+  claim: "A two-label bearing verdict is enough to gate broken internal citations."
+  why_it_matters: "Broken citations degrade the corpus faster than nuanced ones."
+
+hypothesis:
+  variance_source: "unbounded selection of which citations to inspect"
+  intervention: "engine enumerates every internal link; LLM gives a binary bearing verdict"
+
+factorization:
+  inventory_owner: engine
+  judgment_owner: llm
+  aggregation_owner: engine
+  loci:
+    - kind: citation_bears_claim
+      enumerator: "one locus per internal Markdown link (extract_md_links + normalize_link)"
+      source_span: "the Markdown line containing the link"
+      target_span: "the resolved target's anchored section or H1 paragraph"
+
+judgment_contract:
+  allowed_labels:
+    - bears
+    - does_not_bear
+  evidence_required: "source cite + target cite on every does_not_bear verdict"
+  refusal: "missing or duplicate locus answer refuses the sample"
+
+aggregation:
+  formula: "beta = 1 - ( sum_i w * d ) / ( sum_i w )"
+  label_weights:
+    bears: 0.0
+    does_not_bear: 1.0
+  kind_weights:
+    citation_bears_claim: 1.0
+
+consistency_gate:
+  samples: 3
+  agreement_floor: 0.90
+  standing_effect: "a miss publishes without off-diagonal standing"
+
+discrimination_gate:
+  controls: "fixtures/preregs/controls/link-bearing.json (labeled bearing oracle)"
+
+no_decision:
+  condition: "more than one held-out target has fewer than 5 eligible loci"
+  consequence: "record NO-DECISION; no promotion"
+
+success:
+  all_of:
+    - "consistency floor met on every non-sparse target"
+    - "discrimination controls pass"
+
+failure:
+  any_of:
+    - "consistency floor missed on any non-sparse target"
+    - "discrimination controls regress"
+
+post_result_rule:
+  on_failure: record_failed_experiment
+  on_success: "promote the binary probe to a full prereg"
+  forbidden:
+    - "re-tune the floor and re-measure"
