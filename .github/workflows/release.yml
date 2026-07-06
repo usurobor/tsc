@@ -29,6 +29,16 @@ jobs:
             exit 1
           fi
 
+      - name: Install system depexts (libcurl for ezcurl)
+        # Mirrors ci.yml: pre-install the libcurl depext after refreshing the
+        # apt index and BEFORE setup-ocaml, so opam-depext resolves it as
+        # already-satisfied and never apt-fetches libcurl4-gnutls-dev from a
+        # stale mirror snapshot (the transient 404 that failed the 0.12.0
+        # one-off release publish).
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev pkg-config
+
       - name: Set up OCaml
         uses: ocaml/setup-ocaml@v3
         with:
