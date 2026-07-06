@@ -13,3 +13,5 @@ coherence_report.json
 # .tsc/.env contains LLM credentials — never commit; only the
 # coherence ledger is tracked inside .tsc/
 engine/ocaml/_build/
+# Claude Code local infra (agent worktrees, session state) — never commit
+.claude/
