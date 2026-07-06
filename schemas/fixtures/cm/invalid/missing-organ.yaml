@@ -1,0 +1,34 @@
+# schemas/fixtures/cm/invalid/missing-organ.yaml
+#
+# NEGATIVE fixture for schemas/cm.cue #CMDocument (the AC2 negative
+# oracle: "a CM missing an organ must fail vet"). This stub declares a
+# well-formed version and one α organ but OMITS the remaining required
+# organs/relations/clauses. Because every organ is a REGULAR (non-optional)
+# field in #CMDocument, each omission leaves a non-concrete value and
+# `cue vet` reports an "incomplete value" error naming the missing path.
+#
+#   cue vet -d '#CMDocument' schemas/cm.cue schemas/fixtures/cm/invalid/missing-organ.yaml
+#
+# MUST FAIL. Expected diagnostic substring is in missing-organ.expect.
+
+version: "0.2.0"
+gamma_status: provisional
+
+alpha_parts:
+  purpose:
+    id: purpose
+    axis: alpha
+    evidence: only the purpose organ is present; the other eleven α organs are missing
+    mechanical_checks:
+      - "a Purpose organ is present"
+    failure_modes:
+      - "the rest of the document is absent"
+    actions:
+      - "this fixture is expected to fail vet"
+
+# beta_fit, gamma_evolve, and the remaining alpha_parts organs are
+# deliberately absent — vet must reject.
+migration_rules:
+  - from: "alpha = instrument self-agreement / consistency"
+    to: "Consistency standing axis"
+    interpretable: true

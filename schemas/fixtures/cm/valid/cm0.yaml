@@ -1,0 +1,355 @@
+# schemas/fixtures/cm/valid/cm0.yaml
+#
+# Machine-extraction of the typed H2 blocks in
+# docs/beta/governance/CM0.md, for `cue vet`. MUST stay faithful to that
+# document (CM0.md is canonical; this is its data projection). CI runs:
+#   cue vet -d '#CMDocument' schemas/cm.cue schemas/fixtures/cm/valid/cm0.yaml
+# and it must pass. Removing any organ/relation/clause below makes vet fail
+# (that is the AC2 negative oracle; see invalid/missing-organ.yaml).
+
+version: "0.2.0"
+gamma_status: provisional
+
+alpha_parts:
+  purpose:
+    id: purpose
+    axis: alpha
+    evidence: the document's opening statement of what it measures and the compile-before-measure invariant it enforces
+    mechanical_checks:
+      - "a Purpose organ is present under the alpha Parts H1"
+    semantic_checks:
+      - "the stated purpose is a measurement claim, not a mission statement"
+    failure_modes:
+      - "purpose is a value statement with no measurable referent"
+    actions:
+      - "reject as non-measurable; require a corpus-and-axis purpose"
+  scope:
+    id: scope
+    axis: alpha
+    evidence: the declared corpus and the standing scope the readings can reach
+    mechanical_checks:
+      - "declared corpus paths resolve inside the measured bundle"
+    semantic_checks:
+      - "scope matches purpose"
+    failure_modes:
+      - "scope overreaches beyond its anchor base"
+    actions:
+      - "clamp standing_scope to the declared anchor base"
+  axes:
+    id: axes
+    axis: alpha
+    evidence: the axis set the methodology decomposes coherence into
+    mechanical_checks:
+      - "the three authored H1 axes are present and the Consistency standing axis is named"
+    semantic_checks:
+      - "each axis is distinct; no axis is a silent rename of another"
+    failure_modes:
+      - "an axis is silently redefined across versions"
+    actions:
+      - "require a Migration Rules entry for any axis redefinition"
+  evidence:
+    id: evidence
+    axis: alpha
+    evidence: the mechanical signal inventory and the LLM estimate contract
+    mechanical_checks:
+      - "declared signal codes exist in the engine backend; estimate fields appear in the instruction"
+    semantic_checks:
+      - "every axis has at least one evidence source"
+    failure_modes:
+      - "a declared signal has no implementation"
+    actions:
+      - "fail validation on any signal that does not resolve"
+  preregs:
+    id: preregs
+    axis: alpha
+    evidence: the pre-registration objects the methodology admits
+    mechanical_checks:
+      - "each prereg names its axis and an executable gate with failure/no-decision consequences"
+    semantic_checks:
+      - "the gate exercises the axis it claims"
+    failure_modes:
+      - "a prereg gate can pass without touching its declared axis"
+    actions:
+      - "reject a prereg whose gate does not test its axis"
+  factorization:
+    id: factorization
+    axis: alpha
+    evidence: the enumerate/judge/aggregate owner split for every semantic score
+    mechanical_checks:
+      - "each semantic score declares an enumerate/judge/aggregate owner split"
+    semantic_checks:
+      - "no single actor owns all three roles"
+    failure_modes:
+      - "the LLM enumerates, judges, and aggregates in its head"
+    actions:
+      - "reject or mark draft a CM whose LLM owns all three roles"
+  judgment:
+    id: judgment
+    axis: alpha
+    evidence: the bounded per-call schema the semantic witness answers in
+    mechanical_checks:
+      - "witness output is a bounded label set; a negative verdict cites evidence"
+    semantic_checks:
+      - "the labels are exhaustive and mutually exclusive for the predicate"
+    failure_modes:
+      - "the witness emits a raw scalar"
+    actions:
+      - "refuse a sample whose output is not in the bounded contract"
+  aggregation:
+    id: aggregation
+    axis: alpha
+    evidence: the pre-registered deterministic verdict-to-scalar formula
+    mechanical_checks:
+      - "the map is a declared formula computed by the engine; population aggregation is geometric"
+    semantic_checks:
+      - "the formula preserves the degeneracy axiom"
+    failure_modes:
+      - "aggregation done inside the model"
+    actions:
+      - "move aggregation into the engine after witness validation"
+  consistency:
+    id: consistency
+    axis: alpha
+    evidence: the protocol that tests the methodology repeatedly and measures output agreement
+    mechanical_checks:
+      - "the mechanical arm is exactly reproducible; the LLM arm samples k>=2 times"
+    semantic_checks:
+      - "the repeat spread maps through the canonical barrier"
+    failure_modes:
+      - "a deterministic backend that drifts"
+    actions:
+      - "hard-fail the run on any mechanical divergence"
+  discrimination:
+    id: discrimination
+    axis: alpha
+    evidence: the calibration commons the methodology reproduces
+    mechanical_checks:
+      - "the scorer passes the positive kata and fails the negative kata"
+    semantic_checks:
+      - "the meter separates coherent from incoherent on unseen cases"
+    failure_modes:
+      - "a degenerate flatterer or assassin passes"
+    actions:
+      - "confer no standing on a scorer that cannot read the commons"
+  refusal:
+    id: refusal
+    axis: alpha
+    evidence: the single validation funnel that names every refusal stage
+    mechanical_checks:
+      - "a refusal renders no report and never falls back to mechanical scoring"
+    semantic_checks:
+      - "refusal is distinguishable from semantic uncertainty"
+    failure_modes:
+      - "a malformed response silently scored or skipped"
+    actions:
+      - "refuse, don't skip: preserve the raw response, name the stage"
+  report:
+    id: report
+    axis: alpha
+    evidence: the operator-visible verdict, per-axis breakdown, findings, and clarify-on-disagreement
+    mechanical_checks:
+      - "the report carries a verdict, a per-axis breakdown, and a standing_scope"
+    semantic_checks:
+      - "witness disagreement is surfaced as a reported signal, not hidden wobble"
+    failure_modes:
+      - "the report states a number with no findings or actions"
+    actions:
+      - "route every finding to a recommended action"
+
+beta_fit:
+  purpose-axes:
+    id: purpose-axes
+    axis: beta
+    evidence: the Purpose organ and the Axes organ
+    mechanical_checks:
+      - "every axis named in Axes is motivated by the stated Purpose"
+    semantic_checks:
+      - "the purpose is fully covered by the axes"
+    failure_modes:
+      - "an axis exists that the purpose never asks for"
+    actions:
+      - "drop or motivate an orphan axis"
+  axes-evidence:
+    id: axes-evidence
+    axis: beta
+    evidence: the Axes organ and the Evidence organ
+    mechanical_checks:
+      - "every axis has at least one declared evidence source"
+    semantic_checks:
+      - "the evidence bears on the axis it is assigned to"
+    failure_modes:
+      - "an axis with no evidence"
+    actions:
+      - "reject an evidence-less axis as unmeasurable"
+  evidence-factorization:
+    id: evidence-factorization
+    axis: beta
+    evidence: the Evidence organ and the Factorization organ
+    mechanical_checks:
+      - "every semantic evidence source has a declared enumerate/judge/aggregate split"
+    semantic_checks:
+      - "only semantic evidence is routed to the bounded judge"
+    failure_modes:
+      - "semantic evidence with no factorization"
+    actions:
+      - "require a factorization owner-split for each semantic source"
+  prereg-axis:
+    id: prereg-axis
+    axis: beta
+    evidence: the Preregs organ and the Axes organ
+    mechanical_checks:
+      - "every prereg names an axis that exists in the Axes organ"
+    semantic_checks:
+      - "the prereg's gate exercises the named axis"
+    failure_modes:
+      - "a prereg tests an axis the methodology does not declare"
+    actions:
+      - "reject a prereg whose axis is undeclared"
+  prereg-success-gate:
+    id: prereg-success-gate
+    axis: beta
+    evidence: the Preregs organ and its success/failure/no-decision gates
+    mechanical_checks:
+      - "each prereg declares success, failure, and no-decision consequences, each evaluable"
+    semantic_checks:
+      - "the gate is stricter-to-game than to pass honestly"
+    failure_modes:
+      - "a prereg with a success gate but no failure/no-decision rule"
+    actions:
+      - "require terminal failure and no-decision rules"
+  judgment-aggregation:
+    id: judgment-aggregation
+    axis: beta
+    evidence: the Judgment label set and the Aggregation formula
+    mechanical_checks:
+      - "every judgment label has a defined weight in the aggregation formula"
+    semantic_checks:
+      - "the aggregation preserves the ordering the labels imply"
+    failure_modes:
+      - "a label with no weight"
+    actions:
+      - "map every label to a weight before execution"
+  consistency-standing:
+    id: consistency-standing
+    axis: beta
+    evidence: the Consistency alpha-organ and the Standing-Discipline gamma-clause
+    mechanical_checks:
+      - "a report below the consistency floor carries no off-diagonal standing"
+    semantic_checks:
+      - "standing is off-diagonal, never a self-score"
+    failure_modes:
+      - "a self-score promoted to standing"
+    actions:
+      - "strip standing from any reading below the consistency floor"
+  findings-actions:
+    id: findings-actions
+    axis: beta
+    evidence: the Report organ's critical findings and recommended actions
+    mechanical_checks:
+      - "every critical finding maps to at least one recommended action"
+    semantic_checks:
+      - "the action, if taken, would resolve or contest the finding"
+    failure_modes:
+      - "a finding with no action"
+    actions:
+      - "attach an action to every finding"
+
+gamma_evolve:
+  versioning:
+    id: versioning
+    axis: gamma
+    evidence: the CM document SemVer and its distinction from the repo VERSION
+    mechanical_checks:
+      - "the document declares a SemVer distinct from the repo VERSION; axis changes bump it"
+    semantic_checks:
+      - "the increment matches the magnitude of the change"
+    failure_modes:
+      - "an axis redefinition shipped without a version bump"
+    actions:
+      - "bump the document version on any axis/evidence change"
+  experiment-failed-memory:
+    id: experiment-failed-memory
+    axis: gamma
+    evidence: the durable record of terminal experiments and their re-entry preconditions
+    mechanical_checks:
+      - "each terminal experiment records verdict and measured numbers; names terminality"
+    semantic_checks:
+      - "a new experiment names a variance source not already falsified"
+    failure_modes:
+      - "a falsified line silently re-run"
+    actions:
+      - "hold a re-run until operator dispatch and a non-falsified theory of variance"
+  migration:
+    id: migration
+    axis: gamma
+    evidence: the Migration Rules ledger mapping old readings onto the new decomposition
+    mechanical_checks:
+      - "a Migration Rules entry exists for every axis redefinition and states interpretability"
+    semantic_checks:
+      - "the old-to-new mapping is total; no old reading is orphaned"
+    failure_modes:
+      - "an axis renamed with no migration entry"
+    actions:
+      - "reject an axis change lacking a migration entry"
+  standing-discipline:
+    id: standing-discipline
+    axis: gamma
+    evidence: the standing-scope declaration and its mechanics-only promotion rules
+    mechanical_checks:
+      - "every report carries a standing_scope; scope promotes only when mechanics change"
+    semantic_checks:
+      - "a provisional-gamma CM is still an admissible candidate, not zero"
+    failure_modes:
+      - "standing promoted by prose"
+    actions:
+      - "admit provisional-gamma candidates; mark them provisional, do not reject"
+  change-isolation:
+    id: change-isolation
+    axis: gamma
+    evidence: the canonical-vs-generated boundary that stops silent rewriting of old readings
+    mechanical_checks:
+      - "generated state lives under .tsc/ and is never canonical; rendered surfaces carry DO-NOT-EDIT headers"
+    semantic_checks:
+      - "an old reading is comparable across versions or explicitly marked incomparable"
+    failure_modes:
+      - "an edit to generated state treated as canonical"
+    actions:
+      - "route edits to the canonical source and re-render the surface"
+  governance:
+    id: governance
+    axis: gamma
+    evidence: the authorization boundary between operator dispatch, review, and implementation
+    mechanical_checks:
+      - "instrument/experiment changes require a recorded operator dispatch and a pre-reviewed gate"
+    semantic_checks:
+      - "the authorizer is distinct from the implementer"
+    failure_modes:
+      - "an implementation authorized by drafting the note that proposes it"
+    actions:
+      - "hold implementation for operator review of the prereg"
+  re-entry:
+    id: re-entry
+    axis: gamma
+    evidence: the conditions under which a stopped line may be re-entered
+    mechanical_checks:
+      - "re-entry requires operator dispatch, a non-falsified variance theory, and a pre-reviewed gate"
+    semantic_checks:
+      - "the re-entry does not contradict a prior falsification"
+    failure_modes:
+      - "re-entry by re-tweak without fresh dispatch"
+    actions:
+      - "block re-entry absent all three conditions"
+
+migration_rules:
+  - from: "alpha = instrument self-agreement / consistency"
+    to: "Consistency (standing axis) + the alpha consistency organ"
+    interpretable: true
+    note: "old alpha self-agreement reading re-homed on the Consistency standing axis; the producing part is now the alpha consistency organ"
+  - from: "beta = declaration to implementation fit"
+    to: "beta Fit (organ-to-organ relations)"
+    interpretable: true
+    note: "unchanged meaning; generalized to eight organ relations"
+  - from: "gamma = instrument evolution"
+    to: "gamma Evolve (seven named clauses)"
+    interpretable: true
+    note: "unchanged meaning; expanded into seven clauses"

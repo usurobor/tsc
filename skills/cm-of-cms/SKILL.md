@@ -169,6 +169,27 @@ must resolve inside the bundle it is measured in.
 
 ---
 
+> **Canonical structure lives in [`docs/beta/governance/CM0.md`](../../docs/beta/governance/CM0.md).**
+> That document authors CM0 in its own compiler grammar — `# α — Parts`,
+> `# β — Fit`, `# γ — Evolve`, with each H2 a typed, measurable clause
+> (`schemas/cm.cue #CMDocument`). It is the source of truth for the CM0
+> **axis decomposition and organ set**; this skill remains the DEPLOYED
+> essence — the `#CMOfCMs` frontmatter contract and the operator
+> narrative below (§1–§8), which the renderer and validators consume.
+>
+> **Axis-decomposition reconciliation (no contradiction).** The §1 table
+> below is the pre-migration framing — CM0 **document v0.1.0**, where
+> α = *instrument self-agreement / consistency*. CM0.md **v0.2.0**
+> migrates the decomposition to **α Parts / β Fit / γ Evolve /
+> Consistency (standing)**: consistency moves out of α onto a separate
+> standing axis, while β and γ keep their meaning. The rename is recorded
+> as a versioned γ-migration in CM0.md `## Migration Rules`, and old α
+> readings stay interpretable (re-read as Consistency-standing). Where
+> structure is concerned, CM0.md v0.2.0 governs; §1 is retained as the
+> narrative origin of that reading, not a competing definition.
+
+---
+
 ## 1. What measuring a methodology means
 
 The triad, read against an instrument instead of a document corpus:
