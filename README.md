@@ -4,7 +4,7 @@ TSC defines how a declared methodology may warrant that observations belong to o
 
 The repository currently contains two different surfaces:
 
-- **TSC specification 4.0.0 Draft** — the current theory and conformance contract;
+- **TSC specification 4.0.0 Normative** — the current theory and conformance contract;
 - **`coh` software 0.12.0** — the current repository-proxy engine, which does not implement TSC v4.
 
 Read [`STATUS.md`](STATUS.md) before interpreting any score or report.
@@ -13,7 +13,7 @@ Read [`STATUS.md`](STATUS.md) before interpreting any score or report.
 
 | Path | Role | Authority |
 |---|---|---|
-| [`spec/`](spec/README.md) | Typed articulation, coherence receipts, methodology lifecycle, observation dynamics, conformance | Canonical draft specification |
+| [`spec/`](spec/README.md) | Typed articulation, coherence receipts, methodology lifecycle, observation dynamics, conformance | Canonical normative specification |
 | [`conformance/`](conformance/README.md) | Fixtures implementing specification requirement IDs | Evidence; no standing until verified |
 | [`engine/ocaml/`](engine/ocaml/README.md) | Current `coh` repository-proxy executable | Canonical executable of the proxy methodology, not v4 |
 | [`skills/`](skills/README.md) | Current self-measurement and CM-of-CMs declarations | Authority for existing proxy methodologies |
@@ -59,7 +59,7 @@ See [`QUICKSTART.md`](QUICKSTART.md) for the current executable path.
 
 No implementation currently conforms to TSC v4. The first fixture families are specified under [`conformance/`](conformance/README.md). A specified fixture earns no standing until its generator, oracle, positive case, negative case, and evidence are implemented and verified.
 
-Normative headers remain `Status: Draft` until the ratification gate closes and the ratification-only commit is independently reviewed.
+The normative headers carry `Status: Normative` as of the independently reviewed ratification-only commit; ratification makes the specification authoritative but grants no implementation conformance.
 
 ## Version domains
 

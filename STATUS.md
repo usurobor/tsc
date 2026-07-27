@@ -1,16 +1,16 @@
 # TSC Status
 
 **Software release:** 0.12.0
-**Specification:** 4.0.0 Draft
+**Specification:** 4.0.0 Normative
 **v4 conformance standing:** none
 
 TSC's foundational measurement construct is under revision.
 
 ## Theory
 
-`spec/` contains the draft TSC v4 specification. It defines typed articulation, open generators, candidate-fiber measurement, proof-carrying receipts, methodology authority, observation lineage, and conformance obligations.
+`spec/` contains the normative TSC v4 specification. It defines typed articulation, open generators, candidate-fiber measurement, proof-carrying receipts, methodology authority, observation lineage, and conformance obligations.
 
-The draft is not normative until the ratification gate in `spec/tsc-conformance.md` closes.
+The specification is normative as of the independently reviewed ratification-only commit; the ratification gate is defined in `spec/tsc-conformance.md` §8.
 
 ## Current engine
 
