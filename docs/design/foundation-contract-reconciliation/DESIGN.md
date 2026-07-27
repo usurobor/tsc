@@ -309,16 +309,17 @@ F_M^test(D) = {
 }
 ```
 
-Each applicable fiber supports distinct results:
+The fiber is reported against **two** emptiness facts, because they demand opposite responses — no generator fits at all, versus one fits but exceeds the budget `κ_M`:
 
 ```text
-empty, proved          NO_REALIZATION_IN_MODEL
-multiple classes       UNDERDETERMINED
-one class              IDENTIFIED_IN_MODEL
-not established        UNRESOLVED
+fit-only fiber empty (no G fits at any complexity)   NO_REALIZATION_IN_MODEL
+fit-only nonempty, every fit exceeds κ_M             REALIZABLE_OVER_BUDGET
+multiple classes within budget                       UNDERDETERMINED
+one class within budget                              IDENTIFIED_IN_MODEL
+not established                                       UNRESOLVED
 ```
 
-Identification is indexed by the declared passive and active input family. Training compatibility and held-out support remain separate claims.
+`REALIZABLE_OVER_BUDGET` is a signal to raise `κ_M` or revise the coding, **not** a refutation — a mis-set complexity budget must never read as `NO_REALIZATION_IN_MODEL`, which is precisely the point v4 exists to prevent. Identification is indexed by the declared passive and active input family. Training compatibility and held-out support remain separate claims.
 
 ### 5.5 Structured verification receipts
 
@@ -395,6 +396,10 @@ Approximate composition declares both a path-tolerance calculus and a compatible
 ### I10 · Finality is conditional
 
 A final behavior claim names the category, functor, and existence basis. Otherwise the receipt states its finite or approximate scope.
+
+### I11 · Independence of held-out evidence
+
+Held-out or intervention evidence carries identification or lift weight only if the candidate under test did not produce, select, or leak the query. Endogenous or mixed query modes (§5.2) require an explicitly modeled exogenous channel before any such claim. A candidate that authors its own oracle has not been tested.
 
 ---
 
@@ -484,8 +489,9 @@ Expected result:
 ```text
 SUPPORTED_IN_MODEL
 IDENTIFIED_IN_MODEL
-LIFT_VALIDATED
 ```
+
+If the dynamical (B3/S23) class was declared up front, **nothing lifted**: the static margins were simply insufficient evidence within one model, and the held-out observation *identifies* within it. `LIFT_VALIDATED` is reserved for a registered lift — a preregistered expansion from a strictly static H0 that failed first (Core §6). Listing it as a default here would make it unfalsifiable.
 
 ### 8.3 Law violation with preserved surface statistics
 
@@ -577,6 +583,8 @@ TSC 4.0.0 is a clean replacement of the foundational specification set.
 
 The normative specifications define only the current model. They contain no compatibility layer and no narrative of earlier versions. Git retains prior specifications and their rationale.
 
+**Named exception (engine truthfulness).** The shipping OCaml engine implements spec v3.2.2. So that a running binary cites a resolvable specification rather than a git tag, the v3.2.2 set is preserved in-tree at `spec/archive/3.2.2/`. This is a deliberate, bounded deviation from the rule above — scoped to the archive path, labeled historical, and not part of the normative v4 set.
+
 This design document owns the revision rationale. It does not govern the mathematical definitions once the normative specifications are accepted.
 
 Existing measurements remain historical records of the instruments that produced them. They do not inherit v4 semantics.
@@ -622,6 +630,8 @@ Every normative result schema retains its presentation, atlas, alternatives, con
 `spec/tsc-observation-dynamics.md` records boundary, query ownership, dependence, tolerance, behavioral metric, comparison compatibility, and lift provenance.
 
 **Negative:** a held-out claim produced by the candidate under test fails the independence check unless explicitly modeled.
+
+**Promoted:** this independence requirement is invariant **I11** (§6), not only an acceptance criterion on one file — §5.2's endogenous/mixed query modes make reflexive self-oracling possible in any CM.
 
 ### AC7 · Generated conformance suite
 

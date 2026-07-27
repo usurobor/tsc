@@ -205,6 +205,12 @@ F_M^train(D) := {
 }
 ```
 
+The **fit-only fiber** drops the complexity bound, so that *no generator fits* is distinguishable from *a generator fits but exceeds the budget*:
+
+```text
+F_M^fit(D) := { [G]_≃M | G ∈ H_M, L_M(G,D_train) ≤ τ_M }
+```
+
 The tested candidate fiber is the subset that also satisfies the preregistered oracle without refitting:
 
 ```text
@@ -221,6 +227,8 @@ test_status = NOT_RUN
 ```
 
 and does not treat the training fiber as held-out support.
+
+**Independence of the oracle (I11).** `oracle_M(G,D_test)` carries weight only if `D_test` was not produced, selected, or leaked by the candidate `G` under test. When `query_mode` is endogenous or mixed (C≡ §3.2), a held-out or intervention claim requires an explicitly modeled exogenous channel; a candidate that authors its own oracle has not been tested.
 
 Both fibers are indexed by:
 
@@ -239,13 +247,19 @@ The receipt classifies each applicable fiber as:
 
 ```text
 NO_REALIZATION_IN_MODEL
-  search is complete for the declared bound and the fiber is empty
+  the fit-only fiber F_M^fit is empty under a complete search
+  (no generator fits at any complexity)
+
+REALIZABLE_OVER_BUDGET
+  F_M^fit is nonempty but F_M^train is empty (some generator fits;
+  every fit exceeds κ_M) — a signal to raise κ_M or revise the
+  coding, never a refutation
 
 UNDERDETERMINED
-  two or more inequivalent candidates remain
+  two or more inequivalent candidates remain within budget
 
 IDENTIFIED_IN_MODEL
-  exactly one equivalence class remains
+  exactly one equivalence class remains within budget
 
 UNRESOLVED
   evidence, search, or approximation cannot establish another status

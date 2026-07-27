@@ -1,7 +1,11 @@
 # TSC engine (OCaml)
 
 The canonical implementation of the TSC verifier. The binary is `coh`.
-Theory lives in `spec/` (canonical); this directory implements it.
+
+This engine implements **TSC spec v3.2.2**. Note: `spec/` on `main` is now the
+**v4.0.0** specification (normative, unimplemented — see [`/STATUS.md`](../../STATUS.md));
+the engine does **not** implement v4. The v3.2.2 specification this engine
+implements is preserved in-tree at [`spec/archive/3.2.2/`](../../spec/archive/3.2.2/).
 
 ## Pipeline
 

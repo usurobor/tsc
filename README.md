@@ -1,5 +1,10 @@
 # TSC (Triadic Self-Coherence)
 
+> **Specification v4.0.0 (normative, unimplemented). The shipping engine implements v3.2.2.**
+> The `spec/` tree describes v4, which has **no implementation yet**; the `coh` binary and
+> everything under "Quick start" is the **v3.2.2 engine**. A "spec 4.0.0" on `main` does not
+> mean "TSC 4.0.0 works." See [STATUS.md](STATUS.md).
+
 See [docs/THESIS.md](docs/THESIS.md) for what TSC is.
 
 ## Repo contents
@@ -16,6 +21,9 @@ See [docs/THESIS.md](docs/THESIS.md) for what TSC is.
 - `tests/` — conformance and implementation tests
 
 ## Quick start
+
+These commands drive the **v3.2.2 engine** (the shipping binary), not the v4
+specification — v4 is unimplemented (see [STATUS.md](STATUS.md)).
 
 ```bash
 # Install
@@ -106,9 +114,10 @@ CC-BY-4.0
 @software{tsc2026,
   title   = {TSC: Triadic Self-Coherence Framework},
   author  = {Peter Lisovin},
-  year    = {2026},
-  version = {v0.11.0},
-  url     = {https://github.com/usurobor/tsc}
+  year         = {2026},
+  version      = {0.12.0},
+  spec-version = {4.0.0},
+  url          = {https://github.com/usurobor/tsc}
 }
 ```
 

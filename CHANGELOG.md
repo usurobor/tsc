@@ -4,6 +4,14 @@
 
 The spec lineage (C≡, TSC Core, TSC Operational, TSC Glossary, TSC Observation Dynamics) versions independently from the engine. Spec releases are theory work with no binary deployment; validation is mathematical reproduction and cross-spec consistency.
 
+### Spec v4.0.0 (2026-07-27) — Foundation replacement
+
+**Breaking — changes the referent, not just the formulas.** v4 replaces the scalar-first theory with a receipt-first theory of typed generative articulation. Unlike the v3.2 barrier cutover (which changed how `C_Σ` was *computed*), this changes what `coherence`, `α`, `β`, `γ`, and `C_Σ` **mean**. **Pre-v4 reports are not comparable** and do not inherit v4 semantics.
+
+**Status: normative and unimplemented.** No implementation conforms to v4; the OCaml engine still implements spec v3.2.2 (preserved in-tree at `spec/archive/3.2.2/`). The v4 conformance suite (DESIGN §8) is unbuilt — the §8.6 negative foundation tests are the first executable gate, and they gate *conformance claims*, not this spec merge. See [STATUS.md](../STATUS.md) and `docs/design/foundation-contract-reconciliation/DESIGN.md`.
+
+**Affected:** `spec/{c-equiv,tsc-core,tsc-oper,tsc-observation-dynamics,tsc-glossary}.md` (all → 4.0.0), `spec/README.md` (new index), `docs/design/foundation-contract-reconciliation/DESIGN.md` (rationale), `STATUS.md` (new). v3.2.2 specs archived at `spec/archive/3.2.2/`.
+
 ### Spec v3.2.2 (2026-07-04) — τ_lip Verdict Consistency + Notation-Window Closure
 
 Coherence delta: docs-only patch · **Level:** L6
