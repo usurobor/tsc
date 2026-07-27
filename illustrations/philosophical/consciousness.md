@@ -1,5 +1,8 @@
 # Consciousness — a TSC (Triadic Self‑Coherence) exemplar
 
+> **Status: non-normative illustration.** The observations, expected values, and historical scores below teach a framing only. They are not a TSC v4 conformance result, calibration anchor, or measurement verdict.
+
+
 *Version:* examples v2.1.1 • aligns with **spec/tsc-core.md v2.0.0** and **spec/tsc-oper.md v2.0.0**
 
 > **What this file is.** A **didactic, philosophy‑first** demonstration that treats a conscious event as one phenomenon ≡ articulated triadically as **H (pattern)**, **V (relation)**, **D (process)** and then asks a single question: *do these three articulations describe one coherent event?*\
@@ -127,7 +130,7 @@ tsc:
   cfg:
     Theta: 0.80
   
-  provisional:
+  illustrative_non_normative:
     H_c: 0.92
     V_c: 0.91
     D_c: 0.94
@@ -138,7 +141,6 @@ tsc:
     Z_crit: 0.95
 ```
 
-**Interpretation:** The three articulations tell the **same structural story**: clear phenomenal distinctions (V) align with stronger pattern (H) and with the process‑level dispositions (D). The geometric mean **C_Σ ≈ 0.92** indicates one coherent phenomenon (currently returns ~0.67 due to provisional stubs).
 
 ______________________________________________________________________
 
@@ -262,3 +264,7 @@ ______________________________________________________________________
 ______________________________________________________________________
 
 **Notes (source memory):** The reframing of consciousness as a **coherence question** across H/V/D and the emphasis that low alignment is a *measurement property* rather than a metaphysical chasm, plus the advice to increase measurement bandwidth to test the gap, were articulated earlier in our shared notes. The triadic, S₃‑invariant treatment and philosophy anchors were also part of that converged direction.
+
+## Mechanical-proxy limitation
+
+This illustration is also used by the current philosophical kata. The repository proxy may reward its regular structure even though the text supplies no v4 generator, candidate fiber, held-out oracle, or standing-bearing receipt. That mismatch is the lesson, not a positive measurement result.

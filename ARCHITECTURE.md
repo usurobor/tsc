@@ -1,210 +1,135 @@
 # TSC Architecture
 
-TSC has three layers:
+This document explains the repository's authority boundaries during the TSC v4 cutover.
 
-- **theory**
-- **targets**
-- **verifier**
+## 1 · Surfaces
 
-## Theory
-
-The theory lives in `spec/`.
-
-It defines:
-
-- what TSC is
-- what α / β / γ mean
-- what witnesses and invariants are
-- what a target is
-
-Theory is canonical.
-
-## Targets
-
-A target is an explicit declaration of what TSC measures.
-
-Current target surfaces are:
-
-- `spec` — the theory
-- `engine` — the verifier
-- `repo` — the aggregate repository surface
-- `methodology` — the 1st coherence methodology (self-measurement) as a
-  measurable corpus
-- `cm-of-cms` — the 0th coherence methodology (the CM of CMs) as a
-  measurable corpus
-
-The target model lives in:
-
-- `targets/registry.tsc` — target registry
-- `targets/*.tsc` — target manifests
-
-## Methodologies
-
-Measurement procedures are declared as typed skills (`skills/*/SKILL.md`,
-frontmatter validated by `schemas/skill.cue`) and rendered into their
-executable surfaces — the declaration is the authority, the rendered
-command and workflows carry DO-NOT-EDIT headers, and CI enforces
-byte-identity:
-
-- `skills/self-measure/` — the 1st methodology: how this repo measures
-  itself (rendered into `scripts/coh-self` and two workflows).
-- `skills/cm-of-cms/` — the 0th methodology: how methodologies
-  themselves are measured — consistency protocol, admissibility with a
-  five-attacker matrix, and held-out commit-reveal anchors (`heldout/`,
-  `scripts/cm-heldout.sh`) whose standing scope states exactly what its
-  anchor provenance earns.
-
-Generated measurement state lands under `.tsc/` and is never canonical;
-the one tracked exception is `.tsc/COHERENCE.md`, the per-release
-coherence ledger.
-
-## Katas
-
-Katas are pedagogical and regression inputs with declared expected outcomes.
-
-**Katas** differ from **targets** in purpose and audience:
-
-| | Targets | Katas |
+| Surface | Owns | Does not own |
 |---|---|---|
-| Purpose | Project-internal corpora (spec, engine, repo) | Pedagogical/regression inputs |
-| Location | `targets/` | `katas/` |
-| Audience | Continuous measurement of the project itself | New implementors; regression anchors |
-| Runner flag | `--target <name>` | `--kata <id>` |
-| Schema | `targets/*.tsc` (TOML manifests) | `katas/*/kata.toml` (TOML manifests) |
-| Expected outcome | None declared | `expected.verdict + expected.score_range` in `kata.toml` |
+| `spec/` | Theory and normative proof obligations | Current executable behavior |
+| `conformance/` | Domain fixtures implementing requirement IDs | General theory |
+| `engine/ocaml/` | Current repository-proxy execution | TSC v4 semantics |
+| `skills/` | Current methodology declarations and rendered proxy routes | General v4 CM runtime |
+| `.tsc/` | Generated evidence and historical ledger | Canonical definitions |
 
-Both targets and katas use the same engine bundle model and scoring pipeline.
-The difference is that katas carry declared expectations, enabling pass/fail
-verdicts against curated inputs.
-
-The kata framework is documented in [katas/README.md](katas/README.md).
-
-Kata runner invocation:
-
-```bash
-coh --kata 01-glider --mode mechanical   # exit 0 on match, 1 on mismatch
-```
-
-## Verifier
-
-The verifier is the executable layer.
-
-The canonical implementation is:
-
-- `engine/ocaml/` — OCaml engine
-
-The engine has one shared pipeline:
-
-1. Resolve input (named target or direct file globs)
-2. Build deterministic bundle (same model for both inputs)
-3. Choose scoring backend based on `--mode`
-4. Compute result
-5. Validate and write report
-
-### Scoring modes
-
-| Mode | Backend | Credentials |
-|------|---------|-------------|
-| `mechanical` | `mechanical_scoring.ml` — deterministic structural proxies | None |
-| `llm` | `prompt.ml` + LLM provider via `runtime/SELF-MEASURE.md` | Required |
-| `hybrid` | Both backends; `hybrid_scoring.ml` combines results | Required |
-| `auto` | Resolves to `hybrid` when credentials present, else `mechanical` | Optional |
-
-**Mechanical mode** scores structural coherence proxies for α, β, γ across twelve signals. Document-structure signals (headings, links, authority claims, filename fit) measure the bundle's Markdown documents; corpus-level signals (versions, generated markers, deprecation language, traceability) scan every file. Links normalize relative to their source document, and anchored links must name a real heading in their target. It does not call an LLM, perform network I/O, or parse Markdown into a semantic AST. Determinism guarantee: identical bundle + config → identical result.
-
-**LLM mode** sends the bundle to the configured provider using the instruction in `runtime/SELF-MEASURE.md`. This is the semantic scoring path.
-
-**Hybrid mode** runs both backends on the same bundle. Both results are preserved in the report. The `final` sub-object names which backend authored the final adjudication. LLM is semantic authority; `agreement` is reported when both backends agree within threshold.
-
-### Direct file input
-
-`--files <glob>` bypasses named targets. Both `--files` and `--target` produce the same `Bundle.t` shape — same content hashes, same ordering, same metadata. Direct file input restores offline/CI measurement without credentials.
-
-### Report schema
-
-Every report contains:
-
-```json
-{
-  "mode": "mechanical | llm | hybrid",
-  "schema_version": "v3.2.0",
-  "target": "spec | null",
-  "alpha": 0.0–1.0,
-  "beta":  0.0–1.0,
-  "gamma": 0.0–1.0,
-  "bottleneck_axis": "alpha | beta | gamma",
-  "provenance": {
-    "aggregate_math":    { "C_sigma_math": 0.0–1.0, "zero_component_present": "bool" },
-    "aggregate_numeric": { "C_sigma_num": 0.0–1.0, "epsilon": 1e-5, "numeric_floor_applied": "bool" }
-  }
-}
-```
-
-Aggregate facts live under `provenance`. There is no flat top-level `c_sigma` — readers consult `provenance.aggregate_numeric.C_sigma_num` for the verdict-bearing aggregate and `provenance.aggregate_math.C_sigma_math` for the strict mathematical aggregate (zero when any component is exactly zero). The two coincide when every component is at or above `ε`.
-
-Hybrid reports add `mechanical`, `llm`, and `final` sub-objects. The schema fixture lives at `engine/ocaml/test/fixtures/report.schema.json`.
-
-The engine does not parse Markdown semantically. Files are raw text.
-
-## Self-measurement
-
-TSC turned on itself is a declared, rendered surface — not ad-hoc CI glue.
-
-- **Declaration:** `skills/self-measure/SKILL.md`. Frontmatter is the typed
-  machine contract (`schemas/skill.cue`, `#SelfMeasure`); the body is the
-  human-readable authority on which steps are mechanical and exactly what
-  cognitive work the LLM witness performs, under what constraints.
-- **Renderer:** `scripts/render-self-measure.sh` materializes the skill
-  into `scripts/coh-self` (the command `coh self` dispatches to) and
-  `.github/workflows/tsc-self-measure.yml`. Both carry DO-NOT-EDIT headers;
-  CI re-renders and fails on drift.
-- **Split:** every step is mechanical except one — estimating the pairwise
-  discrepancies δ, component scores, and cited evidence per
-  `runtime/SELF-MEASURE.md`. The engine emits the exact prompt
-  (`--emit-prompt`), validates the witness response, and ingests it
-  (`--llm-response`) — so in CI the witness runs as a tool-restricted
-  Claude CLI step with no raw API key, and the engine keeps authority over
-  validation, the barrier transform, and aggregation.
-- **Proof:** `scripts/ci/self-measure-smoke.sh` exercises the mechanical
-  run and both halves of the witness route (including the refusal path)
-  on every CI run, credential-free.
-
-## Generated state
-
-Generated measurement output belongs in `.tsc/`.
-
-Canonical sources remain:
-
-- `spec/`
-- `targets/`
-- `engine/ocaml/`
-- `runtime/SELF-MEASURE.md`
-
-Python is retired as a live engine. OCaml is the canonical implementation.
-
-## Repo map
+## 2 · Specification
 
 ```text
-/spec/                    canonical theory
-/engine/ocaml/            canonical implementation
-  lib/mechanical_scoring  deterministic structural backend
-  lib/hybrid_scoring      backend combiner (pure)
-  lib/bundle              shared bundle model
-  lib/kata                kata manifest parser
-  bin/main.ml             CLI entrypoint (--mode, --files, --target, --kata,
-                          --emit-prompt, --llm-response; `coh self` dispatch)
-/runtime/                 scoring instruction (SELF-MEASURE.md)
-/targets/                 named target declarations (project-internal corpora)
-/skills/                  typed skill modules
-  self-measure/SKILL.md   self-measurement declaration (renders coh-self + workflow)
-/schemas/                 CUE schemas for skill frontmatter (+ fixtures)
-/scripts/coh-self         RENDERED self-measurement command (do not edit)
-/katas/                   kata framework (pedagogical/regression inputs)
-  README.md               framework docs + kata.toml schema
-  01-glider/              positive control kata
-  02-random-soup/         negative control kata
-/docs/                    documentation tree (α/β/γ)
-/examples/                runnable examples
-/tests/                   conformance and implementation tests
-/.tsc/                    generated measurement output
+C≡
+  typed articulation, paths, deterministic Set functor, behavior
+
+Core
+  measurement context, joint generator-atlas realization fibers, receipts, dispositions
+
+Operational
+  compilation, calibration, assessment, admission, authorization, execution
+
+Observation Dynamics
+  episodes, lineage, comparison, dependence, intervention, lift
+
+Conformance
+  requirement IDs and positive/negative proof obligations
 ```
+
+The semantic layers define meaning. `spec/tsc-conformance.md` defines what an implementation must prove.
+
+## 3 · Conformance fixtures
+
+```text
+spec/tsc-conformance.md
+  abstract requirements
+
+schemas/conformance-fixture.cue
+  fixture descriptor schema
+
+conformance/registry.toml
+  fixture registry
+
+conformance/<fixture>/
+  generator, oracle, evidence, positive and negative cases
+```
+
+Domain rules remain outside the foundation.
+
+## 4 · Current engine boundary
+
+`engine/ocaml/` ships software release `0.12.0` and `coh`.
+
+The engine currently resolves file bundles, runs structural-proxy and semantic-judgment routes, validates provider output, and emits v3.2-era score reports.
+
+It does not currently:
+
+```text
+compile arbitrary v4 CMs
+enforce v4 behavior contracts
+construct relation-search atlases and joint generator-atlas realization candidates
+emit ManifestationReceipt / RelationalAtlas / ContinuationReceipt
+produce failure-persistent lineage
+carry v4 standing or authorization
+```
+
+It is the canonical executable of the current repository-proxy methodology, not the canonical implementation of v4.
+
+## 5 · Current methodologies
+
+The current typed skills declare the self-measurement and CM-of-CMs proxy routes. Their source/artifact boundary is real, but they do not yet implement:
+
+```text
+CMSource
+  → CompiledCM
+  → sandbox calibration
+  → CM0 assessment
+  → V admission verdict
+  → δ boundary decision
+  → authorized target execution
+```
+
+## 6 · Current report model
+
+Current reports use v3.2-era scalar fields and proxy evidence. They must not be interpreted as v4 receipts merely because they reuse α, β, and γ symbols.
+
+A v4 report requires:
+
+```text
+CM and authorization identity
+behavior contract and access mode
+coverage and manifestation evidence
+relation-search record and atlas
+joint realization-candidate sets, fibers, and identification
+continuation and held-out evidence
+approximation-contract digest
+lineage and failure dispositions
+standing and verdict authorization
+```
+
+## 7 · Artifact roles
+
+| Role | Purpose | Proof claim |
+|---|---|---|
+| Illustration | Teach a framing | None |
+| Regression fixture | Pin implementation behavior | Implementation-only |
+| Conformance fixture | Test a normative requirement | Independent generator and oracle |
+| Calibration anchor | Characterize a methodology | Scope-bound standing evidence |
+| Experiment | Test a preregistered claim | Retained result and lineage |
+
+Katas remain regression fixtures. Philosophical examples are illustrations. Game of Life conformance work belongs under `conformance/`.
+
+## 8 · Generated state
+
+Generated output belongs under `.tsc/` and is not canonical theory. The tracked ledger remains historical evidence of the instruments that produced it; scores do not acquire v4 semantics retroactively.
+
+## 9 · Dependency direction
+
+```text
+foundation semantics
+  ↓
+Core measurement contract
+  ↓
+Operational authority policy
+  ↓
+methodology implementations
+  ↓
+runtime and generated receipts
+```
+
+History explains the specification but does not govern it. Runtime implements contracts but does not redefine them. Failed receipts remain in lineage when claims change.

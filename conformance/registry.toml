@@ -1,0 +1,13 @@
+format = "tsc-conformance-registry/0.1"
+
+[[fixture]]
+id = "foundation-v4"
+manifest = "foundation-v4/fixture.toml"
+
+[[fixture]]
+id = "gol-ascent-0"
+manifest = "game-of-life/fixture.toml"
+
+[[fixture]]
+id = "stochastic-law-v4"
+manifest = "stochastic-law/fixture.toml"

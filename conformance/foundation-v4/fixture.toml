@@ -1,0 +1,505 @@
+format = "tsc-conformance-fixture/0.1"
+id = "foundation-v4"
+version = "0.2.0"
+status = "specified"
+domain = "TSC foundation, receipt, lifecycle, comparison, and lineage contracts"
+requirements = [
+  "FND-TYPE-001",
+  "FND-PATH-001",
+  "FND-FUNCTOR-001",
+  "FND-FINAL-001",
+  "FND-FINAL-002",
+  "FND-FINAL-003",
+  "FND-SHAPE-001",
+  "FND-ROLE-001",
+  "CORE-PRESENTATION-001",
+  "CORE-EVIDENCE-001",
+  "CORE-RECEIPT-001",
+  "CORE-JOINT-001",
+  "CORE-REALIZE-001",
+  "CORE-ID-001",
+  "CORE-EQUIV-001",
+  "BETA-SEARCH-001",
+  "CORE-GLOBAL-001",
+  "CORE-SCALAR-001",
+  "OPER-AUTH-001",
+  "OPER-BEHAVIOR-001",
+  "OPER-INPUT-001",
+  "OPER-STANDING-001",
+  "OPER-RECEIPT-001",
+  "OBS-COMPARE-001",
+  "OBS-HOLDOUT-001",
+  "OBS-DEPEND-001",
+  "OBS-APPROX-001",
+  "OBS-LINEAGE-001",
+]
+
+[claim_contract]
+generator_class = "bounded generated foundation terms, joint realization candidates, descriptors, receipts, and lifecycle states"
+equivalence = "typed semantic equality of generator-plus-atlas realizations and normalized receipt equality"
+generator_search_claim = "complete_within_bound"
+generator_search_bound = "each generated proof case declares a finite syntax/state bound and exact enumeration cardinality"
+relation_search_claim = "complete_within_bound"
+relation_search_bound = "each generated atlas case declares a finite map domain and exact enumeration cardinality"
+evidence_boundary = "structural type, property, model, and integration cases; no fit/holdout reuse"
+oracle_independence = "type, property, model, and lifecycle oracles are separate from generated subjects"
+
+[generator]
+kind = "typed property, model, and lifecycle case generator"
+planned_source = "foundation-v4/generator"
+deterministic = true
+
+[oracle]
+kind = "typecheck, proof, property, model, and integration oracle"
+planned_source = "foundation-v4/oracle"
+
+[reproducibility]
+planned_command = "coh conformance run foundation-v4"
+
+[[cases]]
+id = "fnd-type-positive"
+requirement = "FND-TYPE-001"
+polarity = "positive"
+given = ["s,o : P", "phi : Rel(s,o)"]
+expect = ["art(s,phi,o) typechecks"]
+oracle = "typechecker accepts dependent event"
+
+[[cases]]
+id = "fnd-type-negative"
+requirement = "FND-TYPE-001"
+polarity = "negative"
+given = ["phi : Rel(s,o)", "attempt role or endpoint mismatch"]
+expect = ["construction rejected"]
+oracle = "typechecker rejects invalid dependent event"
+
+[[cases]]
+id = "fnd-path-positive"
+requirement = "FND-PATH-001"
+polarity = "positive"
+given = ["phi : Rel(s,o)", "psi : Rel(o,u)"]
+expect = ["psi after phi has type Rel(s,u)", "intermediate pole retained"]
+oracle = "typechecker and path-record assertion"
+
+[[cases]]
+id = "fnd-path-negative"
+requirement = "FND-PATH-001"
+polarity = "negative"
+given = ["phi : Rel(s,o)", "psi : Rel(v,u)", "o differs from v"]
+expect = ["composition rejected"]
+oracle = "typechecker rejects mismatched composition"
+
+[[cases]]
+id = "fnd-functor-positive"
+requirement = "FND-FUNCTOR-001"
+polarity = "positive"
+given = ["canonical F_I object and morphism action"]
+expect = ["identity law", "composition law", "coalgebra square typechecks"]
+oracle = "proof/property checker"
+
+[[cases]]
+id = "fnd-functor-negative"
+requirement = "FND-FUNCTOR-001"
+polarity = "negative"
+given = ["object action only", "behavior claim uses F_I(h)"]
+expect = ["COMPILE_REJECTED(FUNCTOR_INCOMPLETE)"]
+oracle = "compiler refusal code"
+
+[[cases]]
+id = "fnd-final-positive"
+requirement = "FND-FINAL-001"
+polarity = "positive"
+given = ["deterministic Set presentation", "B_I = Art^(I+)", "canonical zeta and behavior map"]
+expect = ["commuting law", "unique behavior map"]
+oracle = "theorem check plus finite model instances"
+
+[[cases]]
+id = "fnd-final-negative"
+requirement = "FND-FINAL-001"
+polarity = "negative"
+given = ["SET_FINAL", "different behavior object", "no isomorphism or proof"]
+expect = ["COMPILE_REJECTED(FINALITY_UNSUPPORTED)"]
+oracle = "behavior-contract validator"
+
+[[cases]]
+id = "fnd-final-2-positive"
+requirement = "FND-FINAL-002"
+polarity = "positive"
+given = ["real-valued Set carriers", "deterministic c : X x I -> Art x X"]
+expect = ["SET_FINAL accepted"]
+oracle = "behavior-contract validator"
+
+[[cases]]
+id = "fnd-final-2-negative"
+requirement = "FND-FINAL-002"
+polarity = "negative"
+given = ["stochastic kernel", "randomness not reified", "declared SET_FINAL"]
+expect = ["COMPILE_REJECTED(SET_FINAL_INAPPLICABLE)"]
+oracle = "compiler refusal code"
+
+[[cases]]
+id = "fnd-final-3-positive"
+requirement = "FND-FINAL-003"
+polarity = "positive"
+given = ["GENERAL_FINAL", "category, functor actions/laws, point, articulation interface, finality witness"]
+expect = ["contract accepted"]
+oracle = "behavior-contract validator"
+
+[[cases]]
+id = "fnd-final-3-negative"
+requirement = "FND-FINAL-003"
+polarity = "negative"
+given = ["GENERAL_FINAL", "one required field absent"]
+expect = ["stable compile refusal"]
+oracle = "compiler refusal code"
+
+[[cases]]
+id = "fnd-shape-positive"
+requirement = "FND-SHAPE-001"
+polarity = "positive"
+given = ["equal-leaf-multiset trees", "different internal shape", "node-sensitive evaluator"]
+expect = ["distinct outputs"]
+oracle = "property assertion"
+
+[[cases]]
+id = "fnd-shape-negative"
+requirement = "FND-SHAPE-001"
+polarity = "negative"
+given = ["associative commutative leaf fold", "claim depth-sensitive"]
+expect = ["claim rejected"]
+oracle = "conformance validator"
+
+[[cases]]
+id = "fnd-role-positive"
+requirement = "FND-ROLE-001"
+polarity = "positive"
+given = ["serialized fields reordered", "roles and endpoints transported"]
+expect = ["decoded event unchanged"]
+oracle = "round-trip semantic equality"
+
+[[cases]]
+id = "fnd-role-negative"
+requirement = "FND-ROLE-001"
+polarity = "negative"
+given = ["relation moved into pole field without transport"]
+expect = ["construction rejected"]
+oracle = "typecheck/schema failure"
+
+[[cases]]
+id = "core-presentation-positive"
+requirement = "CORE-PRESENTATION-001"
+polarity = "positive"
+given = ["stochastic kernel", "GeneralPresentation", "pointed-state and articulation interface"]
+expect = ["presentation accepted", "SET_FINAL not implied"]
+oracle = "behavior-contract validator"
+
+[[cases]]
+id = "core-presentation-negative"
+requirement = "CORE-PRESENTATION-001"
+polarity = "negative"
+given = ["stochastic kernel", "SET_FINAL", "randomness not reified"]
+expect = ["COMPILE_REJECTED(SET_FINAL_INAPPLICABLE)"]
+oracle = "compiler refusal code"
+
+[[cases]]
+id = "core-evidence-positive"
+requirement = "CORE-EVIDENCE-001"
+polarity = "positive"
+given = ["all required observations present", "uncertainty grounded"]
+expect = ["alpha = VALID"]
+oracle = "manifestation receipt classifier"
+
+[[cases]]
+id = "core-evidence-negative"
+requirement = "CORE-EVIDENCE-001"
+polarity = "negative"
+given = ["required observation missing"]
+expect = ["alpha = INCOMPLETE", "overall unresolved"]
+oracle = "coverage and classifier"
+
+[[cases]]
+id = "core-receipt-positive"
+requirement = "CORE-RECEIPT-001"
+polarity = "positive"
+given = ["alpha valid", "beta establishes candidate", "gamma test available"]
+expect = ["dependency path completes"]
+oracle = "receipt type and dependency validator"
+
+[[cases]]
+id = "core-receipt-negative"
+requirement = "CORE-RECEIPT-001"
+polarity = "negative"
+given = ["alpha incomplete or beta no realization"]
+expect = ["downstream receipt blocked by named prerequisite"]
+oracle = "receipt classifier"
+
+[[cases]]
+id = "core-joint-positive"
+requirement = "CORE-JOINT-001"
+polarity = "positive"
+given = ["generator G", "two admissible atlas candidates A1 and A2"]
+expect = ["joint candidates R1=(G,A1) and R2=(G,A2) retained", "fit, complexity, equivalence, and identification operate on R"]
+oracle = "joint-realization receipt and fiber validator"
+
+[[cases]]
+id = "core-joint-negative"
+requirement = "CORE-JOINT-001"
+polarity = "negative"
+given = ["map A selected during fit", "fiber constructed over bare generator G", "alternative maps discarded"]
+expect = ["receipt nonconforming", "identification rejected"]
+oracle = "joint-realization receipt and fiber validator"
+
+[[cases]]
+id = "core-realize-positive"
+requirement = "CORE-REALIZE-001"
+polarity = "positive"
+given = ["complete joint-realization search", "fit, budget, and test cases"]
+expect = ["empty fit -> training NO_REALIZATION_IN_MODEL", "fit only over budget -> REALIZABLE_IN_MODEL + REALIZABLE_OVER_BUDGET", "all complete grounded tests fail -> TestStatus.FAILED + REFUTED_IN_MODEL"]
+oracle = "candidate-set classifier"
+
+[[cases]]
+id = "core-realize-negative"
+requirement = "CORE-REALIZE-001"
+polarity = "negative"
+given = ["heuristic search fails or oracle incomplete"]
+expect = ["UNRESOLVED", "not no realization or refutation"]
+oracle = "candidate-set classifier"
+
+[[cases]]
+id = "core-id-positive"
+requirement = "CORE-ID-001"
+polarity = "positive"
+given = ["one realization class", "all alternative bounded candidates have terminal FAIL", "declared regime, identification target, and passive/active input families"]
+expect = ["IDENTIFIED_IN_MODEL for the named regime and target"]
+oracle = "receipt validator"
+
+[[cases]]
+id = "core-id-negative"
+requirement = "CORE-ID-001"
+polarity = "negative"
+given = ["one passing class", "regime, target, or input family absent, or another bounded candidate remains UNRESOLVED"]
+expect = ["identification rejected or NOT_ESTABLISHED"]
+oracle = "receipt validator"
+
+[[cases]]
+id = "core-equiv-positive"
+requirement = "CORE-EQUIV-001"
+polarity = "positive"
+given = ["filter before quotient", "J_train subset J_eval", "congruent outcomes"]
+expect = ["refinement map retained"]
+oracle = "fiber and lineage validator"
+
+[[cases]]
+id = "core-equiv-negative"
+requirement = "CORE-EQUIV-001"
+polarity = "negative"
+given = ["one test-equivalence class", "representatives have different oracle outcomes"]
+expect = ["UNRESOLVED", "identification rejected"]
+oracle = "fiber validator"
+
+[[cases]]
+id = "beta-search-positive"
+requirement = "BETA-SEARCH-001"
+polarity = "positive"
+given = ["declared search claim", "multiple map candidates"]
+expect = ["maps, alternatives, pruning, orchestration, uncertainty retained"]
+oracle = "atlas schema"
+
+[[cases]]
+id = "beta-search-negative"
+requirement = "BETA-SEARCH-001"
+polarity = "negative"
+given = ["best map selected", "only residual emitted"]
+expect = ["beta receipt nonconforming"]
+oracle = "atlas schema"
+
+[[cases]]
+id = "core-global-positive"
+requirement = "CORE-GLOBAL-001"
+polarity = "positive"
+given = ["full diagram and globalization rule"]
+expect = ["compatible atlas"]
+oracle = "globalization oracle"
+
+[[cases]]
+id = "core-global-negative"
+requirement = "CORE-GLOBAL-001"
+polarity = "negative"
+given = ["all pairwise maps fit", "globalization fails"]
+expect = ["no support"]
+oracle = "globalization oracle"
+
+[[cases]]
+id = "core-scalar-positive"
+requirement = "CORE-SCALAR-001"
+polarity = "positive"
+given = ["complete structured receipt", "digest-linked scalar"]
+expect = ["scalar accepted within status domain"]
+oracle = "receipt validator"
+
+[[cases]]
+id = "core-scalar-negative"
+requirement = "CORE-SCALAR-001"
+polarity = "negative"
+given = ["scalar without structured receipt"]
+expect = ["result rejected"]
+oracle = "receipt validator"
+
+[[cases]]
+id = "oper-auth-positive"
+requirement = "OPER-AUTH-001"
+polarity = "positive"
+given = ["compiler, CM0, V, delta, runtime"]
+expect = ["five distinct artifacts and authorities"]
+oracle = "lifecycle model test"
+
+[[cases]]
+id = "oper-auth-negative"
+requirement = "OPER-AUTH-001"
+polarity = "negative"
+given = ["compiler or CM0 attempts admission/authorization"]
+expect = ["operation rejected"]
+oracle = "authority boundary test"
+
+[[cases]]
+id = "oper-behavior-positive"
+requirement = "OPER-BEHAVIOR-001"
+polarity = "positive"
+given = ["valid finality basis and access"]
+expect = ["compiled behavior contract"]
+oracle = "compiler integration"
+
+[[cases]]
+id = "oper-behavior-negative"
+requirement = "OPER-BEHAVIOR-001"
+polarity = "negative"
+given = ["undeclared or unsupported mode", "silent fallback attempted"]
+expect = ["compile refusal", "no fallback"]
+oracle = "compiler integration"
+
+[[cases]]
+id = "oper-input-positive"
+requirement = "OPER-INPUT-001"
+polarity = "positive"
+given = ["complete required input"]
+expect = ["content-addressed coverage manifest"]
+oracle = "input integration test"
+
+[[cases]]
+id = "oper-input-negative"
+requirement = "OPER-INPUT-001"
+polarity = "negative"
+given = ["empty, missing, unreadable, escaping, cyclic, or framing-breaking input"]
+expect = ["refusal before classification"]
+oracle = "negative input matrix"
+
+[[cases]]
+id = "oper-standing-positive"
+requirement = "OPER-STANDING-001"
+polarity = "positive"
+given = ["earned standing", "declared scope and evidence"]
+expect = ["verdict authorization may be true within scope"]
+oracle = "policy test"
+
+[[cases]]
+id = "oper-standing-negative"
+requirement = "OPER-STANDING-001"
+polarity = "negative"
+given = ["standing absent or failed"]
+expect = ["verdict_authorized = false"]
+oracle = "policy test"
+
+[[cases]]
+id = "oper-receipt-positive"
+requirement = "OPER-RECEIPT-001"
+polarity = "positive"
+given = ["each terminal execution class"]
+expect = ["receipt emitted"]
+oracle = "terminal-path integration"
+
+[[cases]]
+id = "oper-receipt-negative"
+requirement = "OPER-RECEIPT-001"
+polarity = "negative"
+given = ["terminal path returns without receipt"]
+expect = ["conformance failure"]
+oracle = "terminal-path integration"
+
+[[cases]]
+id = "obs-compare-positive"
+requirement = "OBS-COMPARE-001"
+polarity = "positive"
+given = ["matching compatibility keys"]
+expect = ["comparison may proceed"]
+oracle = "comparison validator"
+
+[[cases]]
+id = "obs-compare-negative"
+requirement = "OBS-COMPARE-001"
+polarity = "negative"
+given = ["different CM or behavior contract", "no transport"]
+expect = ["INCOMPARABLE"]
+oracle = "comparison validator"
+
+[[cases]]
+id = "obs-holdout-positive"
+requirement = "OBS-HOLDOUT-001"
+polarity = "positive"
+given = ["held-out selection unavailable to fitting path"]
+expect = ["held-out role accepted"]
+oracle = "lineage/provenance validator"
+
+[[cases]]
+id = "obs-holdout-negative"
+requirement = "OBS-HOLDOUT-001"
+polarity = "negative"
+given = ["post-hoc query relabeled held-out"]
+expect = ["role rejected"]
+oracle = "lineage/provenance validator"
+
+[[cases]]
+id = "obs-depend-positive"
+requirement = "OBS-DEPEND-001"
+polarity = "positive"
+given = ["shared source or overlapping sample"]
+expect = ["dependence graph records overlap"]
+oracle = "dependence validator"
+
+[[cases]]
+id = "obs-depend-negative"
+requirement = "OBS-DEPEND-001"
+polarity = "negative"
+given = ["overlap omitted and treated independent"]
+expect = ["comparison/standing rejected"]
+oracle = "dependence validator"
+
+[[cases]]
+id = "obs-approx-positive"
+requirement = "OBS-APPROX-001"
+polarity = "positive"
+given = ["Core approximation digest", "path budgets and endpoint metric"]
+expect = ["path comparison accepted"]
+oracle = "approximation ledger validator"
+
+[[cases]]
+id = "obs-approx-negative"
+requirement = "OBS-APPROX-001"
+polarity = "negative"
+given = ["second tolerance algebra or incompatible digest"]
+expect = ["comparison rejected"]
+oracle = "approximation ledger validator"
+
+[[cases]]
+id = "obs-lineage-positive"
+requirement = "OBS-LINEAGE-001"
+polarity = "positive"
+given = ["failed prior receipt", "explicit disposition"]
+expect = ["lineage accepted", "successor standing independent"]
+oracle = "lineage validator"
+
+[[cases]]
+id = "obs-lineage-negative"
+requirement = "OBS-LINEAGE-001"
+polarity = "negative"
+given = ["failed prior receipt", "claim removed", "no disposition"]
+expect = ["conformance failure"]
+oracle = "lineage validator"

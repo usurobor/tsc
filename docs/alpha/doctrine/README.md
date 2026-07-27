@@ -1,36 +1,18 @@
 # Doctrine
 
-The canonical theory of Triadic Self-Coherence.
-
-## Canonical spec
-
-The canonical spec is `spec/tsc-core.md`. All other spec documents elaborate on it.
-
-## Documents
-
-| Document | Path | Purpose |
-|----------|------|---------|
-| C-equivalence | [spec/c-equiv.md](../../../spec/c-equiv.md) | When two descriptions describe one system |
-| Core axioms | [spec/tsc-core.md](../../../spec/tsc-core.md) | α, β, γ, C_Σ, witnesses, invariants |
-| Operational rules | [spec/tsc-oper.md](../../../spec/tsc-oper.md) | How to apply TSC to a system |
-| Observation dynamics | [spec/tsc-observation-dynamics.md](../../../spec/tsc-observation-dynamics.md) | How measurement interacts with the measured |
-| Glossary | [spec/tsc-glossary.md](../../../spec/tsc-glossary.md) | Term definitions |
-
-## Self-coherence reports
-
-Frozen, versioned snapshots land here. Current measurements are produced
-by `coh self` per [skills/self-measure/SKILL.md](../../../skills/self-measure/SKILL.md)
-into `.tsc/self/` — generated state, never committed; a row is added here
-only when a snapshot is frozen at a spec release.
-
-| Version | Path | Engine | Mode |
-|---------|------|--------|------|
-| 3.2.0 | [3.2.0/SELF-COHERENCE.md](3.2.0/SELF-COHERENCE.md) | v0.7.0 (OCaml) | mechanical |
+The canonical draft theory is the specification tree under [`spec/`](../../../spec/README.md).
 
 ## Reading order
 
-1. `c-equiv.md` — the foundational equivalence
-2. `tsc-core.md` — the axioms
-3. `tsc-oper.md` — how to use them
-4. `tsc-observation-dynamics.md` — what happens when you observe
-5. `tsc-glossary.md` — term reference
+1. [`c-equiv.md`](../../../spec/c-equiv.md) — typed articulation and deterministic Set behavior;
+2. [`tsc-core.md`](../../../spec/tsc-core.md) — behavior contracts, candidate fibers, and receipts;
+3. [`tsc-oper.md`](../../../spec/tsc-oper.md) — methodology lifecycle and authority;
+4. [`tsc-observation-dynamics.md`](../../../spec/tsc-observation-dynamics.md) — lineage, comparison, intervention, and lift;
+5. [`tsc-conformance.md`](../../../spec/tsc-conformance.md) — proof obligations;
+6. [`tsc-glossary.md`](../../../spec/tsc-glossary.md) — informative vocabulary.
+
+## Historical records
+
+Frozen records under versioned subdirectories preserve the instrument and specification line that produced them. They are historical evidence, not current v4 conformance receipts.
+
+Current generated proxy measurements are produced by `coh self` into `.tsc/` under the existing repository-proxy methodology.

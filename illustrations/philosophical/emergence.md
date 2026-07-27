@@ -1,5 +1,8 @@
 # Emergence (Toy: Boids → Global Alignment)
 
+> **Status: non-normative illustration.** The observations, expected values, and historical scores below teach a framing only. They are not a TSC v4 conformance result, calibration anchor, or measurement verdict.
+
+
 **Phenomenon:** Global flock polarization emerging from local heading alignment.
 
 **Scope:** Aggregate summary over 10 steps; no full simulation here. **H** states the macroscopic pattern, **V** ties local alignment to global order, **D** gives a minimal Boids-like update rule.
@@ -76,7 +79,7 @@ tsc:
         - [8, 0.91, 0.84, 1]
         - [9, 0.93, 0.86, 1]
   
-  expected:
+  illustrative_non_normative:
     c_sigma: 0.88
     tolerance: 0.05
     rationale: "Clear macro pattern driven by micro rules; minor slack from finite-size noise."

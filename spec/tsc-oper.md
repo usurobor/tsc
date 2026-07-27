@@ -4,63 +4,26 @@
 **Status:** Draft
 **Artifact:** Normative runtime contract
 
-## 0 · Governing question
+## Governing question
 
 > How does a methodology move from authored source to authorized measurement without collapsing structural validity, instrument quality, standing, and boundary authority into one decision?
 
 TSC Operational separates compilation, bounded execution, instrument assessment, admission, authorization, target execution, and receipt emission.
 
----
-
-## Primitive contract
-
-A Coherence Methodology declares a generator problem:
-
-```text
-CM := (
-  identity,
-  input and observation contract,
-  generator class,
-  relation and equivalence contract,
-  fit and approximation contract,
-  complexity contract,
-  oracle contract,
-  receipt schema,
-  implementation and permission bindings
-)
-```
-
-A target measurement produces a proof-carrying receipt containing, at minimum:
-
-```text
-methodology identity
-target and input identity
-manifestation evidence
-relational atlas
-candidate-fiber status
-continuation status
-uncertainty and provenance
-standing and verdict authorization
-```
-
-Operational governs how the methodology and receipt acquire runtime and epistemic authority.
-
----
-
 ## 1 · Runtime artifacts
 
 ### 1.1 CM source
 
-`CMSource` is the human-authored methodology package.
-
-It contains:
+`CMSource` is the human-authored methodology package. It contains:
 
 ```text
 identity and version
 input and observation contract
-generator class
-equivalence and tolerance contract
-complexity and oracle contract
+generator and atlas-candidate classes
+behavior contract
+relation-search and generator-search contracts
+equivalence and approximation contracts
+complexity and oracle contracts
 implementation bindings
 permissions and resource declarations
 receipt schema
@@ -77,6 +40,9 @@ source digest
 compiled descriptor digest
 validated schemas
 resolved implementation/provider bindings
+behavior contract
+search contracts and orchestration
+approximation-contract digest
 sandbox policy
 input adapters
 execution plan
@@ -87,13 +53,13 @@ Compilation establishes structural executability. It grants no standing and no a
 
 ### 1.3 Calibration receipt
 
-`CalibrationReceipt` records bounded executions over declared controls, repeats, malformed inputs, and held-out anchors.
+`CalibrationReceipt` records bounded executions over declared controls, repeats, malformed inputs, refusal cases, and held-out anchors.
 
 It carries no target-measurement authority.
 
 ### 1.4 Instrument assessment
 
-`InstrumentAssessment` is a CM0 measurement of the candidate methodology as an instrument.
+`InstrumentAssessment` is a CM0 measurement of a candidate methodology as an instrument.
 
 It reports:
 
@@ -108,21 +74,19 @@ calibration evidence
 defects and uncertainty
 ```
 
-CM0 measures. It does not admit or authorize.
+CM0 measures. It does not compile, admit, authorize, or decide a boundary action.
 
 ### 1.5 Admission verdict
 
-`AdmissionVerdict` is produced by validator `V` from the admission contract and assessment evidence.
+`AdmissionVerdict` is produced by validator `V` from an admission contract and assessment evidence:
 
 ```text
 PASS | FAIL
 ```
 
-The verdict answers whether the evidence satisfies the declared admission policy.
-
 ### 1.6 Boundary decision
 
-`BoundaryDecision` is produced by `δ`.
+`BoundaryDecision` is produced by `δ`:
 
 ```text
 register
@@ -135,7 +99,7 @@ revoke
 override_degraded
 ```
 
-`δ` decides what action follows from the evidence and verdict. It does not rewrite the measurement.
+`δ` decides what action follows. It does not rewrite the measurement or verdict.
 
 ### 1.7 Authorized CM
 
@@ -143,9 +107,9 @@ override_degraded
 
 ```text
 CompiledCM digest
-admission verdict
-boundary decision
-standing scope
+AdmissionVerdict
+BoundaryDecision
+standing and scope
 permissions
 validity interval
 revocation conditions
@@ -154,8 +118,6 @@ revocation conditions
 ### 1.8 Measurement receipt
 
 `MeasurementReceipt` is the Core receipt emitted when an authorized or explicitly sandboxed CM runs on a compatible target.
-
----
 
 ## 2 · Authority separation
 
@@ -169,22 +131,124 @@ V          → admission verdict
 runtime    → faithful execution and receipt emission
 ```
 
-No surface may silently assume another surface’s authority.
+No surface may assume another surface's authority.
 
-In particular:
+```text
+compilation does not imply instrument coherence
+instrument coherence does not imply external validity
+admission does not imply production authorization
+execution does not imply standing
+a score does not imply a verdict
+a verdict does not imply a boundary action
+```
 
-- successful compilation does not imply instrument coherence;
-- instrument coherence does not imply external validity;
-- admission does not imply production authorization;
-- execution does not imply standing;
-- a score does not imply a verdict;
-- a verdict does not imply a boundary action.
+## 3 · Compilation contract
 
----
+### 3.1 General checks
 
-## 3 · Methodology lifecycle
+The compiler performs:
 
-### 3.1 AUTHOR
+```text
+parse
+typecheck
+link
+schema validation
+adapter resolution
+permission validation
+receipt-schema validation
+execution-plan normalization
+behavior-contract validation
+search-contract validation
+```
+
+Output:
+
+```text
+COMPILED(CompiledCM)
+```
+
+or:
+
+```text
+COMPILE_REJECTED(code, diagnostics)
+```
+
+### 3.2 Behavior-contract validation
+
+The compiler requires both:
+
+```text
+FinalityBasis
+BehaviorAccess
+```
+
+#### SET_FINAL
+
+`SET_FINAL` passes only when:
+
+```text
+P, I, X, and every Rel(s,o) are members of one declared Set universe;
+Art is their dependent sum;
+the candidate uses SetPresentation with deterministic type X × I → Art × X;
+the canonical C≡ F_I object and morphism actions are used;
+the canonical Set final behavior construction is referenced.
+```
+
+Real-valued or continuous carriers are not rejected merely for being continuous.
+
+A stochastic or nondeterministic implementation passes only when randomness or choice is reified as declared deterministic input or state and the resulting claim is scoped to that presentation.
+
+#### GENERAL_FINAL
+
+`GENERAL_FINAL` passes only when the descriptor includes:
+
+```text
+carrier category
+system functor object action
+system functor morphism action
+functor identity law
+functor composition law
+pointed-state contract
+typed articulation interface
+behavior object
+finality witness
+behavior-map contract
+```
+
+`GENERAL_FINAL` accepts only a complete universal-property witness in the declared category. A tolerant or approximate square without such a theorem does not pass as finality.
+
+#### NO_FINALITY_CLAIM
+
+`NO_FINALITY_CLAIM` may use `COMPLETE_SYMBOLIC`, `FINITE`, or `APPROXIMATE` access when the construction and supported claims are explicit. It cannot invoke final-coalgebra uniqueness, Lambek's isomorphism, or another finality consequence.
+
+### 3.3 Compile refusal codes
+
+The compiler fails closed with stable codes, including:
+
+```text
+BEHAVIOR_MODE_UNDECLARED
+SET_FINAL_INAPPLICABLE
+PRESENTATION_KIND_UNDECLARED
+INITIAL_STATE_WITNESS_MISSING
+ARTICULATION_INTERFACE_MISSING
+FUNCTOR_INCOMPLETE
+FUNCTOR_LAWS_UNPROVED
+FINALITY_UNSUPPORTED
+BEHAVIOR_ACCESS_UNDECLARED
+APPROXIMATION_CONTRACT_MISSING
+SEARCH_CLAIM_MISSING
+RELATION_SEARCH_CONTRACT_MISSING
+SEARCH_ORCHESTRATION_UNDECLARED
+RECEIPT_SCHEMA_INVALID
+PERMISSION_UNDECLARED
+ADAPTER_INCOMPATIBLE
+```
+
+The compiler never silently substitutes finite or approximate behavior for a failed finality claim.
+
+## 4 · Methodology lifecycle
+
+### 4.1 AUTHOR
 
 Input:
 
@@ -198,38 +262,13 @@ Output:
 source digest
 ```
 
-The source is immutable for one lifecycle attempt. A change creates a new digest and requires re-evaluation of every dependent artifact.
+The source is immutable for one lifecycle attempt. A source change creates a new digest and invalidates dependent artifacts.
 
-### 3.2 COMPILE
+### 4.2 COMPILE
 
-The compiler performs:
+The compiler applies §3 and emits `CompiledCM` or a compile refusal.
 
-```text
-parse
-typecheck
-link
-schema validation
-adapter resolution
-permission validation
-receipt-schema validation
-execution-plan normalization
-```
-
-Output:
-
-```text
-COMPILED(CompiledCM)
-```
-
-or:
-
-```text
-COMPILE_REJECTED(diagnostics)
-```
-
-The compiler fails closed on unresolved paths, untyped relations, missing implementation bindings, undeclared effects, or incompatible adapters.
-
-### 3.3 SANDBOX
+### 4.3 SANDBOX
 
 A compiled candidate may run before admission only in the declared calibration sandbox.
 
@@ -247,7 +286,7 @@ output locations
 
 Every sandbox run emits a receipt, including refusals and resource exhaustion.
 
-### 3.4 ASSESS
+### 4.4 ASSESS
 
 CM0 measures the candidate methodology using:
 
@@ -268,19 +307,13 @@ InstrumentAssessment
 
 Self-assessment is a hygiene check. It is never the sole source of standing.
 
-### 3.5 VALIDATE
+### 4.5 VALIDATE
 
-Validator `V` evaluates the assessment against an admission contract.
+Validator `V` evaluates the assessment against the admission contract.
 
-Output:
+Unavailable required evidence yields `FAIL`; it never becomes an inferred pass.
 
-```text
-AdmissionVerdict
-```
-
-The admission contract names every required witness, floor, scope, and refusal rule. Unavailable required evidence yields `FAIL`; it never becomes an inferred pass. `δ` may respond to that verdict with `hold` when policy permits later repair.
-
-### 3.6 DECIDE
+### 4.6 DECIDE
 
 `δ` receives:
 
@@ -291,11 +324,7 @@ AdmissionVerdict
 operator policy
 ```
 
-and emits:
-
-```text
-BoundaryDecision
-```
+and emits `BoundaryDecision`.
 
 An override records:
 
@@ -307,11 +336,9 @@ what standing is lost
 when the override expires
 ```
 
-### 3.7 AUTHORIZE
+### 4.7 AUTHORIZE
 
-A permissive boundary decision creates `AuthorizedCM`.
-
-Authorization is scope-specific:
+A permissive boundary decision creates `AuthorizedCM` for a specific scope:
 
 ```text
 sandbox
@@ -319,11 +346,11 @@ experimental
 production
 ```
 
-It may also restrict input classes, providers, resources, or output uses.
+Authorization may restrict input classes, providers, resources, and output uses.
 
-### 3.8 EXECUTE
+### 4.8 EXECUTE
 
-The runtime executes the authorized CM on a target only after:
+The runtime executes a CM on a target only after:
 
 ```text
 applicability passes
@@ -331,13 +358,12 @@ input completeness passes
 permissions pass
 required evidence is readable
 compiled and authorized digests match
+behavior and approximation contracts are available
 ```
 
-Execution follows the target pipeline in §4.
+### 4.9 RECEIPT
 
-### 3.9 RECEIPT
-
-Every terminal execution state emits one receipt:
+Every terminal state emits one receipt:
 
 ```text
 success
@@ -350,11 +376,11 @@ law violation
 
 No silent fallback or empty green result is permitted.
 
----
+## 5 · Target measurement pipeline
 
-## 4 · Target measurement pipeline
+The stages below name logical obligations. A CM may interleave relation search and generator search only when its compiled execution plan declares the schedule, stop rule, retained alternatives, and determinism or repeat protocol.
 
-### 4.1 HANDSHAKE
+### 5.1 HANDSHAKE
 
 Validate:
 
@@ -365,11 +391,12 @@ input schema
 applicability
 required permissions
 required observation channels
+behavior contract
 ```
 
-Failure emits `NOT_APPLICABLE` or `INVALID_INPUT`.
+Failure emits `NOT_APPLICABLE`, `INVALID_INPUT`, or a compile/authorization refusal.
 
-### 4.2 COVER
+### 5.2 COVER
 
 Resolve all required and optional evidence.
 
@@ -385,90 +412,92 @@ item digests
 resolver version
 ```
 
-Missing required evidence stops execution before scoring or classification.
+Missing required evidence stops execution before classification.
 
-### 4.3 OBSERVE
+### 5.3 OBSERVE
 
 Construct observation episodes and the α receipt.
 
-The runtime records:
+Record:
 
 ```text
-constructor identity
-constructor digest
+constructor identity and digest
 channel identity
 input history
 raw evidence reference
 uncertainty
 ```
 
-### 4.4 ATLAS
+If α is not `VALID`, later roles may retain diagnostics but are marked `BLOCKED_BY(α-validity)` for authoritative classification.
 
-Construct the β relational atlas:
+### 5.4 RELATE
+
+Enumerate, fit, and retain relation candidates:
 
 ```text
-correspondence maps
-transformation maps
-alternatives
-residuals
-uncertainty
-path budgets
-globalization checks
+relation-search evidence
+correspondence and transformation maps
+alternatives and pruning reasons
+residuals and uncertainty
+path checks
+provisional globalization evidence
 ```
 
-The runtime retains the maps even when it computes a summary.
+Relation candidates may depend on generator hypotheses when the declared orchestration permits it.
 
-### 4.5 REALIZE
+### 5.5 REALIZE
 
-Search the declared generator class under the fit and complexity contract.
+Search the generator class jointly with the retained relation candidates to construct joint realization candidates under the declared fit, complexity, and search contracts.
 
 Record:
 
 ```text
-search algorithm and version
-search claim
-candidates considered
-candidate references
-fit values
-complexity values
+search algorithms and versions
+generator and relation search claims
+search orchestration and stop rule
+generators and maps considered
+joint realization-candidate and atlas references
+fit and complexity values
 pruning and refusal reasons
 ```
 
-### 4.6 CONTINUE
+Finalize the β atlas, globalization result, fit and bounded realization-candidate sets, training fiber, and search evidence.
 
-Execute held-out predictions, future-state tests, or interventions and construct the γ receipt.
+If β establishes no applicable realization candidate, γ is `BLOCKED_BY(β-realizability)` for claims about a common generator.
+
+### 5.6 CONTINUE
+
+Execute held-out predictions, future-state tests, or interventions for every fixed bounded realization candidate; retain PASS, FAIL, UNRESOLVED, and NOT_RUN outcomes; construct γ and the tested fiber from the PASS set.
 
 A held-out item is valid only when its selection and label were unavailable to the fitting path under the declared provenance rules.
 
-### 4.7 CLASSIFY
+### 5.7 CLASSIFY
 
 Derive:
 
 ```text
-α status
-fiber status
+α status and evaluation
+β status and evaluation
+γ status and evaluation
+fit, bounded, passing, failing, and unresolved realization-candidate references
+training and test candidate classifications
 coherence disposition
-identification status
-γ continuation status
+training and tested identification statuses and target
 model adequacy
 lift status
 ```
 
 Every derived field is recomputable from the receipt or a referenced deterministic artifact.
 
-### 4.8 EMIT
+### 5.8 EMIT
 
-Write the complete measurement receipt and all referenced artifacts.
+Write the complete measurement receipt and referenced artifacts.
 
-The runtime may render human and machine views, but both derive from one receipt model and must preserve semantic parity.
+Human and machine views derive from one receipt model and preserve semantic parity.
 
----
+## 6 · Standing and authority
 
-## 5 · Standing and authority
-
-### 5.1 Standing states
-
-Operational defines:
+### 6.1 Standing states
 
 ```text
 NONE
@@ -478,11 +507,9 @@ FAILED
 REVOKED
 ```
 
-The admission policy defines the evidence needed to move between them.
+### 6.2 Standing scope
 
-### 5.2 Standing scope
-
-Every non-`NONE` standing state names its scope, such as:
+Every non-`NONE` state names its evidence scope, such as:
 
 ```text
 house-authored public controls
@@ -494,9 +521,9 @@ specific deployment environment
 
 Standing never extends beyond its evidence base by implication.
 
-### 5.3 Verdict authorization
+### 6.3 Verdict authorization
 
-Every measurement receipt contains:
+Every receipt contains:
 
 ```text
 standing
@@ -507,36 +534,43 @@ boundary_use
 
 A receipt may publish findings with `verdict_authorized = false`.
 
-### 5.4 Promotion and revocation
+### 6.4 Promotion and revocation
 
-Promotion requires new evidence under the declared policy.
+Promotion requires new evidence under declared policy.
 
 Revocation occurs when:
 
-- the CM digest changes;
-- an anchor is invalidated;
-- consistency falls below policy;
-- a prohibited effect is discovered;
-- a materially stronger counterexample defeats the admission basis;
-- the authorization expires.
+```text
+CM or implementation digest changes
+an anchor is invalidated
+consistency falls below policy
+a prohibited effect is discovered
+a stronger counterexample defeats the admission basis
+authorization expires
+```
 
----
-
-## 6 · Refusal rules
+## 7 · Refusal rules
 
 The runtime refuses rather than improvises when:
 
-- the CM does not apply to the input;
-- required evidence is missing or unreadable;
-- a path escapes the declared root;
-- an inclusion cycle is detected;
-- input content breaks the framing or serialization contract;
-- a required relation or transformation is untyped;
-- the candidate search cannot support the requested status;
-- the held-out boundary is compromised;
-- uncertainty is ungrounded for a standing-bearing claim;
-- provider output fails schema or evidence validation;
-- resource or permission limits are exceeded.
+```text
+CM does not apply to the input
+required evidence is missing or unreadable
+path escapes the declared root
+inclusion cycle is detected
+input breaks framing or serialization
+required relation or transformation is untyped
+behavior mode is undeclared or unsupported
+functor action or law is incomplete
+pointed-state or articulation interface is missing
+approximation contract is missing
+search orchestration is undeclared
+relation or generator search cannot support the requested claim
+held-out boundary is compromised
+uncertainty is ungrounded for a standing-bearing claim
+provider output fails schema or evidence validation
+resource or permission limits are exceeded
+```
 
 A refusal receipt includes:
 
@@ -549,13 +583,11 @@ retry conditions
 standing effect
 ```
 
----
+## 8 · Reproducibility
 
-## 7 · Reproducibility
+### 8.1 Digests
 
-### 7.1 Digests
-
-The runtime records digests for:
+Record digests for:
 
 ```text
 CM source
@@ -563,46 +595,52 @@ CompiledCM
 implementation
 input
 observation constructors
+relation and generator search implementations
+search orchestration
 provider/model/prompt when used
 calibration set
 policy
+behavior contract
+approximation contract
 receipt schema
 ```
 
-### 7.2 Deterministic core
+### 8.2 Deterministic core
 
 Parsing, typechecking, path resolution, coverage, derivation, classification, and rendering are deterministic for the same declared inputs.
 
 Non-deterministic witnesses are isolated and sampled under a declared repeat protocol.
 
-### 7.3 Raw evidence
+### 8.3 Raw evidence
 
 Raw provider output and raw observation references are retained or content-addressed according to policy, including failed validations.
 
-### 7.4 No post-failure substitution
+### 8.4 No post-failure substitution
 
-After an evidence-producing path has begun, its failure is terminal for that path. The runtime may start a separately declared fallback only when the receipt records the mode change and no result is represented as if it came from the failed path.
+After an evidence-producing path begins, its failure is terminal for that path. A separately declared fallback records the mode change and cannot represent its result as if it came from the failed path.
 
----
-
-## 8 · Minimum report schema
+## 9 · Minimum report schema
 
 Every report exposes:
 
 ```text
 receipt_id
 receipt_schema_version
-cm_id, cm_version, cm_digest
-compiled_cm_digest
-authorization_digest
+CM identity and digests
+compiled and authorization digests
 target identity and input digests
 measurement mode
 coverage manifest
+behavior contract
+approximation-contract digest
 α receipt
 β receipt
 γ receipt
 coherence disposition
-training/test fiber and identification status
+fit, bounded, passing, failing, and unresolved realization-candidate references
+training/test fibers and refinement map
+training and test candidate classifications
+identification target
 test and oracle status
 model and lift status
 standing and verdict authorization
@@ -611,36 +649,8 @@ provenance
 refusal, if any
 ```
 
-A report may omit large artifacts only by content-addressed reference.
+Large artifacts may be omitted only by content-addressed reference.
 
----
+## 10 · Conformance
 
-## 9 · Operational conformance
-
-A runtime is conforming when the following hold.
-
-### Lifecycle
-
-- invalid source cannot produce `CompiledCM`;
-- compiled but unassessed CMs may run only in sandbox;
-- CM0 cannot admit itself or another CM;
-- `V` cannot perform a boundary action;
-- `δ` cannot rewrite the receipt;
-- changed digests invalidate dependent authorization.
-
-### Execution
-
-- empty or incomplete required input produces refusal;
-- coverage is content-addressed;
-- structured maps survive into the receipt;
-- a failed search cannot claim no realization without a complete search contract;
-- failed standing prevents a verdict-bearing result;
-- every terminal path emits a receipt.
-
-### Security
-
-- path traversal fails closed;
-- inclusion cycles fail closed;
-- undeclared network or file access fails closed;
-- input framing cannot inject new control instructions;
-- resource limits are enforced and receipted.
+The normative proof obligations for Operational are defined in [`tsc-conformance.md`](tsc-conformance.md) under the `OPER-*` requirement IDs.

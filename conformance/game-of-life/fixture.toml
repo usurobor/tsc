@@ -1,0 +1,116 @@
+format = "tsc-conformance-fixture/0.1"
+id = "gol-ascent-0"
+version = "0.2.0"
+status = "specified"
+domain = "Conway Game of Life with exact finite-grid B3/S23 oracle"
+requirements = [
+  "CORE-REALIZE-001",
+  "CORE-GLOBAL-001",
+  "CORE-REFINE-001",
+  "CORE-LIFT-001",
+  "CORE-TERM-001",
+  "CORE-RECEIPT-001",
+]
+
+[claim_contract]
+generator_class = "H_0 finite binary grids and H_1 pointed finite-grid B3/S23 generators"
+equivalence = "case-declared equivalence of joint finite-grid generator and projection-atlas realizations"
+generator_search_claim = "complete_within_bound"
+generator_search_bound = "all 5x5 binary initial grids; exact one-step successors; fixture-declared finite collision horizon"
+relation_search_claim = "complete_within_bound"
+relation_search_bound = "all exact row/column projection assignments and grid correspondences inside the 5x5 fixture"
+evidence_boundary = "training margins fix candidates before independently generated next-step margins are revealed"
+oracle_independence = "exact B3/S23 transition and projection code is separate from candidate fitting"
+
+[generator]
+kind = "finite-grid B3/S23 generator"
+planned_source = "game-of-life/generator"
+deterministic = true
+
+[oracle]
+kind = "exact B3/S23 transition, enumeration, projection, and identity oracle"
+planned_source = "game-of-life/oracle"
+
+[reproducibility]
+planned_command = "coh conformance run gol-ascent-0"
+seed = 1337
+
+[[cases]]
+id = "static-underdetermination-positive"
+requirement = "CORE-REALIZE-001"
+polarity = "positive"
+given = ["generated row and column margins", "exactly two compatible grids"]
+expect = ["COMPATIBLE_IN_MODEL", "training_identification_status = UNDERDETERMINED"]
+oracle = "exhaustive finite-grid enumeration"
+
+[[cases]]
+id = "static-globalization-positive"
+requirement = "CORE-GLOBAL-001"
+polarity = "positive"
+given = ["one full binary grid", "row and column projection maps"]
+expect = ["one commuting observation diagram"]
+oracle = "exact margin recomputation"
+
+[[cases]]
+id = "pairwise-only-globalization-negative"
+requirement = "CORE-GLOBAL-001"
+polarity = "negative"
+given = ["locally plausible projection correspondences", "no common binary grid satisfies all constraints"]
+expect = ["no support from pairwise fits"]
+oracle = "exhaustive finite-grid realization search"
+
+[[cases]]
+id = "dynamic-refinement-positive"
+requirement = "CORE-REFINE-001"
+polarity = "positive"
+given = ["B3/S23 declared before fitting", "two initial candidates", "held-out next margins"]
+expect = ["fixed realization-candidate set refined from two classes to one", "training_identification_status = UNDERDETERMINED", "tested_identification_status = IDENTIFIED_IN_MODEL", "SUPPORTED_IN_MODEL"]
+oracle = "exact successor projection; no refitting"
+
+[[cases]]
+id = "refit-masquerading-as-refinement-negative"
+requirement = "CORE-REFINE-001"
+polarity = "negative"
+given = ["held-out margin observed", "candidate initial state changed after reveal"]
+expect = ["refinement claim rejected"]
+oracle = "candidate digest and lineage comparison"
+
+[[cases]]
+id = "true-lift-positive"
+requirement = "CORE-LIFT-001"
+polarity = "positive"
+given = ["H_0 static margins", "preregistered future-state failure", "H_1 pointed B3/S23 generators", "fixed held-out next margin"]
+expect = ["baseline failure reproduced", "complexity rule passed", "LIFT_VALIDATED"]
+oracle = "exact generated held-out projection"
+
+[[cases]]
+id = "memorizing-lift-negative"
+requirement = "CORE-LIFT-001"
+polarity = "negative"
+given = ["larger lookup-table model", "training fit only"]
+expect = ["lift not validated"]
+oracle = "held-out projection failure or complexity rejection"
+
+[[cases]]
+id = "surface-preserving-law-violation-negative"
+requirement = "CORE-RECEIPT-001"
+polarity = "negative"
+given = ["successor preserves live-cell count and selected margins", "successor violates B3/S23"]
+expect = ["alpha = VALID", "beta candidate established", "gamma = LAW_VIOLATION", "REFUTED_IN_MODEL"]
+oracle = "exact B3/S23 transition"
+
+[[cases]]
+id = "lawful-termination-positive"
+requirement = "CORE-TERM-001"
+polarity = "positive"
+given = ["generated collision", "preregistered motif identity and termination rule", "identified candidate or uniform surviving candidate set"]
+expect = ["LAWFUL_TERMINATION"]
+oracle = "exact B3/S23 evolution and identity rule"
+
+[[cases]]
+id = "mixed-termination-negative"
+requirement = "CORE-TERM-001"
+polarity = "negative"
+given = ["underdetermined candidate set", "one candidate terminates", "one continues lawfully"]
+expect = ["not universal LAWFUL_TERMINATION", "mixed alternatives retained"]
+oracle = "candidate-level continuation classifier"

@@ -1,5 +1,8 @@
 # Free Will (Toy: Two-Stage Reasons-Responsive Agent)
 
+> **Status: non-normative illustration.** The observations, expected values, and historical scores below teach a framing only. They are not a TSC v4 conformance result, calibration anchor, or measurement verdict.
+
+
 **Phenomenon:** Choices that are **reasons-responsive** yet not strictly deterministic, via a two-stage model: (1) generate candidates with noise; (2) select by reasons.
 
 **Scope:** Minimal table with contexts and reason scores for two actions (A, B). **H** captures reasons-responsiveness and replay-stability; **V** constrains how noise interacts with reasons; **D** specifies the decision procedure.
@@ -71,7 +74,7 @@ tsc:
         - [c7, 0.55, 0.40, A, A]
         - [c8, 0.40, 0.60, B, B]
   
-  expected:
+  illustrative_non_normative:
     c_sigma: 0.76
     tolerance: 0.07
     rationale: "Strong reasons-responsiveness with small, principled replay flips near ties."

@@ -1,47 +1,74 @@
 # The TSC Thesis
 
-TSC (Triadic Self-Coherence) is a theory of measurement for systems that describe themselves.
+TSC is a theory of warranted coherence claims.
 
-It answers one question:
+It asks:
 
-> Do three independent descriptions of the same system still describe one system?
+> Under a declared methodology, do these observations support one lawful generative process, and what remains unresolved?
 
-The three descriptions are:
+A TSC result is a proof-carrying receipt, not a context-free score.
 
-- **α — pattern coherence** — does the system have stable internal structure?
-- **β — relational coherence** — do the parts refer to each other consistently?
-- **γ — process coherence** — does the system evolve without losing identity?
+## Three proof obligations
 
-These are not metrics to optimize. They are observations. A system either coheres or it does not.
+TSC retains three differently typed receipt roles:
 
-## What TSC is not
+- **α — manifestation** — are the observations valid, complete enough, repeatable, and uncertainty-bounded?
+- **β — relational atlas** — do the maps and generator presentations form joint realization candidates that globalize into one relational account?
+- **γ — continuation** — do applicable candidates predict and continue lawfully under held-out observation or intervention?
 
-TSC is not a linter. It does not enforce style, count errors, or check syntax.
+The roles are non-substitutable and asymmetrically dependent. They are not three independent views and are not freely permutable axes.
 
-TSC is not a test suite. It does not assert expected outputs.
+## What coherence means
 
-TSC is not a quality score. A high C_Σ does not mean "good" — it means "coherent." A coherent system can be wrong. An incoherent system cannot be trusted to know whether it is right.
+A coherence claim is always scoped to:
 
-## How it works
-
-1. A **target** declares what is being measured: which files, what kind of surface.
-2. The **engine** collects those files into a raw bundle and sends them to an LLM with a scoring instruction.
-3. The LLM returns α, β, γ scores with evidence.
-4. The engine validates and reports.
-
-The theory lives in `spec/`. The engine lives in `engine/ocaml/`. The scoring instruction lives in `runtime/SELF-MEASURE.md`.
-
-## The triadic composite
-
-The composite score is the geometric mean:
-
-```
-C_Σ^math = (α · β · γ)^(1/3)
-C_Σ^num  = (max(α, ε) · max(β, ε) · max(γ, ε))^(1/3)
+```text
+methodology
+generator class
+observation and input contract
+relation and generator search
+input-indexed equivalence
+fit and complexity
+approximation
+oracle
+standing
 ```
 
-`C_Σ^math` is the mathematical aggregate — one zero component collapses it to zero. This is intentional: coherence is not an average.
+TSC distinguishes:
 
-`C_Σ^num` is the numerical aggregate used for reporting and verdicts. It floors each component at `ε = 10⁻⁵` so the score stays well-defined when a component is exactly zero. The two aggregates coincide whenever every component is at or above `ε`.
+```text
+no realization
+realization only over budget
+several lawful candidates
+one identified candidate
+search unable to decide
+held-out support
+law violation
+lawful termination
+model insufficiency
+validated model lift
+```
 
-Both forms are emitted under `provenance.aggregate_math` and `provenance.aggregate_numeric` in every report (canonical v3.2 shape). There is no flat top-level `c_sigma` — readers consult provenance for the aggregate facts and the per-axis values for the bottleneck.
+These states cannot be replaced by one scalar.
+
+## How v4 works
+
+1. A CM declares how a domain is observed, modeled, searched, tested, and receipted.
+2. The compiler normalizes that declaration into an executable descriptor.
+3. A sandbox and CM0 assessment characterize the methodology as an instrument.
+4. `V` issues an admission verdict; `δ` decides the authorized boundary use.
+5. The runtime observes a compatible target, retains maps and candidate alternatives, tests continuation, and emits a receipt.
+6. Observation Dynamics preserves lineage, dependence, comparison conditions, intervention provenance, and prior failures.
+
+## Current repository status
+
+The specification is 4.0.0 Draft. The current `coh` engine is a repository-proxy implementation from the v3.2-era line; it does not implement v4.
+
+Read [`../STATUS.md`](../STATUS.md) before interpreting current scores.
+
+## Read next
+
+- [`../spec/README.md`](../spec/README.md)
+- [`../spec/c-equiv.md`](../spec/c-equiv.md)
+- [`../spec/tsc-core.md`](../spec/tsc-core.md)
+- [`../spec/tsc-conformance.md`](../spec/tsc-conformance.md)

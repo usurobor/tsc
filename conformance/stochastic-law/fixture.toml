@@ -1,0 +1,45 @@
+format = "tsc-conformance-fixture/0.1"
+id = "stochastic-law-v4"
+version = "0.2.0"
+status = "specified"
+domain = "Law-relative stochastic process"
+requirements = ["CORE-LAW-001"]
+
+[claim_contract]
+generator_class = "bounded i.i.d. Bernoulli process family"
+equivalence = "equality of predictive distributions and the fixed temporal-independence atlas under declared histories"
+generator_search_claim = "complete_within_bound"
+generator_search_bound = "finite preregistered Bernoulli parameter grid p in {0.4,0.5,0.6}"
+relation_search_claim = "complete"
+relation_search_bound = "single fixed temporal-independence atlas"
+evidence_boundary = "held-out trace generated from an independently seeded stream after fit parameters are fixed"
+oracle_independence = "predeclared stochastic test consumes held-out data unavailable to fitting"
+
+[generator]
+kind = "i.i.d. Bernoulli process generator"
+planned_source = "stochastic-law/generator"
+deterministic = false
+
+[oracle]
+kind = "preregistered stochastic fit and held-out oracle"
+planned_source = "stochastic-law/oracle"
+
+[reproducibility]
+planned_command = "coh conformance run stochastic-law-v4"
+seed = 1337
+
+[[cases]]
+id = "iid-lawful-positive"
+requirement = "CORE-LAW-001"
+polarity = "positive"
+given = ["generated i.i.d. Bernoulli trace", "i.i.d. Bernoulli CM", "independent held-out sample"]
+expect = ["random appearance alone is not refutation", "SUPPORTED_IN_MODEL under the fixed seeded oracle", "tested_identification_status = UNDERDETERMINED"]
+oracle = "declared stochastic fit and held-out test"
+
+[[cases]]
+id = "iid-contract-violation-negative"
+requirement = "CORE-LAW-001"
+polarity = "negative"
+given = ["similar marginal frequency", "systematic temporal dependence violating the declared i.i.d. law"]
+expect = ["candidate removed or REFUTED_IN_MODEL when no alternative remains"]
+oracle = "predeclared dependence test"

@@ -1,93 +1,64 @@
-# TSC engine (OCaml)
+# TSC Repository-Proxy Engine
 
-The canonical implementation of the TSC verifier. The binary is `coh`.
+`engine/ocaml/` builds the `coh` binary for software release `0.12.0`.
 
-This engine implements **TSC spec v3.2.2**. Note: `spec/` on `main` is now the
-**v4.0.0** specification (normative, unimplemented — see [`/STATUS.md`](../../STATUS.md));
-the engine does **not** implement v4. The v3.2.2 specification this engine
-implements is preserved in-tree at [`spec/archive/3.2.2/`](../../spec/archive/3.2.2/).
+It is the canonical executable of the current repository-proxy methodology. It is **not** an implementation of TSC v4.
 
-## Pipeline
+The exact status and immutable semantic pin live in [`CONTRACT.md`](CONTRACT.md).
 
-One shared pipeline for every input:
+## Current pipeline
 
-1. Resolve input — named target (`--target` + `--registry`), direct
-   globs (`--files`), or kata (`--kata`)
-2. Build a deterministic bundle: ordered files, raw text, SHA-256 per file
-3. Choose the scoring backend from `--mode`
-   (`mechanical` | `llm` | `hybrid` | `auto`)
-4. Compute the result
-5. Validate and write reports
+1. Resolve a named target, direct file glob, or kata.
+2. Build a deterministic content-addressed text bundle.
+3. Run `mechanical`, `llm`, `hybrid`, or `auto` mode.
+4. Validate provider output when present.
+5. Emit the current proxy report.
 
-`coh self` dispatches to the rendered `coh-self` command
-(git-style external subcommand); the self-measurement procedure is
-declared in `skills/self-measure/SKILL.md`, not here.
+## Modules
 
-## Module map
+| Module | Current role |
+|---|---|
+| `lib/coherence.ml` | v3.2-era barrier transform, scalar aggregates, gauge proxy |
+| `lib/mechanical_scoring.ml` | Deterministic structural proxies |
+| `lib/response_schema.ml` | LLM response validation |
+| `lib/hybrid_scoring.ml` | Current proxy-route combination |
+| `lib/prompt.ml` | Proxy prompt assembly |
+| `lib/bundle.ml` | Bundle hashing and ordering |
+| `lib/target_registry.ml` | Target registry and manifest resolution |
+| `lib/kata.ml` | Current regression-kata manifests |
+| `lib/cross_target.ml` | Current scalar cross-target aggregation |
+| `lib/consistency.ml` | Current witness-repeat spread |
+| `lib/factorized_beta.ml` | Experimental bounded β adjudication infrastructure |
+| `lib/report.ml` | Current JSON and text reports |
+| `bin/main.ml` | CLI and current mode dispatch |
 
-| Module | Role |
-|--------|------|
-| [lib/coherence.ml](lib/coherence.ml) | Aggregate math: barrier transform φ, `C_sigma_math` / `C_sigma_num`, gauge witness. The one source of aggregate truth. |
-| [lib/mechanical_scoring.ml](lib/mechanical_scoring.ml) | Deterministic structural backend — twelve signals across α/β/γ; no LLM, no network. |
-| [lib/response_schema.ml](lib/response_schema.ml) | Witness (LLM) response validation — one funnel for every refusal stage. |
-| [lib/hybrid_scoring.ml](lib/hybrid_scoring.ml) | Pure combiner of mechanical + LLM results. |
-| [lib/prompt.ml](lib/prompt.ml) | Prompt assembly: scoring instruction + target metadata + bundle. |
-| [lib/bundle.ml](lib/bundle.ml) | Shared bundle model (hashing, ordering). |
-| [lib/target_registry.ml](lib/target_registry.ml) | `targets/registry.tsc` + manifest parsing, glob expansion. |
-| [lib/kata.ml](lib/kata.ml) | `kata.toml` parsing for the kata framework. |
-| [lib/cross_target.ml](lib/cross_target.ml) | Cross-target aggregate report (Operational §7.4). |
-| [lib/ood.ml](lib/ood.ml) | Out-of-distribution tracking over rolling aggregates. |
-| [lib/lipschitz.ml](lib/lipschitz.ml) | Link-Lipschitz constant (Operational §7.1). |
-| [lib/report.ml](lib/report.ml) | JSON + text report emission. |
-| [lib/consistency.ml](lib/consistency.ml) | Consistency protocol, LLM arm: k-sample spread report, routed through `Coherence.phi` (backs `coh consistency-spread`). |
-| [lib/witness_numeric.ml](lib/witness_numeric.ml) | The seven-field numeric witness contract vector — shared by the spread and the medoid. |
-| [lib/witness_medoid.ml](lib/witness_medoid.ml) | Medoid-of-k adjudication election (backs `coh witness-medoid`). |
-| [lib/credentials.ml](lib/credentials.ml) | Local LLM credential detection for auto-mode. |
-| [lib/types.ml](lib/types.ml) | Shared result types + the witness protocol version constant. |
-| [bin/main.ml](bin/main.ml) | CLI entrypoint: mode dispatch, external witness route (`--emit-prompt`, `--llm-response`), `coh self` dispatch, `consistency-spread` / `witness-medoid` subcommands. |
-| [bin/provider.ml](bin/provider.ml) | HTTP provider transport (Anthropic / OpenAI-compatible). |
-| [bin/dotenv.ml](bin/dotenv.ml) | `.tsc/.env` credential loading. |
+## Not implemented
 
-Tests live in [test/](test/); run with `dune runtest`. Fixture schemas:
-[test/fixtures/report.schema.json](test/fixtures/report.schema.json),
-[test/fixtures/provenance_v3_2_0.schema.json](test/fixtures/provenance_v3_2_0.schema.json).
+```text
+CMSource → CompiledCM
+BehaviorContract validation
+SET_FINAL / GENERAL_FINAL enforcement
+relation-search atlas
+candidate sets and fibers
+ManifestationReceipt / RelationalAtlas / ContinuationReceipt
+failure-persistent lineage
+v4 standing and authorization
+```
 
-## Build
+Current scalar outputs do not become v4 receipts by renaming fields.
+
+## Build and test
 
 ```bash
 opam install . --deps-only --with-test -y
-dune build      # binary: _build/default/bin/main.exe
+dune build
 dune runtest
 ```
 
-The engine version lives in `VERSION` at the repo root — the single
-version source; `dune-project` must agree, enforced by
-`scripts/check-version-consistency.sh`.
+`VERSION` is the software release source. Specification versions are independent.
 
 ## Change discipline
 
-Release history lives in `CHANGELOG.md` at the repo root; engine releases
-are cut by `scripts/release.sh`, which gates on a changelog entry.
-Behavioral anchors live in `katas/` — any change to scoring must keep
-every kata's declared expectation (`coh --kata <id> --mode mechanical`).
+Changes preserve the current proxy regression contract unless they explicitly revise that contract and its katas.
 
-## Known debt
-
-Explicit and bounded; tracked here until closed:
-
-- **Interface coverage.** Only `mechanical_scoring` has a `.mli`; the
-  other lib modules expose their internals, so their public surfaces are
-  convention rather than compiler-checked. Target: an interface per lib
-  module to the standard `mechanical_scoring` sets.
-- **Hybrid cross-target.** The engine's cross-target report is
-  mechanical-only this cycle; the coherence ledger computes the hybrid
-  cross aggregate script-side (same §7.4 geometric mean). Target: extend
-  `cross_target` to accept hybrid per-target reports so the engine owns
-  that aggregation everywhere.
-- **Witness-contract version prose.** The engine side is single-sourced
-  (`Types.self_measure_protocol_version`, consumed by prompt metadata
-  and the validator), but the instruction's own title and §3 header are
-  prose: a protocol bump that edits one surface and misses the other
-  compiles cleanly and is caught only at test time
-  (`test_protocol_version_pin` greps both). Residual: no
-  compile-time link between constant and instruction text.
+A future v4 engine enters through the v4 CM lifecycle and passes [`spec/tsc-conformance.md`](../../spec/tsc-conformance.md). It must not reinterpret existing proxy reports as v4 evidence.

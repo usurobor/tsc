@@ -1,5 +1,8 @@
 # Operator Manual
 
+> **Current scope:** This guide operates the 0.12.0 repository-proxy engine. It does not describe a TSC v4-conforming runtime.
+
+
 This manual covers building, configuring, and running the TSC engine.
 
 ---

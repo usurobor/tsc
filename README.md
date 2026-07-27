@@ -1,127 +1,90 @@
-# TSC (Triadic Self-Coherence)
+# TSC
 
-> **Specification v4.0.0 (normative, unimplemented). The shipping engine implements v3.2.2.**
-> The `spec/` tree describes v4, which has **no implementation yet**; the `coh` binary and
-> everything under "Quick start" is the **v3.2.2 engine**. A "spec 4.0.0" on `main` does not
-> mean "TSC 4.0.0 works." See [STATUS.md](STATUS.md).
+TSC defines how a declared methodology may warrant that observations belong to one lawful generative process.
 
-See [docs/THESIS.md](docs/THESIS.md) for what TSC is.
+The repository currently contains two different surfaces:
 
-## Repo contents
+- **TSC specification 4.0.0 Draft** — the current theory and conformance contract;
+- **`coh` software 0.12.0** — the current repository-proxy engine, which does not implement TSC v4.
 
-- `spec/` — canonical theory
-- `engine/ocaml/` — canonical implementation
-- `runtime/SELF-MEASURE.md` — canonical LLM scoring instruction
-- `targets/` — named target declarations
-- `skills/` — [typed skill modules](skills/README.md) (self-measurement declaration)
-- `schemas/` — [CUE schemas](schemas/README.md) validating skill frontmatter
-- `katas/` — [kata framework](katas/README.md) (pedagogical/regression inputs with expected outcomes)
-- `docs/` — [documentation tree](docs/README.md) (operator manual, design, governance)
-- `examples/` — runnable examples
-- `tests/` — conformance and implementation tests
+Read [`STATUS.md`](STATUS.md) before interpreting any score or report.
 
-## Quick start
+## Repository map
 
-These commands drive the **v3.2.2 engine** (the shipping binary), not the v4
-specification — v4 is unimplemented (see [STATUS.md](STATUS.md)).
+| Path | Role | Authority |
+|---|---|---|
+| [`spec/`](spec/README.md) | Typed articulation, coherence receipts, methodology lifecycle, observation dynamics, conformance | Canonical draft specification |
+| [`conformance/`](conformance/README.md) | Fixtures implementing specification requirement IDs | Evidence; no standing until verified |
+| [`engine/ocaml/`](engine/ocaml/README.md) | Current `coh` repository-proxy executable | Canonical executable of the proxy methodology, not v4 |
+| [`skills/`](skills/README.md) | Current self-measurement and CM-of-CMs declarations | Authority for existing proxy methodologies |
+| [`katas/`](katas/README.md) | Regression inputs for the current proxy engine | Implementation regression only |
+| [`illustrations/`](illustrations/README.md) | Conceptual examples | Informative |
+| [`docs/`](docs/README.md) | Design, research, governance, and guides | Authority stated by each document |
+| [`.tsc/`](.tsc/COHERENCE.md) | Generated reports and historical ledger | Generated state; not theory |
+
+## Read the theory
+
+1. [`spec/c-equiv.md`](spec/c-equiv.md) — typed articulation and exact deterministic Set behavior;
+2. [`spec/tsc-core.md`](spec/tsc-core.md) — behavior contracts, joint realization fibers, and structured receipts;
+3. [`spec/tsc-oper.md`](spec/tsc-oper.md) — compilation, assessment, admission, authorization, execution, and refusal;
+4. [`spec/tsc-observation-dynamics.md`](spec/tsc-observation-dynamics.md) — lineage, comparison, intervention, lift, and failure persistence;
+5. [`spec/tsc-conformance.md`](spec/tsc-conformance.md) — permanent proof obligations.
+
+The motivation and historical evidence live outside the normative specification:
+
+- [`DESIGN.md`](docs/design/foundation-contract-reconciliation/DESIGN.md)
+- [`ARCHAEOLOGY.md`](docs/design/foundation-contract-reconciliation/ARCHAEOLOGY.md)
+- [`CUTOVER-RECEIPT.md`](docs/design/foundation-contract-reconciliation/CUTOVER-RECEIPT.md)
+
+## Run the current repository proxy
 
 ```bash
-# Install
 curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
-
-# Measure files locally — no credentials required (mechanical mode)
-git clone https://github.com/usurobor/tsc.git && cd tsc
+git clone https://github.com/usurobor/tsc.git
+cd tsc
 coh --mode mechanical --files spec/ --output .tsc/
-
-# Measure with LLM (semantic + structural, requires credentials)
-export LLM_PROVIDER=anthropic
-export LLM_MODEL=claude-sonnet-4-20250514
-export LLM_API_KEY=sk-ant-your-key
-coh --mode hybrid --target spec --registry targets/registry.tsc
-
-# Auto mode: picks hybrid if credentials present, mechanical otherwise
-coh --target spec --registry targets/registry.tsc
 ```
 
-See the [full quick start guide](QUICKSTART.md) for all modes and options.
-
-See the [operator manual](docs/beta/guides/OPERATOR-MANUAL.md) for configuration and usage.
-
-## Scoring modes
-
-| Mode | Credentials needed | What it does |
-|------|--------------------|--------------|
-| `mechanical` | No | Deterministic structural-proxy scoring. Works offline and in CI. |
-| `llm` | Yes | Semantic scoring via `runtime/SELF-MEASURE.md`. |
-| `hybrid` | Yes | Runs both backends; report contains `mechanical`, `llm`, and `final` sub-objects. |
-| `auto` | Optional | `hybrid` when the full provider configuration (`LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`) is present; `mechanical` otherwise — a partial set warns with the missing names and falls back. (Default.) |
-
-Direct file input (`--files <glob>`) works with any mode. Named targets (`--target`) require `--registry`.
-
-## Self-measurement
-
-TSC measures itself:
+Run the declared self-measurement route:
 
 ```bash
-coh self --mode mechanical   # deterministic, offline, no credentials
-coh self                     # auto: hybrid when the full LLM provider config is present
+coh self --mode mechanical
 ```
 
-The whole procedure — which steps are fully mechanical and exactly what
-cognitive work is delegated to an LLM, under what constraints — is declared
-in [skills/self-measure/SKILL.md](skills/self-measure/SKILL.md). That skill
-is the authority: its frontmatter is validated by [schemas/skill.cue](schemas/skill.cue),
-cross-checked against the engine source, and rendered into the `coh-self`
-command and the [`tsc-self-measure`](.github/workflows/tsc-self-measure.yml)
-workflow (mechanical job always on; the LLM witness runs via a pinned
-Claude CLI, gated by the presence of the `CLAUDE_CODE_OAUTH_TOKEN`
-secret — no separate toggle to drift out of sync with it). CI proves the
-rendered artifacts match the skill byte-for-byte.
+These commands emit v3.2-era repository-proxy results. They are useful for regression, defect discovery, and historical comparison within that methodology. They are **not** v4 coherence receipts and carry no v4 conformance standing.
 
-## Theory stack
+See [`QUICKSTART.md`](QUICKSTART.md) for the current executable path.
 
-Start with `spec/c-equiv.md`, then `tsc-core.md`, `tsc-oper.md`, `tsc-observation-dynamics.md`, `tsc-glossary.md`. See the [doctrine bundle](docs/alpha/doctrine/) for reading order.
+## Conformance status
 
-## Kata framework
+No implementation currently conforms to TSC v4. The first fixture families are specified under [`conformance/`](conformance/README.md). A specified fixture earns no standing until its generator, oracle, positive case, negative case, and evidence are implemented and verified.
 
-Run the engine against curated inputs with known expected outcomes:
+Normative headers remain `Status: Draft` until the ratification gate closes and the ratification-only commit is independently reviewed.
 
-```bash
-# Smoke-test: kata-01 is the positive control (should always pass)
-coh --kata 01-glider --mode mechanical
+## Version domains
 
-# Negative control: kata-02 should score low (expected fail)
-coh --kata 02-random-soup --mode mechanical
+TSC versions these artifacts independently:
+
+```text
+specification
+software / engine
+methodology
+receipt schema
 ```
 
-See [katas/README.md](katas/README.md) for the framework, `kata.toml` schema, and how to add katas.
-
-## Architecture
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for how theory, targets, katas, and verifier fit together.
+`VERSION` is the software release source. Specification versions live in specification headers. A change in one lineage does not imply a change in another.
 
 ## Contributing
 
-Useful contributions fall into four areas: theory, targets, verifier, tests. Keep them aligned.
+A contribution names the surface it changes and proves the matching contract:
 
-## License
+- specification changes require mathematical and cross-spec review;
+- conformance changes require positive and negative evidence;
+- engine changes require regression tests and truthful status projections;
+- methodology changes require calibration, standing, and lineage evidence.
 
-CC-BY-4.0
+## License and citation
 
-## Citation
+TSC is licensed under [CC BY 4.0](LICENSE).
 
-```bibtex
-@software{tsc2026,
-  title   = {TSC: Triadic Self-Coherence Framework},
-  author  = {Peter Lisovin},
-  year         = {2026},
-  version      = {0.12.0},
-  spec-version = {4.0.0},
-  url          = {https://github.com/usurobor/tsc}
-}
-```
-
-## Contact
-
-- **Issues:** [GitHub Issues](https://github.com/usurobor/tsc/issues)
-- **Email:** usurobor@gmail.com
+Citation metadata lives in [`CITATION.cff`](CITATION.cff). Do not copy a software version literal into another document.

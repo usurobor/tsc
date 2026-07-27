@@ -4,49 +4,69 @@
 **Status:** Draft
 **Artifact:** Normative measurement semantics
 
-## 0 · Governing question
+## Governing question
 
 > When do observations warrant the claim that they belong to one lawful generative process under a declared methodology?
 
-TSC answers with a proof-carrying receipt. The receipt preserves the observations, the relations among them, the candidate generators that explain them, and the tests of how those generators continue.
+TSC answers with a proof-carrying receipt. The receipt preserves the observations, the relations among them, the joint generator-and-atlas realization candidates that explain them, and the tests of how those generators continue.
 
-Coherence is always relative to a declared Coherence Methodology (CM). It is not a context-free property and it is not identified with visible order, low entropy, agreement among projections, or the absence of articulation.
+Coherence is relative to a declared Coherence Methodology (CM). It is not a context-free scalar and is not identified with visible order, low entropy, agreement among projections, or absence of articulation.
 
----
+## 1 · Foundation contract
 
-## Primitive contract
-
-Let `P` be a type of poles and:
+Import from C≡:
 
 ```text
-Rel : P × P → Set
-Art := Σ(s : P). Σ(o : P). Rel(s,o)
+P                         pole type
+Rel : P × P → Set         dependent relation family
+Art := Σ(s:P).Σ(o:P).Rel(s,o)
 ```
 
-A concrete pointed generator is:
+The canonical deterministic Set presentation is:
 
 ```text
-G = (X, I, c, x_0)
+SetPresentation := (X,I,c,x_0)
 c : X × I → Art × X
 ```
 
-`X` is a state space, `I` is the input/query/intervention space relative to the tested boundary, and `c` emits one typed articulation event and one successor state.
+A CM that needs another transition structure declares:
 
-A measurement may use final behavior, finite unfolding, or another declared approximation. It must retain the concrete presentation whenever complexity, mechanism, intervention, or standing depends on it.
+```text
+GeneralPresentation := (
+  carrier category C,
+  system functor F : C → C,
+  state object X,
+  structure map c : X → F(X),
+  pointed-state witness x_0,
+  typed articulation interface
+)
+```
 
----
+When `C` has a terminal object, `x_0` may be a generalized element `1_C → X`. Another category uses an equally explicit state witness.
 
-## 1 · Measurement context
+The articulation interface states how one system step produces or predicts typed `Art` events under the CM's input and observation contract. A stochastic or nondeterministic presentation does not acquire the deterministic Set contract by notation alone.
+
+Write:
+
+```text
+BehaviorPresentation := SetPresentation | GeneralPresentation
+```
+
+A measurement may use exact final behavior, a general final behavior, finite access, or an approximation. It retains the concrete presentation whenever complexity, mechanism, intervention, or standing depends on it.
+
+## 2 · Measurement context
 
 A CM defines one measurement context:
 
 ```text
 M := (
   identity,
-  carrier,
+  carrier and behavior contract,
   generator class,
-  input and observation contract,
-  relation and equivalence contract,
+  query and observation contract,
+  relation-search contract,
+  generator-search contract,
+  equivalence contract,
   approximation contract,
   complexity contract,
   oracle contract,
@@ -54,7 +74,7 @@ M := (
 )
 ```
 
-### 1.1 Identity
+### 2.1 Identity
 
 A CM declares:
 
@@ -67,7 +87,7 @@ implementation_digest
 
 Every receipt binds to these values.
 
-### 1.2 Generator class
+### 2.2 Generator class
 
 A CM declares a hypothesis class:
 
@@ -75,461 +95,307 @@ A CM declares a hypothesis class:
 H_M
 ```
 
-Each candidate `G ∈ H_M` is a pointed open generator:
+Each `G ∈ H_M` is a `BehaviorPresentation` admitted by the CM's behavior contract. The class states the allowed:
 
 ```text
-G = (X, I, c, x_0)
-c : X × I → Art × X
+presentation kind
+state spaces or objects
+parameters
+laws
+resources
+representations
+system functor and articulation interface, when general
+input adapter, when the presentation input differs from I_M
 ```
 
-The class declares the allowed state spaces, parameters, laws, resources, and representations.
+Every candidate exposes the CM's `Art` and `I_M` contracts directly or through a typed adapter retained in the receipt.
 
-### 1.3 Query and intervention contract
+### 2.3 Query and intervention contract
+
+Let `I_M*` be the finite histories over `I_M`, including the empty history.
 
 A CM declares:
 
 ```text
 I_M                         input/query/intervention space
 query_mode                  exogenous | endogenous | mixed
-J_passive ⊆ I_M*            passive observation histories
+J_passive ⊆ I_M*            passive histories
 J_active  ⊆ I_M*            active intervention histories
 ```
 
-The boundary between generated and externally supplied queries is part of the measurement contract.
+The empty history may address the initial state before any transition. The boundary between generated and externally supplied queries is part of the claim.
 
-### 1.4 Observation channels
+### 2.4 Observation channels
 
-Let `Q_M` be the set of observation channels. Each channel `q : Q_M` has an observation space:
+Let `Q_M` be the set of observation channels. Each `q : Q_M` has an observation space `O_q`.
 
-```text
-O_q
-```
+The observation contract states how a realization candidate predicts each channel under an input history. The prediction operator is defined with the realization candidate in §2.8 so an unknown correspondence cannot be hidden as fixed preprocessing.
 
-The CM defines a prediction operator:
-
-```text
-predict_M(G, u, q) : Pred(O_q)
-```
-
-where:
-
-- `G ∈ H_M`;
-- `u ∈ I_M*` is an input history;
-- `Pred(O_q)` is a value, set, interval, or probability distribution appropriate to the channel.
-
-### 1.5 Evidence item
+### 2.5 Evidence item
 
 An evidence item is:
 
 ```text
 E := (
   evidence_id,
-  input_history u,
-  channel q,
-  observed value o,
+  input_history,
+  channel,
+  observed_value,
   uncertainty,
   provenance,
   holdout_role
 )
 ```
 
-`holdout_role` is one of:
+`holdout_role` is:
 
 ```text
-fit | calibration | held_out | intervention
+fit | calibration | held_out | intervention | post_hoc
 ```
 
 A dataset `D` is a finite set of evidence items plus a completeness declaration.
 
-### 1.6 Fit and complexity
+### 2.6 Search claim
+
+Use one vocabulary for every search surface:
+
+```text
+SearchClaim :=
+  complete
+  | complete_within_bound(bound)
+  | heuristic
+  | sampled(protocol)
+```
 
 A CM declares:
 
 ```text
-L_M(G,D)       fit or loss
-K_M(G)         complexity or prior cost
+generator_search_claim : SearchClaim
+relation_search_claim  : SearchClaim
+```
+
+A failed search proves absence only when the corresponding search claim warrants it.
+
+### 2.7 Relation-search contract
+
+The β relation-search contract declares:
+
+```text
+relation constructor or solver family
+implementation and solver digests
+search claim and bounds
+selection policy
+parameters and seeds
+pruning rules
+uncertainty model
+orchestration with generator search
+```
+
+The β receipt retains:
+
+```text
+candidate maps considered
+maps retained
+maps pruned and why
+alternative maps
+map-level uncertainty
+sensitivity to selection policy
+search schedule or fixed-point protocol
+```
+
+Relation search and generator search may interleave. The schedule is declared and receipted. A heuristic relation search may propose an atlas; it may not prove that no valid map exists or that the atlas is unique.
+
+### 2.8 Realization candidates
+
+For `G ∈ H_M` and dataset `D`, let:
+
+```text
+A_M(G,D)
+```
+
+be the CM-declared class of admissible atlas candidates produced by the relation contract. An atlas candidate contains the maps and transformation structure needed to relate the concrete generator presentation to the observation episodes.
+
+Define the joint realization-candidate class:
+
+```text
+R_M(D) := {
+  R = (G,A) |
+  G ∈ H_M,
+  A ∈ A_M(G,D)
+}
+```
+
+A realization candidate retains both the generator and the atlas. The CM may derive a unique atlas mechanically from `G`; when it does, that derivation and its sufficiency proof remain in the receipt.
+
+The prediction operator is:
+
+```text
+predict_M(R, u, q) : Pred(O_q)
+```
+
+where `u ∈ I_M*`. A CM may project `R` to `G` internally only when the atlas is irrelevant to that prediction by a declared proof.
+
+The identification target is explicit:
+
+```text
+identification_target = generator | atlas | joint_realization | another_declared_target
+```
+
+The equivalence contract in §2.10 determines which differences matter for that target.
+
+### 2.9 Fit and complexity
+
+A CM declares:
+
+```text
+L_M(R,D)       fit or loss for a joint realization candidate
+K_M(R)         complexity or prior cost for generator plus atlas
 τ_M            admissible fit bound
 κ_M            admissible complexity bound
 ```
 
-The representation language or prior that gives `K_M` meaning is part of the CM.
+`K_M` accounts for every presentation choice used to explain the evidence, including a nontrivial atlas or relation-selection rule. The representation language, prior, or resource model that gives `K_M` meaning is part of the CM.
 
-### 1.7 Equivalence
+### 2.10 Input-indexed equivalence
 
-A CM declares an equivalence relation:
-
-```text
-G ≃_M G'
-```
-
-The relation states which presentation differences do not matter for the claim being made.
-
-The CM also declares whether equivalence is based on:
-
-- concrete presentation isomorphism;
-- passive behavior;
-- active/interventional behavior;
-- another explicit criterion.
-
-### 1.8 Search claim
-
-A CM declares the strength of its candidate search:
+A CM declares an equivalence family over realization candidates:
 
 ```text
-search_claim = complete | complete_within_bound | heuristic | sampled
+R ≃_M^J R'
 ```
 
-A failed search proves an empty candidate class only when the declared search claim warrants that conclusion.
+for every input family `J` used by the claim.
 
----
-
-## 2 · Candidate fiber
-
-### 2.1 Definition
-
-Partition the evidence by role:
+The family states which generator and atlas differences are unobservable or irrelevant under `J` and the declared identification target. It may be based on:
 
 ```text
-D_train := D_fit ∪ D_calibration
-D_test  := D_held_out ∪ D_intervention
+presentation isomorphism
+atlas isomorphism or gauge
+behavior over J
+active/interventional behavior over J
+another explicit criterion
 ```
 
-The fitted candidate fiber is:
+It satisfies refinement monotonicity:
 
 ```text
-F_M^train(D) := {
-  [G]_≃M |
-  G ∈ H_M,
-  L_M(G,D_train) ≤ τ_M,
-  K_M(G) ≤ κ_M
-}
+J_1 ⊆ J_2
+and R ≃_M^J_2 R'
+⇒ R ≃_M^J_1 R'
 ```
 
-The **fit-only fiber** drops the complexity bound, so that *no generator fits* is distinguishable from *a generator fits but exceeds the budget*:
+Wider input families may distinguish realization candidates that a narrower family identifies.
+
+Prediction, fit, complexity, and oracle contracts are congruent with the equivalence used for their evidence regime. If equivalent realizations can receive different outcomes, the CM refines the equivalence or reports the class relation as unresolved.
+
+Identification is always relative to the declared target, equivalence family, and input regime.
+
+## 3 · Behavior contract
+
+Behavioral semantics and empirical access are separate declarations.
+
+### 3.1 Finality basis
 
 ```text
-F_M^fit(D) := { [G]_≃M | G ∈ H_M, L_M(G,D_train) ≤ τ_M }
+FinalityBasis :=
+  SET_FINAL {
+    universe,
+    canonical deterministic generator shape,
+    canonical F_I object action,
+    canonical F_I morphism action,
+    canonical behavior object Art^(I+)
+  }
+
+  | GENERAL_FINAL {
+    carrier_category,
+    object_action,
+    morphism_action,
+    functor_laws,
+    pointed_state_contract,
+    articulation_interface,
+    behavior_object,
+    finality_witness
+  }
+
+  | NO_FINALITY_CLAIM
 ```
 
-The tested candidate fiber is the subset that also satisfies the preregistered oracle without refitting:
+`SET_FINAL` applies only when:
 
 ```text
-F_M^test(D) := {
-  [G]_≃M ∈ F_M^train(D) |
-  oracle_M(G,D_test) = PASS
-}
+P, I, X, and every Rel(s,o) belong to one declared Set universe;
+Art is their dependent sum;
+c has deterministic shape X × I → Art × X;
+the canonical C≡ functor and final behavior construction are used.
 ```
 
-When the oracle contract does not require held-out or intervention evidence, the receipt sets:
+A continuous deterministic state or input space may satisfy `SET_FINAL` at the underlying Set level.
+
+`SET_FINAL` requires a `SetPresentation`. A stochastic or nondeterministic kernel may use `SET_FINAL` only after randomness or choice has been made explicit as declared deterministic input or state and the claim is scoped to that reified presentation. Otherwise it uses a `GeneralPresentation` under another finality basis.
+
+Measurable, topological, metric-enriched, or other category-specific claims do not inherit `SET_FINAL` merely because their underlying carriers are sets.
+
+`GENERAL_FINAL` asserts an actual final coalgebra in the declared category. An approximate commuting property or tolerant fixed-point sketch is not a finality witness.
+
+### 3.2 Behavior access
 
 ```text
-test_status = NOT_RUN
+BehaviorAccess :=
+  COMPLETE_SYMBOLIC {
+    representation,
+    decision procedures,
+    supported claims
+  }
+
+  | FINITE {
+    horizon,
+    retained structure,
+    induced equivalence,
+    supported claims
+  }
+
+  | APPROXIMATE {
+    construction,
+    approximation_contract_digest,
+    supported claims
+  }
 ```
 
-and does not treat the training fiber as held-out support.
-
-**Independence of the oracle (I11).** `oracle_M(G,D_test)` carries weight only if `D_test` was not produced, selected, or leaked by the candidate `G` under test. When `query_mode` is endogenous or mixed (C≡ §3.2), a held-out or intervention claim requires an explicitly modeled exogenous channel; a candidate that authors its own oracle has not been tested.
-
-Both fibers are indexed by:
-
-- the CM;
-- the evidence roles and digests;
-- the passive and active input families;
-- the fit and oracle tolerances;
-- the complexity bound;
-- the declared equivalence.
-
-The receipt retains both fibers or verifiable references to them. Test evidence may remove candidates. It must not silently alter their fitted parameters or generator class.
-
-### 2.2 Fiber status
-
-The receipt classifies each applicable fiber as:
+A CM may declare:
 
 ```text
-NO_REALIZATION_IN_MODEL
-  the fit-only fiber F_M^fit is empty under a complete search
-  (no generator fits at any complexity)
-
-REALIZABLE_OVER_BUDGET
-  F_M^fit is nonempty but F_M^train is empty (some generator fits;
-  every fit exceeds κ_M) — a signal to raise κ_M or revise the
-  coding, never a refutation
-
-UNDERDETERMINED
-  two or more inequivalent candidates remain within budget
-
-IDENTIFIED_IN_MODEL
-  exactly one equivalence class remains within budget
-
-UNRESOLVED
-  evidence, search, or approximation cannot establish another status
+finality_basis = SET_FINAL
+behavior_access = FINITE(...)
 ```
 
-`UNDERDETERMINED` is not incoherence. It means the evidence is compatible with more than one lawful generator.
+Exact transition-behavior existence does not imply complete computational or observational access. Empty-history state observations belong to the CM observation contract and may refine the canonical Set behavioral equivalence.
 
-`IDENTIFIED_IN_MODEL` is not absolute truth. It is identification within the declared CM, class, equivalence, bounds, and intervention family.
-
-### 2.3 Widening the input family
-
-Adding independent queries or interventions may refine a fixed fitted fiber:
+### 3.3 Behavior contract
 
 ```text
-J_1 ⊆ J_2  ⇒  F_M^test(D | J_2) ⊆ F_M^test(D | J_1)
+BehaviorContract := (FinalityBasis, BehaviorAccess)
 ```
 
-A CM must not claim this monotonic refinement unless its observation and equivalence contracts make it valid.
+Every behavior-dependent claim names this contract and its digest.
 
----
+## 4 · Approximation contract
 
-## 3 · Three verification receipts
-
-TSC verifies a claim through three non-interchangeable receipts.
-
-### 3.1 α — Manifestation receipt
-
-The α receipt answers:
-
-> Are the observations valid, complete enough for the stated claim, and stable under the declared local checks?
-
-It contains:
+Core is the sole normative owner of empirical approximation.
 
 ```text
-observation ids and digests
-channel and constructor identities
-coverage and missingness
-repeat or perturbation results
-noise and uncertainty
-invalid or out-of-domain evidence
+ApproximationContract := (
+  tolerance monoid,
+  local budget rule,
+  path accumulation,
+  behavioral metric,
+  budget-to-distance interpretation,
+  grounding rules
+)
 ```
 
-Its status is:
+Every approximate claim binds to one immutable contract digest.
 
-```text
-VALID | INCOMPLETE | INVALID
-```
-
-A missing observation is not positive evidence. An empty dataset does not receive a coherence judgment unless the CM explicitly defines an empty-input question.
-
-### 3.2 β — Relational atlas
-
-The β receipt answers:
-
-> Do the observations, correspondences, and transformations form one globally compatible relational structure under the declared model?
-
-It contains:
-
-```text
-source-to-observation maps
-observation-to-observation correspondences
-alternative maps
-map uncertainty
-local residuals
-path compositions
-cycle or globalization checks
-training and tested candidate fibers
-identifiability status
-oracle and test status
-unresolved correspondences
-```
-
-The maps are primary evidence. A residual or scalar may summarize them but cannot replace them.
-
-Pairwise compatibility does not establish a global realization. The CM must define and execute a full-diagram criterion.
-
-### 3.3 γ — Continuation receipt
-
-The γ receipt answers:
-
-> Does the candidate generator continue lawfully under time, viewpoint, scale, intervention, or another declared transformation?
-
-It contains:
-
-```text
-input and intervention histories
-predictions made before observation
-held-out outcomes
-state and identity transport
-composition across paths
-law violations
-birth, merge, split, and termination events
-```
-
-Its status is:
-
-```text
-LAWFUL
-LAW_VIOLATION
-LAWFUL_TERMINATION
-INSUFFICIENT_EVIDENCE
-```
-
-A lawful ending is not degraded coherence. Raw stasis is not process coherence. The CM states what identity means and how it may change or end.
-
----
-
-## 4 · Core axioms
-
-### A1 — Scopedness
-
-Every coherence claim names its CM, evidence, generator class, equivalence, tolerance, complexity bound, and input/intervention family.
-
-### A2 — Realizability
-
-Distinct observations support one process when at least one declared generator produces them within the fit and complexity contract.
-
-Similarity among observations is neither necessary nor sufficient.
-
-### A3 — Relation retention
-
-Every correspondence, transformation, and path used to support realizability remains in the β receipt.
-
-### A4 — Globality
-
-Pairwise fits support a common process only when they satisfy the CM’s full-diagram globalization rule.
-
-### A5 — Non-vacuity
-
-The generator class and complexity contract are declared before fitting. A lookup table or tuple of observations does not establish generativity unless it passes the same complexity and held-out obligations as any other candidate.
-
-### A6 — Identifiability separation
-
-Realizability, uniqueness, and search completeness are different facts and receive different statuses.
-
-### A7 — Law-relative continuation
-
-Randomness is not incoherence. A stochastic process may be lawful under a stochastic CM. A negative control violates a declared law; it need not look disordered.
-
-### A8 — Receipt primacy
-
-Structured evidence remains normative until a quotient is proved sufficient for the exact decision. Incomplete search produces `UNRESOLVED`, not a fabricated negative result.
-
----
-
-## 5 · Coherence disposition
-
-### 5.1 Compatible in model
-
-Evidence is `COMPATIBLE_IN_MODEL` when:
-
-```text
-α = VALID
-F_M^train(D) is nonempty
-γ ≠ LAW_VIOLATION
-```
-
-Compatibility means that at least one bounded candidate accounts for the evidence used to construct it. It is not held-out support and does not establish identification.
-
-### 5.2 Supported in model
-
-Evidence is `SUPPORTED_IN_MODEL` when:
-
-```text
-α = VALID
-F_M^test(D) is nonempty
-test_status = PASSED
-γ ∈ {LAWFUL, LAWFUL_TERMINATION}
-```
-
-and every oracle obligation required by the CM has passed.
-
-Support means that at least one candidate survived evidence not used to fit it. It remains scoped to the declared CM, class, equivalence, bounds, and intervention family.
-
-### 5.3 Refuted in model
-
-Evidence is `REFUTED_IN_MODEL` when:
-
-```text
-α = VALID
-```
-
-and either:
-
-```text
-an applicable fiber is proved NO_REALIZATION_IN_MODEL
-```
-
-or:
-
-```text
-γ = LAW_VIOLATION
-```
-
-The refutation is scoped to the declared model class and test regime.
-
-### 5.4 Unresolved
-
-Evidence is `UNRESOLVED` when:
-
-- α is incomplete;
-- candidate search is not strong enough to classify the applicable fiber;
-- required relations are missing;
-- uncertainty exceeds the declared bound;
-- a required held-out or intervention test has not been run;
-- γ is `INSUFFICIENT_EVIDENCE` for a continuation claim;
-- the CM cannot ground a load-bearing transformation.
-
-### 5.5 Identification status
-
-Identification remains a separate field:
-
-```text
-IDENTIFIED_IN_MODEL | UNDERDETERMINED | NOT_ESTABLISHED
-```
-
-A compatible or supported receipt may remain underdetermined.
-
----
-
-## 6 · Model insufficiency and lift
-
-### 6.1 Current-model insufficiency
-
-A receipt may classify:
-
-```text
-CURRENT_MODEL_INSUFFICIENT
-```
-
-when:
-
-- α observations are stable and valid;
-- the declared class cannot realize them or cannot globalize their relations;
-- the result is not explained by missing evidence, ungrounded transforms, or search incompleteness.
-
-This status does not yet authorize a richer model.
-
-### 6.2 Lift proposal
-
-A lift proposal declares before testing:
-
-```text
-baseline class H_0
-lifted class H_1
-new degrees of freedom
-complexity rule
-baseline failure or obstruction
-acceptance margin
-held-out query, future state, or intervention
-```
-
-### 6.3 Lift validation
-
-A lift is `LIFT_VALIDATED` only when:
-
-1. the baseline failure is reproduced;
-2. the lifted class reduces the declared failure by the preregistered margin;
-3. the gain survives the complexity cost;
-4. the lifted generator predicts held-out evidence not used to fit it;
-5. the result remains stable under the declared uncertainty checks;
-6. the full maps and alternatives remain in the receipt.
-
-Otherwise the lift is `LIFT_REJECTED` or `LIFT_UNRESOLVED`.
-
----
-
-## 7 · Approximation
-
-### 7.1 Path-tolerance monoid
+### 4.1 Tolerance monoid
 
 An approximate CM declares:
 
@@ -537,7 +403,7 @@ An approximate CM declares:
 (E, ⊕, 0, ≤)
 ```
 
-and a local error budget:
+and a local budget:
 
 ```text
 ε(edge) : E
@@ -549,13 +415,13 @@ For path:
 p = e_n ∘ ... ∘ e_1
 ```
 
-its budget is:
+define:
 
 ```text
 B(p) = ε(e_1) ⊕ ... ⊕ ε(e_n)
 ```
 
-### 7.2 Behavioral metric
+### 4.2 Behavioral metric
 
 The CM declares a metric or pseudometric:
 
@@ -563,33 +429,598 @@ The CM declares a metric or pseudometric:
 d_B
 ```
 
-for endpoint or behavior comparison.
+and an interpretation function:
 
-It also declares the compatibility law connecting `B(p)` to `d_B`.
+```text
+interpret : E → DistanceBound
+```
 
-A fixed global epsilon with no path law is not a conformance contract for compositional evidence.
+The compatibility law is:
 
-### 7.3 Grounding
+```text
+d_B(observed_endpoint, predicted_endpoint) ≤ interpret(B(p))
+```
+
+The domains, units, dependence assumptions, and relation between distance zero and the CM's equivalence are explicit.
+
+A fixed global epsilon without a path law is not a compositional contract.
+
+### 4.3 Grounding
 
 Every nonzero tolerance, inflation, or uncertainty term identifies its basis:
 
 ```text
-empirical measurement
-analytic bound
-prior calibration
-conservative policy
-ungrounded declaration
+EMPIRICAL_MEASUREMENT
+ANALYTIC_BOUND
+PRIOR_CALIBRATION
+CONSERVATIVE_POLICY
+UNGROUNDED
 ```
 
-Ungrounded values may be reported. They cannot support a standing-bearing verdict.
+`UNGROUNDED` values may be reported. They cannot support a standing-bearing verdict.
 
----
+## 5 · Realization candidates and fibers
 
-## 8 · Optional scalar summaries
+Partition evidence by role:
 
-A CM may define scalar summaries for ranking or monitoring within one compatible context.
+```text
+D_train := D_fit ∪ D_calibration
+D_test  := D_held_out ∪ D_intervention
+```
 
-Every scalar summary must declare:
+Let `J_train` be the histories represented by the fitting and calibration regime. Let `J_eval` contain `J_train` plus every held-out or intervention history used for evaluation.
+
+### 5.1 Fit and bounded candidate sets
+
+Filter joint realization candidates before quotienting.
+
+```text
+C_M^fit(D) := {
+  R ∈ R_M(D_train) |
+  L_M(R,D_train) ≤ τ_M
+}
+```
+
+```text
+C_M^train(D) := {
+  R ∈ C_M^fit(D) |
+  K_M(R) ≤ κ_M
+}
+```
+
+```text
+F_M^train(D) := C_M^train(D) / ≃_M^J_train
+```
+
+Filtering before quotienting keeps generator-, atlas-, complexity-, and resource-sensitive claims well defined. Separating `C_M^fit` from `C_M^train` distinguishes failure to realize the evidence from realization only through candidates that exceed the declared budget.
+
+### 5.2 Tested candidate set
+
+Let:
+
+```text
+OracleResult := PASS | FAIL | UNRESOLVED | NOT_RUN
+```
+
+Evaluate every fixed bounded realization candidate without refitting:
+
+```text
+oracle_outcome_M(R,D_test) : OracleResult
+```
+
+Retain the outcome partition:
+
+```text
+C_M^pass(D) := {
+  R ∈ C_M^train(D) |
+  oracle_outcome_M(R,D_test) = PASS
+}
+
+C_M^fail(D) := {
+  R ∈ C_M^train(D) |
+  oracle_outcome_M(R,D_test) = FAIL
+}
+
+C_M^unresolved(D) := {
+  R ∈ C_M^train(D) |
+  oracle_outcome_M(R,D_test) ∈ {UNRESOLVED, NOT_RUN}
+}
+```
+
+The tested candidate set is the passing set:
+
+```text
+C_M^test(D) := C_M^pass(D)
+F_M^test(D) := C_M^test(D) / ≃_M^J_eval
+```
+
+When the oracle contract does not require held-out or intervention evidence, every candidate outcome is `NOT_RUN`, aggregate `TestStatus = NOT_RUN`, and the training fiber is not represented as held-out support.
+
+### 5.3 Refinement map
+
+Because `J_train ⊆ J_eval`, every tested equivalence class lies inside one training equivalence class. The receipt records:
+
+```text
+r_test→train : F_M^test(D) → F_M^train(D)
+```
+
+Evaluation may:
+
+```text
+remove realization candidates;
+split a coarse training class into finer tested classes.
+```
+
+Therefore `F_M^test` is not generally a literal subset of `F_M^train`. The realization-candidate set satisfies:
+
+```text
+C_M^test(D) ⊆ C_M^train(D)
+```
+
+while the quotient fibers are related by `r_test→train`.
+
+Test evidence does not silently alter fitted parameters, generator class, equivalence family, or complexity contract.
+
+### 5.4 Index and provenance
+
+Candidate sets, fibers, and the refinement map are indexed by:
+
+```text
+CM identity and digest
+evidence roles and digests
+J_train and J_eval
+fit and oracle tolerances
+complexity bound
+equivalence-family digest
+behavior contract
+search claims
+```
+
+The receipt retains fit, bounded, passing, failing, and unresolved realization candidates—including their generator and atlas components—or verifiable references, in addition to equivalence classes.
+
+### 5.5 Candidate classification
+
+Training and test regimes are classified separately.
+
+```text
+RealizationStatus :=
+  NO_REALIZATION_IN_MODEL
+  | REALIZABLE_IN_MODEL
+  | UNRESOLVED
+
+BudgetStatus :=
+  WITHIN_BUDGET
+  | REALIZABLE_OVER_BUDGET
+  | NOT_ESTABLISHED
+
+IdentificationStatus :=
+  IDENTIFIED_IN_MODEL
+  | UNDERDETERMINED
+  | NOT_ESTABLISHED
+
+TestStatus :=
+  NOT_RUN
+  | PASSED
+  | FAILED
+  | UNRESOLVED
+```
+
+The receipt contains:
+
+```text
+TrainingCandidateClassification := (
+  realization_status,
+  budget_status,
+  training_identification_status
+)
+
+TestCandidateClassification := (
+  test_status,
+  tested_identification_status
+)
+```
+
+Classification rules:
+
+```text
+complete applicable fit search and C_M^fit empty
+  → NO_REALIZATION_IN_MODEL
+
+C_M^fit nonempty and C_M^train empty
+  → REALIZABLE_IN_MODEL + REALIZABLE_OVER_BUDGET
+
+C_M^train nonempty within a sufficiently strong search/equivalence contract
+  → REALIZABLE_IN_MODEL + WITHIN_BUDGET
+    + IDENTIFIED_IN_MODEL or UNDERDETERMINED
+
+no required held-out/intervention oracle
+  → TestStatus.NOT_RUN
+
+required oracle incomplete, ungrounded, or search-limited
+  → TestStatus.UNRESOLVED
+
+at least one fixed bounded realization candidate passes every required test
+  → TestStatus.PASSED
+
+TestStatus.PASSED and C_M^unresolved empty
+  → tested identification from F_M^test
+
+TestStatus.PASSED and C_M^unresolved nonempty
+  → tested identification NOT_ESTABLISHED
+
+every required test is complete and grounded, C_M^pass is empty,
+and every fixed bounded realization candidate is in C_M^fail
+  → TestStatus.FAILED
+    + tested identification NOT_ESTABLISHED
+
+C_M^pass empty and C_M^unresolved nonempty
+  → TestStatus.UNRESOLVED
+    + tested identification NOT_ESTABLISHED
+```
+
+`UNDERDETERMINED` is not incoherence. `IDENTIFIED_IN_MODEL` is not absolute truth. A test failure is not relabeled `NO_REALIZATION_IN_MODEL`: the candidates realized the training evidence and failed the declared test.
+
+### 5.6 Input refinement
+
+Widening an independently chosen input family can remove realization candidates or split equivalence classes. A CM may claim refinement only when:
+
+```text
+the wider histories were permitted by the existing input contract;
+the equivalence family satisfies refinement monotonicity;
+fit, complexity, and oracle contracts remain fixed;
+no realization candidate is refitted;
+the refinement map is retained.
+```
+
+Changing the declared input language, intervention boundary, or model class is a lift, not refinement.
+
+## 6 · Receipt evaluation envelope
+
+Each verification receipt carries:
+
+```text
+ReceiptEvaluation :=
+  COMPLETED
+  | BLOCKED_BY(requirement_id)
+  | NOT_REQUIRED
+```
+
+A role may produce local artifacts before its prerequisites are satisfied. Those artifacts cannot become an authoritative role status until evaluation is `COMPLETED`.
+
+## 7 · Three non-substitutable receipts
+
+TSC uses three differently typed proof obligations.
+
+### 7.1 α — Manifestation receipt
+
+The α receipt asks:
+
+> Are the observations valid, complete enough for the stated claim, and stable under the declared local checks?
+
+```text
+ManifestationReceipt := (
+  evaluation,
+  observation ids and digests,
+  channel and constructor identities,
+  coverage and missingness,
+  repeat or perturbation results,
+  noise and uncertainty,
+  invalid or out-of-domain evidence,
+  status
+)
+```
+
+Status:
+
+```text
+VALID | INCOMPLETE | INVALID
+```
+
+A missing observation is not positive evidence. An empty dataset receives no coherence disposition unless the CM explicitly defines an empty-input question.
+
+### 7.2 β — Relational atlas
+
+The β receipt asks:
+
+> Do the observations, correspondences, and transformations form one globally compatible relational structure under the declared model?
+
+```text
+RelationalAtlas := (
+  evaluation,
+  relation-search contract and evidence,
+  source-to-observation maps,
+  observation-to-observation correspondences,
+  alternative maps,
+  map uncertainty,
+  local residuals,
+  path compositions,
+  exact or approximate globalization checks,
+  fit, bounded, and tested realization-candidate references,
+  training and tested fibers,
+  training and test candidate classifications,
+  identification target and statuses,
+  unresolved correspondences,
+  status
+)
+```
+
+The maps are primary evidence. A residual or scalar cannot replace them. Pairwise compatibility does not establish a global realization.
+
+An authoritative β result requires:
+
+```text
+α.status = VALID
+α.evaluation = COMPLETED
+```
+
+Otherwise β is `BLOCKED_BY(α-validity)` even if local maps have been computed.
+
+### 7.3 γ — Continuation receipt
+
+The γ receipt asks:
+
+> Does the generator in an applicable realization candidate continue lawfully under time, viewpoint, scale, intervention, or another declared transformation?
+
+```text
+CandidateContinuation :=
+  LAWFUL_CONTINUATION
+  | LAWFUL_TERMINATION
+  | LAW_VIOLATION
+  | INSUFFICIENT_EVIDENCE
+```
+
+```text
+ContinuationReceipt := (
+  evaluation,
+  realization-candidate references,
+  candidate-level continuation outcomes,
+  input and intervention histories,
+  predictions fixed before observation,
+  held-out outcomes,
+  state and identity transport,
+  composition across paths,
+  law violations,
+  birth, merge, split, and termination events,
+  status
+)
+```
+
+Candidate-level outcomes remove or retain joint realization candidates in `C_M^test`.
+
+Aggregate status:
+
+```text
+LAWFUL
+  at least one realization candidate survives every required continuation test;
+  mixed lawful-continuation and lawful-termination alternatives remain explicit
+
+LAWFUL_TERMINATION
+  the identified realization candidate, or every surviving realization candidate in a complete
+  applicable set, predicts and matches a declared termination
+
+LAW_VIOLATION
+  the identified realization candidate, or every realization candidate in a complete applicable set,
+  violates the declared law
+
+INSUFFICIENT_EVIDENCE
+  coverage, search, or continuation evidence cannot establish another status
+```
+
+When some realization candidates fail and others survive, failure refines the candidate set; it does not refute the entire model class.
+
+An authoritative γ result requires:
+
+```text
+α.status = VALID
+β establishes at least one applicable realization candidate
+```
+
+Otherwise γ is blocked by the missing prerequisite.
+
+A lawful ending is not degraded coherence. Raw stasis is not process coherence.
+
+### 7.4 Non-substitutability
+
+The receipts are non-substitutable:
+
+```text
+β cannot validate missing or invalid observations;
+α cannot establish a global relational realization;
+α and β cannot erase a held-out law violation;
+γ cannot create a realization candidate that β failed to establish.
+```
+
+This is a dependency claim, not statistical independence, algebraic non-isomorphism, or axis symmetry.
+
+## 8 · Core axioms
+
+### A1 — Scopedness
+
+Every coherence claim names its CM, evidence, generator class, equivalence, behavior contract, approximation contract, complexity bound, search claims, and input/intervention family.
+
+### A2 — Realizability
+
+Distinct observations support one process only when at least one declared generator produces them within the fit and complexity contract.
+
+Similarity among observations is neither necessary nor sufficient.
+
+### A3 — Relation retention
+
+Every correspondence, transformation, alternative, and path used to support realizability remains in the β receipt.
+
+### A4 — Globality
+
+Pairwise fits support a common process only when they satisfy the CM's full-diagram globalization rule.
+
+### A5 — Non-vacuity
+
+The generator class, representation language, and complexity contract are declared before fitting. A lookup table or tuple of observations receives no exemption from complexity and held-out obligations.
+
+### A6 — Identifiability separation
+
+Realizability, uniqueness, search completeness, input-family scope, and held-out support are separate facts.
+
+### A7 — Law-relative continuation
+
+Randomness is not incoherence. A stochastic process may be lawful under a stochastic CM. A negative control violates a declared law; it need not look disordered.
+
+### A8 — Receipt primacy
+
+Structured evidence remains normative until a quotient is proved sufficient for the exact decision. Incomplete search produces `UNRESOLVED`, not a fabricated negative result.
+
+### A9 — Authority neutrality
+
+Core classifies evidence. It does not grant standing or authorize a boundary action.
+
+## 9 · Coherence disposition
+
+### 9.1 Compatible in model
+
+```text
+COMPATIBLE_IN_MODEL
+```
+
+when:
+
+```text
+α = VALID
+training realization_status = REALIZABLE_IN_MODEL
+budget_status = WITHIN_BUDGET
+at least one bounded realization candidate remains compatible with observed training evidence
+```
+
+Compatibility is a fit-regime result, not held-out support.
+
+### 9.2 Supported in model
+
+```text
+SUPPORTED_IN_MODEL
+```
+
+when:
+
+```text
+α = VALID
+TestStatus = PASSED
+C_M^test(D) is nonempty
+γ ∈ {LAWFUL, LAWFUL_TERMINATION}
+all required oracle obligations pass for at least one fixed realization candidate
+```
+
+Support remains scoped to the declared CM and evidence regime.
+
+### 9.3 Refuted in model
+
+```text
+REFUTED_IN_MODEL
+```
+
+when valid evidence establishes at least one of:
+
+```text
+training realization_status = NO_REALIZATION_IN_MODEL under a complete applicable search;
+
+training realization_status = REALIZABLE_IN_MODEL,
+TestStatus = FAILED, and C_M^test(D) is empty;
+
+the claim-designated identified realization candidate violates the declared law
+and no admissible alternative remains.
+```
+
+A violation by one member of an underdetermined realization-candidate set removes that member. It does not refute surviving candidates or the entire model class.
+
+Refutation is scoped to the declared model class and test regime. A separate model-adequacy field may also report `CURRENT_MODEL_INSUFFICIENT` when a wider phenomenon claim remains open.
+
+### 9.4 Unresolved
+
+```text
+UNRESOLVED
+```
+
+when any load-bearing obligation is incomplete, blocked, ungrounded, or search-limited.
+
+### 9.5 Identification status
+
+Identification is reported separately for the training and tested regimes:
+
+```text
+training_identification_status : IdentificationStatus
+tested_identification_status   : IdentificationStatus
+identification_target
+identification_basis = training | tested
+```
+
+A compatible receipt may be underdetermined in training. A supported receipt may remain underdetermined after testing. A held-out refinement may change training `UNDERDETERMINED` into tested `IDENTIFIED_IN_MODEL`; both facts remain visible.
+
+## 10 · Refinement, insufficiency, and lift
+
+### 10.1 Evidence refinement
+
+A refinement adds evidence, narrows uncertainty, or exercises more histories within an already declared input contract without changing:
+
+```text
+generator class
+representation language
+relation family
+equivalence contract
+complexity contract
+```
+
+It records the fixed prior realization-candidate set, the refinement map, and every realization candidate removed or class split. Generators and atlases are not refitted.
+
+### 10.2 Current-model insufficiency
+
+```text
+CURRENT_MODEL_INSUFFICIENT
+```
+
+may be reported when:
+
+```text
+α observations are stable and valid;
+the declared class cannot realize or globalize them,
+or cannot answer a preregistered question;
+the result is not explained by missing evidence,
+ungrounded transforms, or search incompleteness.
+```
+
+### 10.3 Lift proposal
+
+A lift changes the generator class, representation language, relation family, declared input language, or tested boundary. Before testing it declares:
+
+```text
+baseline class H_0
+lifted class H_1
+embedding or relation between classes
+new degrees of freedom
+complexity rule
+preregistered baseline failure
+acceptance margin
+held-out query, future state, or intervention
+```
+
+### 10.4 Lift validation
+
+```text
+LIFT_VALIDATED
+```
+
+requires:
+
+1. the baseline failure is reproduced;
+2. the lifted class reduces that failure by the declared margin;
+3. the gain survives the complexity cost;
+4. the lifted realization candidate predicts held-out evidence without refitting;
+5. uncertainty and dependence remain within contract;
+6. maps and remaining alternatives remain in the receipt.
+
+Otherwise the lift is `LIFT_REJECTED` or `LIFT_UNRESOLVED`.
+
+## 11 · Optional scalar summaries
+
+A CM may define a scalar for ranking or monitoring within one compatible context.
+
+Every scalar declares:
 
 ```text
 source receipt fields
@@ -600,60 +1031,46 @@ calibration
 status domain
 ```
 
-A scalar cannot change the receipt’s categorical status. In particular, it cannot:
+A scalar cannot:
 
-- turn `UNDERDETERMINED` into `IDENTIFIED_IN_MODEL`;
-- turn `UNRESOLVED` into `NO_REALIZATION_IN_MODEL`;
-- turn `LAW_VIOLATION` into lawful continuation;
-- grant standing;
-- authorize a boundary action.
+```text
+turn UNDERDETERMINED into IDENTIFIED_IN_MODEL
+turn UNRESOLVED into NO_REALIZATION_IN_MODEL
+override LAW_VIOLATION
+grant standing
+authorize a boundary action
+```
 
----
-
-## 9 · Core receipt
+## 12 · Core receipt
 
 A Core receipt contains at least:
 
 ```text
 receipt_id
-cm identity and digests
+CM identity and digests
 input and evidence digests
 query/intervention boundary
-α manifestation receipt
-β relational atlas
-γ continuation receipt
-training and tested candidate fibers or verifiable references
-search claim
+behavior contract
+approximation-contract digest
+α ManifestationReceipt
+β RelationalAtlas
+γ ContinuationReceipt
+fit, bounded, passing, failing, and unresolved realization-candidate sets
+training and tested fibers and refinement map
+training and test candidate classifications
+generator and relation search claims
 test status and oracle evidence
 fit and complexity accounting
-equivalence and tolerance contract
+equivalence contract
 coherence disposition
-identification status
+training and tested identification statuses and target
 model and lift status
 uncertainty and grounding
 provenance
 ```
 
-Every conclusion points to the receipt fields that support it.
+Every conclusion points to the fields that support it.
 
----
+## 13 · Conformance
 
-## 10 · Core conformance
-
-A Core implementation is conforming when it can prove the following positive and negative cases.
-
-### Positive
-
-- valid evidence with several lawful candidates produces `SUPPORTED_IN_MODEL + UNDERDETERMINED`;
-- independent held-out evidence can reduce the fiber to `IDENTIFIED_IN_MODEL`;
-- a lawful stochastic trace is supported under its stochastic CM;
-- a lawful ending produces `LAWFUL_TERMINATION`.
-
-### Negative
-
-- incomplete evidence does not produce a verdict;
-- pairwise fits with no global realization do not produce support;
-- a failed heuristic search does not produce `NO_REALIZATION_IN_MODEL`;
-- a larger model that only memorizes fit does not validate a lift;
-- a scalar cannot override a structured status;
-- an illegal transition produces `LAW_VIOLATION` even when superficial statistics remain unchanged.
+The normative proof obligations for Core are defined in [`tsc-conformance.md`](tsc-conformance.md) under the `CORE-*` and `BETA-*` requirement IDs.

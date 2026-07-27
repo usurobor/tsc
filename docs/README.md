@@ -1,48 +1,28 @@
 # Docs
 
-Start with [THESIS.md](THESIS.md).
+Start with [`THESIS.md`](THESIS.md), then read [`../spec/README.md`](../spec/README.md).
 
-This tree follows the documentation system defined in [beta/governance/DOCUMENTATION-SYSTEM.md](beta/governance/DOCUMENTATION-SYSTEM.md).
+The documentation tree follows the system in [`beta/governance/DOCUMENTATION-SYSTEM.md`](beta/governance/DOCUMENTATION-SYSTEM.md).
 
----
+## Current authority
 
-## Bundle index
+| Question | Source |
+|---|---|
+| What does TSC v4 mean? | [`../spec/README.md`](../spec/README.md) |
+| What must a v4 implementation prove? | [`../spec/tsc-conformance.md`](../spec/tsc-conformance.md) |
+| Why did the foundation change? | [`design/foundation-contract-reconciliation/DESIGN.md`](design/foundation-contract-reconciliation/DESIGN.md) |
+| What is the current executable? | [`../engine/ocaml/CONTRACT.md`](../engine/ocaml/CONTRACT.md) |
+| What is currently runnable? | [`../QUICKSTART.md`](../QUICKSTART.md) |
 
-| Bundle | Axis | Canonical | Purpose |
-|--------|------|-----------|---------|
-| [doctrine](alpha/doctrine/) | α | `spec/tsc-core.md` | The theory of triadic self-coherence |
-| [engine](alpha/engine/) | α | `engine/ocaml/` | The canonical measurement engine |
+## Bundles
 
----
+| Bundle | Purpose |
+|---|---|
+| [`alpha/doctrine/`](alpha/doctrine/) | Specification reading map and frozen historical theory records |
+| [`alpha/engine/`](alpha/engine/) | Current repository-proxy engine records |
+| [`beta/guides/`](beta/guides/) | Current operator guides |
+| [`design/foundation-contract-reconciliation/`](design/foundation-contract-reconciliation/) | v4 design, archaeology, cutover receipt, and review response |
 
-## By axis
+## Status boundary
 
-### α — Pattern coherence
-
-| Document | Location |
-|----------|----------|
-| Doctrine bundle | [alpha/doctrine/](alpha/doctrine/) |
-| Engine bundle | [alpha/engine/](alpha/engine/) |
-
-### β — Relational coherence
-
-| Document | Location |
-|----------|----------|
-| Operator manual | [beta/guides/OPERATOR-MANUAL.md](beta/guides/OPERATOR-MANUAL.md) |
-| Documentation system | [beta/governance/DOCUMENTATION-SYSTEM.md](beta/governance/DOCUMENTATION-SYSTEM.md) |
-
-### γ — Process coherence
-
-| Document | Location |
-|----------|----------|
-| Changelog | [CHANGELOG.md](../CHANGELOG.md) |
-
----
-
-## Pathways
-
-**Understand TSC theory** — read [THESIS.md](THESIS.md), then follow the [doctrine bundle](alpha/doctrine/).
-
-**Run the engine** — read the [operator manual](beta/guides/OPERATOR-MANUAL.md).
-
-**Contribute** — read [ARCHITECTURE.md](../ARCHITECTURE.md), then the [engine bundle](alpha/engine/).
+The draft v4 specification and the current 0.12.0 proxy engine are different surfaces. Historical self-coherence reports and proxy scores retain the semantics of the instruments that produced them; they do not acquire v4 meaning retroactively.

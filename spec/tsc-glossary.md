@@ -7,17 +7,13 @@
 
 > What do the terms in the TSC specification mean?
 
-This glossary explains the normative vocabulary. The specifications govern when this guide and a specification differ.
-
----
+The normative specifications govern when this glossary differs.
 
 ## Articulation
 
 ### Pole
 
-A role-bearing endpoint in an articulation.
-
-A pole may be a state, context, observation, agent, boundary, pattern, or another domain-specific endpoint. A pole is not assumed to be a material object.
+A role-bearing endpoint in an articulation. A pole may be a state, context, observation, agent, boundary, pattern, or another domain-specific endpoint.
 
 ### Relation family
 
@@ -27,459 +23,484 @@ A dependent type:
 Rel : P × P → Set
 ```
 
-For poles `s` and `o`, a value:
-
-```text
-φ : Rel(s,o)
-```
-
-is a well-typed relation from `s` to `o`.
+For poles `s` and `o`, a value `φ : Rel(s,o)` is a well-typed relation from `s` to `o`.
 
 ### Articulation event
 
 A typed source–relation–result event:
 
 ```text
-Art := Σ(s : P). Σ(o : P). Rel(s,o)
+Art := Σ(s:P).Σ(o:P).Rel(s,o)
+art(s,φ,o)
 ```
-
-Write:
-
-```text
-art(s, φ, o)
-```
-
-or:
-
-```text
-s --φ→ o
-```
-
-The event is one occurrence with three dependent roles. The relation is typed by both poles.
 
 ### Coherer
 
 The source role of an articulation event.
 
-The coherer supplies the state, condition, constraint, or context from which the event proceeds.
-
 ### Cohering
 
-The dependent relation in an articulation event.
-
-Cohering is not a third independent object. Its type depends on the coherer and cohered poles that it relates.
+The dependent relation in an articulation event. Its type depends on both poles.
 
 ### Cohered
 
-The result role of an articulation event.
-
-A cohered result may become a coherer in a later event.
+The result role of an articulation event. A cohered result may become a coherer in a later event.
 
 ### Unity
 
-The wholeness of the typed articulation event and its lawful continuation.
+The wholeness of the complete typed event and its lawful continuation. Unity is not stored in one field.
 
-Unity is not stored in one field. Removing the relation or either pole destroys the event's type.
+### Mutual constitution
+
+The static result that a well-formed articulation requires both poles and their relation. The signature does not derive the pole universe from relations.
+
+### Role succession
+
+The use of a result pole as the source pole of a later event through path composition. Role succession is not free role permutation.
 
 ### Path
 
-A composable sequence of articulation events:
-
-```text
-s_0 --φ_1→ s_1 --φ_2→ ... --φ_n→ s_n
-```
-
-The composite relation is:
-
-```text
-φ_n ∘ ... ∘ φ_1 : Rel(s_0,s_n)
-```
+A finite composable sequence of typed articulation events. A path retains intermediate poles and relations.
 
 ### Diagram
 
-A finite or generated network of poles and typed relations.
+A typed network of poles, relations, paths, alternatives, overlaps, and commutation conditions.
 
-A diagram records more than its endpoints. Its paths, overlaps, alternatives, and commutation conditions carry relational evidence.
+### Exact commutation
 
-### Commutation
-
-Agreement between two paths with the same source and target, under the declared exact or approximate equality.
-
-Commutation is a global compatibility condition. Pairwise fit alone does not imply it.
-
----
+Equality of two composed paths with the same endpoints. Approximate comparison belongs to Core.
 
 ## Generative systems
 
 ### State space
 
-The type `X` of concrete generator states.
-
-A state may contain latent variables, parameters, memory, current configuration, or other information needed for continuation.
+The type or object `X` of concrete generator states.
 
 ### Input space
 
-The type `I` of queries, conditions, or interventions supplied at the tested boundary.
-
-An input is exogenous only relative to the declared model boundary.
+The type or object `I` of queries, conditions, or interventions supplied across the tested boundary.
 
 ### Open generator
 
-A transition-and-output map:
+For the deterministic Set kernel:
 
 ```text
 c : X × I → Art × X
 ```
 
-For state `x` and input `i`, the generator emits one typed articulation event and a successor state.
+It emits one articulation and one successor state.
 
-### Pointed generator
+### Set presentation
 
-A generator together with an initial state:
+A pointed deterministic presentation:
 
 ```text
-G = (X, I, c, x_0)
+(X,I,c,x_0)
 ```
 
-The law without its state need not determine a particular behavior.
+### General presentation
+
+A category-specific presentation with a system functor, state object, structure map, pointed-state witness, and typed articulation interface.
 
 ### Query mode
 
-How a methodology treats the source of queries:
-
 ```text
-exogenous
-endogenous
-mixed
+exogenous | endogenous | mixed
 ```
 
-An endogenous query is generated inside the system. An exogenous input is supplied across the tested boundary. A mixed system uses both.
+It states where queries or interventions originate relative to the tested boundary.
 
 ### Unfolding
 
 Repeated application of a generator along an input history.
 
-An unfolding retains the emitted events and successor states. It is not reduced to a final score.
+### Reflexive generator
 
-### Coalgebra
+A generator whose emitted events or successor states alter the conditions of later articulation.
 
-A system whose structure map exposes one observation step and continuation.
+## Coalgebraic behavior
 
-For:
+### System functor
+
+For the deterministic Set kernel:
 
 ```text
 F_I(Y) := (Art × Y)^I
 ```
 
-an open generator is equivalently a coalgebra:
+with morphism action:
 
 ```text
-c : X → F_I(X)
+F_I(h)(k)(i) := let (a,y)=k(i) in (a,h(y))
 ```
 
-### Final behavior
+### Coalgebra
 
-A final coalgebra:
+A state object with a structure map `c : X → F(X)`.
+
+### Coalgebra morphism
+
+A map `h : X → Y` satisfying:
 
 ```text
-ζ : νF_I → F_I(νF_I)
+F(h) ∘ c = d ∘ h
 ```
 
-when it exists in the declared category.
+### Input history
 
-`νF_I` is a universal space of complete input-conditioned behavior. A concrete generator is not presumed to be final.
+A finite sequence of inputs. `I*` includes the empty history; `I+` contains nonempty histories.
+
+### Set-final behavior
+
+For the deterministic Set functor:
+
+```text
+B_I := Art^(I+)
+```
+
+It records the output on the final transition of every nonempty finite input history.
 
 ### Behavior map
 
-The unique coalgebra morphism:
+The unique coalgebra morphism from a concrete deterministic Set generator to `B_I`.
 
-```text
-beh_c : X → νF_I
-```
+### Final coalgebra
 
-when final behavior exists.
-
-It satisfies:
-
-```text
-ζ ∘ beh_c = F_I(beh_c) ∘ c
-```
-
-The equation states that concrete unfolding and behavioral interpretation agree step by step.
+A coalgebra receiving one unique coalgebra morphism from every coalgebra for the same functor.
 
 ### Lambek law
 
-The structure map of a final coalgebra is an isomorphism:
+The structure map of a final coalgebra is an isomorphism. The law applies to the final behavior object, not automatically to a concrete generator.
+
+### Finality basis
 
 ```text
-ζ : νF_I ≅ F_I(νF_I)
+SET_FINAL | GENERAL_FINAL | NO_FINALITY_CLAIM
 ```
 
-At final behavior, complete behavior and one articulation plus continuation are mutually recoverable. The law does not imply that every concrete generator is final.
+It states what universal behavior claim, if any, the CM makes.
 
-### Finite behavior
+### SET_FINAL
 
-A bounded unfolding used when final behavior is unavailable, unnecessary, or not established.
+The canonical deterministic Set finality construction from C≡.
 
-A methodology must state the horizon and what claims the finite approximation supports.
+### GENERAL_FINAL
 
----
+A category-specific finality claim carrying a complete functor and finality witness.
+
+### Behavior access
+
+```text
+COMPLETE_SYMBOLIC | FINITE | APPROXIMATE
+```
+
+It states what part of behavior an execution can compute or observe. It is independent of the finality basis.
 
 ## Equivalence and approximation
 
 ### Presentation equivalence
 
-Equivalence between two concrete generator presentations under declared state, pole, relation, and input transports.
-
-Presentation equivalence preserves implementation-sensitive structure.
+Equivalence preserving concrete generator structure, initial state, and typed behavior.
 
 ### Behavioral equivalence
 
-Equivalence between states that produce the same declared behavior under the tested input family.
-
-Behavioral equivalence can identify different concrete presentations.
+Equivalence induced by observable behavior.
 
 ### Input-indexed equivalence
 
-Behavioral equivalence relative to a particular passive or active input family.
+Equivalence relative to a declared passive or active input-history family.
 
-Widening the input family can separate generators that were equivalent under a narrower family.
+### No premature quotient
 
-### Behavioral metric
+The rule that structured evidence remains normative until a reduction is proved sufficient for the downstream decision.
 
-A distance on behavior that replaces exact equality in empirical settings.
+### Commutative-fold blindness
 
-A methodology declares the metric, its domain, and the relation between distance zero and its equivalence notion.
+The theorem that an associative commutative fold over leaf values cannot distinguish internal tree shape, depth, grouping, path, or order.
+
+### Approximation contract
+
+The Core-owned contract relating local error budgets, path accumulation, behavioral distance, and grounding.
 
 ### Tolerance monoid
-
-A structure for composing local error budgets along a path:
 
 ```text
 (E, ⊕, 0, ≤)
 ```
 
-The operation `⊕` may be addition, maximum, root-sum-square, probabilistic convolution, or another declared and justified law.
+A structure for accumulating local error budgets along a path.
 
-### Path budget
+### Behavioral metric
 
-The composed tolerance allowed for a path.
+A metric or pseudometric used to compare observed and predicted behavior under the approximation contract.
 
-A path budget and a behavioral metric must be compatible. A budget without an endpoint comparison rule has no operational meaning.
+### Grounding basis
 
-### No premature quotient
-
-The rule that structured evidence must be retained until a reduction is proved sufficient for the downstream decision.
-
-Counts, residuals, final behaviors, and scalar scores are all quotients. Each may erase information that later claims require.
-
----
+The evidence or derivation supporting an uncertainty or tolerance term.
 
 ## Coherence methodologies
 
 ### Coherence Methodology (CM)
 
-A versioned instrument that declares how a domain is observed, modeled, compared, tested, and receipted.
-
-A CM defines:
-
-```text
-input and observation contract
-generator class
-relation and equivalence contract
-fit and approximation contract
-complexity contract
-oracle contract
-receipt schema
-execution and permission bindings
-```
+A versioned instrument that declares how a domain is observed, modeled, searched, tested, compared, and receipted.
 
 ### Generator class
 
-The declared class `H_M` of candidate generator presentations that a CM may consider.
-
-The class bounds what may count as an explanation.
+The declared class `H_M` of candidate behavior presentations before an observation atlas is attached.
 
 ### Observation channel
 
-A declared way of observing a target or generator.
+A declared way of observing a target or realization candidate, with an observation type, constructor, uncertainty rule, and provenance.
 
-Each channel has an observation type, production rule, uncertainty rule, and provenance.
+### Atlas-candidate class
+
+For generator `G` and evidence `D`, `A_M(G,D)` is the declared class of admissible correspondence and transformation atlases considered by relation search.
+
+### Realization candidate
+
+A joint explanation:
+
+```text
+R = (G,A)
+```
+
+containing a concrete generator presentation and the atlas through which it accounts for the observation episodes. Candidate fibers range over realization candidates, not bare generators.
 
 ### Evidence item
 
-A grounded observation together with its channel, role, uncertainty, provenance, and holdout status.
+A grounded observation with input history, channel, value, uncertainty, provenance, and holdout role.
+
+### Search claim
+
+```text
+complete
+complete_within_bound
+heuristic
+sampled
+```
+
+It states what absence or completeness conclusions a search can support.
+
+### Relation-search contract
+
+The declaration and receipt for correspondence-map search, including alternatives, pruning, uncertainty, and orchestration with generator search.
 
 ### Fit
 
-The CM-defined relation or loss between candidate predictions and evidence.
-
-Fit is not coherence by itself. A flexible or unbounded candidate can fit without explaining.
+The CM-defined relation or loss between joint realization-candidate predictions and training evidence.
 
 ### Complexity
 
-A declared cost or bound on a candidate presentation.
-
-Complexity is relative to a coding language, prior, architecture, or resource model. It is not representation-free.
+A representation-, prior-, or resource-relative cost on the complete realization candidate, including nontrivial atlas choices.
 
 ### Oracle
 
-The rule that decides whether a held-out prediction, intervention, or control succeeded.
-
-The oracle is declared before the result it judges.
+The preregistered rule judging held-out or interventional evidence without refitting.
 
 ### Calibration
 
-Bounded execution of a CM over repeats, controls, malformed inputs, and held-out anchors to characterize the instrument.
-
-Calibration may produce evidence for admission or standing. It does not by itself authorize target verdicts.
+Bounded execution over repeats, controls, malformed inputs, refusals, and anchors to characterize a methodology.
 
 ### CM0
 
-A methodology that assesses candidate CMs as instruments.
-
-CM0 measures instrument coherence. It does not compile, admit, authorize, or execute a candidate on target data by itself.
-
----
+A methodology that assesses candidate CMs as instruments. CM0 does not compile, admit, authorize, or perform the boundary decision by itself.
 
 ## Candidate reasoning
 
+### Fit candidate set
+
+`C_M^fit`: joint realization candidates satisfying the fit bound before the complexity filter.
+
+### Bounded training set
+
+`C_M^train`: fitting realization candidates satisfying the complexity bound.
+
+### Oracle outcome partition
+
+The fixed bounded realization candidates separated into `C_M^pass`, `C_M^fail`, and `C_M^unresolved` by preregistered oracle outcomes without refitting.
+
+### Tested candidate set
+
+`C_M^test := C_M^pass`: the passing realization candidates used to form the tested fiber.
+
 ### Candidate fiber
 
-The set of candidate generator equivalence classes compatible with the evidence under one CM:
+An equivalence-class quotient of a realization-candidate set under the declared input-indexed equivalence.
 
-```text
-F_M(D)
-```
+### Refinement map
 
-The fiber is indexed by the methodology, input family, equivalence, tolerances, complexity bound, and evidence.
+The map from finer tested classes to coarser training classes when the evaluation input family widens.
+
+### Training candidate classification
+
+The product of realization, budget, and training-identification statuses for the fit and bounded training regime.
+
+### Test candidate classification
+
+The product of `TestStatus` and tested-identification status for fixed realization candidates under held-out or interventional evidence. A passing candidate can support the model while unresolved alternatives keep tested identification `NOT_ESTABLISHED`.
+
+### Identification target
+
+What one-class identification refers to: the generator, the atlas, the joint realization, or another CM-declared target.
 
 ### No realization in model
 
-The candidate fiber is proved empty within the declared class and search claim.
+A complete applicable search proves `C_M^fit` empty.
 
-Failure to find a candidate is not a proof of emptiness.
+### Realizable over budget
+
+At least one joint realization candidate fits, but none satisfies the complexity bound.
 
 ### Underdetermined
 
-The candidate fiber contains more than one inequivalent candidate.
-
-Underdetermination is not incoherence. It means the evidence does not identify one generator under the declared model.
+More than one inequivalent realization class remains in the named regime.
 
 ### Identified in model
 
-The candidate fiber contains one equivalence class under the declared evidence and input family.
-
-Identification is always model-relative and input-relative.
+Exactly one realization class remains for the named identification target and regime under the declared CM, input family, equivalence, bounds, and search claims.
 
 ### Unresolved
 
-The available evidence or search cannot establish whether the fiber is empty, multiple, or identified.
+The evidence, search, equivalence, approximation, or prerequisites cannot establish another status.
 
 ### Compatible in model
 
-At least one bounded candidate accounts for the evidence used to construct it, with no observed law violation.
-
-Compatibility is a training- or fit-regime result. It is not held-out support.
+At least one bounded realization candidate accounts for training evidence. Compatibility is not held-out support.
 
 ### Supported in model
 
-At least one candidate survives the CM's required held-out or intervention oracle without refitting and continues lawfully.
-
-Support remains scoped to the declared methodology and evidence regime.
+At least one fixed bounded realization candidate survives every required held-out or intervention oracle and continues lawfully.
 
 ### Refuted in model
 
-The declared model is contradicted by a proved empty applicable fiber or a law violation under valid evidence.
-
-Refutation applies to the declared generator class and test regime, not to every possible model of the phenomenon.
+The declared class or claim fails under complete, grounded evidence and the stated test regime.
 
 ### Current-model insufficiency
 
-Stable evidence defeats the declared generator class or leaves a preregistered question unanswerable, without warranting a claim that the phenomenon itself is incoherent.
+The declared class cannot realize, globalize, or answer a preregistered question, while evidence and search are adequate to localize the failure to the model.
+
+### Evidence refinement
+
+New evidence removes fixed realization candidates or splits equivalence classes without changing the model contract or refitting.
 
 ### Model lift
 
-A preregistered expansion of the generator class, representation, inputs, or relations intended to resolve a measured insufficiency.
+A preregistered change to the generator class, representation, relation family, declared input language, or tested boundary.
 
 ### Validated lift
 
-A lift that reduces the preregistered insufficiency by the declared margin, survives complexity control, and predicts held-out observation or intervention results.
-
-A richer model fitting the training evidence is not enough.
-
----
+A lift that reproduces the baseline failure, survives complexity control, meets its acceptance margin, and predicts held-out or interventional evidence.
 
 ## Verification receipts
+
+### Receipt evaluation
+
+```text
+COMPLETED | BLOCKED_BY(requirement_id) | NOT_REQUIRED
+```
+
+It distinguishes a role status from whether the role was authorized to issue that status.
 
 ### α — Manifestation receipt
 
 Evidence that observations are valid, complete enough, repeatable, and uncertainty-bounded.
 
-α asks whether the manifestations themselves can bear the later inference.
-
 ### β — Relational atlas
 
-The normative record of correspondences, transformations, alternatives, uncertainties, path checks, global compatibility, and the candidate fiber.
-
-β asks whether distinct manifestations can belong to one lawful generator under the declared model.
+The record of relation search, maps, alternatives, global compatibility, joint realization-candidate sets, fibers, and identification.
 
 ### γ — Continuation receipt
 
-Evidence of lawful continuation through time, viewpoint, scale, migration, or intervention.
+Candidate-level and aggregate evidence of lawful continuation, violation, intervention response, and termination.
 
-γ retains predictions, identity transport, law violations, and lawful termination.
+### Non-substitutability
+
+No receipt may discharge the proof obligation owned by another. The dependency is asymmetric; it is not statistical independence.
 
 ### Receipt
 
 The proof-carrying result of a measurement.
 
-A receipt retains the generator presentation, behavior reference, evidence, atlas, candidate alternatives, continuation tests, uncertainty, standing, and provenance.
-
 ### Scalar summary
 
-An optional numerical projection of a receipt.
+An optional CM-local projection of a complete receipt. It cannot override structured status or grant authority.
 
-A scalar is local to a declared CM and categorical status. It cannot replace the receipt or override no-realization, underdetermination, unresolved search, law violation, or standing.
+## Observation Dynamics
 
----
+### Observation episode
+
+A value together with the boundary, methodology, input history, channel, uncertainty, provenance, time, and holdout role that produced it.
+
+### Lineage
+
+The content-addressed parent relation among evidence, transformations, candidates, receipts, comparisons, refinements, lifts, and dispositions.
+
+### Dependence graph
+
+The record of shared sources, parameters, prompts, time windows, calibration anchors, and preprocessing.
+
+### Comparison compatibility
+
+The condition that two receipts share or validly transport every load-bearing measurement contract.
+
+### Failure disposition
+
+```text
+RESOLVED | CLAIM_WITHDRAWN | SUPERSEDED | INVALIDATED | UNRESOLVED
+```
+
+### Failure persistence
+
+The rule that a failed receipt cannot disappear when a later theory, methodology, or runtime changes the claim.
 
 ## Runtime authority
 
 ### Compilation
 
-Normalization and validation of authored CM source into a runtime descriptor.
-
-Compilation establishes structural executability. It does not establish instrument quality or epistemic authority.
+Normalization and validation of CM source into a runtime descriptor. Compilation grants structural executability only.
 
 ### Instrument assessment
 
-CM0 measurement of a compiled candidate methodology using calibration evidence.
+CM0 measurement of a compiled candidate methodology.
 
-### Admission
+### Admission verdict
 
-A validator decision that assessment evidence satisfies an admission contract.
+`V`'s pass/fail judgment against an admission contract.
 
-### Authorization
+### Boundary decision
 
-A boundary decision that grants a specific permitted use and standing scope.
-
-### Sandbox execution
-
-Bounded pre-admission execution used to gather calibration and discrimination evidence.
-
-### Target execution
-
-Application of an authorized CM to compatible target input.
+`δ`'s action following the evidence and verdict.
 
 ### Standing
 
-The scope of epistemic authority earned by a methodology or receipt.
-
-Standing does not follow from compilation, self-assessment, or publication alone.
+The scope-bounded epistemic authority earned by a methodology or result.
 
 ### Verdict authorization
 
-Whether a receipt may cross the declared decision boundary.
+Whether a receipt may drive the declared boundary use.
 
-A measurement may contain useful findings while lacking verdict authority.
+## Conformance
+
+### Conformance requirement
+
+A stable normative proof obligation with an owner, positive oracle, and negative oracle.
+
+### Conformance fixture
+
+A reproducible domain package implementing requirement IDs with a generator, independent oracle, and positive/negative cases.
+
+### Illustration
+
+A conceptual example with no normative expected result.
+
+### Regression fixture
+
+An artifact pinning implementation behavior without establishing general truth.
+
+### Calibration anchor
+
+A labeled case with provenance and standing scope used to characterize a methodology.
+
+### Experiment
+
+A preregistered claim test with retained result and lineage.
