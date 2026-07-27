@@ -1,7 +1,7 @@
 # TSC Core v4 — Generative Coherence Receipts
 
 **Version:** 4.0.0
-**Status:** Draft
+**Status:** Normative
 **Artifact:** Normative measurement semantics
 
 ## Governing question

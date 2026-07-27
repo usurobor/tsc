@@ -1,7 +1,7 @@
 # TSC Operational v4 — Methodology Lifecycle and Authorized Measurement
 
 **Version:** 4.0.0
-**Status:** Draft
+**Status:** Normative
 **Artifact:** Normative runtime contract
 
 ## Governing question

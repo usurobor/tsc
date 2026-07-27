@@ -1,7 +1,7 @@
 # TSC Conformance v4 — Proof Obligations
 
 **Version:** 4.0.0
-**Status:** Draft
+**Status:** Normative
 **Artifact:** Normative proof authority
 
 ## Governing question

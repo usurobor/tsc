@@ -1,7 +1,7 @@
 # C≡ v4 — Typed Articulation and Generative Unfolding
 
 **Version:** 4.0.0
-**Status:** Draft
+**Status:** Normative
 **Artifact:** Normative foundation
 
 ## Governing question

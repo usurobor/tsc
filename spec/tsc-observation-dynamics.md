@@ -1,7 +1,7 @@
 # TSC Observation Dynamics v4 — Lineage, Comparison, and Validated Lift
 
 **Version:** 4.0.0
-**Status:** Draft
+**Status:** Normative
 **Artifact:** Normative observation and comparison contract
 
 ## Governing question
