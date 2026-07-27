@@ -40,7 +40,7 @@ GeneralPresentation := (
   structure map c : X → F(X),
   pointed-state witness x_0,
   typed articulation interface,
-  path contract or category-specific succession witness
+  intrinsic path contract or category-specific intrinsic succession witness
 )
 ```
 
@@ -740,7 +740,7 @@ RelationalAtlas := (
 )
 ```
 
-The maps are primary evidence. A residual or scalar cannot replace them. Pairwise compatibility does not establish a global realization.
+The maps are primary evidence. A residual or scalar cannot replace them. Pairwise compatibility does not establish a global realization. A β diagram may relate `EVENTWISE` emissions, but it does not alter the generator's path contract or turn atlas-level connectivity into intrinsic generator succession.
 
 An authoritative β result requires:
 

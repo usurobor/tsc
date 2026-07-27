@@ -447,7 +447,7 @@ path checks
 provisional globalization evidence
 ```
 
-Relation candidates may depend on generator hypotheses when the declared orchestration permits it.
+Relation candidates may depend on generator hypotheses when the declared orchestration permits it. A β diagram may relate `EVENTWISE` emissions, but relation search does not mutate the compiled path contract or authorize an intrinsic role-succession claim.
 
 ### 5.5 REALIZE
 

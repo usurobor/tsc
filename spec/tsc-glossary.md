@@ -56,7 +56,7 @@ The static result that a well-formed articulation requires both poles and their 
 
 ### Role succession
 
-The use of a result pole as the source pole of a later event through path composition. In an emitted stream this claim requires a declared `STATE_LINKED` path contract or another explicit diagram witness. Role succession is not free role permutation.
+The use of a result pole as the source pole of a later event through path composition. For a deterministic Set generator, intrinsic role succession requires a declared `STATE_LINKED` path contract. A β atlas may relate `EVENTWISE` emissions in a larger diagram, but that does not turn them into generator-level succession. A `GeneralPresentation` may declare a category-specific intrinsic witness. Role succession is not free role permutation.
 
 ### Path
 
@@ -111,7 +111,7 @@ EVENTWISE
 STATE_LINKED { pole_of : X → P }
 ```
 
-`EVENTWISE` preserves each typed event but makes no succession claim. `STATE_LINKED` requires every transition `c(x,i)=(a,x')` to satisfy `src(a)=pole_of(x)` and `dst(a)=pole_of(x')`.
+`EVENTWISE` preserves each typed event but makes no intrinsic succession claim. `STATE_LINKED` requires every transition `c(x,i)=(a,x')` to satisfy `src(a)=pole_of(x)` and `dst(a)=pole_of(x')`. Atlas-level relations among `EVENTWISE` emissions remain β evidence and do not change the path contract.
 
 ### Query mode
 

@@ -109,6 +109,22 @@ expect = ["PATH_CONTRACT_UNDECLARED or PATH_COHERENCE_VIOLATION"]
 oracle = "compiler/runtime refusal code"
 
 [[cases]]
+id = "fnd-path-2-atlas-positive"
+requirement = "FND-PATH-002"
+polarity = "positive"
+given = ["EVENTWISE generator", "beta atlas relates successive emissions in a larger diagram"]
+expect = ["atlas relation retained", "generator path contract remains EVENTWISE", "no intrinsic role-succession claim"]
+oracle = "receipt semantic validator"
+
+[[cases]]
+id = "fnd-path-2-atlas-negative"
+requirement = "FND-PATH-002"
+polarity = "negative"
+given = ["EVENTWISE generator", "beta atlas relation", "receipt labels relation as intrinsic generator succession"]
+expect = ["conformance failure", "path contract remains EVENTWISE"]
+oracle = "receipt semantic validator"
+
+[[cases]]
 id = "fnd-functor-positive"
 requirement = "FND-FUNCTOR-001"
 polarity = "positive"

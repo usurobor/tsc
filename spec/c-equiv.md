@@ -214,7 +214,7 @@ where `x_0 : X` is the initial or current state under examination and `path_cont
 
 ### 3.3 Path contract
 
-Every generator presentation declares exactly one:
+Every deterministic Set generator presentation declares exactly one:
 
 ```text
 PathContract :=
@@ -235,7 +235,9 @@ src(a) = pole_of(x)
 dst(a) = pole_of(x')
 ```
 
-Under `STATE_LINKED`, every finite unfolding emits a composable path. A methodology may establish another path relation among emitted events through an explicit diagram or category-specific witness, but it may not describe consecutive emissions as role succession without such a contract.
+Under `STATE_LINKED`, every finite unfolding emits a composable path.
+
+For deterministic Set presentations, `EVENTWISE` and `STATE_LINKED` are the only generator-level path contracts. A later measurement layer may place `EVENTWISE` emissions in a larger diagram, but that relation is not part of the generator `PathContract`: it does not reclassify the generator as path-coherent and does not license the claim that consecutive emissions themselves are role succession. A generator in another carrier category may declare an analogous intrinsic succession witness under §6.
 
 ### 3.4 Query ownership
 
@@ -485,8 +487,8 @@ A methodology may make no finality claim and use a finite or approximate behavio
 Two deterministic Set presentations:
 
 ```text
-G  = (X, I, c, x_0)
-G' = (X', I, c', x'_0)
+G  = (X, I, c, x_0, path_contract)
+G' = (X', I, c', x'_0, path_contract')
 ```
 
 are presentation-isomorphic when there is a declared isomorphism:
@@ -635,7 +637,7 @@ pole_of(x_k) --rel(a_k)→ pole_of(x_(k+1))
              --rel(a_(k+1))→ pole_of(x_(k+2))
 ```
 
-The cohered pole of one event is thereby the coherer pole of the next. An `EVENTWISE` generator makes no such cross-step claim unless a separate diagram witness establishes it. Role succession across events never implies role permutation within one event.
+The cohered pole of one event is thereby the coherer pole of the next. An `EVENTWISE` generator makes no intrinsic cross-step path claim. A later measurement diagram may relate its emissions without changing that generator-level fact, and a generator in another carrier category may use a category-specific intrinsic succession witness under §6. Role succession across events never implies role permutation within one event.
 
 ## 10 · Conformance
 

@@ -97,14 +97,16 @@ A `specified` fixture has no result and contributes no conformance standing.
 
 **Owner:** `c-equiv.md` §§3.3, 9.3; `tsc-oper.md` §§3, 5, 7
 
-**Positive:** an `EVENTWISE` generator makes no cross-step path claim; a `STATE_LINKED(pole_of)` generator whose emitted endpoints match current and successor state poles produces a composable path.
+**Positive:** an `EVENTWISE` generator makes no intrinsic cross-step path claim; a `STATE_LINKED(pole_of)` generator whose emitted endpoints match current and successor state poles produces a composable path. A β atlas may relate `EVENTWISE` emissions while the generator remains `EVENTWISE`.
 
-**Negative:** a generator that claims role succession without a path contract, or whose `STATE_LINKED` emission violates either endpoint equation, fails with:
+**Negative:** a generator that claims intrinsic role succession without a path contract, or whose `STATE_LINKED` emission violates either endpoint equation, fails with:
 
 ```text
 PATH_CONTRACT_UNDECLARED
 PATH_COHERENCE_VIOLATION
 ```
+
+An `EVENTWISE` presentation whose receipt relabels atlas-level connectivity as intrinsic generator succession also fails conformance; the relation remains in β and the generator remains `EVENTWISE`.
 
 ### FND-FUNCTOR-001 — Complete deterministic Set functor
 
