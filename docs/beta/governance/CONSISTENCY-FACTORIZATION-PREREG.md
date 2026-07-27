@@ -410,3 +410,59 @@ standing scope does not promote by prose.
 This pre-registration is rejected if any gate item cannot be evaluated
 by a command, fixture, artifact, or explicit numeric comparison. A
 further operator review is required before implementation.
+
+---
+
+## Experiment result (measured 2026-07-05) — FAILED
+
+Implemented as CDD wave #73 (Sub-1 engine #74, Sub-2 harness #75). The
+credentialed CI measurement (`factorized-beta-measure.yml` run 2,
+`cycle/75` @ `2cf60ff`, all 9 jobs green) evaluated the frozen A/B/C
+gate over the five held-out targets, k=3. **Verdict:
+`FACTORIZED_BETA_VERDICT=FAIL`.**
+
+| gate | result | detail |
+|------|--------|--------|
+| A0 yield | **PASS** | 3/3 on all applicable targets |
+| A1 β `Coh_consistency` ≥ 0.90 | **MISS** | cm-of-cms, methodology, repo |
+| A2 ≥ baseline + 0.10 | **MISS** | cm-of-cms, methodology, repo, spec |
+| A3 locus-verdict agreement ≥ 0.90 | **MISS** | cm-of-cms, methodology, repo |
+| B1 katas | **PASS** | discrimination non-regression |
+| B2 admissibility matrix | **PASS** | unchanged |
+| B3 β local controls | **PASS** | typed rules + label agreement |
+| C | — | 1 sparse (`engine`) → no NO-DECISION; any A-miss ⇒ FAIL |
+
+**Interpretation.** The discrimination side held (B1/B2/B3): the
+factorized meter still separates coherent from incoherent — it did not
+degenerate into a blind mechanical proxy. The consistency side failed
+(A1/A2/A3). **A3 is decisive:** with the engine choosing the *same*
+loci for every witness and the LLM restricted to a bounded
+`supports | contradicts | insufficient` verdict, independent witnesses
+still disagree > 10% of the time on the *local semantic relation itself*
+— not what to inspect, not how to count, not how to aggregate (all
+removed), but whether this source span's claim is borne out by that
+target span. The residual variance is **genuine semantic judgment over
+under-specified citation relations** (plus ordinary model
+non-determinism), not the structural freedom the seam removed. **The
+freedom-seam hypothesis is falsified for β.**
+
+**Standing of this result.** This is the third distinct falsification of
+consistency-improvement (after v3.2.3 checklist and v3.2.4 cards), and a
+*stronger* one: even fixed-locus local adjudication did not cross the
+gate. **TERMINAL** for the factorization line per the re-entry rule — no
+re-tweak, no re-run, no v3.2.5 without a fresh operator dispatch and a
+new theory of variance not already falsified. Does **not** reset the
+meter-loop counter. The harness + engine are retained as measurement
+infrastructure / contract hardening with **no consistency claim**.
+
+**Successor line (operator directive 2026-07-05):** change the LLM's
+role from scalar judge to defect-proposer + ambiguity-detector; treat
+remaining disagreement as a measured property of the artifact. Tracked
+in **#76** (meter-found semantic ambiguity queue) under
+`docs/beta/governance/DEFECT-HARVESTING.md`. One flagged nuance for the
+record: `spec`'s A2 miss cannot be distinguished from logs alone between
+"baseline absent (<2 valid scalar samples)" and "present but below the
++0.10 margin"; immaterial to the verdict since A1/A3 already fail on
+three targets, and the fixed +0.10 margin has an inherent ceiling when a
+baseline is already high (a prereg design property, not a harness
+defect).

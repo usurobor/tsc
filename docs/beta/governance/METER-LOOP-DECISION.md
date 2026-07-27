@@ -91,3 +91,31 @@ optimization target:
   floor is missed; low consistency withholds standing, per CM²
   doctrine.
 - The measurement route samples k=3 (`llm_repeats: 3`).
+
+## Update 2026-07-05 — factorization re-entry ran and FAILED (stronger negative)
+
+A single re-entry was authorized under the door above (operator dispatch
++ written theory of variance + pre-registered gate): the **freedom-seam
+factorization** (`CONSISTENCY-FACTORIZATION-PREREG.md` rev 4), run as
+wave #73. It attacked a genuinely different seam from the rejected line —
+it did **not** add filing structure; it removed the LLM's scalar
+judgment, fixed the loci deterministically, and aggregated mechanically.
+
+**Result: FAILED** (measured; A1/A2/A3 missed, B1/B2/B3 held) — a
+*stronger* negative than v3.2.3/v3.2.4: even fixed-locus local
+adjudication did not cross the consistency gate. The decisive datum is
+A3 — independent witnesses disagree on the *local semantic relation
+itself* under a bounded verdict. Conclusion: same-route LLM semantic
+judgment is not intrinsically stable enough to be a scalar authority;
+the residual variance is genuine semantic judgment over under-specified
+citation relations.
+
+**Consequence:** consistency-improvement work stays **stopped**. No
+v3.2.5, no re-run of the factorization, no further same-route
+prompt/schema/locus tweak with a consistency-movement rationale. The
+replacement line advances instead: the meter becomes a defect-proposer +
+ambiguity-detector, and disagreement becomes a measured artifact
+property — **#76** (semantic ambiguity queue) under
+[DEFECT-HARVESTING.md](DEFECT-HARVESTING.md), extending replacement item
+2 above; external/cross-route calibration (item 3) remains the eventual
+consistency-evidence path.

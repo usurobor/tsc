@@ -37,3 +37,13 @@
  (name test_consistency)
  (modules test_consistency)
  (libraries tsc_engine unix))
+
+(test
+ (name test_factorized_beta)
+ (modules test_factorized_beta)
+ (libraries tsc_engine yojson))
+
+(test
+ (name test_factorized_beta_gate)
+ (modules test_factorized_beta_gate)
+ (libraries tsc_engine yojson))

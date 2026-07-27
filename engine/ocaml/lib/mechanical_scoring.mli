@@ -208,6 +208,38 @@ val summarize_signal : signal -> string
 val summarize_result : result -> string
 (** Human-readable summary for logs or text reports. *)
 
+(** {1 Deterministic β anchors}
+
+    The exact link / anchor / heading primitives the β signals are built
+    on. Exposed so [Factorized_beta] can enumerate its β loci on the SAME
+    mechanical surface the scalar β signals score — the locus set cannot
+    diverge from the signal it claims to anchor (see
+    docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md §"β locus
+    enumerators"). No behaviour of the scalar path changes; these were
+    already computed, only their visibility widens. *)
+
+val extract_md_links : string -> string list
+(** [text](target) link targets, one per Markdown inline link. *)
+
+val is_internal_link : string -> bool
+(** A link target that is not http/mailto/ftp and not a pure #anchor. *)
+
+val normalize_link : src:string -> string -> string
+(** Resolve a link target to a bundle-relative path (fragment stripped,
+    [.]/[..] collapsed) relative to the linking document [src]. *)
+
+val slugify : string -> string
+(** GitHub-style heading anchor slug. *)
+
+val doc_slug_map : Bundle.file list -> (string * string list) list
+(** (document path, heading slugs) for every document — the anchor map. *)
+
+val link_resolves :
+  bundle_paths:string list ->
+  doc_slugs:(string * string list) list ->
+  src:string -> string -> bool
+(** Whether a link target resolves (path AND, when present, #fragment). *)
+
 (** {1 Scoring intent by axis}
 
     {b Alpha:}
