@@ -20,6 +20,7 @@ TSC Operational separates compilation, bounded execution, instrument assessment,
 identity and version
 input and observation contract
 generator and atlas-candidate classes
+path contract
 behavior contract
 relation-search and generator-search contracts
 equivalence and approximation contracts
@@ -40,6 +41,7 @@ source digest
 compiled descriptor digest
 validated schemas
 resolved implementation/provider bindings
+path contract and succession-check plan
 behavior contract
 search contracts and orchestration
 approximation-contract digest
@@ -157,6 +159,7 @@ adapter resolution
 permission validation
 receipt-schema validation
 execution-plan normalization
+path-contract validation
 behavior-contract validation
 search-contract validation
 ```
@@ -184,19 +187,9 @@ BehaviorAccess
 
 #### SET_FINAL
 
-`SET_FINAL` passes only when:
+The compiler validates the descriptor's `SET_FINAL` applicability evidence against the mathematical contract owned by C≡ §6. Operational does not duplicate that contract. The permanent proof obligation `FND-FINAL-002` tests the compiler's enforcement.
 
-```text
-P, I, X, and every Rel(s,o) are members of one declared Set universe;
-Art is their dependent sum;
-the candidate uses SetPresentation with deterministic type X × I → Art × X;
-the canonical C≡ F_I object and morphism actions are used;
-the canonical Set final behavior construction is referenced.
-```
-
-Real-valued or continuous carriers are not rejected merely for being continuous.
-
-A stochastic or nondeterministic implementation passes only when randomness or choice is reified as declared deterministic input or state and the resulting claim is scoped to that presentation.
+Absent or failed applicability evidence emits `SET_FINAL_INAPPLICABLE`. Operational may enforce the foundation contract; it may not restate a weaker one.
 
 #### GENERAL_FINAL
 
@@ -231,6 +224,7 @@ SET_FINAL_INAPPLICABLE
 PRESENTATION_KIND_UNDECLARED
 INITIAL_STATE_WITNESS_MISSING
 ARTICULATION_INTERFACE_MISSING
+PATH_CONTRACT_UNDECLARED
 FUNCTOR_INCOMPLETE
 FUNCTOR_LAWS_UNPROVED
 FINALITY_UNSUPPORTED
@@ -391,6 +385,7 @@ input schema
 applicability
 required permissions
 required observation channels
+path contract
 behavior contract
 ```
 
@@ -429,6 +424,15 @@ uncertainty
 ```
 
 If α is not `VALID`, later roles may retain diagnostics but are marked `BLOCKED_BY(α-validity)` for authoritative classification.
+
+For `STATE_LINKED(pole_of)`, each executed transition also verifies:
+
+```text
+src(a) = pole_of(x)
+dst(a) = pole_of(x')
+```
+
+A mismatch terminates that execution path with `PATH_COHERENCE_VIOLATION`. An `EVENTWISE` contract emits no cross-step succession claim.
 
 ### 5.4 RELATE
 
@@ -560,6 +564,8 @@ path escapes the declared root
 inclusion cycle is detected
 input breaks framing or serialization
 required relation or transformation is untyped
+path contract is missing for a claimed succession
+STATE_LINKED emission violates its source/successor pole law
 behavior mode is undeclared or unsupported
 functor action or law is incomplete
 pointed-state or articulation interface is missing
@@ -570,6 +576,13 @@ held-out boundary is compromised
 uncertainty is ungrounded for a standing-bearing claim
 provider output fails schema or evidence validation
 resource or permission limits are exceeded
+```
+
+Stable path-related refusal codes are:
+
+```text
+PATH_CONTRACT_UNDECLARED
+PATH_COHERENCE_VIOLATION
 ```
 
 A refusal receipt includes:
@@ -600,6 +613,7 @@ search orchestration
 provider/model/prompt when used
 calibration set
 policy
+path contract
 behavior contract
 approximation contract
 receipt schema
@@ -631,6 +645,7 @@ compiled and authorization digests
 target identity and input digests
 measurement mode
 coverage manifest
+path-contract digest
 behavior contract
 approximation-contract digest
 α receipt

@@ -218,6 +218,7 @@ Two receipts are directly comparable only when their compatibility keys agree or
 CM id and semantic version
 CM digest or approved compatibility relation
 generator class
+path-contract digest and succession semantics
 behavior contract
 input and observation schema
 equivalence relation

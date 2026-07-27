@@ -25,8 +25,9 @@ Art := Σ(s:P).Σ(o:P).Rel(s,o)
 The canonical deterministic Set presentation is:
 
 ```text
-SetPresentation := (X,I,c,x_0)
+SetPresentation := (X,I,c,x_0,path_contract)
 c : X × I → Art × X
+path_contract : C≡ PathContract
 ```
 
 A CM that needs another transition structure declares:
@@ -38,7 +39,8 @@ GeneralPresentation := (
   state object X,
   structure map c : X → F(X),
   pointed-state witness x_0,
-  typed articulation interface
+  typed articulation interface,
+  path contract or category-specific succession witness
 )
 ```
 
@@ -63,7 +65,7 @@ M := (
   identity,
   carrier and behavior contract,
   generator class,
-  query and observation contract,
+  query, observation, and path contract,
   relation-search contract,
   generator-search contract,
   equivalence contract,
@@ -105,6 +107,7 @@ laws
 resources
 representations
 system functor and articulation interface, when general
+path mode and succession witness for every cross-step path claim
 input adapter, when the presentation input differs from I_M
 ```
 
@@ -276,7 +279,14 @@ active/interventional behavior over J
 another explicit criterion
 ```
 
-It satisfies refinement monotonicity:
+It satisfies refinement monotonicity as relation inclusion:
+
+```text
+J_1 ⊆ J_2
+⇒ (≃_M^J_2) ⊆ (≃_M^J_1)
+```
+
+Equivalently:
 
 ```text
 J_1 ⊆ J_2
@@ -284,7 +294,7 @@ and R ≃_M^J_2 R'
 ⇒ R ≃_M^J_1 R'
 ```
 
-Wider input families may distinguish realization candidates that a narrower family identifies.
+Wider input families may distinguish realization candidates that a narrower family identifies; they may not merge classes that the narrower family separated.
 
 Prediction, fit, complexity, and oracle contracts are congruent with the equivalence used for their evidence regime. If equivalent realizations can receive different outcomes, the CM refines the equivalence or reports the class relation as unresolved.
 
@@ -299,11 +309,7 @@ Behavioral semantics and empirical access are separate declarations.
 ```text
 FinalityBasis :=
   SET_FINAL {
-    universe,
-    canonical deterministic generator shape,
-    canonical F_I object action,
-    canonical F_I morphism action,
-    canonical behavior object Art^(I+)
+    applicability_evidence
   }
 
   | GENERAL_FINAL {
@@ -320,20 +326,9 @@ FinalityBasis :=
   | NO_FINALITY_CLAIM
 ```
 
-`SET_FINAL` applies only when:
+The mathematical applicability conditions for `SET_FINAL` are owned solely by C≡ §6. Core records `applicability_evidence` against that contract; it does not restate or weaken the conditions. The permanent conformance requirement `FND-FINAL-002` tests this evidence but is not part of the semantic data type.
 
-```text
-P, I, X, and every Rel(s,o) belong to one declared Set universe;
-Art is their dependent sum;
-c has deterministic shape X × I → Art × X;
-the canonical C≡ functor and final behavior construction are used.
-```
-
-A continuous deterministic state or input space may satisfy `SET_FINAL` at the underlying Set level.
-
-`SET_FINAL` requires a `SetPresentation`. A stochastic or nondeterministic kernel may use `SET_FINAL` only after randomness or choice has been made explicit as declared deterministic input or state and the claim is scoped to that reified presentation. Otherwise it uses a `GeneralPresentation` under another finality basis.
-
-Measurable, topological, metric-enriched, or other category-specific claims do not inherit `SET_FINAL` merely because their underlying carriers are sets.
+Category-specific measurable, topological, metric-enriched, stochastic, or nondeterministic claims still declare whatever additional structure their claim requires; satisfaction of the underlying Set construction does not grant those stronger claims.
 
 `GENERAL_FINAL` asserts an actual final coalgebra in the declared category. An approximate commuting property or tolerant fixed-point sketch is not a finality witness.
 
@@ -728,6 +723,7 @@ The β receipt asks:
 RelationalAtlas := (
   evaluation,
   relation-search contract and evidence,
+  path contract and cross-step path checks,
   source-to-observation maps,
   observation-to-observation correspondences,
   alternative maps,
@@ -773,6 +769,7 @@ CandidateContinuation :=
 ContinuationReceipt := (
   evaluation,
   realization-candidate references,
+  path contract and succession evidence,
   candidate-level continuation outcomes,
   input and intervention histories,
   predictions fixed before observation,
@@ -836,7 +833,7 @@ This is a dependency claim, not statistical independence, algebraic non-isomorph
 
 ### A1 — Scopedness
 
-Every coherence claim names its CM, evidence, generator class, equivalence, behavior contract, approximation contract, complexity bound, search claims, and input/intervention family.
+Every coherence claim names its CM, evidence, generator class, path contract, equivalence, behavior contract, approximation contract, complexity bound, search claims, and input/intervention family.
 
 ### A2 — Realizability
 
@@ -870,7 +867,7 @@ Structured evidence remains normative until a quotient is proved sufficient for 
 
 ### A9 — Authority neutrality
 
-Core classifies evidence. It does not grant standing or authorize a boundary action.
+Core classifies evidence. Its normative receipt schema contains no standing grant, admission verdict, or boundary decision. Operational may envelope a Core receipt with those later authorities; Core cannot issue them.
 
 ## 9 · Coherence disposition
 
@@ -923,8 +920,7 @@ training realization_status = NO_REALIZATION_IN_MODEL under a complete applicabl
 training realization_status = REALIZABLE_IN_MODEL,
 TestStatus = FAILED, and C_M^test(D) is empty;
 
-the claim-designated identified realization candidate violates the declared law
-and no admissible alternative remains.
+γ.evaluation = COMPLETED and γ.status = LAW_VIOLATION.
 ```
 
 A violation by one member of an underdetermined realization-candidate set removes that member. It does not refute surviving candidates or the entire model class.
@@ -1050,6 +1046,7 @@ receipt_id
 CM identity and digests
 input and evidence digests
 query/intervention boundary
+path-contract digest and succession evidence
 behavior contract
 approximation-contract digest
 α ManifestationReceipt

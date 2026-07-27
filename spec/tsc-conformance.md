@@ -93,6 +93,19 @@ A `specified` fixture has no result and contributes no conformance standing.
 
 **Negative:** mismatched intermediate poles cannot compose.
 
+### FND-PATH-002 — Declared role succession
+
+**Owner:** `c-equiv.md` §§3.3, 9.3; `tsc-oper.md` §§3, 5, 7
+
+**Positive:** an `EVENTWISE` generator makes no cross-step path claim; a `STATE_LINKED(pole_of)` generator whose emitted endpoints match current and successor state poles produces a composable path.
+
+**Negative:** a generator that claims role succession without a path contract, or whose `STATE_LINKED` emission violates either endpoint equation, fails with:
+
+```text
+PATH_CONTRACT_UNDECLARED
+PATH_COHERENCE_VIOLATION
+```
+
 ### FND-FUNCTOR-001 — Complete deterministic Set functor
 
 **Owner:** `c-equiv.md` §4
@@ -117,7 +130,7 @@ COMPILE_REJECTED(FUNCTOR_INCOMPLETE)
 
 ### FND-FINAL-002 — SET_FINAL applicability
 
-**Owner:** `c-equiv.md` §6; `tsc-core.md` §3; `tsc-oper.md` §3
+**Owner:** `c-equiv.md` §6; enforcement: `tsc-oper.md` §3 through this requirement
 
 **Positive:** a deterministic CM with real-valued `X`, `I`, and `Art` may use `SET_FINAL` when all are Set objects in one declared universe and the canonical functor is used.
 
@@ -324,6 +337,14 @@ No receipt may discharge another receipt's proof obligation.
 
 **Negative:** a scalar-only result fails conformance and cannot override fiber, law, standing, or authority status.
 
+### CORE-AUTH-001 — Core authority neutrality
+
+**Owner:** `tsc-core.md` A9; `tsc-oper.md` §2
+
+**Positive:** a Core receipt classifies evidence and may later be wrapped by Operational standing, verdict, and boundary artifacts without changing the Core receipt.
+
+**Negative:** a Core-only receipt schema that grants standing, emits an admission verdict, or performs a boundary decision fails conformance.
+
 ## 4 · Operational requirements
 
 ### OPER-AUTH-001 — Authority separation
@@ -442,7 +463,25 @@ stochastic-law-v4
 
 A fixture contributes standing only when its status is `verified` and its raw evidence is reproducible.
 
-## 7 · Specification ratification and implementation conformance
+## 7 · Conformance self-application
+
+### CONF-COVERAGE-001 — Requirement and fixture closure
+
+**Owner:** this document §§1, 6, 7
+
+**Positive:** every requirement ID is referenced by at least one registered fixture with both a positive and a negative case, and every fixture requirement reference resolves to an existing ID.
+
+**Negative:** an orphan requirement ID, dangling fixture reference, duplicate requirement ID, or missing polarity fails conformance validation.
+
+### CONF-STATUS-001 — Evidence-bound fixture status
+
+**Owner:** this document §§1.2–1.3; `schemas/conformance-fixture.cue`
+
+**Positive:** `verified` status carries reproducible PASS evidence, its digest and replay command, and an immutable independent-review reference with PASS result.
+
+**Negative:** a fixture labeled `verified` without either replayable PASS evidence or independent immutable PASS review fails schema and registry validation; a `specified` fixture carrying evidence or verification also fails.
+
+## 8 · Specification ratification and implementation conformance
 
 Specification ratification and implementation conformance are separate claims.
 

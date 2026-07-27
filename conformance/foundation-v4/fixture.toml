@@ -1,11 +1,12 @@
 format = "tsc-conformance-fixture/0.1"
 id = "foundation-v4"
-version = "0.2.0"
+version = "0.3.0"
 status = "specified"
 domain = "TSC foundation, receipt, lifecycle, comparison, and lineage contracts"
 requirements = [
   "FND-TYPE-001",
   "FND-PATH-001",
+  "FND-PATH-002",
   "FND-FUNCTOR-001",
   "FND-FINAL-001",
   "FND-FINAL-002",
@@ -22,6 +23,7 @@ requirements = [
   "BETA-SEARCH-001",
   "CORE-GLOBAL-001",
   "CORE-SCALAR-001",
+  "CORE-AUTH-001",
   "OPER-AUTH-001",
   "OPER-BEHAVIOR-001",
   "OPER-INPUT-001",
@@ -32,6 +34,8 @@ requirements = [
   "OBS-DEPEND-001",
   "OBS-APPROX-001",
   "OBS-LINEAGE-001",
+  "CONF-COVERAGE-001",
+  "CONF-STATUS-001",
 ]
 
 [claim_contract]
@@ -87,6 +91,22 @@ polarity = "negative"
 given = ["phi : Rel(s,o)", "psi : Rel(v,u)", "o differs from v"]
 expect = ["composition rejected"]
 oracle = "typechecker rejects mismatched composition"
+
+[[cases]]
+id = "fnd-path-2-positive"
+requirement = "FND-PATH-002"
+polarity = "positive"
+given = ["EVENTWISE with no succession claim", "STATE_LINKED pole_of with matching transition endpoints"]
+expect = ["eventwise stream accepted without path claim", "state-linked unfolding is a composable path"]
+oracle = "path-contract type/property checker"
+
+[[cases]]
+id = "fnd-path-2-negative"
+requirement = "FND-PATH-002"
+polarity = "negative"
+given = ["succession claimed without path contract or endpoint mismatch under STATE_LINKED"]
+expect = ["PATH_CONTRACT_UNDECLARED or PATH_COHERENCE_VIOLATION"]
+oracle = "compiler/runtime refusal code"
 
 [[cases]]
 id = "fnd-functor-positive"
@@ -345,6 +365,22 @@ expect = ["result rejected"]
 oracle = "receipt validator"
 
 [[cases]]
+id = "core-authority-positive"
+requirement = "CORE-AUTH-001"
+polarity = "positive"
+given = ["Core classification receipt", "separate Operational authority envelope"]
+expect = ["Core remains unchanged", "standing and boundary fields originate only from Operational"]
+oracle = "receipt-schema and lifecycle validator"
+
+[[cases]]
+id = "core-authority-negative"
+requirement = "CORE-AUTH-001"
+polarity = "negative"
+given = ["Core-only receipt grants standing, verdict, or boundary action"]
+expect = ["conformance failure"]
+oracle = "receipt-schema authority validator"
+
+[[cases]]
 id = "oper-auth-positive"
 requirement = "OPER-AUTH-001"
 polarity = "positive"
@@ -436,7 +472,7 @@ oracle = "comparison validator"
 id = "obs-compare-negative"
 requirement = "OBS-COMPARE-001"
 polarity = "negative"
-given = ["different CM or behavior contract", "no transport"]
+given = ["different CM, path contract, succession semantics, or behavior contract", "no transport"]
 expect = ["INCOMPARABLE"]
 oracle = "comparison validator"
 
@@ -503,3 +539,35 @@ polarity = "negative"
 given = ["failed prior receipt", "claim removed", "no disposition"]
 expect = ["conformance failure"]
 oracle = "lineage validator"
+
+[[cases]]
+id = "conf-coverage-positive"
+requirement = "CONF-COVERAGE-001"
+polarity = "positive"
+given = ["all normative requirement IDs", "registered fixture manifests"]
+expect = ["every ID has at least one registered positive and negative case", "all fixture references resolve"]
+oracle = "registry closure validator"
+
+[[cases]]
+id = "conf-coverage-negative"
+requirement = "CONF-COVERAGE-001"
+polarity = "negative"
+given = ["orphan requirement, dangling reference, duplicate ID, or missing polarity"]
+expect = ["conformance validation fails"]
+oracle = "registry closure validator"
+
+[[cases]]
+id = "conf-status-positive"
+requirement = "CONF-STATUS-001"
+polarity = "positive"
+given = ["verified fixture", "PASS evidence digest and replay command", "immutable independent PASS review"]
+expect = ["verified status accepted"]
+oracle = "fixture status/schema validator"
+
+[[cases]]
+id = "conf-status-negative"
+requirement = "CONF-STATUS-001"
+polarity = "negative"
+given = ["verified label missing replayable PASS evidence or independent immutable PASS review"]
+expect = ["fixture status rejected"]
+oracle = "fixture status/schema validator"

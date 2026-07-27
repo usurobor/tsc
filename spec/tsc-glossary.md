@@ -56,7 +56,7 @@ The static result that a well-formed articulation requires both poles and their 
 
 ### Role succession
 
-The use of a result pole as the source pole of a later event through path composition. Role succession is not free role permutation.
+The use of a result pole as the source pole of a later event through path composition. In an emitted stream this claim requires a declared `STATE_LINKED` path contract or another explicit diagram witness. Role succession is not free role permutation.
 
 ### Path
 
@@ -95,12 +95,23 @@ It emits one articulation and one successor state.
 A pointed deterministic presentation:
 
 ```text
-(X,I,c,x_0)
+(X,I,c,x_0,path_contract)
 ```
 
 ### General presentation
 
 A category-specific presentation with a system functor, state object, structure map, pointed-state witness, and typed articulation interface.
+
+### Path contract
+
+A declaration of whether consecutive generator emissions are claimed to form a composable path:
+
+```text
+EVENTWISE
+STATE_LINKED { pole_of : X → P }
+```
+
+`EVENTWISE` preserves each typed event but makes no succession claim. `STATE_LINKED` requires every transition `c(x,i)=(a,x')` to satisfy `src(a)=pole_of(x)` and `dst(a)=pole_of(x')`.
 
 ### Query mode
 
@@ -163,6 +174,10 @@ It records the output on the final transition of every nonempty finite input his
 ### Behavior map
 
 The unique coalgebra morphism from a concrete deterministic Set generator to `B_I`.
+
+### State-linked behavior witness
+
+For a `STATE_LINKED(pole_of)` presentation, the pair `(pole_of(x), beh_c(x))` proves that each first event begins at the current pole and each later event begins where the previous event ended. The ambient final behavior space also contains eventwise behaviors; the path witness remains presentation-sensitive evidence.
 
 ### Final coalgebra
 

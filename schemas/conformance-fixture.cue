@@ -12,7 +12,7 @@ package conformance
 	status:  "specified" | "implemented" | "verified"
 	domain:  string & !=""
 
-	requirements: [...string & =~"^(FND|CORE|BETA|OPER|OBS)-[A-Z]+-[0-9]{3}$"] & [_, ...]
+	requirements: [...string & =~"^(FND|CORE|BETA|OPER|OBS|CONF)-[A-Z]+-[0-9]{3}$"] & [_, ...]
 
 	claim_contract: {
 		generator_class:        string & !=""
@@ -119,7 +119,7 @@ package conformance
 
 #Case: {
 	id:          string & =~"^[a-z][a-z0-9-]*$"
-	requirement: string & =~"^(FND|CORE|BETA|OPER|OBS)-[A-Z]+-[0-9]{3}$"
+	requirement: string & =~"^(FND|CORE|BETA|OPER|OBS|CONF)-[A-Z]+-[0-9]{3}$"
 	polarity:    "positive" | "negative"
 	given:       [...string] & [_, ...]
 	expect:      [...string] & [_, ...]

@@ -205,6 +205,8 @@ c : X × I → Art × X
 
 The generator emits a complete event and successor state. Query ownership is declared as exogenous, endogenous, or mixed.
 
+Cross-step role succession is not inferred from emission order. Each presentation declares `EVENTWISE` or `STATE_LINKED(pole_of)`. Only the latter requires each event to run from the pole indexed by the current state to the pole indexed by the successor state, making an unfolding a composable articulation path.
+
 ### 5.3 Exact Set behavior
 
 ```text
