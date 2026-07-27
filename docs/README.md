@@ -25,4 +25,4 @@ The documentation tree follows the system in [`beta/governance/DOCUMENTATION-SYS
 
 ## Status boundary
 
-The draft v4 specification and the current 0.12.0 proxy engine are different surfaces. Historical self-coherence reports and proxy scores retain the semantics of the instruments that produced them; they do not acquire v4 meaning retroactively.
+The v4 specification and the current 0.12.0 proxy engine are different surfaces. Historical self-coherence reports and proxy scores retain the semantics of the instruments that produced them; they do not acquire v4 meaning retroactively.

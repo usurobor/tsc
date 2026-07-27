@@ -1,9 +1,22 @@
 # Self-Measure v3.2.4
 
+> **Frozen repository-proxy methodology — not TSC v4.** This is the
+> v3.2.x repository-proxy scoring instruction. Its semantic contract is
+> the immutable v3.2.2 pin recorded in
+> [`engine/ocaml/CONTRACT.md`](../engine/ocaml/CONTRACT.md), not the live
+> `spec/` bodies. The three axes α, β, γ below are **this proxy's**
+> independent scalar coherence axes. They are **not** TSC v4's α/β/γ,
+> which the normative spec defines as non-substitutable,
+> asymmetrically-dependent receipt roles (manifestation, relational
+> atlas, continuation), never independent scalar axes.
+
 You are evaluating a TSC target bundle.
 
 Your job is not to summarize the files.
-Your job is to measure whether the bundle forms one coherent system across three independent axes:
+Your job is to measure whether the bundle forms one coherent system
+across the three independent scalar axes of the v3.2 repository proxy —
+α, β, γ (this proxy's axes, not the v4 receipt roles that share the
+names):
 
 - **α** — pattern coherence
 - **β** — relational coherence

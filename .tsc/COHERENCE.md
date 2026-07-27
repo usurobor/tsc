@@ -8,7 +8,9 @@ says which. Historical rows were backfilled mechanically by measuring
 each tag's tree (its own `targets/registry.tsc`) with a single fixed
 engine — reproducible, hence comparable; a hybrid row is a semantic
 judgment and is not re-derivable bit-for-bit. The cross aggregate is the
-geometric mean of the per-target values (tsc-oper §7.4).
+geometric mean of the per-target values (frozen v3.2 repository-proxy
+formula, `engine/ocaml/CONTRACT.md` — not v4 `spec/tsc-oper.md` §7, which
+is now the refusal contract).
 
 A hybrid row also records the consistency protocol's verdict on itself
 (skills/cm-of-cms/SKILL.md §3): how many validated witness samples the

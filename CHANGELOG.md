@@ -8,9 +8,9 @@ The spec lineage (C≡, TSC Core, TSC Operational, TSC Glossary, TSC Observation
 
 **Breaking — changes the referent, not just the formulas.** v4 replaces the scalar-first theory with a receipt-first theory of typed generative articulation. Unlike the v3.2 barrier cutover (which changed how `C_Σ` was *computed*), this changes what `coherence`, `α`, `β`, `γ`, and `C_Σ` **mean**. **Pre-v4 reports are not comparable** and do not inherit v4 semantics.
 
-**Status: normative and unimplemented.** No implementation conforms to v4; the OCaml engine still implements spec v3.2.2 (preserved in-tree at `spec/archive/3.2.2/`). The v4 conformance suite (DESIGN §8) is unbuilt — the §8.6 negative foundation tests are the first executable gate, and they gate *conformance claims*, not this spec merge. See [STATUS.md](../STATUS.md) and `docs/design/foundation-contract-reconciliation/DESIGN.md`.
+**Status: normative and unimplemented.** No implementation conforms to v4; the OCaml engine still implements spec v3.2.2, pinned immutably in `engine/ocaml/CONTRACT.md` (the v3.2.2 spec set is retired from the tree and preserved in git history). The v4 conformance obligations are the normative authority `spec/tsc-conformance.md`; the fixture suite under `conformance/` is specified but unbuilt — the negative foundation cases are the first executable gate, and they gate *conformance claims*, not this spec merge. See [STATUS.md](STATUS.md) and `docs/design/foundation-contract-reconciliation/DESIGN.md`.
 
-**Affected:** `spec/{c-equiv,tsc-core,tsc-oper,tsc-observation-dynamics,tsc-glossary}.md` (all → 4.0.0), `spec/README.md` (new index), `docs/design/foundation-contract-reconciliation/DESIGN.md` (rationale), `STATUS.md` (new). v3.2.2 specs archived at `spec/archive/3.2.2/`.
+**Affected:** `spec/{c-equiv,tsc-core,tsc-oper,tsc-observation-dynamics,tsc-glossary}.md` (all → 4.0.0), `spec/tsc-conformance.md` (normative proof authority), `spec/README.md` (new index), `conformance/**` (fixture suite), `schemas/conformance-fixture.cue` (fixture schema), `docs/design/foundation-contract-reconciliation/DESIGN.md` (rationale), `STATUS.md` (new), and the reconciled consumer surfaces (`README.md`, `docs/`, `skills/`, `runtime/SELF-MEASURE.md`, `targets/`). The v3.2.2 spec set is retired from the tree — preserved in git history and pinned in `engine/ocaml/CONTRACT.md`.
 
 ### Spec v3.2.2 (2026-07-04) — τ_lip Verdict Consistency + Notation-Window Closure
 
@@ -107,7 +107,7 @@ falsification is recorded in the instruction's experiment record.
 
 ## Release Coherence Ledger
 
-Grades use TSC's own triadic axes (see [spec/](spec/)). Engineering levels per [cnos ENGINEERING-LEVELS.md](https://github.com/usurobor/cnos/blob/main/docs/gamma/ENGINEERING-LEVELS.md).
+Grades use the frozen v3.2 repository-proxy triadic axes, pinned in [`engine/ocaml/CONTRACT.md`](engine/ocaml/CONTRACT.md) — not the live `spec/` symbols, which under v4 denote non-substitutable receipt roles rather than independent scalar axes. Engineering levels per [cnos ENGINEERING-LEVELS.md](https://github.com/usurobor/cnos/blob/main/docs/gamma/ENGINEERING-LEVELS.md).
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|

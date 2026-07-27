@@ -68,7 +68,14 @@ jobs:
       - name: Check required spec files present
         run: |
           missing=0
-          for f in spec/tsc-core.md spec/tsc-oper.md spec/tsc-glossary.md; do
+          for f in \
+            spec/c-equiv.md \
+            spec/tsc-core.md \
+            spec/tsc-oper.md \
+            spec/tsc-observation-dynamics.md \
+            spec/tsc-conformance.md \
+            spec/tsc-glossary.md \
+            spec/README.md; do
             if [ ! -f "$f" ]; then
               echo "MISSING: $f"
               missing=$((missing + 1))
@@ -81,6 +88,39 @@ jobs:
             exit 1
           fi
           echo "spec-validate: all required spec files present"
+
+      - name: Check spec status headers (ratified v4)
+        run: |
+          # The five normative bodies + the spec index must read
+          # `**Status:** Normative`; the glossary must read
+          # `**Status:** Informative`. Guards against a partial or
+          # reverted ratification surface.
+          fail=0
+          check_status() {
+            local f="$1" want="$2" line
+            line=$(grep -m1 -E '^\*\*Status:\*\*' "$f" || true)
+            if [ "$line" != "**Status:** $want" ]; then
+              echo "STATUS MISMATCH: $f -> '$line' (expected '**Status:** $want')"
+              fail=$((fail + 1))
+            else
+              echo "OK: $f is $want"
+            fi
+          }
+          for f in \
+            spec/c-equiv.md \
+            spec/tsc-core.md \
+            spec/tsc-oper.md \
+            spec/tsc-observation-dynamics.md \
+            spec/tsc-conformance.md \
+            spec/README.md; do
+            check_status "$f" "Normative"
+          done
+          check_status spec/tsc-glossary.md "Informative"
+          if [ $fail -gt 0 ]; then
+            echo "spec-validate: $fail spec status header(s) inconsistent"
+            exit 1
+          fi
+          echo "spec-validate: all spec status headers consistent"
 
       - name: Link check (spec/*.md)
         uses: lycheeverse/lychee-action@v1
@@ -97,6 +137,30 @@ jobs:
   # kata-check job removed in cycle #36 — consolidated into the dedicated
   # `katas.yml` workflow which adds an OPAM + dune build cache and
   # PR-only concurrency cancellation. See `.github/workflows/katas.yml`.
+
+  conformance-validate:
+    # Failure classes guarded (schemas/README.md):
+    #   - a conformance fixture that no longer satisfies
+    #     schemas/conformance-fixture.cue;
+    #   - registry <-> manifest drift (dangling or orphan fixtures);
+    #   - a fixture referencing a requirement ID absent from
+    #     spec/tsc-conformance.md, or a covered requirement missing a
+    #     positive or negative case;
+    #   - an evidence-rule violation (a specified fixture carrying
+    #     execution evidence, or a verified fixture without replayable
+    #     PASS evidence and independent PASS review).
+    # Consumer: anyone reading conformance/ as the v4 proof surface.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup CUE
+        uses: cue-lang/setup-cue@v1.0.1
+        with:
+          version: v0.13.2
+
+      - name: Validate v4 conformance fixtures
+        run: ./scripts/ci/validate-v4-conformance.sh
 
   skill-validate:
     # Failure classes guarded (schemas/README.md):

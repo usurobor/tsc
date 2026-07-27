@@ -11,8 +11,10 @@ A target is an explicit declaration of:
 Current targets:
 
 - `spec` — theory surface
-- `engine` — implementation surface
-- `repo` — aggregate repository surface
+- `engine` — current repository-proxy implementation surface (includes
+  `engine/ocaml/CONTRACT.md`, the immutable v3.2.2 semantic pin)
+- `repo` — aggregate repository surface, spanning theory, implementation,
+  and integration (status, conformance fixtures, schemas, illustrations)
 - `methodology` — the 1st coherence methodology (self-measurement) as a
   measurable corpus
 - `cm-of-cms` — the 0th coherence methodology (the CM of CMs) as a

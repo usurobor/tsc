@@ -1,7 +1,7 @@
 # TSC v4 Specifications
 
 **Version:** 4.0.0
-**Status:** Draft
+**Status:** Normative
 
 TSC defines coherence as a warranted relation among a concrete generator, its typed articulations, and evidence that tests how the generator continues under declared observations and interventions.
 
@@ -70,7 +70,11 @@ These documents explain the revision. They do not override the normative definit
 
 ## Ratification
 
-`Status: Draft` remains binding until:
+The specification is ratified. `Status: Normative` is binding, set by the
+independently reviewed ratification-only commit. The seven conditions that
+governed the prior `Status: Draft` phase were all satisfied before that
+commit landed, and are retained here as the record of what ratification
+required:
 
 1. every semantic layer is internally complete and cross-referenced;
 2. every enduring conformance requirement has an owner and specified positive/negative oracle;

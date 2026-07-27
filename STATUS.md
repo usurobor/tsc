@@ -4,7 +4,7 @@
 **Specification:** 4.0.0 Normative
 **v4 conformance standing:** none
 
-TSC's foundational measurement construct is under revision.
+TSC's foundational measurement construct is ratified: the v4 specification is Normative. Its v4 implementation and conformance standing remain under development — no engine or methodology conforms yet — but the foundation itself is no longer under revision.
 
 ## Theory
 

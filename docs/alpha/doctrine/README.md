@@ -1,6 +1,6 @@
 # Doctrine
 
-The canonical draft theory is the specification tree under [`spec/`](../../../spec/README.md).
+The canonical theory is the specification tree under [`spec/`](../../../spec/README.md).
 
 ## Reading order
 

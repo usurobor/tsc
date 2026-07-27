@@ -47,7 +47,7 @@ self_measure:
       max absolute pairwise difference over the response contract's
       numeric fields; delta_consistency maps through the barrier
       phi(delta) = delta/(1-delta) to Coh_consistency = exp(-phi)
-      (tsc-core section 3.2, lambda = 1). Reported alongside (A/B
+      (frozen v3.2.2 proxy barrier, engine/ocaml/CONTRACT.md; lambda = 1). Reported alongside (A/B
       labeled, Issue D): the k-fair companion — MEAN absolute pairwise
       difference per field, max across fields, same barrier — under
       *_mean_pairwise names; max-pairwise stays the conservative
@@ -173,6 +173,19 @@ self_measure:
 
 # Self-measurement
 
+> **Frozen repository-proxy methodology — not TSC v4.** This skill
+> declares the CURRENT repository-proxy self-measurement methodology. Its
+> semantic contract is the immutable v3.2.2 pin recorded in
+> [`engine/ocaml/CONTRACT.md`](../../engine/ocaml/CONTRACT.md), not the
+> live `spec/` bodies. The symbols α, β, γ used below are this proxy's
+> three independent scalar coherence axes. They are **not** TSC v4's
+> α/β/γ, which the normative spec defines as non-substitutable,
+> asymmetrically-dependent receipt roles (manifestation atlas,
+> relational atlas, continuation), never independent scalar axes. Where
+> this document cites a barrier transform, aggregate, or cross-target
+> formula, the binding definition is the frozen v3.2.2 proxy contract
+> above, not the v4 section that now occupies the same number.
+
 TSC measures whether three descriptions of a system still describe one
 system. This skill declares how TSC turns that instrument on itself — and
 draws the exact line between the parts a machine computes and the one part
@@ -227,7 +240,8 @@ Three named targets from [targets/registry.tsc](../../targets/registry.tsc):
 Each target is resolved into a deterministic bundle: ordered files, raw
 text, SHA-256 per file. Bundles are built the same way in every mode.
 A mechanical cross-target report (geometric mean over per-target
-aggregates, `spec/tsc-oper.md` §7.4) covers all three.
+aggregates, per the frozen v3.2.2 proxy contract in
+`engine/ocaml/CONTRACT.md`) covers all three.
 
 Reports land in `.tsc/self/`. Generated state is never canonical
 (ARCHITECTURE.md); the directory is gitignored.
@@ -298,7 +312,8 @@ Twelve signals, four per axis:
 - `gamma.authority_evolution_consistency` — future change paths are owned
 
 Each signal carries its evidence into the report. Axis scores feed the
-canonical aggregate (§5 of `spec/tsc-core.md`): C_Σ^math is the strict
+canonical aggregate (frozen v3.2.2 proxy contract,
+`engine/ocaml/CONTRACT.md`): C_Σ^math is the strict
 geometric mean (zero if any axis is zero), C_Σ^num the ε-floored numerical
 form (ε = 10⁻⁵) that carries verdicts. No flat aggregate field exists;
 readers consult `provenance.aggregate_numeric.C_sigma_num`.
@@ -319,7 +334,8 @@ The delegated task, in full: given the prompt from step 4 (the scoring
 instruction `runtime/SELF-MEASURE.md` + the hashed bundle), estimate
 
 - `delta_alpha_beta`, `delta_beta_gamma`, `delta_gamma_alpha` — normalized
-  discrepancy δ ∈ [0,1] per axis pair (`spec/tsc-core.md` §3.1),
+  discrepancy δ ∈ [0,1] per axis pair (frozen v3.2.2 proxy contract,
+  `engine/ocaml/CONTRACT.md`),
 - `alpha`, `beta`, `gamma` — component scores s_α, s_β, s_γ ∈ [0,1],
 - `bottleneck_axis`, `confidence`, `summary`,
 - `axis_evidence` — strongest positive and negative evidence per axis,

@@ -87,7 +87,9 @@ says which. Historical rows were backfilled mechanically by measuring
 each tag's tree (its own `targets/registry.tsc`) with a single fixed
 engine — reproducible, hence comparable; a hybrid row is a semantic
 judgment and is not re-derivable bit-for-bit. The cross aggregate is the
-geometric mean of the per-target values (tsc-oper §7.4).
+geometric mean of the per-target values (frozen v3.2 repository-proxy
+formula, `engine/ocaml/CONTRACT.md` — not v4 `spec/tsc-oper.md` §7, which
+is now the refusal contract).
 
 A hybrid row also records the consistency protocol's verdict on itself
 (skills/cm-of-cms/SKILL.md §3): how many validated witness samples the
@@ -111,7 +113,7 @@ instrument_version() {
 # script runs). Reports older than one hour are ignored: in CI the
 # workspace is fresh, but a LOCAL append must not scoop up stale
 # session reports and label them as this release's measurement. Prints "spec engine repo cross" or nothing when any
-# target lacks a hybrid report. Cross is the §7.4 geometric mean of the
+# target lacks a hybrid report. Cross is the frozen v3.2 proxy geometric mean of the
 # three hybrid per-target values (the engine's cross-target surface is
 # mechanical-only this cycle — engine follow-up noted in its README).
 read_hybrid() {

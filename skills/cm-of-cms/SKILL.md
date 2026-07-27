@@ -47,7 +47,7 @@ cm_of_cms:
       max absolute pairwise difference over the response contract's
       numeric fields; delta_consistency maps through the barrier
       phi(delta) = delta/(1-delta) to Coh_consistency = exp(-phi)
-      (tsc-core section 3.2, lambda = 1)
+      (frozen v3.2.2 proxy barrier, engine/ocaml/CONTRACT.md; lambda = 1)
     script: scripts/cm-consistency.sh
   admissibility: scripts/cm-admissibility.sh
   standing:
@@ -150,6 +150,18 @@ cm_of_cms:
 
 # CM of CMs — the methodology of methodologies
 
+> **Frozen repository-proxy methodology — not TSC v4.** This skill
+> declares a CURRENT repository-proxy methodology. Its semantic contract
+> is the immutable v3.2.2 pin recorded in
+> [`engine/ocaml/CONTRACT.md`](../../engine/ocaml/CONTRACT.md), not the
+> live `spec/` bodies. The symbols α, β, γ used below are this proxy's
+> three independent scalar coherence axes. They are **not** TSC v4's
+> α/β/γ, which the normative spec defines as non-substitutable,
+> asymmetrically-dependent receipt roles, never independent scalar axes.
+> Where this document cites a barrier transform, the binding definition
+> is the frozen v3.2.2 proxy contract above, not the v4 section that now
+> occupies the same number.
+
 TSC measures whether three descriptions of a system still describe one
 system. A coherence methodology (CM) is itself such a system: it has a
 declaration (its skill), an implementation (its schema, scripts, and
@@ -225,8 +237,8 @@ hard failure — a "deterministic" backend that drifts has a hidden input
 times against the frozen prompt. The spread is the max absolute pairwise
 difference over the response contract's numeric fields (component
 scores, δ estimates, confidence). That spread is a discrepancy like any
-other in TSC, so it maps through the canonical barrier
-(`spec/tsc-core.md` §3.2):
+other in TSC, so it maps through the canonical barrier (the frozen
+v3.2.2 proxy transform, `engine/ocaml/CONTRACT.md`):
 
 ```
 delta_consistency = max |x_i - x_j|   over repeats i,j and numeric fields
