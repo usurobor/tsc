@@ -1,4 +1,4 @@
-# TSC 4.1 Conformance Fixtures
+# TSC v4 Conformance Fixtures
 
 Conformance fixtures implement the proof obligations in `spec/tsc-conformance.md`.
 
@@ -30,8 +30,3 @@ Only `verified` fixtures contribute conformance standing.
 - `stochastic-law-v4` — law-relative stochastic compatibility and violation.
 
 Domain fixtures live here so the normative theory does not hard-code B3/S23 or one stochastic law.
-
-## Polar-expression fixtures
-
-- `polar-syntax-v4-1` — parser, ordered AST, nesting, reversal, grounding, frame, and conservative-embedding proof pairs. This fixture is independent of the v4 runtime.
-- `polar-realization-v4-1` — non-vacuity, candidate-fiber status, β receipt retention, runtime refusal, comparison, and lift proof pairs. This fixture depends on the v4 CM runtime.

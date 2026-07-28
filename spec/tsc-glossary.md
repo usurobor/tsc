@@ -1,6 +1,6 @@
-# TSC Glossary v4.1
+# TSC Glossary v4
 
-**Version:** 4.1.0
+**Version:** 4.0.0
 **Status:** Informative
 
 ## Governing question
@@ -8,98 +8,6 @@
 > What do the terms in the TSC specification mean?
 
 The normative specifications govern when this glossary differs.
-
-## Polar expression
-
-### Polar term
-
-A recursively nestable source expression:
-
-```text
-Whole | LabelTerm(name) | Dim(left,right)
-```
-
-Polar terms are ordered trees. They are not formulas of equality.
-
-### Whole
-
-The source-language term rendered as:
-
-```text
-≡
-```
-
-It is the source-language term for unarticulated wholeness. It is not the terminal value produced by the forgetful grounding map, even though both render with the same glyph. A methodology assigns Whole nodes through an explicit Whole-interpretation policy.
-
-### Polar label
-
-A source-language name such as `1`, `0`, `I`, `AM`, `lim`, or `∞`. Labels have no built-in arithmetic or metaphysical meaning; a CM interprets them.
-
-### Dimension expression
-
-```text
-Dim(x,y)
-```
-
-rendered:
-
-```text
-(x ≡ y)
-```
-
-It declares one dimension through two ordered poles. It is neither equality nor a directed event.
-
-### Polar frame
-
-```text
-Frame(coherer, cohering, cohered)
-```
-
-A role-labeled triple of polar terms. A frame is not automatically one articulation event; a CM supplies a typed frame witness.
-
-### Polar source
-
-A term source or frame source supplied to a methodology for realization.
-
-### Reversal
-
-The explicit structural operation that swaps the two boundary subtrees of the root dimension while preserving their internal orientation. Reversal is involutive but does not imply semantic equivalence without a witness. A recursive mirror is a separate transformation.
-
-### Grounding
-
-The unique forgetful map from every polar term to one undifferentiated value rendered `≡`. It is vacuous by design and cannot support equality, substitution, realization, or standing.
-
-### Raw polar elaboration
-
-A node-to-pole assignment plus typed boundary legs for every dimension node. A raw elaboration is only a typed candidate.
-
-### Projective dimension node
-
-A realization node with one whole pole mapping outward to both boundary poles.
-
-### Inclusive dimension node
-
-A realization node with both boundary poles mapping inward to one whole pole.
-
-### Polar admissibility contract
-
-The C≡-level declaration that turns raw typed elaborations into structurally admissible elaborations through label and Whole interpretation, constructor policy, a structural candidate class, nondegeneracy, boundary faithfulness, and structural equivalence.
-
-### Structurally admissible polar elaboration
-
-A raw polar elaboration satisfying the complete C≡ polar admissibility contract. Bare initial, terminal, empty, singleton, monic, or epic constructions receive no automatic admissibility.
-
-### Core polar realization contract
-
-The Core measurement declaration that combines a C≡ admissibility contract with a polar candidate class, search claim and bound, complexity and fit contributions, oracle obligations, identification target, and equivalence. Only this combined contract can support a measurement realization status.
-
-### Frame elaboration contract
-
-The C≡-level structural declaration containing a dependent frame-witness family, role-to-witness bridge types, frame nondegeneracy, and structural equivalence.
-
-### Frame witness
-
-The typed event, diagram, generator step, or other declared construction through which three elaborated frame terms bear the roles coherer, cohering, and cohered. The cohering polar term is never silently coerced into an event relation.
 
 ## Articulation
 
@@ -361,7 +269,7 @@ A declared way of observing a target or realization candidate, with an observati
 
 ### Atlas-candidate class
 
-For generator `G`, evidence `D`, and optional polar source `S`, `A_M(G,D,S)` is the declared class of admissible correspondence and transformation atlases considered by relation search. When `S` is present, the atlas also carries raw and structurally admissible polar elaborations, measurement realization candidates, boundary maps, rejected alternatives, and frame witnesses.
+For generator `G` and evidence `D`, `A_M(G,D)` is the declared class of admissible correspondence and transformation atlases considered by relation search.
 
 ### Realization candidate
 
@@ -371,7 +279,7 @@ A joint explanation:
 R = (G,A)
 ```
 
-containing a concrete generator presentation and the atlas through which it accounts for the observation episodes. When a polar source is present, its structurally admissible elaboration and Core measurement realization evidence are part of the atlas. Candidate fibers range over joint realization candidates, not bare generators or raw polar cones.
+containing a concrete generator presentation and the atlas through which it accounts for the observation episodes. Candidate fibers range over realization candidates, not bare generators.
 
 ### Evidence item
 
@@ -390,7 +298,7 @@ It states what absence or completeness conclusions a search can support.
 
 ### Relation-search contract
 
-The declaration and receipt for correspondence-map and Core polar-realization search, including alternatives, pruning, uncertainty, frame witnesses, and orchestration with generator search.
+The declaration and receipt for correspondence-map search, including alternatives, pruning, uncertainty, and orchestration with generator search.
 
 ### Fit
 
@@ -514,7 +422,7 @@ Evidence that observations are valid, complete enough, repeatable, and uncertain
 
 ### β — Relational atlas
 
-The record of relation search, maps, alternatives, polar realizations when present, global compatibility, joint realization-candidate sets, fibers, and identification.
+The record of relation search, maps, alternatives, global compatibility, joint realization-candidate sets, fibers, and identification.
 
 ### γ — Continuation receipt
 

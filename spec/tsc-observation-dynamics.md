@@ -1,7 +1,7 @@
-# TSC Observation Dynamics v4.1 — Lineage, Comparison, and Validated Lift
+# TSC Observation Dynamics v4 — Lineage, Comparison, and Validated Lift
 
-**Version:** 4.1.0
-**Status:** Draft
+**Version:** 4.0.0
+**Status:** Normative
 **Artifact:** Normative observation and comparison contract
 
 ## Governing question
@@ -20,7 +20,6 @@ Episode := (
   CM identity,
   target identity,
   generator and realization-candidate reference,
-  polar source and realization reference, when present,
   input history,
   query/intervention ownership,
   observation channel,
@@ -83,7 +82,6 @@ Every derived artifact records its parents:
 raw evidence
 observation episode
 atlas entry
-polar source, node realization, or frame witness
 realization candidate
 classification
 receipt
@@ -106,7 +104,6 @@ output reference
 parameters
 code or provider identity
 approximation-contract digest
-polar source, admissibility-contract, Core-realization-contract, and frame-contract digests, when load-bearing
 uncertainty contribution
 grounding basis
 ```
@@ -221,14 +218,13 @@ Two receipts are directly comparable only when their compatibility keys agree or
 CM id and semantic version
 CM digest or approved compatibility relation
 generator class
-polar source, admissibility-contract, Core-realization-contract, and frame-contract digests
 path-contract digest and succession semantics
 behavior contract
 input and observation schema
 equivalence relation
 query/intervention family
 fit and complexity contract
-relation, generator, and polar realization search contracts
+relation and generator search contracts
 approximation-contract digest
 receipt schema
 standing scope
@@ -286,7 +282,6 @@ A refinement adds evidence, narrows uncertainty, or exercises additional histori
 generator class
 representation language
 relation family
-polar source, syntax tree, admissibility contract, Core realization contract, and frame contract
 equivalence contract
 complexity contract
 declared input language or tested boundary
@@ -309,11 +304,11 @@ refitting status
 
 Test evidence refines fixed fitted realization candidates. It may remove realization candidates or split equivalence classes as the exercised history family widens. It does not silently refit generators or atlases.
 
-Changing the declared input language, tested boundary, generator class, representation, relation family, polar syntax tree, polar admissibility contract, Core realization contract, or frame contract is a lift.
+Changing the declared input language, tested boundary, generator class, representation, or relation family is a lift.
 
 ## 7 · Model lift
 
-A lift changes the generator class, representation language, relation structure, polar syntax tree, polar realization or frame contract, declared input language, or tested boundary.
+A lift changes the generator class, representation language, relation structure, declared input language, or tested boundary.
 
 ### 7.1 Lift declaration
 
@@ -324,7 +319,6 @@ baseline class H_0
 lifted class H_1
 embedding or relation between classes
 new degrees of freedom
-polar source, admissibility, or realization transport, when changed
 complexity rule
 preregistered baseline failure
 acceptance margin
@@ -354,7 +348,7 @@ the lifted class reduces it by the declared margin
 the gain survives the complexity cost
 held-out or interventional evidence succeeds
 uncertainty and dependence remain within contract
-maps, polar node realizations, frame witnesses, and remaining alternatives are preserved
+maps and remaining alternatives are preserved
 ```
 
 A larger model that only fits existing evidence is not a validated lift.
@@ -460,7 +454,6 @@ compatibility result
 lineage and dependence graph
 coverage comparison
 transformation or migration map
-polar source, admissibility-contract, Core-realization-contract, and frame-contract compatibility or transport
 uncertainty ledgers
 categorical status comparison
 scalar relation, if authorized
@@ -473,4 +466,4 @@ A comparison never consists of a bare subtraction.
 
 ## 11 · Conformance
 
-The normative proof obligations for Observation Dynamics are defined in [`tsc-conformance.md`](tsc-conformance.md) under the `OBS-*` requirement IDs, including polar-source comparison and lift obligations.
+The normative proof obligations for Observation Dynamics are defined in [`tsc-conformance.md`](tsc-conformance.md) under the `OBS-*` requirement IDs.

@@ -11,11 +11,3 @@ manifest = "game-of-life/fixture.toml"
 [[fixture]]
 id = "stochastic-law-v4"
 manifest = "stochastic-law/fixture.toml"
-
-[[fixture]]
-id = "polar-syntax-v4-1"
-manifest = "polar-syntax-v4.1/fixture.toml"
-
-[[fixture]]
-id = "polar-realization-v4-1"
-manifest = "polar-realization-v4.1/fixture.toml"
