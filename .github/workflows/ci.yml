@@ -89,12 +89,13 @@ jobs:
           fi
           echo "spec-validate: all required spec files present"
 
-      - name: Check spec status headers (ratified v4)
+      - name: Check spec status headers (4.1 draft cycle)
         run: |
-          # The five normative bodies + the spec index must read
-          # `**Status:** Normative`; the glossary must read
-          # `**Status:** Informative`. Guards against a partial or
-          # reverted ratification surface.
+          # During the 4.1 draft cycle the five normative bodies + the spec
+          # index read `**Status:** Draft`; the glossary reads
+          # `**Status:** Informative`. The ratification-only commit flips the
+          # bodies Draft -> Normative and this expected value with them.
+          # Guards against a partial or mixed status surface.
           fail=0
           check_status() {
             local f="$1" want="$2" line
@@ -113,7 +114,7 @@ jobs:
             spec/tsc-observation-dynamics.md \
             spec/tsc-conformance.md \
             spec/README.md; do
-            check_status "$f" "Normative"
+            check_status "$f" "Draft"
           done
           check_status spec/tsc-glossary.md "Informative"
           if [ $fail -gt 0 ]; then

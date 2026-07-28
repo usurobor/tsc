@@ -1,0 +1,97 @@
+format = "tsc-conformance-fixture/0.1"
+id = "polar-realization-v4-1"
+version = "0.1.0"
+status = "specified"
+domain = "C≡ 4.1 polar realization, receipt, runtime, comparison, and lift contracts"
+requirements = [
+  "CORE-POLAR-001",
+  "CORE-POLAR-002",
+  "OPER-POLAR-001",
+  "OBS-POLAR-001",
+]
+
+[claim_contract]
+generator_class = "bounded polar realization problems with raw cones/cocones, admissibility predicates, generators, and atlases"
+equivalence = "declared polar-tree-preserving realization equivalence"
+generator_search_claim = "complete_within_bound"
+generator_search_bound = "finite generated carrier and generator class declared by each case"
+relation_search_claim = "complete_within_bound"
+relation_search_bound = "finite node assignment, boundary-map, and frame-witness enumeration declared by each case"
+evidence_boundary = "fit, complexity, nondegeneracy, held-out, comparison, and lift cases with fixed boundaries"
+oracle_independence = "status and receipt oracles are generated from the declared problem, not from implementation output"
+
+[generator]
+kind = "bounded polar realization and receipt problem generator"
+planned_source = "polar-realization-v4.1/generator"
+deterministic = true
+
+[oracle]
+kind = "exact admissibility, candidate-fiber, receipt-retention, refusal, and comparison oracle"
+planned_source = "polar-realization-v4.1/oracle"
+
+[reproducibility]
+planned_command = "coh conformance run polar-realization-v4-1"
+
+[[cases]]
+id = "polar-status-positive"
+requirement = "CORE-POLAR-001"
+polarity = "positive"
+given = ["C≡-admissible elaborations", "three complete bounded measurement problems with zero, several, and one surviving equivalence classes"]
+expect = ["NO_REALIZATION_IN_MODEL", "UNDERDETERMINED", "IDENTIFIED_IN_MODEL"]
+oracle = "exact candidate-fiber cardinality oracle"
+
+[[cases]]
+id = "polar-status-negative"
+requirement = "CORE-POLAR-001"
+polarity = "negative"
+given = ["incomplete search", "raw or merely structurally admissible elaborations", "grounding-only match"]
+expect = ["UNRESOLVED or refusal, never absence or identification"]
+oracle = "status derivation checker"
+
+[[cases]]
+id = "polar-receipt-positive"
+requirement = "CORE-POLAR-002"
+polarity = "positive"
+given = ["nested polar source", "multiple raw and rejected candidates", "one admitted frame witness"]
+expect = ["AST, maps, rejections, witness, bridges, and search evidence retained"]
+oracle = "receipt completeness checker"
+
+[[cases]]
+id = "polar-receipt-negative"
+requirement = "CORE-POLAR-002"
+polarity = "negative"
+given = ["best realization or scalar emitted without tree, maps, or rejected alternatives"]
+expect = ["receipt conformance failure"]
+oracle = "receipt completeness checker"
+
+[[cases]]
+id = "polar-runtime-positive"
+requirement = "OPER-POLAR-001"
+polarity = "positive"
+given = ["valid canonical polar source and complete contracts"]
+expect = ["compiled AST and digests", "candidate evidence reaches beta receipt"]
+oracle = "compiler/runtime integration oracle"
+
+[[cases]]
+id = "polar-runtime-negative"
+requirement = "OPER-POLAR-001"
+polarity = "negative"
+given = ["ambiguous syntax, missing contract, implicit relation coercion, grounding misuse, or silent flattening"]
+expect = ["stable refusal", "no success receipt"]
+oracle = "refusal-code and terminal-state oracle"
+
+[[cases]]
+id = "polar-comparison-positive"
+requirement = "OBS-POLAR-001"
+polarity = "positive"
+given = ["two receipts with identical polar contracts", "two receipts related by a validated polar transport"]
+expect = ["direct comparison", "transported comparison"]
+oracle = "compatibility-key and migration oracle"
+
+[[cases]]
+id = "polar-comparison-negative"
+requirement = "OBS-POLAR-001"
+polarity = "negative"
+given = ["changed polar tree, admissibility contract, or Core realization contract called refinement", "rejected candidates dropped from lineage"]
+expect = ["INCOMPARABLE or lift required", "lineage conformance failure"]
+oracle = "comparison and lineage oracle"

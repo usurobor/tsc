@@ -1,10 +1,10 @@
 # Doctrine
 
-The canonical theory is the specification tree under [`spec/`](../../../spec/README.md).
+The canonical 4.1 draft theory is the specification tree under [`spec/`](../../../spec/README.md).
 
 ## Reading order
 
-1. [`c-equiv.md`](../../../spec/c-equiv.md) — typed articulation and deterministic Set behavior;
+1. [`c-equiv.md`](../../../spec/c-equiv.md) — polar expression, typed articulation, and deterministic Set behavior;
 2. [`tsc-core.md`](../../../spec/tsc-core.md) — behavior contracts, candidate fibers, and receipts;
 3. [`tsc-oper.md`](../../../spec/tsc-oper.md) — methodology lifecycle and authority;
 4. [`tsc-observation-dynamics.md`](../../../spec/tsc-observation-dynamics.md) — lineage, comparison, intervention, and lift;

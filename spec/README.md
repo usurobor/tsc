@@ -1,15 +1,15 @@
-# TSC v4 Specifications
+# TSC v4.1 Specifications
 
-**Version:** 4.0.0
-**Status:** Normative
+**Version:** 4.1.0
+**Status:** Draft
 
-TSC defines coherence as a warranted relation among a concrete generator, its typed articulations, and evidence that tests how the generator continues under declared observations and interventions.
+TSC defines coherence as a warranted relation among an optional polar source, a concrete generator, its typed articulations, and evidence that tests how the generator continues under declared observations and interventions.
 
 ## Authority
 
 The semantic specification has four layers.
 
-1. [`c-equiv.md`](c-equiv.md) defines typed articulation, open generators, and exact deterministic Set behavior.
+1. [`c-equiv.md`](c-equiv.md) defines the polar expression calculus, typed articulation, open generators, and exact deterministic Set behavior.
 2. [`tsc-core.md`](tsc-core.md) defines measurement contexts, behavior contracts, joint realization fibers, structured receipts, and result classes.
 3. [`tsc-oper.md`](tsc-oper.md) defines methodology compilation, assessment, admission, authorization, execution, and refusal.
 4. [`tsc-observation-dynamics.md`](tsc-observation-dynamics.md) defines lineage, dependence, comparison, intervention, refinement, lift, and failure persistence.
@@ -43,7 +43,7 @@ CM source
   → proof-carrying coherence receipt
 ```
 
-A receipt retains the concrete generator presentation, behavior contract, observations, relational atlas, candidate alternatives, continuation evidence, uncertainty, lineage, and standing. A scalar may summarize a receipt only after categorical status has been preserved.
+A receipt retains the polar source and realization evidence when present, concrete generator presentation, behavior contract, observations, relational atlas, candidate alternatives, continuation evidence, uncertainty, lineage, and standing. A scalar may summarize a receipt only after categorical status has been preserved.
 
 ## Version domains
 
@@ -66,15 +66,13 @@ The verified project archaeology lives in [`../docs/design/foundation-contract-r
 
 The first explicit dispositions of prior failed claims live in [`../docs/design/foundation-contract-reconciliation/CUTOVER-RECEIPT.md`](../docs/design/foundation-contract-reconciliation/CUTOVER-RECEIPT.md).
 
+The polar-expression recovery rationale and impact graph live in [`../docs/design/polar-expression-recovery/DESIGN.md`](../docs/design/polar-expression-recovery/DESIGN.md).
+
 These documents explain the revision. They do not override the normative definitions.
 
 ## Ratification
 
-The specification is ratified. `Status: Normative` is binding, set by the
-independently reviewed ratification-only commit. The seven conditions that
-governed the prior `Status: Draft` phase were all satisfied before that
-commit landed, and are retained here as the record of what ratification
-required:
+`Status: Draft` remains binding until:
 
 1. every semantic layer is internally complete and cross-referenced;
 2. every enduring conformance requirement has an owner and specified positive/negative oracle;

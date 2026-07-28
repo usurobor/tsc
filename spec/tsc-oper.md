@@ -1,7 +1,7 @@
-# TSC Operational v4 — Methodology Lifecycle and Authorized Measurement
+# TSC Operational v4.1 — Methodology Lifecycle and Authorized Measurement
 
-**Version:** 4.0.0
-**Status:** Normative
+**Version:** 4.1.0
+**Status:** Draft
 **Artifact:** Normative runtime contract
 
 ## Governing question
@@ -20,6 +20,7 @@ TSC Operational separates compilation, bounded execution, instrument assessment,
 identity and version
 input and observation contract
 generator and atlas-candidate classes
+optional polar source, admissibility contract, and Core realization contract
 path contract
 behavior contract
 relation-search and generator-search contracts
@@ -41,6 +42,8 @@ source digest
 compiled descriptor digest
 validated schemas
 resolved implementation/provider bindings
+canonical polar AST and source digest, when present
+polar admissibility, Core realization, and frame-contract digests, when present
 path contract and succession-check plan
 behavior contract
 search contracts and orchestration
@@ -159,6 +162,9 @@ adapter resolution
 permission validation
 receipt-schema validation
 execution-plan normalization
+polar-source parsing and canonicalization
+polar-admissibility- and Core-realization-contract validation
+frame-contract validation
 path-contract validation
 behavior-contract validation
 search-contract validation
@@ -175,6 +181,35 @@ or:
 ```text
 COMPILE_REJECTED(code, diagnostics)
 ```
+
+### 3.1.1 Polar-source validation
+
+When `CMSource` declares a polar source, the compiler:
+
+```text
+parses the canonical C≡ 4.1 grammar
+rejects ambiguous or malformed chains
+constructs a shape-preserving AST
+computes the source digest
+validates label interpretation
+validates projective/inclusive node policy
+validates structural nondegeneracy and boundary-faithfulness declarations
+validates the Core polar candidate, search, complexity, fit, and oracle declarations
+validates frame elaboration and Core frame-realization contracts, when the source is a frame
+binds polar artifacts into the relation-search and receipt contracts
+```
+
+The compiler does not:
+
+```text
+interpret ≡ as equality
+flatten nested dimensions
+infer admissibility from raw cone or cocone existence
+coerce a frame's cohering term into an event relation
+use grounding as substitution or realization evidence
+```
+
+A CM without a polar source follows the unchanged typed-generator compilation path.
 
 ### 3.2 Behavior-contract validation
 
@@ -224,6 +259,12 @@ SET_FINAL_INAPPLICABLE
 PRESENTATION_KIND_UNDECLARED
 INITIAL_STATE_WITNESS_MISSING
 ARTICULATION_INTERFACE_MISSING
+POLAR_SYNTAX_INVALID
+POLAR_CONTRACT_MISSING
+POLAR_ORIENTATION_UNDECLARED
+POLAR_FRAME_CONTRACT_MISSING
+POLAR_IMPLICIT_RELATION_COERCION
+POLAR_GROUNDING_MISUSE
 PATH_CONTRACT_UNDECLARED
 FUNCTOR_INCOMPLETE
 FUNCTOR_LAWS_UNPROVED
@@ -232,6 +273,7 @@ BEHAVIOR_ACCESS_UNDECLARED
 APPROXIMATION_CONTRACT_MISSING
 SEARCH_CLAIM_MISSING
 RELATION_SEARCH_CONTRACT_MISSING
+POLAR_SEARCH_CLAIM_MISSING
 SEARCH_ORCHESTRATION_UNDECLARED
 RECEIPT_SCHEMA_INVALID
 PERMISSION_UNDECLARED
@@ -385,6 +427,7 @@ input schema
 applicability
 required permissions
 required observation channels
+polar source, admissibility contract, and Core realization contract, when declared
 path contract
 behavior contract
 ```
@@ -444,10 +487,15 @@ correspondence and transformation maps
 alternatives and pruning reasons
 residuals and uncertainty
 path checks
+polar node assignments and projective/inclusive boundary legs
+raw, retained, and rejected polar candidates
+frame witnesses and role bridges
 provisional globalization evidence
 ```
 
 Relation candidates may depend on generator hypotheses when the declared orchestration permits it. A β diagram may relate `EVENTWISE` emissions, but relation search does not mutate the compiled path contract or authorize an intrinsic role-succession claim.
+
+When a polar source is present, RELATE preserves the complete polar tree and treats raw typed cones, cocones, and frame tuples as candidates only. It cannot admit them without the compiled C≡ admissibility and Core polar realization contracts.
 
 ### 5.5 REALIZE
 
@@ -457,15 +505,16 @@ Record:
 
 ```text
 search algorithms and versions
-generator and relation search claims
+generator, relation, and polar realization search claims
 search orchestration and stop rule
 generators and maps considered
+polar realizations, boundary legs, and frame witnesses considered
 joint realization-candidate and atlas references
 fit and complexity values
 pruning and refusal reasons
 ```
 
-Finalize the β atlas, globalization result, fit and bounded realization-candidate sets, training fiber, and search evidence.
+Finalize the β atlas, globalization result, polar admissibility result when applicable, fit and bounded realization-candidate sets, training fiber, and search evidence.
 
 If β establishes no applicable realization candidate, γ is `BLOCKED_BY(β-realizability)` for claims about a common generator.
 
@@ -488,6 +537,7 @@ training and test candidate classifications
 coherence disposition
 training and tested identification statuses and target
 model adequacy
+polar realization and frame status, when applicable
 lift status
 ```
 
@@ -564,6 +614,10 @@ path escapes the declared root
 inclusion cycle is detected
 input breaks framing or serialization
 required relation or transformation is untyped
+polar syntax, orientation, admissibility contract, Core realization contract, or frame contract is invalid
+raw polar structure is promoted without admissibility evidence
+frame cohering term is coerced into an event relation without an explicit bridge
+grounding is used as equality, substitution, or realization evidence
 path contract is missing for a claimed succession
 STATE_LINKED emission violates its source/successor pole law
 behavior mode is undeclared or unsupported
@@ -578,9 +632,16 @@ provider output fails schema or evidence validation
 resource or permission limits are exceeded
 ```
 
-Stable path-related refusal codes are:
+Stable polar and path-related refusal codes include:
 
 ```text
+POLAR_SYNTAX_INVALID
+POLAR_CONTRACT_MISSING
+POLAR_ORIENTATION_UNDECLARED
+POLAR_FRAME_CONTRACT_MISSING
+POLAR_IMPLICIT_RELATION_COERCION
+POLAR_GROUNDING_MISUSE
+POLAR_SEARCH_CLAIM_MISSING
 PATH_CONTRACT_UNDECLARED
 PATH_COHERENCE_VIOLATION
 ```
@@ -613,6 +674,7 @@ search orchestration
 provider/model/prompt when used
 calibration set
 policy
+polar source, AST, admissibility contract, Core realization contract, and frame contract when present
 path contract
 behavior contract
 approximation contract
@@ -645,6 +707,8 @@ compiled and authorization digests
 target identity and input digests
 measurement mode
 coverage manifest
+polar source, AST, admissibility-contract, Core-realization-contract, and frame-contract digests when present
+polar candidate and witness references
 path-contract digest
 behavior contract
 approximation-contract digest
@@ -668,4 +732,4 @@ Large artifacts may be omitted only by content-addressed reference.
 
 ## 10 · Conformance
 
-The normative proof obligations for Operational are defined in [`tsc-conformance.md`](tsc-conformance.md) under the `OPER-*` requirement IDs.
+The normative proof obligations for Operational are defined in [`tsc-conformance.md`](tsc-conformance.md) under the `OPER-*` requirement IDs, including polar compilation and receipt obligations.

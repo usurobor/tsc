@@ -1,14 +1,14 @@
-# TSC Core v4 — Generative Coherence Receipts
+# TSC Core v4.1 — Generative Coherence Receipts
 
-**Version:** 4.0.0
-**Status:** Normative
+**Version:** 4.1.0
+**Status:** Draft
 **Artifact:** Normative measurement semantics
 
 ## Governing question
 
-> When do observations warrant the claim that they belong to one lawful generative process under a declared methodology?
+> When do observations and an optional polar source warrant the claim that they belong to one lawful generative process under a declared methodology?
 
-TSC answers with a proof-carrying receipt. The receipt preserves the observations, the relations among them, the joint generator-and-atlas realization candidates that explain them, and the tests of how those generators continue.
+TSC answers with a proof-carrying receipt. The receipt preserves the polar source and its candidate realizations when present, the observations, the relations among them, the joint generator-and-atlas realization candidates that explain them, and the tests of how those generators continue.
 
 Coherence is relative to a declared Coherence Methodology (CM). It is not a context-free scalar and is not identified with visible order, low entropy, agreement among projections, or absence of articulation.
 
@@ -17,8 +17,15 @@ Coherence is relative to a declared Coherence Methodology (CM). It is not a cont
 Import from C≡:
 
 ```text
-P                         pole type
-Rel : P × P → Set         dependent relation family
+PolarTerm                  recursively nestable polar term
+PolarFrame                 role-labeled triple of polar terms
+PolarSource                term or frame source
+RawPolar_E(t)               typed node assignment and boundary legs
+PolarAdmissibilityContract foundation-level structural admissibility
+FrameElaborationContract_E foundation-level typed frame witness and bridge contract
+
+P                          pole type
+Rel : P × P → Set          dependent relation family
 Art := Σ(s:P).Σ(o:P).Rel(s,o)
 ```
 
@@ -64,6 +71,7 @@ A CM defines one measurement context:
 M := (
   identity,
   carrier and behavior contract,
+  optional polar source and structural admissibility contract,
   generator class,
   query, observation, and path contract,
   relation-search contract,
@@ -75,6 +83,30 @@ M := (
   receipt schema
 )
 ```
+
+### 2.0 Polar source
+
+A CM declares either:
+
+```text
+polar_source = none
+```
+
+or:
+
+```text
+polar_source : PolarSource
+polar_source_digest
+polar_admissibility_contract : PolarAdmissibilityContract
+polar_admissibility_digest
+polar_frame_contract, when the source is a frame
+```
+
+A polar source is a claim to be realized, not a realized object. The C≡ contract declares label and Whole interpretation, projective and inclusive node policy, structural candidate class, nondegeneracy, boundary faithfulness, and structural equivalence.
+
+A frame source additionally declares a typed frame-elaboration contract. The middle polar term is never coerced into an event relation by syntax alone.
+
+When `polar_source = none`, every Core construction below has the same meaning as the unadorned typed-generator case.
 
 ### 2.1 Identity
 
@@ -108,6 +140,7 @@ resources
 representations
 system functor and articulation interface, when general
 path mode and succession witness for every cross-step path claim
+polar-source compatibility and realization hooks, when polar source is declared
 input adapter, when the presentation input differs from I_M
 ```
 
@@ -173,9 +206,12 @@ SearchClaim :=
 A CM declares:
 
 ```text
-generator_search_claim : SearchClaim
-relation_search_claim  : SearchClaim
+generator_search_claim        : SearchClaim
+relation_search_claim         : SearchClaim
+polar_realization_search_claim: SearchClaim | not_applicable
 ```
+
+`polar_realization_search_claim` is required when a polar source is load-bearing. It searches Core measurement candidates built from C≡-admissible elaborations. It may be implemented by relation search, generator search, or a declared joint schedule, but it retains its own bound and conclusion strength.
 
 A failed search proves absence only when the corresponding search claim warrants it.
 
@@ -204,19 +240,39 @@ alternative maps
 map-level uncertainty
 sensitivity to selection policy
 search schedule or fixed-point protocol
+polar node assignments and boundary legs considered, when applicable
+raw polar elaborations rejected and why
+structurally admissible elaborations retained or rejected by later measurement filters
+frame witnesses and bridges considered, when applicable
 ```
 
 Relation search and generator search may interleave. The schedule is declared and receipted. A heuristic relation search may propose an atlas; it may not prove that no valid map exists or that the atlas is unique.
 
 ### 2.8 Realization candidates
 
-For `G ∈ H_M` and dataset `D`, let:
+For `G ∈ H_M`, dataset `D`, and optional polar source `S_M`, let:
 
 ```text
-A_M(G,D)
+A_M(G,D,S_M)
 ```
 
 be the CM-declared class of admissible atlas candidates produced by the relation contract. An atlas candidate contains the maps and transformation structure needed to relate the concrete generator presentation to the observation episodes.
+
+When `S_M` is present, an atlas candidate also retains:
+
+```text
+canonical polar AST and digest
+node-to-pole assignments
+projective or inclusive node constructors
+boundary legs
+raw polar elaborations considered
+structurally admissible elaborations retained
+measurement candidates admitted or rejected and reasons
+frame witness and role bridges, when applicable
+polar realization search evidence
+```
+
+A raw C≡ cone, cocone, node assignment, or frame tuple is not an admissible atlas merely because it is typed. The C≡ structural admissibility contract must hold, followed by Core search, fit, complexity, and oracle obligations.
 
 Define the joint realization-candidate class:
 
@@ -224,7 +280,7 @@ Define the joint realization-candidate class:
 R_M(D) := {
   R = (G,A) |
   G ∈ H_M,
-  A ∈ A_M(G,D)
+  A ∈ A_M(G,D,S_M)
 }
 ```
 
@@ -246,6 +302,8 @@ identification_target = generator | atlas | joint_realization | another_declared
 
 The equivalence contract in §2.10 determines which differences matter for that target.
 
+When a polar source is present, the identification target also declares whether identification concerns the generator, the polar realization, the atlas, or their joint class. Syntax-tree identity is never inferred from grounding alone.
+
 ### 2.9 Fit and complexity
 
 A CM declares:
@@ -257,7 +315,29 @@ K_M(R)         complexity or prior cost for generator plus atlas
 κ_M            admissible complexity bound
 ```
 
-`K_M` accounts for every presentation choice used to explain the evidence, including a nontrivial atlas or relation-selection rule. The representation language, prior, or resource model that gives `K_M` meaning is part of the CM.
+`K_M` accounts for every presentation choice used to explain the evidence, including a nontrivial atlas, relation-selection rule, polar node assignment, boundary map, orientation choice, or frame witness. The representation language, prior, or resource model that gives `K_M` meaning is part of the CM.
+
+Low complexity does not establish polar nondegeneracy. Initial, terminal, empty, singleton, or lookup candidates remain subject to the declared polar admissibility and evidence contracts.
+
+### 2.9.1 Core polar realization contract
+
+When a polar source is load-bearing, Core binds the foundation-level elaboration contract to measurement obligations:
+
+```text
+PolarRealizationContract_M := (
+  polar source and canonical AST,
+  C≡ PolarAdmissibilityContract and digest,
+  frame-elaboration contract and digest, when applicable,
+  polar candidate class H_M^polar,
+  polar realization search claim and bound,
+  contribution to K_M,
+  contribution to L_M,
+  held-out or interventional oracle obligations,
+  identification target and equivalence
+)
+```
+
+C≡ determines which elaborations are structurally admissible. Core determines which structurally admissible elaborations survive the declared measurement regime. Neither layer may infer realization from raw typing or grounding alone.
 
 ### 2.10 Input-indexed equivalence
 
@@ -274,6 +354,7 @@ The family states which generator and atlas differences are unobservable or irre
 ```text
 presentation isomorphism
 atlas isomorphism or gauge
+polar-tree-preserving realization equivalence
 behavior over J
 active/interventional behavior over J
 another explicit criterion
@@ -569,6 +650,7 @@ complexity bound
 equivalence-family digest
 behavior contract
 search claims
+polar source, admissibility-contract, frame-contract, and Core realization-contract digests, when present
 ```
 
 The receipt retains fit, bounded, passing, failing, and unresolved realization candidates—including their generator and atlas components—or verifiable references, in addition to equivalence classes.
@@ -655,6 +737,27 @@ C_M^pass empty and C_M^unresolved nonempty
 
 `UNDERDETERMINED` is not incoherence. `IDENTIFIED_IN_MODEL` is not absolute truth. A test failure is not relabeled `NO_REALIZATION_IN_MODEL`: the candidates realized the training evidence and failed the declared test.
 
+### 5.5.1 Polar realization classification
+
+When a polar source is load-bearing, only structurally admissible elaborations that also satisfy the Core polar realization contract inside joint candidates count.
+
+```text
+complete applicable polar search and no measurement-admitted candidate
+  → NO_REALIZATION_IN_MODEL
+
+several inequivalent measurement-admitted polar realization classes remain
+  → UNDERDETERMINED for the declared polar identification target
+
+one measurement-admitted class remains under the declared equivalence and evidence regime
+  → IDENTIFIED_IN_MODEL for that scoped target
+
+raw or structurally admissible elaborations exist but Core search, fit, complexity,
+or oracle evidence is incomplete
+  → UNRESOLVED
+```
+
+Raw initial, terminal, empty, singleton, or lookup cones and cocones do not make `NO_REALIZATION_IN_MODEL` unreachable. They count only when the methodology's nondegeneracy, boundary-faithfulness, fit, complexity, and oracle contracts admit them.
+
 ### 5.6 Input refinement
 
 Widening an independently chosen input family can remove realization candidates or split equivalence classes. A CM may claim refinement only when:
@@ -724,6 +827,11 @@ RelationalAtlas := (
   evaluation,
   relation-search contract and evidence,
   path contract and cross-step path checks,
+  polar source, admissibility-contract, frame-contract, and Core-realization-contract digests,
+  polar AST and node-to-pole assignments,
+  projective or inclusive boundary legs,
+  raw elaborations, structurally admissible elaborations, and measurement-admitted or rejected polar candidates,
+  frame witnesses and role bridges,
   source-to-observation maps,
   observation-to-observation correspondences,
   alternative maps,
@@ -741,6 +849,8 @@ RelationalAtlas := (
 ```
 
 The maps are primary evidence. A residual or scalar cannot replace them. Pairwise compatibility does not establish a global realization. A β diagram may relate `EVENTWISE` emissions, but it does not alter the generator's path contract or turn atlas-level connectivity into intrinsic generator succession.
+
+When a polar source is present, β owns the realization evidence. It may not flatten nested dimensions, infer realization from grounding, treat raw cone existence as admissibility, or coerce a frame's cohering term into an event relation without an explicit bridge.
 
 An authoritative β result requires:
 
@@ -837,13 +947,13 @@ Every coherence claim names its CM, evidence, generator class, path contract, eq
 
 ### A2 — Realizability
 
-Distinct observations support one process only when at least one declared generator produces them within the fit and complexity contract.
+Distinct observations and any load-bearing polar source support one process only when at least one declared joint realization candidate satisfies the structural admissibility, fit, and complexity contracts.
 
 Similarity among observations is neither necessary nor sufficient.
 
 ### A3 — Relation retention
 
-Every correspondence, transformation, alternative, and path used to support realizability remains in the β receipt.
+Every correspondence, transformation, alternative, path, polar node assignment, boundary leg, rejected polar candidate, and frame witness used to support realizability remains in the β receipt.
 
 ### A4 — Globality
 
@@ -851,7 +961,7 @@ Pairwise fits support a common process only when they satisfy the CM's full-diag
 
 ### A5 — Non-vacuity
 
-The generator class, representation language, and complexity contract are declared before fitting. A lookup table or tuple of observations receives no exemption from complexity and held-out obligations.
+The generator class, representation language, polar admissibility and Core realization contracts when present, and complexity contract are declared before fitting. A lookup table, tuple of observations, initial or terminal cone, empty carrier, singleton carrier, or raw typed frame receives no exemption from nondegeneracy, fit, complexity, search, and held-out obligations.
 
 ### A6 — Identifiability separation
 
@@ -1047,6 +1157,8 @@ CM identity and digests
 input and evidence digests
 query/intervention boundary
 path-contract digest and succession evidence
+polar source, AST, admissibility-contract, frame-contract, and Core-realization-contract digests when present
+polar candidate, boundary-map, and frame-witness references
 behavior contract
 approximation-contract digest
 α ManifestationReceipt
@@ -1055,7 +1167,7 @@ approximation-contract digest
 fit, bounded, passing, failing, and unresolved realization-candidate sets
 training and tested fibers and refinement map
 training and test candidate classifications
-generator and relation search claims
+generator, relation, and polar realization search claims
 test status and oracle evidence
 fit and complexity accounting
 equivalence contract
@@ -1070,4 +1182,4 @@ Every conclusion points to the fields that support it.
 
 ## 13 · Conformance
 
-The normative proof obligations for Core are defined in [`tsc-conformance.md`](tsc-conformance.md) under the `CORE-*` and `BETA-*` requirement IDs.
+The normative proof obligations for Core are defined in [`tsc-conformance.md`](tsc-conformance.md) under the `CORE-*` and `BETA-*` requirement IDs, including the `CORE-POLAR-*` family.

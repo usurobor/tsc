@@ -1,14 +1,159 @@
-# C≡ v4 — Typed Articulation and Generative Unfolding
+# C≡ v4.1 — Polar Expression and Typed Generative Unfolding
 
-**Version:** 4.0.0
-**Status:** Normative
+**Version:** 4.1.0
+**Status:** Draft
 **Artifact:** Normative foundation
 
 ## Governing question
 
-> What is the smallest formal structure that represents one process articulating as distinguishable poles through a relation, and continuing to articulate?
+> What is the smallest language that can express one dimension through two recursively nestable poles and elaborate that expression into typed generative behavior?
 
-C≡ answers with a typed articulation event and an open generator. It defines exact articulation, composition, unfolding, behavior, and equivalence. It does not define a universal coherence score.
+C≡ answers with a polar expression calculus, a typed articulation category, and an open generator. It defines exact syntax, typed elaboration, composition, unfolding, behavior, and equivalence. It does not define a universal coherence score or treat `≡` as arithmetic equality.
+
+## 0 · Polar expression calculus
+
+### 0.1 Abstract syntax
+
+Fix a set `Label` of source-language labels.
+
+Polar expressions are finite ordered trees:
+
+```text
+PolarTerm ::= Whole
+            | LabelTerm(Label)
+            | Dim(PolarTerm, PolarTerm)
+
+PolarFrame ::= Frame {
+  coherer : PolarTerm,
+  cohering : PolarTerm,
+  cohered : PolarTerm
+}
+
+PolarSource ::= TermSource(PolarTerm)
+              | FrameSource(PolarFrame)
+```
+
+`Dim(x,y)` denotes one dimension through two ordered poles. It does not assert `x = y` and does not denote a directed event from `x` to `y`.
+
+A polar term declares a source structure to be realized. Its well-formed syntax does not prove that any external domain admits a realization.
+
+A frame assigns three polar expressions to the roles coherer, cohering, and cohered. A frame is not automatically one articulation event.
+
+### 0.2 Surface notation
+
+A bare label is a nonempty token containing no whitespace, parenthesis, or `≡` glyph. Arbitrary labels use a quoted string in the canonical serializer.
+
+The canonical human notation is:
+
+```text
+≡                    Whole
+name                 LabelTerm(name)
+x ≡ y                Dim(x,y) at the source root
+(x ≡ y)              Dim(x,y) when nested or used as a frame operand
+x ≡ y ≡ z            Frame(x,y,z)
+≡ ≡ ≡                reserved literal for Frame(Whole,Whole,Whole)
+```
+
+At the source root, a chain with two operands denotes one dimension and a chain with three operands denotes one frame. Parentheses are mandatory around a dimension used as an operand of another dimension or frame. Chains with more than three operands, missing operands, or mixed ambiguous grouping are invalid.
+
+The expression:
+
+```text
+≡
+≡ ≡ ≡
+(I ≡ AM) ≡ (lim ≡ ∞) ≡ (1 ≡ 0)
+```
+
+therefore has the abstract syntax:
+
+```text
+Whole
+
+Frame(Whole, Whole, Whole)
+
+Frame(
+  Dim(LabelTerm(I), LabelTerm(AM)),
+  Dim(LabelTerm(lim), LabelTerm(∞)),
+  Dim(LabelTerm(1), LabelTerm(0))
+)
+```
+
+The label names receive no built-in arithmetic, logical, physical, or metaphysical interpretation. Their interpretation belongs to a declared methodology.
+
+The three displayed lines form an ordered progressive presentation, not an equality rewrite. The second line exposes the three typed frame roles; the third supplies a polar expression for each role. Their shared grounding does not erase the structural differences among the lines.
+
+### 0.3 Structural laws
+
+Polar terms preserve their complete ordered tree shape.
+
+```text
+Dim(x,y) ≠ Dim(y,x)                         by default
+Dim(Dim(a,b),c) ≠ Dim(a,Dim(b,c))
+```
+
+No associativity, commutativity, idempotence, flattening, cancellation, or implicit normalization is built into `Dim`.
+
+Define explicit reversal of the root dimension:
+
+```text
+reverse(Whole) = Whole
+reverse(LabelTerm(a)) = LabelTerm(a)
+reverse(Dim(x,y)) = Dim(y,x)
+reverse(reverse(t)) = t
+```
+
+Reversal swaps the two boundary subtrees without changing their internal orientation. A recursive mirror, when needed, is a separate explicitly declared tree transformation.
+
+Reversal is a structural operation. It does not establish semantic equivalence unless a methodology supplies a symmetry witness.
+
+### 0.4 Nodes and nesting
+
+Let `Node(t)` be the finite set of syntax nodes of term `t`. Every node retains:
+
+```text
+node id
+constructor
+parent, when present
+ordered child position, when present
+source span or canonical serialization location
+```
+
+For:
+
+```text
+Dim(Dim(1,0), Dim(lim,∞))
+```
+
+there are four label nodes and three distinct dimension nodes. A valid parser, serializer, elaborator, or receipt cannot replace this tree with the unordered label multiset `{1,0,lim,∞}`.
+
+### 0.5 Forgetful grounding
+
+Define the unique maps:
+
+```text
+ground_term  : PolarTerm → 1
+ground_frame : PolarFrame → 1
+```
+
+and render their sole value as `≡`.
+
+The source term `Whole : PolarTerm` and the sole grounding value in `1` are different typed objects even though they share the glyph.
+
+Grounding is vacuous by design. It records only that every polar term is presented as an articulation of one unnamed ground. It carries no shape, orientation, equality, substitution, realization, or standing evidence.
+
+Therefore:
+
+```text
+ground_term(x) = ground_term(y)
+```
+
+does not imply:
+
+```text
+x = y
+x may substitute for y
+x and y have equivalent realizations
+```
 
 ## 1 · Universe and typed articulation
 
@@ -19,6 +164,7 @@ Fix a set universe `U` closed under:
 ```text
 finite products
 dependent sums
+subsets of members of U
 finite sequences
 nonempty finite sequences
 function spaces between members of U
@@ -128,6 +274,138 @@ The dependent-sum representation is lossless.
 The static signature requires poles and relation together for a well-formed event. It does not derive the pole universe from relations and does not assign ontological priority among the dependent roles.
 
 The generator below emits complete articulation events. The particular poles of an emitted event are outputs of an unfolding, not independent inputs to that event.
+
+### 1.6 Raw typed elaboration
+
+A raw elaboration of term `t` assigns one typed pole to every syntax node:
+
+```text
+p : Node(t) → P
+```
+
+A label interpretation fixes `p(n)` for each label node. A Whole-interpretation policy states whether `Whole` nodes share one pole, receive context-indexed poles, or remain constrained by another declared rule.
+
+For each dimension node `n = Dim(l,r)`, the elaboration uses exactly one of two distinct constructors.
+
+```text
+ProjectiveNode(n) := (
+  whole = p(n),
+  left  : Rel(p(n), p(l)),
+  right : Rel(p(n), p(r))
+)
+```
+
+The dimension whole articulates outward as its two poles.
+
+```text
+InclusiveNode(n) := (
+  whole = p(n),
+  left  : Rel(p(l), p(n)),
+  right : Rel(p(r), p(n))
+)
+```
+
+The two poles articulate inward into the dimension whole.
+
+Projective and inclusive nodes are separate typed constructors. They have separate degeneracies and cannot be interchanged by an informal orientation flag.
+
+A raw elaboration retains the term, every node assignment, every constructor choice, and every boundary leg.
+
+For elaboration `r` of term `t`, define its root pole:
+
+```text
+root(r) := p(root_node(t))
+```
+
+### 1.7 Structurally admissible elaboration
+
+Raw cone or cocone shape is not sufficient to elaborate a dimension faithfully. Initial, terminal, empty, singleton, or lookup constructions may satisfy the raw typing vacuously.
+
+The polar source declares a foundation-level contract:
+
+```text
+PolarAdmissibilityContract := (
+  label interpretation,
+  Whole-interpretation policy,
+  allowed node constructors,
+  structural candidate class,
+  nondegeneracy predicate,
+  boundary-faithfulness rule,
+  structural equivalence
+)
+```
+
+A polar elaboration environment is:
+
+```text
+E := (P, Rel, PolarAdmissibilityContract)
+```
+
+Write:
+
+```text
+RawPolar_E(t)                 raw typed node assignments and legs under environment E
+AdmissiblePolar_E(t,r)        the declared structural contract holds for r
+Polar_E(t) := { r ∈ RawPolar_E(t) | AdmissiblePolar_E(t,r) }
+```
+
+The subscript `E` therefore fixes the pole category, label and Whole interpretations, constructor policy, and structural admissibility contract.
+
+A contract must make its admissibility predicate falsifiable by at least one reproducible negative case. Mere existence, inhabitedness, monicity, epicity, or low structural size receives no universal sufficiency status.
+
+Zero, one, or several structurally admissible elaborations are all possible. Core adds generator-class, search, fit, complexity, and oracle obligations before it calls one of them a measurement realization or assigns a realization status.
+
+### 1.8 Frame elaboration
+
+A frame is a role-labeled polar source:
+
+```text
+f = Frame(r,i,e)
+```
+
+A frame elaboration contract declares:
+
+```text
+FrameElaborationContract_E := (
+  FrameWitness_E,
+  role-to-witness bridge types,
+  frame nondegeneracy predicate,
+  frame structural equivalence
+)
+
+FrameWitness_E :
+  Polar_E(r) × Polar_E(i) × Polar_E(e) → U
+```
+
+and defines:
+
+```text
+Frame_E(f) := Σ(r_R : Polar_E(r)).
+              Σ(r_I : Polar_E(i)).
+              Σ(r_E : Polar_E(e)).
+              FrameWitness_E(r_R,r_I,r_E)
+```
+
+A witness retains the role-to-witness bridges by which the three elaborated terms form one typed event, diagram, generator step, or another declared construction.
+
+The `cohering` term is not automatically an inhabitant of:
+
+```text
+Rel(root(r_R), root(r_E))
+```
+
+If the frame witness is one articulation event, an explicit bridge relates the elaborated cohering term to that event's dependent relation. No syntax coercion supplies this bridge.
+
+### 1.9 Conservative embedding
+
+A typed v4 presentation that declares no polar source remains a valid C≡ presentation:
+
+```text
+polar_source = none
+polar_admissibility_contract = none
+```
+
+Its articulation, generator, behavior, equivalence, and receipt semantics are unchanged.
 
 ## 2 · Paths and diagrams
 
@@ -641,13 +919,22 @@ The cohered pole of one event is thereby the coherer pole of the next. An `EVENT
 
 ## 10 · Conformance
 
-The normative proof obligations for this foundation are defined in [`tsc-conformance.md`](tsc-conformance.md) under the `FND-*` requirement IDs.
+The normative proof obligations for this foundation are defined in [`tsc-conformance.md`](tsc-conformance.md) under the `FND-*` requirement IDs, including the `FND-POLAR-*`, `FND-FRAME-*`, and `FND-CONSERVATIVE-*` families.
 
 C≡ supplies semantics. Conformance supplies the permanent positive and negative tests that prevent an implementation from weakening those semantics.
 
 ## Canonical kernel
 
 ```text
+PolarTerm ::= Whole | LabelTerm(Label) | Dim(PolarTerm,PolarTerm)
+PolarFrame ::= Frame(PolarTerm,PolarTerm,PolarTerm)
+PolarSource ::= TermSource(PolarTerm) | FrameSource(PolarFrame)
+
+RawPolar_E(t)             node-to-pole assignment plus projective/inclusive legs
+Polar_E(t)                structurally admissible elaborations under environment E
+FrameElaborationContract_E structural frame-witness and bridge contract
+Frame_E(f)                structurally admissible frame elaborations and witnesses
+
 U                         declared Set universe
 P : U                     pole type
 Rel : P × P → U           dependent relation family
@@ -666,7 +953,7 @@ I+                        nonempty finite input histories
 B_I := Art^(I+)
 ζ(b)(i) := (b([i]), w ↦ b(i·w))
 beh_c : X → B_I
-Path_I(p,b)              state-linked path witness
+Path_I(p,b)               state-linked path witness
 
 ζ ∘ beh_c = F_I(beh_c) ∘ c
 ```
