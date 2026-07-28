@@ -1,6 +1,6 @@
 # TSC Architecture
 
-This document explains the repository's authority boundaries during the TSC v4 cutover.
+This document explains the repository's authority boundaries while TSC 4.1 extends the ratified v4 foundation with an optional polar source language.
 
 ## 1 · Surfaces
 
@@ -16,10 +16,10 @@ This document explains the repository's authority boundaries during the TSC v4 c
 
 ```text
 C≡
-  typed articulation, paths, deterministic Set functor, behavior
+  polar expression, typed articulation, paths, deterministic Set functor, behavior
 
 Core
-  measurement context, joint generator-atlas realization fibers, receipts, dispositions
+  measurement context, polar realization contracts, joint generator-atlas realization fibers, receipts, dispositions
 
 Operational
   compilation, calibration, assessment, admission, authorization, execution
@@ -88,10 +88,11 @@ CMSource
 
 Current reports use v3.2-era scalar fields and proxy evidence. They must not be interpreted as v4 receipts merely because they reuse α, β, and γ symbols.
 
-A v4 report requires:
+A v4.1 report requires:
 
 ```text
 CM and authorization identity
+polar source and realization evidence, when declared
 behavior contract and access mode
 coverage and manifestation evidence
 relation-search record and atlas

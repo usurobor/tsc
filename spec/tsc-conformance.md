@@ -1,12 +1,12 @@
-# TSC Conformance v4 — Proof Obligations
+# TSC Conformance v4.1 — Proof Obligations
 
-**Version:** 4.0.0
-**Status:** Normative
+**Version:** 4.1.0
+**Status:** Draft
 **Artifact:** Normative proof authority
 
 ## Governing question
 
-> What must an implementation, methodology, and fixture prove before it may claim conformance with TSC v4?
+> What must an implementation, methodology, and fixture prove before it may claim conformance with TSC 4.1?
 
 The semantic specifications define what TSC means. This document defines how those claims are tested. Every requirement has a stable ID, an owning specification, a positive oracle, and a negative oracle.
 
@@ -184,6 +184,62 @@ FINALITY_UNSUPPORTED
 
 **Negative:** free semantic permutation of source, relation, and result is rejected.
 
+### FND-POLAR-001 — Polar syntax is not equality
+
+**Owner:** `c-equiv.md` §§0.1–0.2
+
+**Positive:** `1 ≡ 0` parses canonically as `Dim(LabelTerm(1),LabelTerm(0))`; the exact three-line foundational expression parses to `Whole`, `Frame(Whole,Whole,Whole)`, and the declared nested frame AST.
+
+**Negative:** interpreting `≡` as arithmetic equality, logical identity, a directed event, or an ambiguous binary chain fails conformance.
+
+### FND-POLAR-002 — Nested shape retention
+
+**Owner:** `c-equiv.md` §§0.3–0.4
+
+**Positive:** `Dim(Dim(1,0),Dim(lim,∞))` retains four label nodes and three distinct dimension nodes through parsing, canonical serialization, elaboration, and receipt projection.
+
+**Negative:** a commutative fold, flattening, reassociation, or unordered multiset representation that loses any dimension node fails conformance.
+
+### FND-POLAR-003 — Orientation and reversal honesty
+
+**Owner:** `c-equiv.md` §§0.3, 1.6
+
+**Positive:** projective and inclusive dimension nodes are separately typed; explicit root reversal swaps the two boundary subtrees, preserves their internal orientation, and is involutive.
+
+**Negative:** treating projective and inclusive nodes as one untyped flag, silently equating `Dim(x,y)` with `Dim(y,x)`, or using reversal as semantic equivalence without a witness fails conformance.
+
+### FND-POLAR-004 — Grounding is forgetful only
+
+**Owner:** `c-equiv.md` §0.5
+
+**Positive:** every polar term has the same grounding value while its structural AST remains unchanged and separately retained.
+
+**Negative:** grounding used to justify equality, substitution, flattening, realization, identification, or standing fails conformance.
+
+### FND-POLAR-005 — Structural admissibility is non-vacuous
+
+**Owner:** `c-equiv.md` §§1.6–1.7
+
+**Positive:** a raw typed elaboration becomes structurally admissible only through a declared label and Whole interpretation, constructor policy, structural candidate class, nondegeneracy predicate, boundary-faithfulness rule, and structural equivalence; at least one negative case is executable.
+
+**Negative:** raw initial, terminal, empty, singleton, lookup, monic, or epic cones/cocones admitted by existence alone fail conformance.
+
+### FND-FRAME-001 — Frame elaboration is explicit
+
+**Owner:** `c-equiv.md` §§0.2, 1.8; `tsc-core.md` §2.0
+
+**Positive:** a three-role frame preserves all three polar terms and carries a declared typed frame witness plus role-to-witness bridges.
+
+**Negative:** silently coercing the cohering polar term into `Rel(root(coherer),root(cohered))`, parsing a frame as binary association, or dropping a role term fails conformance.
+
+### FND-CONSERVATIVE-001 — v4.0 conservative embedding
+
+**Owner:** `c-equiv.md` §1.9; `tsc-core.md` §2.0
+
+**Positive:** every valid typed v4.0 presentation and receipt remains valid with `polar_source = none` and retains identical generator, behavior, receipt, standing, and authority semantics.
+
+**Negative:** making a polar source mandatory, changing a no-polar-source classification, or reinterpreting a historical v4.0 receipt as polar evidence fails conformance.
+
 ## 3 · Core requirements
 
 ### CORE-PRESENTATION-001 — Truthful presentation kind
@@ -254,6 +310,22 @@ No receipt may discharge another receipt's proof obligation.
 **Positive:** every candidate fiber ranges over `R = (G,A)`, retaining the concrete generator and the atlas that relates it to observations. Fit, complexity, equivalence, oracle results, and identification are well defined on the joint realization or carry a proof that a projection is sufficient.
 
 **Negative:** a methodology that selects a map during fitting, builds the candidate fiber over bare `G`, and discards atlas alternatives fails receipt and identification conformance.
+
+### CORE-POLAR-001 — Polar realization classification
+
+**Owner:** `tsc-core.md` §§2.0, 2.6, 2.8–2.10, 5.5.1
+
+**Positive:** the Core polar realization contract combines C≡ structural admissibility with a declared polar candidate class, complete applicable search, complexity and fit contributions, held-out or intervention oracle, target, and equivalence. Zero surviving classes yields `NO_REALIZATION_IN_MODEL`, several yields `UNDERDETERMINED`, and one yields scoped `IDENTIFIED_IN_MODEL` for the declared target.
+
+**Negative:** raw or merely structurally admissible elaborations counted as measurement realizations, incomplete search reported as absence, or grounding reported as identification fails conformance.
+
+### CORE-POLAR-002 — Polar evidence remains in the β atlas
+
+**Owner:** `tsc-core.md` §§2.7–2.9, 7.2, 8 A3, 12
+
+**Positive:** the receipt retains the canonical polar AST, node-to-pole assignments, boundary legs, raw elaborations, structurally admissible elaborations, measurement-admitted and rejected candidates, frame witnesses, bridges, search evidence, and content-addressed references.
+
+**Negative:** a scalar, root pole, accepted realization, or best-fit residual replacing the polar tree, rejected alternatives, or maps fails conformance.
 
 ### CORE-REALIZE-001 — Realizability, budget, and test failure
 
@@ -365,6 +437,14 @@ No receipt may discharge another receipt's proof obligation.
 
 **Negative:** undeclared or unsupported modes fail closed; no silent final-to-finite fallback occurs; a no-finality CM cannot invoke Lambek or universal uniqueness.
 
+### OPER-POLAR-001 — Polar compilation fails closed
+
+**Owner:** `tsc-oper.md` §§3.1.1, 3.3, 5.4–5.5, 7
+
+**Positive:** the compiler canonicalizes polar syntax, binds realization and frame contracts, retains shape, and the runtime carries candidate and refusal evidence into β.
+
+**Negative:** malformed or ambiguous syntax, missing orientation/search/nondegeneracy/frame declarations, implicit relation coercion, grounding misuse, or silent flattening emits a stable refusal and no measurement receipt claiming success.
+
 ### OPER-INPUT-001 — Complete input boundary
 
 **Owner:** `tsc-oper.md` §§5, 7
@@ -398,6 +478,14 @@ No receipt may discharge another receipt's proof obligation.
 **Positive:** compatible receipts compare under one declared relation with dependence and uncertainty.
 
 **Negative:** incompatible methodologies or behavior contracts produce `INCOMPARABLE`.
+
+### OBS-POLAR-001 — Polar compatibility and lift
+
+**Owner:** `tsc-observation-dynamics.md` §§2, 5–7, 10
+
+**Positive:** directly compared receipts agree on polar source, C≡ admissibility contract, Core realization contract, frame contract, and search semantics or carry a validated transport; changing any load-bearing polar contract is classified as a lift.
+
+**Negative:** comparing incompatible polar trees/contracts directly, relabeling a changed polar source as evidence refinement, or dropping prior rejected realizations and failures from lineage fails conformance.
 
 ### OBS-HOLDOUT-001 — Holdout integrity
 
@@ -461,6 +549,12 @@ gol-ascent-0
 
 stochastic-law-v4
   law-relative stochastic compatibility and violation
+
+polar-syntax-v4-1
+  parser, ordered AST, nesting, grounding, frame, and conservative-embedding proof pairs
+
+polar-realization-v4-1
+  non-vacuity, candidate-fiber, receipt, runtime, comparison, and lift proof pairs
 ```
 
 A fixture contributes standing only when its status is `verified` and its raw evidence is reproducible.
@@ -487,7 +581,7 @@ A fixture contributes standing only when its status is `verified` and its raw ev
 
 Specification ratification and implementation conformance are separate claims.
 
-TSC v4 may change from `Draft` to `Normative` when:
+TSC 4.1 may change from `Draft` to `Normative` when:
 
 ```text
 every semantic layer is internally complete and cross-referenced;
@@ -501,4 +595,4 @@ that final commit is reviewed before merge.
 
 Ratification makes the specification authoritative. It does not grant conformance to an engine or methodology.
 
-An implementation may claim TSC v4 conformance only when the applicable registered fixtures are `verified`, their positive and negative evidence is reproducible, and every required receipt is bound to the reviewed implementation digest.
+An implementation may claim TSC 4.1 conformance only when the applicable registered fixtures are `verified`, their positive and negative evidence is reproducible, and every required receipt is bound to the reviewed implementation digest.

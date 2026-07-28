@@ -1,6 +1,6 @@
 # The TSC Thesis
 
-TSC is a theory of warranted coherence claims.
+TSC is a theory of warranted coherence claims over optional polar source expressions and typed generative systems.
 
 It asks:
 
@@ -62,7 +62,7 @@ These states cannot be replaced by one scalar.
 
 ## Current repository status
 
-The specification is 4.0.0 Draft. The current `coh` engine is a repository-proxy implementation from the v3.2-era line; it does not implement v4.
+The specification is 4.1.0 Draft. The current `coh` engine is a repository-proxy implementation from the v3.2-era line; it does not implement v4.
 
 Read [`../STATUS.md`](../STATUS.md) before interpreting current scores.
 

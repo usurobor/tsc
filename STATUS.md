@@ -1,16 +1,16 @@
 # TSC Status
 
 **Software release:** 0.12.0
-**Specification:** 4.0.0 Normative
-**v4 conformance standing:** none
+**Specification:** 4.1.0 Draft
+**4.1 conformance standing:** none
 
 TSC's foundational measurement construct is under revision.
 
 ## Theory
 
-`spec/` contains the normative TSC v4 specification. It defines typed articulation, open generators, candidate-fiber measurement, proof-carrying receipts, methodology authority, observation lineage, and conformance obligations.
+`spec/` contains the draft TSC 4.1 specification. It defines typed articulation, open generators, candidate-fiber measurement, proof-carrying receipts, methodology authority, observation lineage, and conformance obligations.
 
-The specification is normative as of the independently reviewed ratification-only commit; the ratification gate is defined in `spec/tsc-conformance.md` §8.
+The 4.1 specification is not normative until the ratification gate in `spec/tsc-conformance.md` §8 closes. The polar-expression fixtures are specified but unimplemented.
 
 ## Current engine
 
@@ -36,7 +36,7 @@ The first v4 conformance fixtures are specified under `conformance/`. A specifie
 
 ## Evidence status
 
-No current implementation has emitted a passing v4 conformance receipt.
+No current implementation has emitted a passing TSC 4.1 conformance receipt.
 
 A historical v2.3 braided witness emitted a failed receipt. The failure is retained and explicitly disposed in:
 
