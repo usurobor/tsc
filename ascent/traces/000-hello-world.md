@@ -201,3 +201,38 @@ source-exhaustiveness closure — or did we merely write down the
 programming-language semantics we already knew?
 
 If the derivation survives that audit, Trace 000 writes `KERNEL.md` v0.1.
+
+## First-run control (fresh model, no context)
+
+**Setup.** The model-visible payload above (Viewpoint + Intent only) was given
+to a fresh model with no ascent context, no method, no vocabulary, and no repo
+access. *Caveat:* fresh context but same model family — a proxy for, not a
+substitute for, a genuinely independent model.
+
+**Result: PASS.** Unprompted, it:
+
+- identified the load-bearing closure and pressed on its sufficiency — *"a claim
+  of identity plus a claim of sufficiency … press on the word 'is' … the text is
+  one relatum; it is not the relation";*
+- generated the polarity in the exact vocabulary the input withheld — *"the
+  program as a static artifact … and the program as a dynamic occurrence"; "the
+  source text is the score; the execution is the performance";*
+- named the cohering center — semantics + implementation + environment as the
+  interpreting relation through which text becomes program;
+- produced a discriminating consequence — *"run with stdout redirected to
+  /dev/null, the very same text produces no visible greeting"* (same source +
+  different environment → different behavior).
+
+The static/dynamic inversion appeared as a *move* (grant the strongest reading,
+test sufficiency, separate relatum from relation), not merely recalled as a
+conclusion. This is first-case support for the typed-inversion claim.
+
+**Finding — Intent variance, confirmed on run 1.** The leak-free Intent ("the
+most complete account of what this program is") is broad enough to open an
+articulation the harness-side derivation did not anticipate: the program as a
+*cultural/communicative* artifact (*"the canonical first program, a proof the
+toolchain is alive"*). So the ascent fiber on this viewpoint is not obviously
+size 1 — the pragmatic articulation is a second branch the operational ascent
+(`source ≡ behavior`) does not contain. Open question for `KERNEL.md`: does
+whole-recovery return a fiber here, and should the bootstrap Intent stay broad
+(leak-free, fiber > 1) or be narrowed (risking a behavior leak)?
