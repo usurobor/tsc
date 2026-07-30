@@ -1,8 +1,9 @@
-# Trace 001 — Hard/soft flickering versus simultaneous decomposition
+# Trace 002 — Hard/soft flickering versus simultaneous decomposition
 
 **Status:** Hand trace
-**Purpose:** Test whether the proposed ascent kernel produces a
-non-decorative result on live external material.
+**Purpose:** Formal-calibration case — test whether the ascent kernel
+produces a non-decorative result carrying a strong `FORMAL_PROOF` warrant,
+with a migration audit that can reach `CONTRADICTORY_RESIDUE`.
 
 ## Input viewpoint
 
