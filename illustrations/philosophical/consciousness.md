@@ -1,4 +1,4 @@
-# Consciousness — a TSC (Triadic Self‑Coherence) exemplar
+# Consciousness — a TSC (Triadic Self‑Coherence) exemplar (Historical v2 illustration)
 
 > **Status: non-normative illustration.** The observations, expected values, and historical scores below teach a framing only. They are not a TSC v4 conformance result, calibration anchor, or measurement verdict.
 

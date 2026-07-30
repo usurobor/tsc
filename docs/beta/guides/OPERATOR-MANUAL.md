@@ -2,6 +2,14 @@
 
 > **Current scope:** This guide operates the 0.12.0 repository-proxy engine. It does not describe a TSC v4-conforming runtime.
 
+> **Frozen repository-proxy methodology — not TSC v4.** The engine's
+> semantic contract is the immutable v3.2.2 pin recorded in
+> [`engine/ocaml/CONTRACT.md`](../../../engine/ocaml/CONTRACT.md), not the
+> live `spec/` bodies. Where this manual names α, β, γ, they are the
+> repository proxy's three independent scalar coherence axes — **not**
+> TSC v4's α/β/γ, which the normative spec defines as non-substitutable,
+> asymmetrically-dependent receipt roles, never independent scalar axes.
+
 
 This manual covers building, configuring, and running the TSC engine.
 
@@ -9,7 +17,9 @@ This manual covers building, configuring, and running the TSC engine.
 
 ## 1. What the engine does
 
-The engine measures triadic self-coherence of a target in one of four
+The engine measures the frozen v3.2 repository proxy's triadic
+self-coherence of a target (the proxy's three independent scalar axes,
+not a live general-TSC or v4 measurement) in one of four
 modes — `mechanical` | `llm` | `hybrid` | `auto` (the default: `hybrid`
 when the full provider configuration — `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY` — is present, `mechanical` otherwise; a partial set warns with the missing variable names and falls back). It:
 

@@ -1,10 +1,11 @@
 format = "tsc-target/0.1"
 name = "engine"
 kind = "implementation"
-description = "Canonical implementation surface."
+description = "Current repository-proxy implementation surface."
 
 include = [
   "engine/ocaml/README.md",
+  "engine/ocaml/CONTRACT.md",
   "engine/ocaml/**/*.ml",
   "engine/ocaml/**/*.mli",
   "engine/ocaml/dune-project",
