@@ -6,7 +6,7 @@
 
 (rule
  (target build_version.ml)
- (deps ../../../VERSION)
+ (deps ../../../../VERSION)
  (action (bash "echo 'let version = \"'$(cat %{deps}| tr -d '\\n')'\"' > %{target}")))
 
 (rule

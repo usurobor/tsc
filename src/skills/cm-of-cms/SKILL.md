@@ -47,7 +47,7 @@ cm_of_cms:
       max absolute pairwise difference over the response contract's
       numeric fields; delta_consistency maps through the barrier
       phi(delta) = delta/(1-delta) to Coh_consistency = exp(-phi)
-      (frozen v3.2.2 proxy barrier, engine/ocaml/CONTRACT.md; lambda = 1)
+      (frozen v3.2.2 proxy barrier, src/engine/ocaml/CONTRACT.md; lambda = 1)
     script: scripts/cm-consistency.sh
   admissibility: scripts/cm-admissibility.sh
   standing:
@@ -58,7 +58,7 @@ cm_of_cms:
     llm_consistency_gate: reported-not-gating
     llm_consistency_floor: 0.90
   mechanical:
-    backend: engine/ocaml/lib/mechanical_scoring.ml
+    backend: src/engine/ocaml/lib/mechanical_scoring.ml
     determinism: >-
       identical bundle + config -> identical result; no LLM, no network
       I/O, no semantic parsing of file contents
@@ -108,7 +108,7 @@ cm_of_cms:
         output anything except the JSON object required by the scoring
         instruction's output contract
     validation: >-
-      engine/ocaml/lib/response_schema.ml (validate_witness_response) —
+      src/engine/ocaml/lib/response_schema.ml (validate_witness_response) —
       one funnel for every refusal stage: parse, base_schema,
       prohibited_fields (computed Coh/C_sigma), target_mismatch,
       v3_2_delta, checklist (v3.2.3 defect walk missing or malformed),
@@ -128,7 +128,7 @@ cm_of_cms:
         and declares no workflow binding of its own
     ci_prompt: |
       You are the LLM witness step of the CM-of-CMs measurement, rendered
-      from skills/cm-of-cms/SKILL.md. Your entire task:
+      from src/skills/cm-of-cms/SKILL.md. Your entire task:
 
       1. Read the file .tsc/cm/prompt/{target}.md. It contains the
          canonical scoring instruction (runtime/SELF-MEASURE.md) followed
@@ -153,7 +153,7 @@ cm_of_cms:
 > **Frozen repository-proxy methodology — not TSC v4.** This skill
 > declares a CURRENT repository-proxy methodology. Its semantic contract
 > is the immutable v3.2.2 pin recorded in
-> [`engine/ocaml/CONTRACT.md`](../../engine/ocaml/CONTRACT.md), not the
+> [`src/engine/ocaml/CONTRACT.md`](../../src/engine/ocaml/CONTRACT.md), not the
 > live `spec/` bodies. The symbols α, β, γ used below are this proxy's
 > three independent scalar coherence axes. They are **not** TSC v4's
 > α/β/γ, which the normative spec defines as non-substitutable,
@@ -170,7 +170,7 @@ and how those outputs move as it evolves). So a CM is measurable by the
 same triadic instrument — and this skill declares how.
 
 This is the **0th coherence methodology**. The self-measurement skill
-(`skills/self-measure/SKILL.md`) is the 1st: the tsc-repo CM applied to
+(`src/skills/self-measure/SKILL.md`) is the 1st: the tsc-repo CM applied to
 tsc. Both satisfy the same comparable contract,
 [`#CoherenceMethodology`](../../schemas/skill.cue); the 1st is deployed
 (command, render, ledger, CI bindings), the 0th is essence-only — it
@@ -238,7 +238,7 @@ times against the frozen prompt. The spread is the max absolute pairwise
 difference over the response contract's numeric fields (component
 scores, δ estimates, confidence). That spread is a discrepancy like any
 other in TSC, so it maps through the canonical barrier (the frozen
-v3.2.2 proxy transform, `engine/ocaml/CONTRACT.md`):
+v3.2.2 proxy transform, `src/engine/ocaml/CONTRACT.md`):
 
 ```
 delta_consistency = max |x_i - x_j|   over repeats i,j and numeric fields
@@ -280,12 +280,12 @@ consistency protocol:
 
 | Work | Owner | Where |
 |------|-------|-------|
-| Resolve the CM's corpus, bundle, hash | mechanical | engine pipeline (steps 1–2 of the 1st methodology's split, `skills/self-measure/SKILL.md` §2) |
+| Resolve the CM's corpus, bundle, hash | mechanical | engine pipeline (steps 1–2 of the 1st methodology's split, `src/skills/self-measure/SKILL.md` §2) |
 | Run the object-CM's own verification battery (validator, render check, smoke, katas, tests) | mechanical | the CM's declared CI surfaces |
-| Score 12 structural signals over the CM corpus | mechanical | [mechanical_scoring.ml](../../engine/ocaml/lib/mechanical_scoring.ml) |
+| Score 12 structural signals over the CM corpus | mechanical | [mechanical_scoring.ml](../../src/engine/ocaml/lib/mechanical_scoring.ml) |
 | N-run determinism check + repeat-spread computation | mechanical | [scripts/cm-consistency.sh](../../scripts/cm-consistency.sh) |
 | **Judge whether declaration, implementation, and instrument behavior still describe one system** | **LLM** | [runtime/SELF-MEASURE.md](../../runtime/SELF-MEASURE.md) over the CM bundle |
-| Validate the witness response, barrier, aggregate, report | mechanical | [response_schema.ml](../../engine/ocaml/lib/response_schema.ml), [coherence.ml](../../engine/ocaml/lib/coherence.ml) |
+| Validate the witness response, barrier, aggregate, report | mechanical | [response_schema.ml](../../src/engine/ocaml/lib/response_schema.ml), [coherence.ml](../../src/engine/ocaml/lib/coherence.ml) |
 
 The witness contract is identical to the 1st methodology's — same
 estimate fields, same prohibitions, same single-funnel validation. The

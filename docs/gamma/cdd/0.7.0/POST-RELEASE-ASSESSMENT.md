@@ -43,7 +43,7 @@
 
 ## 3. Process Learning
 
-**What went wrong:** Nothing material. The stale issue status table (issue body stated `engine/ocaml/test/` did not exist when it had been created in cycle #24) was a minor observation. It did not cause any AC mapping error and was not a finding.
+**What went wrong:** Nothing material. The stale issue status table (issue body stated `src/engine/ocaml/test/` did not exist when it had been created in cycle #24) was a minor observation. It did not cause any AC mapping error and was not a finding.
 
 **What went right:**
 1. Migration cycles bounded by deletion-plus-completion closed in a single round as expected. The scope was tight, the non-goals explicit, and the legacy-decision table was the substantive work — the OCaml code followed from the decisions.
@@ -98,7 +98,7 @@ No independent process gap found (per γ close-out §Independent γ process-gap 
 **How to verify:**
 ```bash
 git ls-files '*.py' | wc -l          # expect: 0
-cd engine/ocaml && dune runtest       # expect: exit 0, ≥74 PASS lines
+cd src/engine/ocaml && dune runtest       # expect: exit 0, ≥74 PASS lines
 git ls-files pyproject.toml           # expect: empty
 ```
 

@@ -8,8 +8,8 @@ This document explains the repository's authority boundaries while TSC 4.1 exten
 |---|---|---|
 | `spec/` | Theory and normative proof obligations | Current executable behavior |
 | `conformance/` | Domain fixtures implementing requirement IDs | General theory |
-| `engine/ocaml/` | Current repository-proxy execution | TSC v4 semantics |
-| `skills/` | Current methodology declarations and rendered proxy routes | General v4 CM runtime |
+| `src/engine/ocaml/` | Current repository-proxy execution | TSC v4 semantics |
+| `src/skills/` | Current methodology declarations and rendered proxy routes | General v4 CM runtime |
 | `.tsc/` | Generated evidence and historical ledger | Canonical definitions |
 
 ## 2 · Specification
@@ -53,7 +53,7 @@ Domain rules remain outside the foundation.
 
 ## 4 · Current engine boundary
 
-`engine/ocaml/` ships software release `0.12.0` and `coh`.
+`src/engine/ocaml/` ships software release `0.12.0` and `coh`.
 
 The engine currently resolves file bundles, runs structural-proxy and semantic-judgment routes, validates provider output, and emits v3.2-era score reports.
 

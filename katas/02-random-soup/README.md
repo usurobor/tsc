@@ -81,4 +81,4 @@ For `expected.verdict = "fail"` katas, the runner logic is inverted:
 
 - `katas/README.md` — kata framework documentation
 - `katas/01-glider/` — positive control kata (expected pass, C_Σ ≥ 0.87)
-- `engine/ocaml/lib/mechanical_scoring.ml` — mechanical scoring implementation
+- `src/engine/ocaml/lib/mechanical_scoring.ml` — mechanical scoring implementation

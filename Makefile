@@ -2,7 +2,7 @@
 # REQUIRES: opam, dune, OCaml >= 4.14
 .PHONY: help setup build test clean measure render validate-skills linkcheck
 
-ENGINE := engine/ocaml
+ENGINE := src/engine/ocaml
 
 help:
 	@echo "Targets:"
@@ -10,7 +10,7 @@ help:
 	@echo "  build           - dune build"
 	@echo "  test            - dune runtest"
 	@echo "  measure         - TSC self-measurement (auto: hybrid with LLM_* credentials, mechanical without)"
-	@echo "  render          - render skills/self-measure/SKILL.md into coh-self + workflow"
+	@echo "  render          - render src/skills/self-measure/SKILL.md into coh-self + workflow"
 	@echo "  validate-skills - SKILL.md frontmatter + render byte-identity checks (requires cue, jq)"
 	@echo "  linkcheck       - check Markdown links (requires lychee)"
 	@echo "  clean           - dune clean"
@@ -24,7 +24,7 @@ build:
 test:
 	cd $(ENGINE) && dune runtest
 
-# Self-measurement per skills/self-measure/SKILL.md — all targets +
+# Self-measurement per src/skills/self-measure/SKILL.md — all targets +
 # cross-target report into .tsc/self/. Mode auto: hybrid when LLM_*
 # credentials are present, mechanical otherwise.
 measure: build

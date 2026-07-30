@@ -1,5 +1,5 @@
 // schemas/audit-dispute.cue — the adjudication surface for contested
-// audits (skills/cm-of-cms/SKILL.md section 6, dispute layer).
+// audits (src/skills/cm-of-cms/SKILL.md section 6, dispute layer).
 //
 // This schema is deliberately ahead of its institution: the
 // cherry-pick-assassin (grounded-but-misleading evidence) cannot be

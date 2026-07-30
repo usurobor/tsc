@@ -678,7 +678,7 @@ let locus_prompt_block l =
 (** The bounded per-locus adjudication instruction. The witness adjudicates
     ONLY the resolved loci; it emits exactly one response per locus_id and
     NEVER a scalar — the engine computes β. Consistent with how
-    runtime/SELF-MEASURE.md / skills/self-measure emit prompts, but this is
+    runtime/SELF-MEASURE.md / src/skills/self-measure emit prompts, but this is
     a separate β-adjudication surface and does NOT change the α/γ scalar
     path. *)
 let adjudication_instruction (loci : locus list) =

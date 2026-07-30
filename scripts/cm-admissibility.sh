@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/cm-admissibility.sh — the admissibility instrument of the 0th
-# coherence methodology (skills/cm-of-cms/SKILL.md §6).
+# coherence methodology (src/skills/cm-of-cms/SKILL.md §6).
 #
 # A CM's scores of OTHER CMs carry standing only if the CM first
 # reproduces the calibration commons — the kata anchors with agreed
@@ -52,7 +52,7 @@ OUT_DIR=".tsc/cm/admissibility"
 resolve_coh() {
   if [ -n "${COH_BIN:-}" ]; then echo "$COH_BIN"; return; fi
   if command -v coh >/dev/null 2>&1; then echo "coh"; return; fi
-  local build="engine/ocaml/_build/default/bin/main.exe"
+  local build="src/engine/ocaml/_build/default/bin/main.exe"
   [ -x "$build" ] && { echo "$REPO_ROOT/$build"; return; }
   echo "cm-admissibility: no coh binary (set COH_BIN or dune build)" >&2
   exit 2
@@ -205,7 +205,7 @@ json.dump({
              "blind (no kata paths, no adjacent labels); public-anchor "
              "standing never exceeds house-authored-public-commons scope"),
     "anchors": anchors,
-    "protocol": "skills/cm-of-cms/SKILL.md section 6",
+    "protocol": "src/skills/cm-of-cms/SKILL.md section 6",
 }, open(out_path, "w"), indent=2)
 print(f"cm-admissibility: {cand_name} -> {verdict} -> {out_path}",
       file=sys.stderr)
@@ -242,7 +242,7 @@ WRAP
 }
 
 self_test() {
-  # The five-attacker matrix (skills/cm-of-cms/SKILL.md section 6). The
+  # The five-attacker matrix (src/skills/cm-of-cms/SKILL.md section 6). The
   # EXPECTED verdicts are asserted exactly — including the two honest
   # admissions, so the residuals stay measured instead of forgotten:
   #   engine               ADMITTED   (the meter reads the commons)
@@ -276,7 +276,7 @@ self_test() {
   expect rejected path-gamer scripts/cm-attackers/path-gamer.py
   expect rejected boilerplate-gamer scripts/cm-attackers/boilerplate-gamer.py
   expect admitted basename-gamer scripts/cm-attackers/basename-gamer.py
-  COH_BIN_EXPORT="${COH_BIN:-$PWD/engine/ocaml/_build/default/bin/main.exe}"
+  COH_BIN_EXPORT="${COH_BIN:-$PWD/src/engine/ocaml/_build/default/bin/main.exe}"
   COH_BIN="$COH_BIN_EXPORT" expect admitted cherry-pick-assassin scripts/cm-attackers/cherry-pick-assassin.py
 
   rm -rf "$tools"

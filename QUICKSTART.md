@@ -44,7 +44,7 @@ coh --mode mechanical --target spec --registry targets/registry.tsc
 coh self --mode mechanical
 ```
 
-With provider credentials, `coh self` may run the current hybrid proxy route. `skills/self-measure/SKILL.md` governs that route.
+With provider credentials, `coh self` may run the current hybrid proxy route. `src/skills/self-measure/SKILL.md` governs that route.
 
 ## 7 · Read output honestly
 
@@ -76,6 +76,6 @@ bash scripts/run-katas.sh
 - [`spec/README.md`](spec/README.md)
 - [`spec/tsc-conformance.md`](spec/tsc-conformance.md)
 - [`conformance/README.md`](conformance/README.md)
-- [`engine/ocaml/CONTRACT.md`](engine/ocaml/CONTRACT.md)
+- [`src/engine/ocaml/CONTRACT.md`](src/engine/ocaml/CONTRACT.md)
 
 No command currently emits a passing v4 conformance receipt.

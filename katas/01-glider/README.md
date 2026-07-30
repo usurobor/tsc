@@ -71,4 +71,4 @@ between structured and unstructured input. The gap should be ≥ 0.2 `C_sigma_nu
 
 - `katas/README.md` — kata framework documentation
 - `katas/02-random-soup/` — negative control kata
-- `engine/ocaml/lib/mechanical_scoring.ml` — mechanical scoring implementation
+- `src/engine/ocaml/lib/mechanical_scoring.ml` — mechanical scoring implementation

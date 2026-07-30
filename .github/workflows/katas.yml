@@ -15,8 +15,8 @@
 #   - Auto-discovers every directory under katas/ (no hard-coded kata names).
 #   - Invokes `coh --kata <id> --mode mechanical` for each kata.
 #   - Fails the job on any non-zero exit from the kata runner.
-#   - Caches OPAM + dune _build keyed on engine/ocaml/dune-project +
-#     engine/ocaml/tsc_engine.opam so dep / build-config changes
+#   - Caches OPAM + dune _build keyed on src/engine/ocaml/dune-project +
+#     src/engine/ocaml/tsc_engine.opam so dep / build-config changes
 #     invalidate cleanly.
 #   - Persists per-kata result JSON to `.kata-results/<id>.json` and
 #     uploads as an artifact (cycle #38 AC1); emits a markdown summary
@@ -87,8 +87,8 @@ jobs:
         with:
           path: |
             ~/.opam
-            engine/ocaml/_build
-          key: katas-${{ runner.os }}-ocaml-5.2-${{ hashFiles('engine/ocaml/dune-project', 'engine/ocaml/tsc_engine.opam') }}
+            src/engine/ocaml/_build
+          key: katas-${{ runner.os }}-ocaml-5.2-${{ hashFiles('src/engine/ocaml/dune-project', 'src/engine/ocaml/tsc_engine.opam') }}
           restore-keys: |
             katas-${{ runner.os }}-ocaml-5.2-
 
@@ -98,12 +98,12 @@ jobs:
           ocaml-compiler: "5.2"
 
       - name: Install dependencies
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam install . --deps-only -y
 
       - name: Build engine
         # Mirrors ci.yml::build — `dune build` produces the binary at
-        # engine/ocaml/_build/default/bin/main.exe.
+        # src/engine/ocaml/_build/default/bin/main.exe.
         #
         # Earlier (post-#36-merge) the step here was `opam install . -y`
         # to put `coh` on PATH. That step failed on the first main run
@@ -114,7 +114,7 @@ jobs:
         # in opam's build sandbox. Switching to bare `dune build` in
         # the engine working directory avoids the package-mode
         # constraint; the kata loop invokes the binary by direct path.
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam exec -- dune build
 
       # AC2 — auto-discovery. The glob `katas/*/` matches *directories only*,
@@ -131,7 +131,7 @@ jobs:
       # dependency on opam-install vs dune-install state.
       #
       # Per-kata result JSON capture (cycle #38 AC1): the engine's
-      # `run_kata` (engine/ocaml/bin/main.ml:516) emits its result JSON
+      # `run_kata` (src/engine/ocaml/bin/main.ml:516) emits its result JSON
       # to *stdout* (Printf.printf), not via `--output`. The CLI
       # `--output` flag exists but is only wired for --target / --files
       # modes (main.ml:299/358/365/371/426). For kata mode we therefore
@@ -146,7 +146,7 @@ jobs:
         run: |
           set +e
           shopt -s nullglob
-          COH="engine/ocaml/_build/default/bin/main.exe"
+          COH="src/engine/ocaml/_build/default/bin/main.exe"
           if [ ! -x "$COH" ]; then
             echo "::error::engine binary not found at $COH — Build engine step probably failed"
             exit 1

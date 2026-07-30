@@ -22,7 +22,7 @@
 #
 # Usage:
 #   ./scripts/ci/validate-skill-frontmatter.sh
-#       Validate all SKILL.md under skills/.
+#       Validate all SKILL.md under src/skills/.
 #   ./scripts/ci/validate-skill-frontmatter.sh --self-test
 #       Run schemas/fixtures/skill-frontmatter/{valid,invalid}/ as the
 #       built-in positive/negative regression suite.
@@ -63,7 +63,7 @@ REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 SCHEMA="${REPO_ROOT}/schemas/skill.cue"
 FIXTURE_VALID="${REPO_ROOT}/schemas/fixtures/skill-frontmatter/valid"
 FIXTURE_INVALID="${REPO_ROOT}/schemas/fixtures/skill-frontmatter/invalid"
-DEFAULT_ROOT="${REPO_ROOT}/skills"
+DEFAULT_ROOT="${REPO_ROOT}/src/skills"
 
 [[ -f "$SCHEMA" ]] || {
   echo "${RED}${SYM_FAIL}${RESET} schema not found at: $SCHEMA" >&2
@@ -296,7 +296,7 @@ PYEOF
   #     lands in the engine but the skill still describes the old funnel.
   local validation_prose funnel_src
   validation_prose=$(jq -r ".${block}.llm.validation // \"\"" "$json_path")
-  funnel_src="$REPO_ROOT/engine/ocaml/lib/response_schema.ml"
+  funnel_src="$REPO_ROOT/src/engine/ocaml/lib/response_schema.ml"
   if [[ "$validation_prose" == *"response_schema.ml"* && -f "$funnel_src" ]]; then
     local stage
     while IFS= read -r stage; do

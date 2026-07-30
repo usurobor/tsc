@@ -218,7 +218,7 @@ package skill
 // #SelfMeasure — the 1st coherence methodology: tsc's repo CM applied to
 // tsc itself, DEPLOYED (command + render + ledger + ci bindings are
 // required here, optional in the core contract). The 0th methodology is
-// the CM of CMs (skills/cm-of-cms/SKILL.md): the methodology that
+// the CM of CMs (src/skills/cm-of-cms/SKILL.md): the methodology that
 // measures methodologies, including itself. The renderer
 // (scripts/render-self-measure.sh) consumes this skill and materializes
 // the substrate artifacts (coh-self command, measurement workflow,

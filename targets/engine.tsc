@@ -4,14 +4,14 @@ kind = "implementation"
 description = "Current repository-proxy implementation surface."
 
 include = [
-  "engine/ocaml/README.md",
-  "engine/ocaml/CONTRACT.md",
-  "engine/ocaml/**/*.ml",
-  "engine/ocaml/**/*.mli",
-  "engine/ocaml/dune-project",
-  "engine/ocaml/lib/dune",
-  "engine/ocaml/bin/dune",
-  "engine/ocaml/test/fixtures/*.json"
+  "src/engine/ocaml/README.md",
+  "src/engine/ocaml/CONTRACT.md",
+  "src/engine/ocaml/**/*.ml",
+  "src/engine/ocaml/**/*.mli",
+  "src/engine/ocaml/dune-project",
+  "src/engine/ocaml/lib/dune",
+  "src/engine/ocaml/bin/dune",
+  "src/engine/ocaml/test/fixtures/*.json"
 ]
 
 exclude = [
@@ -19,7 +19,7 @@ exclude = [
   "spec/**",
   "examples/**",
   "targets/**",
-  "engine/ocaml/_build/**",
+  "src/engine/ocaml/_build/**",
   "README.md",
   "ARCHITECTURE.md",
   "QUICKSTART.md"

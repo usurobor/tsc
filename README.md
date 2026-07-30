@@ -15,8 +15,8 @@ Read [`STATUS.md`](STATUS.md) before interpreting any score or report.
 |---|---|---|
 | [`spec/`](spec/README.md) | Typed articulation, coherence receipts, methodology lifecycle, observation dynamics, conformance | Canonical draft specification |
 | [`conformance/`](conformance/README.md) | Fixtures implementing specification requirement IDs | Evidence; no standing until verified |
-| [`engine/ocaml/`](engine/ocaml/README.md) | Current `coh` repository-proxy executable | Canonical executable of the proxy methodology, not v4 |
-| [`skills/`](skills/README.md) | Current self-measurement and CM-of-CMs declarations | Authority for existing proxy methodologies |
+| [`src/engine/ocaml/`](src/engine/ocaml/README.md) | Current `coh` repository-proxy executable | Canonical executable of the proxy methodology, not v4 |
+| [`src/skills/`](src/skills/README.md) | Current self-measurement and CM-of-CMs declarations | Authority for existing proxy methodologies |
 | [`katas/`](katas/README.md) | Regression inputs for the current proxy engine | Implementation regression only |
 | [`illustrations/`](illustrations/README.md) | Conceptual examples | Informative |
 | [`docs/`](docs/README.md) | Design, research, governance, and guides | Authority stated by each document |

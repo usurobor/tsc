@@ -67,6 +67,14 @@ data) are tooling/data, not repository content.
 - Established `research/` as the pre-normative plane; moved `ascent/` →
   `research/ascent/` (zero references — safe).
 - Established `docs/architecture/decisions/` (this ADR).
+- **Consolidated the executable planes under `src/`:** `engine/` → `src/engine/`,
+  `skills/` → `src/skills/` (branch `cycle/repo-planes-src`, **CI-gated**). All
+  live path references rewritten; frozen `.cdd/`, `docs/alpha/`, and CHANGELOG
+  history preserved. Fixed-depth breakages caught and repaired locally: the
+  `VERSION` build dep (`bin/dune`) and the kata-test path candidates. Verified
+  locally before hand-off to CI: `cue` schema vet, render byte-identity,
+  conformance validator, skill-frontmatter validator, dune structure parse. The
+  pinned OCaml 5.2 build + link (otoml/digestif/ezcurl) is CI's gate.
 
 **Deferred to CI-gated iterations (recorded, not loose ends):**
 
@@ -75,14 +83,9 @@ data) are tooling/data, not repository content.
   (`DESIGN.md` → `docs/architecture/decisions/`, `ARCHAEOLOGY.md` →
   `research/foundation/archaeology/`, `CUTOVER-RECEIPT.md` → `docs/evidence/`);
   `illustrations/` → `docs/concepts/illustrations/`. Safe (markdown + links).
-- **`src/` consolidation** — `engine/` and `skills/` under `src/`, `targets/`
-  folded into the engine, `katas/` to a tests plane, schemas co-located with
-  owners. This rewires 100s of references plus CI `working-directory`, dune,
-  opam, `cue`, the `.cdd` manifest, and the self-measure render byte-identity —
-  **none of which this environment can build-verify locally.** It must land as
-  one atomic change **gated by CI**, not pushed blind. Reference counts at time
-  of writing: `engine/ocaml` 118, `skills/` 106, `katas/` 53, `targets/` 44,
-  `runtime/SELF-MEASURE` 43, `schemas/` 35.
+- **Remaining `src/` moves** — `targets/` folded into the engine, `katas/` to a
+  tests plane, `runtime/SELF-MEASURE.md` co-located with its skill, schemas
+  co-located with owners. Each a further CI-gated change.
 
 ## Invariants any move commit must preserve
 
@@ -94,7 +97,7 @@ targets resolve; conformance validator exits 0
 
 ### TSC Foundation
 - Specification: `spec/` · Conformance: `conformance/foundation-v4/`
-- Implementation: `engine/ocaml/` (→ `src/engine/` when consolidated)
+- Implementation: `src/engine/ocaml/`
 - History: `research/foundation/` (archaeology, once moved)
 
 ### Articulation Ascent

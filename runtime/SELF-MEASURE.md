@@ -3,7 +3,7 @@
 > **Frozen repository-proxy methodology — not TSC v4.** This is the
 > v3.2.x repository-proxy scoring instruction. Its semantic contract is
 > the immutable v3.2.2 pin recorded in
-> [`engine/ocaml/CONTRACT.md`](../engine/ocaml/CONTRACT.md), not the live
+> [`src/engine/ocaml/CONTRACT.md`](../src/engine/ocaml/CONTRACT.md), not the live
 > `spec/` bodies. The three axes α, β, γ below are **this proxy's**
 > independent scalar coherence axes. They are **not** TSC v4's α/β/γ,
 > which the normative spec defines as non-substitutable,

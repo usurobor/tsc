@@ -11,7 +11,7 @@ The documentation tree follows the system in [`beta/governance/DOCUMENTATION-SYS
 | What does TSC 4.1 mean? | [`../spec/README.md`](../spec/README.md) |
 | What must a 4.1 implementation prove? | [`../spec/tsc-conformance.md`](../spec/tsc-conformance.md) |
 | Why did the foundation change? | [`design/foundation-contract-reconciliation/DESIGN.md`](design/foundation-contract-reconciliation/DESIGN.md) |
-| What is the current executable? | [`../engine/ocaml/CONTRACT.md`](../engine/ocaml/CONTRACT.md) |
+| What is the current executable? | [`../src/engine/ocaml/CONTRACT.md`](../src/engine/ocaml/CONTRACT.md) |
 | What is currently runnable? | [`../QUICKSTART.md`](../QUICKSTART.md) |
 
 ## Bundles

@@ -105,7 +105,7 @@
 
 **How to verify:**
 ```bash
-cd engine/ocaml
+cd src/engine/ocaml
 dune build
 LLM_API_KEY=<key> ./_build/default/bin/main.exe --target spec --mode llm | python3 -m json.tool | grep -E "discrepancy_symbol|coherence_link|aggregate_math|gauge_witness"
 ```

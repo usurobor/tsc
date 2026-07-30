@@ -48,7 +48,7 @@ discovery/cross-file checks into CUE.
 ## CI wiring
 
 The `skill-validate` job in `.github/workflows/ci.yml` runs the fixture
-self-test, validates every `skills/**/SKILL.md`, and re-renders the
+self-test, validates every `src/skills/**/SKILL.md`, and re-renders the
 self-measurement artifacts (`scripts/render-self-measure.sh --check`) to
 prove the committed rendered surfaces match the skill byte-for-byte.
 

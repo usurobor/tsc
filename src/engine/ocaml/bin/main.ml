@@ -14,12 +14,12 @@
       --target <name> --registry <path>    named target (any mode); repeatable
       --files <glob>  [--files <glob>...]  direct file input (mechanical / hybrid)
 
-    Self-measurement (skills/self-measure/SKILL.md):
+    Self-measurement (src/skills/self-measure/SKILL.md):
       coh self [...]           dispatches to the rendered [coh-self] command
                                (git-style external subcommand; the procedure
                                is declared by the skill, not by this binary)
 
-    Consistency protocol (skills/cm-of-cms/SKILL.md §3):
+    Consistency protocol (src/skills/cm-of-cms/SKILL.md §3):
       coh consistency-spread --target <t> <resp.json>... [--output <f>]
                                k-sample spread report (lib/consistency.ml)
       coh witness-medoid [--target <t>] <resp.json>...
@@ -27,7 +27,7 @@
                                with --target only funnel-valid samples are
                                candidates and zero valid samples exits 2
 
-    External provider route (skills/self-measure/SKILL.md §LLM contract):
+    External provider route (src/skills/self-measure/SKILL.md §LLM contract):
       --emit-prompt <path>     write the exact LLM prompt (instruction +
                                target metadata + file bundle) to <path> and
                                exit; no provider call is made
@@ -241,7 +241,7 @@ let () =
 (* `coh self` — git-style external-subcommand dispatch.
 
    The self-measurement procedure is declared by
-   skills/self-measure/SKILL.md and rendered into the [coh-self]
+   src/skills/self-measure/SKILL.md and rendered into the [coh-self]
    executable by scripts/render-self-measure.sh. The engine stays
    generic (measure any target); the skill owns what "self" means.
    Resolution order: sibling of this binary, then PATH. *)
@@ -259,7 +259,7 @@ let () =
        Printf.eprintf
          "coh self: cannot find 'coh-self' (sibling of %s or on PATH).\n\
           The self-measurement command is rendered from \
-          skills/self-measure/SKILL.md;\n\
+          src/skills/self-measure/SKILL.md;\n\
           run scripts/render-self-measure.sh and install scripts/coh-self \
           next to coh.\n"
          Sys.executable_name;
@@ -878,7 +878,7 @@ let validate_witness_or_exit ~args ~bundle ~ts ~raw_path raw_response =
 
 (** Obtain the raw LLM response plus (provider, model) labels.
 
-    Two routes (skills/self-measure/SKILL.md §LLM contract):
+    Two routes (src/skills/self-measure/SKILL.md §LLM contract):
     - HTTP route (default): engine calls the configured provider.
     - External route (--llm-response): the response was produced out of
       band (e.g. by the Claude CLI step of the rendered self-measurement

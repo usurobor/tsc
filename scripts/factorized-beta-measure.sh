@@ -61,7 +61,7 @@ esac
 resolve_coh() {
   if [ -n "${COH_BIN:-}" ]; then echo "$COH_BIN"; return; fi
   if command -v coh >/dev/null 2>&1; then echo "coh"; return; fi
-  local build="engine/ocaml/_build/default/bin/main.exe"
+  local build="src/engine/ocaml/_build/default/bin/main.exe"
   [ -x "$build" ] && { echo "$REPO_ROOT/$build"; return; }
   echo "factorized-beta-measure: no coh binary (set COH_BIN or dune build)" >&2
   exit 2

@@ -47,7 +47,7 @@ self_measure:
       max absolute pairwise difference over the response contract's
       numeric fields; delta_consistency maps through the barrier
       phi(delta) = delta/(1-delta) to Coh_consistency = exp(-phi)
-      (frozen v3.2.2 proxy barrier, engine/ocaml/CONTRACT.md; lambda = 1). Reported alongside (A/B
+      (frozen v3.2.2 proxy barrier, src/engine/ocaml/CONTRACT.md; lambda = 1). Reported alongside (A/B
       labeled, Issue D): the k-fair companion — MEAN absolute pairwise
       difference per field, max across fields, same barrier — under
       *_mean_pairwise names; max-pairwise stays the conservative
@@ -59,7 +59,7 @@ self_measure:
       medoid-of-k (v3.2.3): the adjudicated response is the FUNNEL-VALID
       sample with minimum total L1 distance to the other valid samples
       over the same numeric fields the spread is computed on
-      (coh witness-medoid --target, engine/ocaml/lib/witness_medoid.ml)
+      (coh witness-medoid --target, src/engine/ocaml/lib/witness_medoid.ml)
       — a real witness response, never first-sample order luck, never a
       sample the funnel refuses; zero valid samples withholds
       adjudication and records a no_valid_witness_samples artifact
@@ -67,7 +67,7 @@ self_measure:
       spread
     script: scripts/cm-consistency.sh
   mechanical:
-    backend: engine/ocaml/lib/mechanical_scoring.ml
+    backend: src/engine/ocaml/lib/mechanical_scoring.ml
     determinism: >-
       identical bundle + config -> identical result; no LLM, no network
       I/O, no semantic parsing of file contents
@@ -117,7 +117,7 @@ self_measure:
         output anything except the JSON object required by the scoring
         instruction's output contract
     validation: >-
-      engine/ocaml/lib/response_schema.ml (validate_witness_response) —
+      src/engine/ocaml/lib/response_schema.ml (validate_witness_response) —
       one funnel for every refusal stage: parse, base_schema,
       prohibited_fields (computed Coh/C_sigma), target_mismatch,
       v3_2_delta, checklist (v3.2.3 defect walk missing or malformed),
@@ -137,7 +137,7 @@ self_measure:
         ingests the response via --llm-response
     ci_prompt: |
       You are the LLM witness step of TSC self-measurement, rendered from
-      skills/self-measure/SKILL.md. Your entire task:
+      src/skills/self-measure/SKILL.md. Your entire task:
 
       1. Read the file .tsc/self/prompt/{target}.md. It contains the
          canonical scoring instruction (runtime/SELF-MEASURE.md) followed
@@ -176,7 +176,7 @@ self_measure:
 > **Frozen repository-proxy methodology — not TSC v4.** This skill
 > declares the CURRENT repository-proxy self-measurement methodology. Its
 > semantic contract is the immutable v3.2.2 pin recorded in
-> [`engine/ocaml/CONTRACT.md`](../../engine/ocaml/CONTRACT.md), not the
+> [`src/engine/ocaml/CONTRACT.md`](../../src/engine/ocaml/CONTRACT.md), not the
 > live `spec/` bodies. The symbols α, β, γ used below are this proxy's
 > three independent scalar coherence axes. They are **not** TSC v4's
 > α/β/γ, which the normative spec defines as non-substitutable,
@@ -192,7 +192,7 @@ draws the exact line between the parts a machine computes and the one part
 a model estimates.
 
 This is the **1st coherence methodology**: the tsc-repo CM applied to its
-own repo. (The 0th is the CM of CMs — `skills/cm-of-cms/SKILL.md`, the
+own repo. (The 0th is the CM of CMs — `src/skills/cm-of-cms/SKILL.md`, the
 methodology that measures methodologies, this one included; each
 methodology's corpus is measured as a closed system, so cross-methodology
 references are plain paths, not links.) The typed contract it satisfies —
@@ -234,14 +234,14 @@ Three named targets from [targets/registry.tsc](../../targets/registry.tsc):
 | Target | Kind | Corpus |
 |--------|------|--------|
 | `spec` | theory | `spec/**/*.md` — the canonical theory |
-| `engine` | implementation | `engine/ocaml/**` — the verifier |
+| `engine` | implementation | `src/engine/ocaml/**` — the verifier |
 | `repo` | aggregate | `spec` + `engine` + integration surfaces (README, ARCHITECTURE, targets, scoring instruction) |
 
 Each target is resolved into a deterministic bundle: ordered files, raw
 text, SHA-256 per file. Bundles are built the same way in every mode.
 A mechanical cross-target report (geometric mean over per-target
 aggregates, per the frozen v3.2.2 proxy contract in
-`engine/ocaml/CONTRACT.md`) covers all three.
+`src/engine/ocaml/CONTRACT.md`) covers all three.
 
 Reports land in `.tsc/self/`. Generated state is never canonical
 (ARCHITECTURE.md); the directory is gitignored.
@@ -254,16 +254,16 @@ One table. Everything TSC self-measurement does, and who does it.
 
 | # | Step | Owner | Where |
 |---|------|-------|-------|
-| 1 | Resolve targets, expand globs, order files | mechanical | [target_registry.ml](../../engine/ocaml/lib/target_registry.ml) |
-| 2 | Build bundle: raw text + SHA-256 hashes | mechanical | [bundle.ml](../../engine/ocaml/lib/bundle.ml) |
-| 3 | Score 12 structural signals per axis | mechanical | [mechanical_scoring.ml](../../engine/ocaml/lib/mechanical_scoring.ml) |
-| 4 | Assemble the LLM prompt (instruction + metadata + bundle) | mechanical | [prompt.ml](../../engine/ocaml/lib/prompt.ml) |
+| 1 | Resolve targets, expand globs, order files | mechanical | [target_registry.ml](../../src/engine/ocaml/lib/target_registry.ml) |
+| 2 | Build bundle: raw text + SHA-256 hashes | mechanical | [bundle.ml](../../src/engine/ocaml/lib/bundle.ml) |
+| 3 | Score 12 structural signals per axis | mechanical | [mechanical_scoring.ml](../../src/engine/ocaml/lib/mechanical_scoring.ml) |
+| 4 | Assemble the LLM prompt (instruction + metadata + bundle) | mechanical | [prompt.ml](../../src/engine/ocaml/lib/prompt.ml) |
 | 5 | **Estimate δ per axis pair + component scores + cite evidence** | **LLM** | [runtime/SELF-MEASURE.md](../../runtime/SELF-MEASURE.md) |
-| 6 | Validate the LLM response (strict v3.2 delta contract) | mechanical | [response_schema.ml](../../engine/ocaml/lib/response_schema.ml) |
-| 7 | Barrier transform φ(δ) = δ/(1−δ), Coh = exp(−λ·φ(δ)) | mechanical | [coherence.ml](../../engine/ocaml/lib/coherence.ml) |
-| 8 | Aggregate C_Σ^math / C_Σ^num (geometric forms, ε-floor) | mechanical | [coherence.ml](../../engine/ocaml/lib/coherence.ml) |
-| 9 | Bottleneck rule, provenance, report emission | mechanical | [report.ml](../../engine/ocaml/lib/report.ml), [hybrid_scoring.ml](../../engine/ocaml/lib/hybrid_scoring.ml) |
-| 10 | Cross-target aggregate | mechanical | [cross_target.ml](../../engine/ocaml/lib/cross_target.ml) |
+| 6 | Validate the LLM response (strict v3.2 delta contract) | mechanical | [response_schema.ml](../../src/engine/ocaml/lib/response_schema.ml) |
+| 7 | Barrier transform φ(δ) = δ/(1−δ), Coh = exp(−λ·φ(δ)) | mechanical | [coherence.ml](../../src/engine/ocaml/lib/coherence.ml) |
+| 8 | Aggregate C_Σ^math / C_Σ^num (geometric forms, ε-floor) | mechanical | [coherence.ml](../../src/engine/ocaml/lib/coherence.ml) |
+| 9 | Bottleneck rule, provenance, report emission | mechanical | [report.ml](../../src/engine/ocaml/lib/report.ml), [hybrid_scoring.ml](../../src/engine/ocaml/lib/hybrid_scoring.ml) |
+| 10 | Cross-target aggregate | mechanical | [cross_target.ml](../../src/engine/ocaml/lib/cross_target.ml) |
 | 11 | CI gating, artifact upload, summaries | mechanical | [rendered workflow](../../.github/workflows/tsc-self-measure.yml) |
 
 Step 5 is the only cognitive step. In `mechanical` mode it is skipped
@@ -313,12 +313,12 @@ Twelve signals, four per axis:
 
 Each signal carries its evidence into the report. Axis scores feed the
 canonical aggregate (frozen v3.2.2 proxy contract,
-`engine/ocaml/CONTRACT.md`): C_Σ^math is the strict
+`src/engine/ocaml/CONTRACT.md`): C_Σ^math is the strict
 geometric mean (zero if any axis is zero), C_Σ^num the ε-floored numerical
 form (ε = 10⁻⁵) that carries verdicts. No flat aggregate field exists;
 readers consult `provenance.aggregate_numeric.C_sigma_num`.
 
-Guarantee (from [mechanical_scoring.mli](../../engine/ocaml/lib/mechanical_scoring.mli)):
+Guarantee (from [mechanical_scoring.mli](../../src/engine/ocaml/lib/mechanical_scoring.mli)):
 identical bundle + config → identical result. No LLM, no network, no
 semantic parsing. Mechanical scores are structural proxies — well-written
 prose can outrun them (kata 04 documents that ceiling; kata 05 pins the
@@ -335,7 +335,7 @@ instruction `runtime/SELF-MEASURE.md` + the hashed bundle), estimate
 
 - `delta_alpha_beta`, `delta_beta_gamma`, `delta_gamma_alpha` — normalized
   discrepancy δ ∈ [0,1] per axis pair (frozen v3.2.2 proxy contract,
-  `engine/ocaml/CONTRACT.md`),
+  `src/engine/ocaml/CONTRACT.md`),
 - `alpha`, `beta`, `gamma` — component scores s_α, s_β, s_γ ∈ [0,1],
 - `bottleneck_axis`, `confidence`, `summary`,
 - `axis_evidence` — strongest positive and negative evidence per axis,
@@ -360,7 +360,7 @@ The model must not:
 - **produce anything beyond the JSON** — no prose, no fences.
 
 Validation is unconditional and single-funneled
-([response_schema.ml](../../engine/ocaml/lib/response_schema.ml),
+([response_schema.ml](../../src/engine/ocaml/lib/response_schema.ml),
 `validate_witness_response`). Every way a response
 can fail is classified into a stage — `parse` (prose, fenced JSON,
 malformed text), `base_schema` (missing/mistyped contract fields),
@@ -434,8 +434,8 @@ coh-self --ingest spec
 
 In CI (`tsc-self-measure.yml`):
 
-- **mechanical job** — always runs on changes to `spec/`, `engine/ocaml/`,
-  `targets/`, `runtime/`, `skills/`. No secrets, no gate.
+- **mechanical job** — always runs on changes to `spec/`, `src/engine/ocaml/`,
+  `targets/`, `runtime/`, `src/skills/`. No secrets, no gate.
 - **llm-witness job** — gated by the presence of the
   `CLAUDE_CODE_OAUTH_TOKEN` secret; there is no separate toggle to drift
   out of sync with it. Secret present → the witness runs; absent → the

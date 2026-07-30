@@ -350,7 +350,7 @@ let validate_v32_deltas json =
 
 (** Every way a witness (LLM) response can be refused, as one classification
     so callers write one validation-failure artifact shape for all stages
-    (skills/self-measure/SKILL.md §4: "a refused witness is a recorded fact").
+    (src/skills/self-measure/SKILL.md §4: "a refused witness is a recorded fact").
 
     Stages, in checking order:
     - [`Parse]             raw text is not a JSON object (includes fenced

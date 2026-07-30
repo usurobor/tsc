@@ -1,6 +1,6 @@
 (** OCaml test scaffolding for hybrid scoring — AC4, AC5, AC6.
 
-    Tests run via: opam exec -- dune runtest engine/ocaml/test/
+    Tests run via: opam exec -- dune runtest src/engine/ocaml/test/
 
     Covered:
     AC4 — Bundle parity: direct-file and named-target paths produce Bundle.t with

@@ -1,5 +1,5 @@
 # DO NOT EDIT. Rendered by `scripts/render-self-measure.sh` from:
-#   source: skills/self-measure/SKILL.md
+#   source: src/skills/self-measure/SKILL.md
 # Schema:  tsc.self-measure.v1 (schemas/skill.cue #SelfMeasure)
 #
 # Authority split: the skill owns the measurement contract (targets,
@@ -13,10 +13,10 @@ on:
   pull_request:
     paths:
       - 'spec/**'
-      - 'engine/ocaml/**'
+      - 'src/engine/ocaml/**'
       - 'targets/**'
       - 'runtime/**'
-      - 'skills/**'
+      - 'src/skills/**'
   # Measure on every branch: a measurement surface that only reads main
   # never sees the work while it can still be repaired. Firing on this
   # workflow's own file makes installation itself the first measurement
@@ -26,10 +26,10 @@ on:
       - '**'
     paths:
       - 'spec/**'
-      - 'engine/ocaml/**'
+      - 'src/engine/ocaml/**'
       - 'targets/**'
       - 'runtime/**'
-      - 'skills/**'
+      - 'src/skills/**'
       - '.github/workflows/tsc-self-measure.yml'
   workflow_dispatch:
 
@@ -38,7 +38,7 @@ permissions:
 
 jobs:
   # Fully mechanical: deterministic structural scoring. No credentials,
-  # no gate, no LLM. skills/self-measure/SKILL.md section 3.
+  # no gate, no LLM. src/skills/self-measure/SKILL.md section 3.
   mechanical:
     runs-on: ubuntu-22.04
     steps:
@@ -55,17 +55,17 @@ jobs:
           ocaml-compiler: "5.2"
 
       - name: Install dependencies
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam install . --deps-only -y
 
       - name: Build engine
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam exec -- dune build
 
       - name: Self-measure (mechanical, all targets + cross-target)
         run: |
-          export PATH="$PWD/engine/ocaml/_build/default/bin:$PATH"
-          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+          export PATH="$PWD/src/engine/ocaml/_build/default/bin:$PATH"
+          COH_BIN="$PWD/src/engine/ocaml/_build/default/bin/main.exe" \
             scripts/coh-self --mode mechanical --output .tsc/self
 
       - name: Summary
@@ -98,7 +98,7 @@ jobs:
   # secret — no separate toggle to drift out of sync with it. Secrets
   # cannot appear in job-level `if:` conditions, so a one-step job
   # projects presence into an output. Its log states the decision either
-  # way (skills/self-measure/SKILL.md section 6).
+  # way (src/skills/self-measure/SKILL.md section 6).
   witness-gate:
     runs-on: ubuntu-22.04
     outputs:
@@ -121,7 +121,7 @@ jobs:
   # the Claude CLI when the credential exists. The engine emits the exact
   # prompt, the model estimates deltas/components/evidence, the engine
   # validates and renders the hybrid report.
-  # skills/self-measure/SKILL.md sections 4-5.
+  # src/skills/self-measure/SKILL.md sections 4-5.
   llm-witness:
     needs: witness-gate
     if: ${{ needs.witness-gate.outputs.enabled == 'true' }}
@@ -144,16 +144,16 @@ jobs:
           ocaml-compiler: "5.2"
 
       - name: Install dependencies
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam install . --deps-only -y
 
       - name: Build engine
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam exec -- dune build
 
       - name: Emit witness prompt (deterministic)
         run: |
-          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+          COH_BIN="$PWD/src/engine/ocaml/_build/default/bin/main.exe" \
             scripts/coh-self --emit-prompt ${{ matrix.target }} --output .tsc/self
 
       - name: Estimate deltas and evidence (LLM witness — Claude CLI, k=3 samples)
@@ -187,7 +187,7 @@ jobs:
           SETTINGS
           cat > "$RUNNER_TEMP/witness-prompt.md" <<'WITNESS_PROMPT'
           You are the LLM witness step of TSC self-measurement, rendered from
-          skills/self-measure/SKILL.md. Your entire task:
+          src/skills/self-measure/SKILL.md. Your entire task:
 
           1. Read the file .tsc/self/prompt/${{ matrix.target }}.md. It contains the
              canonical scoring instruction (runtime/SELF-MEASURE.md) followed
@@ -226,7 +226,7 @@ jobs:
           # consistency step records the explicit no-valid-samples artifact
           # (expected witness invalidity is DATA, not a pipeline failure).
           if ls "$BASE".r*.json >/dev/null 2>&1; then
-            if elected="$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid --target "$T" "$BASE".r*.json)"; then
+            if elected="$("$PWD/src/engine/ocaml/_build/default/bin/main.exe" witness-medoid --target "$T" "$BASE".r*.json)"; then
               cp "$elected" "$RESP"
             else
               echo "witness-medoid: no funnel-valid sample for $T — adjudication withheld"
@@ -244,7 +244,7 @@ jobs:
           # failure: skip green; the consistency step records the
           # no-valid-samples artifact and failed standing.
           if [ -f ".tsc/self/response/${{ matrix.target }}.json" ]; then
-            COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \
+            COH_BIN="$PWD/src/engine/ocaml/_build/default/bin/main.exe" \
               scripts/coh-self --ingest ${{ matrix.target }} --output .tsc/self
           else
             echo "no funnel-valid witness samples — ingest skipped"
@@ -260,7 +260,7 @@ jobs:
         run: |
           T="${{ matrix.target }}"
           BASE=".tsc/self/response/$T"
-          COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+          COH="$PWD/src/engine/ocaml/_build/default/bin/main.exe"
           valid=""
           for r in "$BASE".r*.json; do
             [ -f "$r" ] || continue

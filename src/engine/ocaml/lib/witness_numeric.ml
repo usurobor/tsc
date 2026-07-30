@@ -2,8 +2,8 @@
 
     The seven numeric fields of the witness response contract — the
     fields the consistency protocol spreads over and the medoid
-    election measures distance on (skills/cm-of-cms/SKILL.md §3;
-    skills/self-measure/SKILL.md consistency block). One source of
+    election measures distance on (src/skills/cm-of-cms/SKILL.md §3;
+    src/skills/self-measure/SKILL.md consistency block). One source of
     truth: the spread report and the medoid both consume this module.
 
     Pure module — the only I/O is [of_json_file] reading one file. *)

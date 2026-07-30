@@ -4,8 +4,8 @@ kind = "aggregate"
 description = "The 1st coherence methodology as a measurable corpus: the self-measurement declaration, its schema, validators, renderer, rendered surfaces, scoring instruction, corpus declarations, and the engine modules its pipeline names."
 
 include = [
-  "skills/README.md",
-  "skills/self-measure/**",
+  "src/skills/README.md",
+  "src/skills/self-measure/**",
   "schemas/skill.cue",
   "schemas/README.md",
   "scripts/render-self-measure.sh",
@@ -20,16 +20,16 @@ include = [
   "targets/spec.tsc",
   "targets/engine.tsc",
   "targets/repo.tsc",
-  "engine/ocaml/lib/target_registry.ml",
-  "engine/ocaml/lib/bundle.ml",
-  "engine/ocaml/lib/mechanical_scoring.ml",
-  "engine/ocaml/lib/mechanical_scoring.mli",
-  "engine/ocaml/lib/prompt.ml",
-  "engine/ocaml/lib/response_schema.ml",
-  "engine/ocaml/lib/coherence.ml",
-  "engine/ocaml/lib/report.ml",
-  "engine/ocaml/lib/hybrid_scoring.ml",
-  "engine/ocaml/lib/cross_target.ml"
+  "src/engine/ocaml/lib/target_registry.ml",
+  "src/engine/ocaml/lib/bundle.ml",
+  "src/engine/ocaml/lib/mechanical_scoring.ml",
+  "src/engine/ocaml/lib/mechanical_scoring.mli",
+  "src/engine/ocaml/lib/prompt.ml",
+  "src/engine/ocaml/lib/response_schema.ml",
+  "src/engine/ocaml/lib/coherence.ml",
+  "src/engine/ocaml/lib/report.ml",
+  "src/engine/ocaml/lib/hybrid_scoring.ml",
+  "src/engine/ocaml/lib/cross_target.ml"
 ]
 
 exclude = [

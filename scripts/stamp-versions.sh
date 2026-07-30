@@ -2,8 +2,8 @@
 # stamp-versions.sh — Rewrite version-stamped files from the VERSION file.
 #
 # For tsc, the stamped files are:
-#   - engine/ocaml/dune-project  (opam metadata, not used at build time)
-#   - engine/ocaml/tsc_engine.opam (generated, but we keep it in sync)
+#   - src/engine/ocaml/dune-project  (opam metadata, not used at build time)
+#   - src/engine/ocaml/tsc_engine.opam (generated, but we keep it in sync)
 #
 # The binary reads version from VERSION via a dune build rule
 # (build_version.ml), so no code files need stamping.
@@ -28,7 +28,7 @@ echo "Stamping version $VERSION into manifests..."
 
 # 1. dune-project — top-level (version X.Y.Z)
 #    Only match lines starting with '(' (not indented inside (package ...))
-DUNE_PROJECT="$REPO_ROOT/engine/ocaml/dune-project"
+DUNE_PROJECT="$REPO_ROOT/src/engine/ocaml/dune-project"
 if [ -f "$DUNE_PROJECT" ]; then
   if grep -q '^(version ' "$DUNE_PROJECT"; then
     OLD=$(grep '^(version ' "$DUNE_PROJECT" | head -1 | sed 's/(version \(.*\))/\1/')
@@ -42,7 +42,7 @@ if [ -f "$DUNE_PROJECT" ]; then
 fi
 
 # 2. tsc_engine.opam — version: "X.Y.Z" (may or may not be present)
-OPAM="$REPO_ROOT/engine/ocaml/tsc_engine.opam"
+OPAM="$REPO_ROOT/src/engine/ocaml/tsc_engine.opam"
 if [ -f "$OPAM" ]; then
   if grep -q '^version:' "$OPAM"; then
     sed -i "s/^version: .*/version: \"$VERSION\"/" "$OPAM"

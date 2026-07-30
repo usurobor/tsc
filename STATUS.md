@@ -17,7 +17,7 @@ The 4.1 specification is not normative until the ratification gate in `spec/tsc-
 
 ## Current engine
 
-`engine/ocaml/` is the canonical executable of the existing repository-proxy methodology.
+`src/engine/ocaml/` is the canonical executable of the existing repository-proxy methodology.
 
 It implements the v3.2-era scoring and witness contract. It does **not** implement TSC v4 Core, Operational, or Conformance.
 

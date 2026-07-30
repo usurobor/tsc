@@ -12,7 +12,7 @@ Current targets:
 
 - `spec` — theory surface
 - `engine` — current repository-proxy implementation surface (includes
-  `engine/ocaml/CONTRACT.md`, the immutable v3.2.2 semantic pin)
+  `src/engine/ocaml/CONTRACT.md`, the immutable v3.2.2 semantic pin)
 - `repo` — aggregate repository surface, spanning theory, implementation,
   and integration (status, conformance fixtures, schemas, illustrations)
 - `methodology` — the 1st coherence methodology (self-measurement) as a

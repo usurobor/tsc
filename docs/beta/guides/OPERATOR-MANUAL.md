@@ -4,7 +4,7 @@
 
 > **Frozen repository-proxy methodology — not TSC v4.** The engine's
 > semantic contract is the immutable v3.2.2 pin recorded in
-> [`engine/ocaml/CONTRACT.md`](../../../engine/ocaml/CONTRACT.md), not the
+> [`src/engine/ocaml/CONTRACT.md`](../../../src/engine/ocaml/CONTRACT.md), not the
 > live `spec/` bodies. Where this manual names α, β, γ, they are the
 > repository proxy's three independent scalar coherence axes — **not**
 > TSC v4's α/β/γ, which the normative spec defines as non-substitutable,
@@ -75,7 +75,7 @@ Prerequisites: OCaml >= 4.14 (5.2 recommended), opam, libcurl (for ezcurl).
 
 ```bash
 opam switch create tsc 5.2.0
-cd engine/ocaml
+cd src/engine/ocaml
 opam install . --deps-only -y
 dune build
 ```
@@ -87,7 +87,7 @@ make setup
 make build
 ```
 
-The binary is `engine/ocaml/_build/default/bin/main.exe`.
+The binary is `src/engine/ocaml/_build/default/bin/main.exe`.
 
 ---
 
@@ -110,7 +110,7 @@ semantic paths.
 In CI, the rendered self-measurement workflow uses no raw API key: the
 witness runs via the Claude CLI, gated by the presence of the
 `CLAUDE_CODE_OAUTH_TOKEN` secret (see
-[skills/self-measure/SKILL.md](../../../skills/self-measure/SKILL.md) §5–6).
+[src/skills/self-measure/SKILL.md](../../../src/skills/self-measure/SKILL.md) §5–6).
 
 ### Optional variables
 
@@ -182,7 +182,7 @@ Exactly one input selector is required: `--target`, `--files`, or
 
 `coh self` measures this repository against its own targets. The engine
 dispatches it (git-style external subcommand) to the `coh-self` command,
-which is rendered from [skills/self-measure/SKILL.md](../../../skills/self-measure/SKILL.md) —
+which is rendered from [src/skills/self-measure/SKILL.md](../../../src/skills/self-measure/SKILL.md) —
 read that skill for the full procedure, including exactly which steps are
 mechanical and which single step is delegated to an LLM.
 
@@ -198,7 +198,7 @@ coh-self --ingest spec       # validate + ingest a witness response
 | Target | Kind | What it measures |
 |--------|------|------------------|
 | `spec` | theory | Canonical theory surface (`spec/**/*.md`) |
-| `engine` | implementation | OCaml engine (`engine/ocaml/**/*.ml`, build files) |
+| `engine` | implementation | OCaml engine (`src/engine/ocaml/**/*.ml`, build files) |
 | `repo` | aggregate | Full repository: includes `spec` + `engine` targets plus integration surfaces |
 | `methodology` | aggregate | The self-measurement methodology as a corpus: skill declaration, schema, validators, renderer, rendered surfaces, scoring instruction |
 | `cm-of-cms` | aggregate | The 0th coherence methodology as a corpus: CM-of-CMs declaration, comparable schema, instruments, calibration-commons contract |
@@ -278,9 +278,9 @@ The `ci` workflow (`.github/workflows/ci.yml`) runs on every push to main and ev
 ### Self-measurement
 
 The `tsc-self-measure` workflow (`.github/workflows/tsc-self-measure.yml`,
-rendered from `skills/self-measure/SKILL.md` — edit the skill, never the
-YAML) runs on any branch push or PR touching `spec/`, `engine/ocaml/`,
-`targets/`, `runtime/`, or `skills/`:
+rendered from `src/skills/self-measure/SKILL.md` — edit the skill, never the
+YAML) runs on any branch push or PR touching `spec/`, `src/engine/ocaml/`,
+`targets/`, `runtime/`, or `src/skills/`:
 
 - **mechanical job** — always on; no secrets, no gate. Measures every
   target deterministically and uploads the reports.

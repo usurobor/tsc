@@ -1,6 +1,6 @@
 (** Tests for AC1–AC4 (coherence math) and AC7 (OOD cutover guard).
 
-    Run via: opam exec -- dune runtest engine/ocaml/test/
+    Run via: opam exec -- dune runtest src/engine/ocaml/test/
 
     AC1 — Barrier transform: coh(0,1)=1, coh(1,1)=0, coh(0.5,1)=exp(-1), monotone.
     AC2 — L_link case-split: both branches, continuity at lambda=2.

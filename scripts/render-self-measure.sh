@@ -2,7 +2,7 @@
 # scripts/render-self-measure.sh — render the self-measurement skill into
 # its substrate artifacts.
 #
-# Consumes skills/self-measure/SKILL.md (frontmatter `self_measure:` block,
+# Consumes src/skills/self-measure/SKILL.md (frontmatter `self_measure:` block,
 # validated by schemas/skill.cue #SelfMeasure) and materializes THREE
 # artifacts, each carrying a DO-NOT-EDIT header:
 #
@@ -37,7 +37,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-SKILL="${REPO_ROOT}/skills/self-measure/SKILL.md"
+SKILL="${REPO_ROOT}/src/skills/self-measure/SKILL.md"
 
 command -v python3 >/dev/null 2>&1 || { echo "render-self-measure: python3 missing" >&2; exit 2; }
 python3 -c 'import yaml' 2>/dev/null || { echo "render-self-measure: python3 yaml module missing" >&2; exit 2; }
@@ -96,7 +96,7 @@ if not targets:
 
 header = (
     "# DO NOT EDIT. Rendered by `scripts/render-self-measure.sh` from:\n"
-    "#   source: skills/self-measure/SKILL.md\n"
+    "#   source: src/skills/self-measure/SKILL.md\n"
     "# Schema:  tsc.self-measure.v1 (schemas/skill.cue #SelfMeasure)\n"
     "#\n"
     "# Authority split: the skill owns the measurement contract (targets,\n"
@@ -126,7 +126,7 @@ coh_self = f"""#!/bin/sh
 # produced it). --require-llm forces the semantic path: it refuses to run
 # at all when no LLM credentials are configured, instead of degrading to
 # mechanical. --emit-prompt / --ingest are the two deterministic halves of
-# the external witness route (skills/self-measure/SKILL.md section 5).
+# the external witness route (src/skills/self-measure/SKILL.md section 5).
 set -eu
 
 TARGETS="{targets_sp}"
@@ -176,7 +176,7 @@ resolve_coh() {{
   self_dir=$(dirname "$0")
   if [ -x "$self_dir/coh" ]; then echo "$self_dir/coh"; return; fi
   if command -v coh >/dev/null 2>&1; then echo "coh"; return; fi
-  build="$ROOT/engine/ocaml/_build/default/bin/main.exe"
+  build="$ROOT/src/engine/ocaml/_build/default/bin/main.exe"
   if [ -x "$build" ]; then echo "$build"; return; fi
   echo "{command}: cannot find the coh engine binary (set COH_BIN, install coh, or dune build)" >&2
   exit 2
@@ -250,9 +250,9 @@ CLAUDE_CLI_VERSION = "2.1.199"
 witness_resp = output_root + "/response/${{ matrix.target }}.json"
 
 # The LLM-consistency standing floor is doctrine owned by the 0th
-# methodology (skills/cm-of-cms/SKILL.md, standing block) — read, never
+# methodology (src/skills/cm-of-cms/SKILL.md, standing block) — read, never
 # assumed.
-with open(os.path.join(repo_root, "skills/cm-of-cms/SKILL.md")) as f:
+with open(os.path.join(repo_root, "src/skills/cm-of-cms/SKILL.md")) as f:
     cm0 = yaml.safe_load(f.read().split("---\n", 2)[1])
 llm_consistency_floor = cm0["cm_of_cms"]["standing"]["llm_consistency_floor"]
 
@@ -275,7 +275,7 @@ def consistency_standing_run(t_expr, declared_k):
     ind = "          "
     return f"""{ind}T="{t_expr}"
 {ind}BASE="{output_root}/response/$T"
-{ind}COH="$PWD/engine/ocaml/_build/default/bin/main.exe"
+{ind}COH="$PWD/src/engine/ocaml/_build/default/bin/main.exe"
 {ind}valid=""
 {ind}for r in "$BASE".r*.json; do
 {ind}  [ -f "$r" ] || continue
@@ -376,7 +376,7 @@ def cli_witness_run(prompt_text, k=1, resp=None):
 {ind}# consistency step records the explicit no-valid-samples artifact
 {ind}# (expected witness invalidity is DATA, not a pipeline failure).
 {ind}if ls "$BASE".r*.json >/dev/null 2>&1; then
-{ind}  if elected="$("$PWD/engine/ocaml/_build/default/bin/main.exe" witness-medoid --target "$T" "$BASE".r*.json)"; then
+{ind}  if elected="$("$PWD/src/engine/ocaml/_build/default/bin/main.exe" witness-medoid --target "$T" "$BASE".r*.json)"; then
 {ind}    cp "$elected" "$RESP"
 {ind}  else
 {ind}    echo "witness-medoid: no funnel-valid sample for $T — adjudication withheld"
@@ -436,11 +436,11 @@ build_steps = """      - uses: actions/checkout@v4
           ocaml-compiler: "5.2"
 
       - name: Install dependencies
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam install . --deps-only -y
 
       - name: Build engine
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam exec -- dune build"""
 
 workflow = f"""{header}
@@ -450,10 +450,10 @@ on:
   pull_request:
     paths:
       - 'spec/**'
-      - 'engine/ocaml/**'
+      - 'src/engine/ocaml/**'
       - 'targets/**'
       - 'runtime/**'
-      - 'skills/**'
+      - 'src/skills/**'
   # Measure on every branch: a measurement surface that only reads main
   # never sees the work while it can still be repaired. Firing on this
   # workflow's own file makes installation itself the first measurement
@@ -463,10 +463,10 @@ on:
       - '**'
     paths:
       - 'spec/**'
-      - 'engine/ocaml/**'
+      - 'src/engine/ocaml/**'
       - 'targets/**'
       - 'runtime/**'
-      - 'skills/**'
+      - 'src/skills/**'
       - '.github/workflows/tsc-self-measure.yml'
   workflow_dispatch:
 
@@ -475,7 +475,7 @@ permissions:
 
 jobs:
   # Fully mechanical: deterministic structural scoring. No credentials,
-  # no gate, no LLM. skills/self-measure/SKILL.md section 3.
+  # no gate, no LLM. src/skills/self-measure/SKILL.md section 3.
   mechanical:
     runs-on: ubuntu-22.04
     steps:
@@ -483,8 +483,8 @@ jobs:
 
       - name: Self-measure (mechanical, all targets + cross-target)
         run: |
-          export PATH="$PWD/engine/ocaml/_build/default/bin:$PATH"
-          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+          export PATH="$PWD/src/engine/ocaml/_build/default/bin:$PATH"
+          COH_BIN="$PWD/src/engine/ocaml/_build/default/bin/main.exe" \\
             {command_out} --mode mechanical --output {output_root}
 
       - name: Summary
@@ -517,7 +517,7 @@ jobs:
   # secret — no separate toggle to drift out of sync with it. Secrets
   # cannot appear in job-level `if:` conditions, so a one-step job
   # projects presence into an output. Its log states the decision either
-  # way (skills/self-measure/SKILL.md section 6).
+  # way (src/skills/self-measure/SKILL.md section 6).
   witness-gate:
     runs-on: ubuntu-22.04
     outputs:
@@ -540,7 +540,7 @@ jobs:
   # the Claude CLI when the credential exists. The engine emits the exact
   # prompt, the model estimates deltas/components/evidence, the engine
   # validates and renders the hybrid report.
-  # skills/self-measure/SKILL.md sections 4-5.
+  # src/skills/self-measure/SKILL.md sections 4-5.
   llm-witness:
     needs: witness-gate
     if: ${{{{ needs.witness-gate.outputs.enabled == 'true' }}}}
@@ -554,7 +554,7 @@ jobs:
 
       - name: Emit witness prompt (deterministic)
         run: |
-          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+          COH_BIN="$PWD/src/engine/ocaml/_build/default/bin/main.exe" \\
             {command_out} --emit-prompt ${{{{ matrix.target }}}} --output {output_root}
 
       - name: Estimate deltas and evidence (LLM witness — Claude CLI, k={measure_k} samples)
@@ -573,7 +573,7 @@ jobs:
           # failure: skip green; the consistency step records the
           # no-valid-samples artifact and failed standing.
           if [ -f "{output_root}/response/${{{{ matrix.target }}}}.json" ]; then
-            COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+            COH_BIN="$PWD/src/engine/ocaml/_build/default/bin/main.exe" \\
               {command_out} --ingest ${{{{ matrix.target }}}} --output {output_root}
           else
             echo "no funnel-valid witness samples — ingest skipped"
@@ -641,7 +641,7 @@ def ledger_witness_steps():
         blocks.append(f"""      - name: Emit witness prompt ({t})
         if: ${{{{ env.{llm_secret} != '' }}}}
         run: |
-          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+          COH_BIN="$PWD/src/engine/ocaml/_build/default/bin/main.exe" \\
             {command_out} --emit-prompt {t} --output {output_root}
 
       - name: Estimate deltas and evidence ({t} — Claude CLI witness, k={ledger_k} samples)
@@ -669,7 +669,7 @@ def ledger_witness_steps():
           # response means zero funnel-valid samples, recorded by the
           # consistency step — not a pipeline failure.
           if [ -f "{output_root}/response/{t}.json" ]; then
-            COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+            COH_BIN="$PWD/src/engine/ocaml/_build/default/bin/main.exe" \\
               {command_out} --ingest {t} --output {output_root}
           else
             echo "no funnel-valid witness samples — ingest skipped"
@@ -784,7 +784,7 @@ jobs:
           git config user.name  "tsc-coherence-ledger"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout "$branch"
-          COH_BIN="$PWD/engine/ocaml/_build/default/bin/main.exe" \\
+          COH_BIN="$PWD/src/engine/ocaml/_build/default/bin/main.exe" \\
             {ledger_script} append "$version"
           git add {ledger_path}
           git diff --cached --quiet && {{ echo "ledger unchanged"; exit 0; }}

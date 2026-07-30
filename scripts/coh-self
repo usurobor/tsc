@@ -1,6 +1,6 @@
 #!/bin/sh
 # DO NOT EDIT. Rendered by `scripts/render-self-measure.sh` from:
-#   source: skills/self-measure/SKILL.md
+#   source: src/skills/self-measure/SKILL.md
 # Schema:  tsc.self-measure.v1 (schemas/skill.cue #SelfMeasure)
 #
 # Authority split: the skill owns the measurement contract (targets,
@@ -22,7 +22,7 @@
 # produced it). --require-llm forces the semantic path: it refuses to run
 # at all when no LLM credentials are configured, instead of degrading to
 # mechanical. --emit-prompt / --ingest are the two deterministic halves of
-# the external witness route (skills/self-measure/SKILL.md section 5).
+# the external witness route (src/skills/self-measure/SKILL.md section 5).
 set -eu
 
 TARGETS="spec engine repo"
@@ -72,7 +72,7 @@ resolve_coh() {
   self_dir=$(dirname "$0")
   if [ -x "$self_dir/coh" ]; then echo "$self_dir/coh"; return; fi
   if command -v coh >/dev/null 2>&1; then echo "coh"; return; fi
-  build="$ROOT/engine/ocaml/_build/default/bin/main.exe"
+  build="$ROOT/src/engine/ocaml/_build/default/bin/main.exe"
   if [ -x "$build" ]; then echo "$build"; return; fi
   echo "coh-self: cannot find the coh engine binary (set COH_BIN, install coh, or dune build)" >&2
   exit 2

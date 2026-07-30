@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/cm-heldout.sh — commit-reveal held-out anchors for the 0th
-# coherence methodology (skills/cm-of-cms/SKILL.md §6, registration
+# coherence methodology (src/skills/cm-of-cms/SKILL.md §6, registration
 # protocol).
 #
 # What this buys, stated precisely: a held-out anchor whose commitment

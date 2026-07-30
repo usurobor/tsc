@@ -9,16 +9,16 @@ each tag's tree (its own `targets/registry.tsc`) with a single fixed
 engine — reproducible, hence comparable; a hybrid row is a semantic
 judgment and is not re-derivable bit-for-bit. The cross aggregate is the
 geometric mean of the per-target values (frozen v3.2 repository-proxy
-formula, `engine/ocaml/CONTRACT.md` — not v4 `spec/tsc-oper.md` §7, which
+formula, `src/engine/ocaml/CONTRACT.md` — not v4 `spec/tsc-oper.md` §7, which
 is now the refusal contract).
 
 A hybrid row also records the consistency protocol's verdict on itself
-(skills/cm-of-cms/SKILL.md §3): how many validated witness samples the
+(src/skills/cm-of-cms/SKILL.md §3): how many validated witness samples the
 row rests on, the worst per-target Coh_consistency of the k-sample
 spread, and the standing that reading carries. A row whose Samples
 column is 1 is a single-sample semantic reading and carries NO standing,
 whatever its scores. Mechanical rows have no semantic samples ("-").
-Contract: skills/self-measure/SKILL.md §6.
+Contract: src/skills/self-measure/SKILL.md §6.
 
 | Release | Date | spec C | engine C | repo C | cross C_Σ | Mode | Samples | min Coh_cons | Standing | Instrument |
 |---------|------|--------|----------|--------|-----------|------|---------|--------------|----------|------------|

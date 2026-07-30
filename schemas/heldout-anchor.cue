@@ -5,7 +5,7 @@
 // any bound challenger registers; the sealed tarball carries them and
 // the reveal is verified against sha256. author_class is the standing
 // boundary: only an external author can promote standing past the
-// house (skills/cm-of-cms/SKILL.md section 6).
+// house (src/skills/cm-of-cms/SKILL.md section 6).
 
 package heldout
 

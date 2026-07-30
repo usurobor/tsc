@@ -28,7 +28,7 @@ self_measure:
     llm_repeats: 3
     llm_spread: max abs pairwise diff over numeric contract fields, barrier-mapped
   mechanical:
-    backend: engine/ocaml/lib/mechanical_scoring.ml
+    backend: src/engine/ocaml/lib/mechanical_scoring.ml
     determinism: fixture
     signals:
       alpha:

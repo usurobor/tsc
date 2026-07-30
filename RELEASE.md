@@ -34,7 +34,7 @@ repo actually runs under current, integrity-checked, and gate-enforced.
 
 ## Added
 
-- **factorized-β engine subsystem** (#74, #75): `engine/ocaml/lib/factorized_beta.{ml,mli}` and `factorized_beta_gate.{ml,mli}` — deterministic β-locus inventory, three enumerators on the real mechanical anchors, bounded local adjudication (`supports | contradicts | insufficient`), mechanical `β_factorized` aggregation, the pre-registered A0/A1/A2/A3 + B1/B2/B3 + C gate, and the B3 typed-fixture oracle; five `coh factorized-beta-*` CLI subcommands; witness-free tests pinning the full gate matrix.
+- **factorized-β engine subsystem** (#74, #75): `src/engine/ocaml/lib/factorized_beta.{ml,mli}` and `factorized_beta_gate.{ml,mli}` — deterministic β-locus inventory, three enumerators on the real mechanical anchors, bounded local adjudication (`supports | contradicts | insufficient`), mechanical `β_factorized` aggregation, the pre-registered A0/A1/A2/A3 + B1/B2/B3 + C gate, and the B3 typed-fixture oracle; five `coh factorized-beta-*` CLI subcommands; witness-free tests pinning the full gate matrix.
 - **`factorized-beta-measure.yml`** — a credentialed k=3 measurement harness (manual `workflow_dispatch`) over the five held-out targets that emits the terminal `PASS | FAIL | NO-DECISION`.
 - **CDD platform (cnos 3.82.0)** (#71): vendored `cnos.cdd` / `cnos.cds` / `cnos.handoff` skills under `.cdd/skills/` with a `MANIFEST.sha256` integrity manifest + `scripts/verify-skill-bundle.sh`; `cdd-artifact-validate` workflow and `scripts/validate-release-gate.sh`.
 - **Frozen factorized-β pre-registration** + B3 fixtures (#72): `docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md` (rev 4, with the recorded FAIL result) and `factorized-beta-controls.json`.

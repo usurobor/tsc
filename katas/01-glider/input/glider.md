@@ -18,7 +18,7 @@ diagonally with period 4. The glider is the simplest non-trivial moving pattern.
 of the three axis scores: `C_Σ = (α · β · γ)^(1/3)`. See TSC spec §tsc-core.md.
 
 **Mechanical mode**: deterministic structural-proxy scoring. No LLM calls required.
-Identical input → identical output. See `engine/ocaml/lib/mechanical_scoring.ml`.
+Identical input → identical output. See `src/engine/ocaml/lib/mechanical_scoring.ml`.
 
 **Positive control**: an input designed to score high under C_Σ measurement.
 The glider is a positive control because it exhibits maximal structural regularity.
@@ -99,7 +99,7 @@ The glider exhibits maximal coherence under TSC mechanical scoring because:
    then as a reference. No synonyms, no drift.
 
 2. **Cross-reference consistency (β)**: the document references `kata-02` (negative control),
-   `engine/ocaml/lib/mechanical_scoring.ml` (implementation), and `spec/tsc-core.md` (theory).
+   `src/engine/ocaml/lib/mechanical_scoring.ml` (implementation), and `spec/tsc-core.md` (theory).
    These references are consistent: each named artifact has a single canonical path.
 
 3. **Version surface consistency (γ)**: this document carries no version number of its own,
@@ -139,7 +139,7 @@ coh --kata 01-glider --mode mechanical
 
 - `katas/README.md` — kata framework documentation and `kata.toml` schema
 - `katas/02-random-soup/` — negative control kata (low coherence, expected fail)
-- `engine/ocaml/lib/mechanical_scoring.ml` — mechanical scoring implementation
+- `src/engine/ocaml/lib/mechanical_scoring.ml` — mechanical scoring implementation
 - `spec/tsc-core.md` — TSC theory (α, β, γ axes and C_Σ definition)
 
 ## License

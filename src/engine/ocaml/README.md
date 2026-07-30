@@ -1,6 +1,6 @@
 # TSC Repository-Proxy Engine
 
-`engine/ocaml/` builds the `coh` binary for software release `0.12.0`.
+`src/engine/ocaml/` builds the `coh` binary for software release `0.12.0`.
 
 It is the canonical executable of the current repository-proxy methodology. It is **not** an implementation of TSC v4.
 

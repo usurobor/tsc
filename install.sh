@@ -154,7 +154,7 @@ TMPFILE=""  # prevent cleanup from removing installed binary
 ok "Installed to ${BIN_DIR}/${BINARY_NAME}"
 
 # --- Companion command: coh-self (self-measurement) ---
-# Rendered from skills/self-measure/SKILL.md; `coh self` dispatches to it.
+# Rendered from src/skills/self-measure/SKILL.md; `coh self` dispatches to it.
 # Pinned to the SAME release tag as the binary so the pair cannot skew —
 # a coh-self from a newer main could require engine flags the released
 # binary does not have. Best-effort: coh works without it for everything

@@ -1,6 +1,6 @@
 (** Tests for sub-issue #53 — cross-target report surface (Operational §7.4).
 
-    Run via: opam exec -- dune runtest engine/ocaml/test/
+    Run via: opam exec -- dune runtest src/engine/ocaml/test/
 
     AC2 — Each constituent target uses the existing mechanical scoring
           path. The cross-target [target_row] derived from a result

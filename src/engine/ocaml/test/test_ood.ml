@@ -1,6 +1,6 @@
 (** Tests for cycle/52 (#52) — OOD aggregate_semantics detector.
 
-    Run via: opam exec -- dune runtest engine/ocaml/test/
+    Run via: opam exec -- dune runtest src/engine/ocaml/test/
 
     AC1 — aggregate_semantics is required as a string field.
     AC2 — only "canonical-v3.2-geometric-num" is accepted.

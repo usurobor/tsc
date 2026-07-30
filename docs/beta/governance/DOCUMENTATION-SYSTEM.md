@@ -149,7 +149,7 @@ Within each axis:
 | Bundle | Axis | Canonical spec | Path |
 |--------|------|----------------|------|
 | doctrine | α | `spec/tsc-core.md` | `docs/alpha/doctrine/` |
-| engine | α | `engine/ocaml/` (implementation) | `docs/alpha/engine/` |
+| engine | α | `src/engine/ocaml/` (implementation) | `docs/alpha/engine/` |
 
 ---
 

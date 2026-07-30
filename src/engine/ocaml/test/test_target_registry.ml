@@ -1,6 +1,6 @@
 (** Tests for sub-issue #54 AC6 — target-registry smoke tests.
 
-    Run via: opam exec -- dune runtest engine/ocaml/test/
+    Run via: opam exec -- dune runtest src/engine/ocaml/test/
 
     AC6 invariant: the test suite proves the shipped target registry
     resolves the canonical targets to non-empty bundles.
@@ -20,7 +20,7 @@
          root/path semantics main.ml uses (prefix+suffix glob walk).
 
     The registry, manifest, and glob-expansion code lives in
-    [engine/ocaml/lib/target_registry.ml] + [engine/ocaml/bin/main.ml].
+    [src/engine/ocaml/lib/target_registry.ml] + [src/engine/ocaml/bin/main.ml].
     main.ml's glob helper is reproduced here verbatim so the test
     exercises the same semantics without depending on the binary
     target. *)
@@ -43,7 +43,7 @@ let check cond label =
 (* ------------------------------------------------------------------ *)
 (* Test fixtures — resolved relative to repo root.
 
-   When dune runs the test, the cwd may be _build/default/engine/ocaml/test/.
+   When dune runs the test, the cwd may be _build/default/src/engine/ocaml/test/.
    Walk up from cwd to find the repo root (directory containing VERSION
    alongside targets/registry.tsc). This matches the dune-runtime
    convention used by other tests in this suite. *)

@@ -4,7 +4,7 @@
 # mechanical grounding check passes. Expected: ADMITTED at the public
 # gate. This attacker is NOT closed by code anywhere in the edifice:
 # evidence that exists but misleads is caught only by adjudication
-# (skills/cm-of-cms/SKILL.md section 6, dispute layer) — an
+# (src/skills/cm-of-cms/SKILL.md section 6, dispute layer) — an
 # institution, not a script. Its presence in the suite keeps that
 # dependency measured instead of forgotten.
 import json, os, subprocess, sys, tempfile, glob as g
@@ -12,7 +12,7 @@ out = tempfile.mkdtemp()
 args = []
 for f in sys.argv[1:]:
     args += ["--files", f]
-coh = os.environ.get("COH_BIN", "engine/ocaml/_build/default/bin/main.exe")
+coh = os.environ.get("COH_BIN", "src/engine/ocaml/_build/default/bin/main.exe")
 subprocess.run([coh, "--mode", "mechanical"] + args + ["--output", out],
                capture_output=True)
 d = json.load(open(g.glob(out + "/*.json")[0]))

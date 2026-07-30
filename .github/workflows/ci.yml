@@ -25,22 +25,22 @@ jobs:
           ocaml-compiler: "5.2"
 
       - name: Install dependencies
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam install . --deps-only --with-test -y
 
       - name: Build
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam exec -- dune build
 
       - name: Test
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam exec -- dune runtest
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: coh-linux-x64
-          path: engine/ocaml/_build/default/bin/main.exe
+          path: src/engine/ocaml/_build/default/bin/main.exe
           retention-days: 90
 
   linkcheck:
@@ -170,7 +170,7 @@ jobs:
     #     scoring instruction does not carry (declaration drift);
     #   - rendered artifacts (scripts/coh-self,
     #     .github/workflows/tsc-self-measure.yml) hand-edited or stale
-    #     relative to skills/self-measure/SKILL.md (render drift).
+    #     relative to src/skills/self-measure/SKILL.md (render drift).
     # Consumer: anyone reading a SKILL.md as the authority on behavior.
     runs-on: ubuntu-latest
     steps:
@@ -200,7 +200,7 @@ jobs:
     # default, so this credential-free smoke is the always-on proof of the
     # route, including its refusal path (invalid response => validation-
     # failure artifact, no report). Consumer: anyone touching
-    # engine/ocaml/bin/main.ml, scripts/coh-self, or the skill.
+    # src/engine/ocaml/bin/main.ml, scripts/coh-self, or the skill.
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -216,11 +216,11 @@ jobs:
           ocaml-compiler: "5.2"
 
       - name: Install dependencies
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam install . --deps-only -y
 
       - name: Build engine
-        working-directory: engine/ocaml
+        working-directory: src/engine/ocaml
         run: opam exec -- dune build
 
       - name: Self-measurement smoke (mechanical + external witness route)
@@ -232,7 +232,7 @@ jobs:
         # flatterer, path-gamer, boilerplate-gamer rejected;
         # basename-gamer and cherry-pick-assassin ADMITTED (the two
         # named residuals: held-out anchors and adjudication are their
-        # closures). skills/cm-of-cms/SKILL.md section 6.
+        # closures). src/skills/cm-of-cms/SKILL.md section 6.
         run: ./scripts/cm-admissibility.sh --self-test
 
       - name: Held-out anchor integrity (commitments vs reveals)

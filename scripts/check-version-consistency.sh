@@ -24,7 +24,7 @@ echo "Checking version consistency against VERSION=$VERSION"
 echo ""
 
 # 1. dune-project (version X.Y.Z)
-DUNE_PROJECT="$REPO_ROOT/engine/ocaml/dune-project"
+DUNE_PROJECT="$REPO_ROOT/src/engine/ocaml/dune-project"
 if [ -f "$DUNE_PROJECT" ] && grep -q '(version ' "$DUNE_PROJECT"; then
   DUNE_VER=$(grep '(version ' "$DUNE_PROJECT" | head -1 | sed 's/.*(version \(.*\))/\1/')
   check "$DUNE_PROJECT" "$DUNE_VER" "dune-project version"
@@ -33,7 +33,7 @@ else
 fi
 
 # 2. No hardcoded version in main.ml
-MAIN_ML="$REPO_ROOT/engine/ocaml/bin/main.ml"
+MAIN_ML="$REPO_ROOT/src/engine/ocaml/bin/main.ml"
 if grep -q 'let version = "' "$MAIN_ML" 2>/dev/null; then
   HARDCODED=$(grep 'let version = "' "$MAIN_ML" | head -1 | sed 's/.*"\(.*\)"/\1/')
   echo "FAIL: main.ml has hardcoded version '$HARDCODED' — should use Build_version.version"
@@ -43,7 +43,7 @@ else
 fi
 
 # 3. build_version rule reads VERSION (structural check)
-DUNE_BIN="$REPO_ROOT/engine/ocaml/bin/dune"
+DUNE_BIN="$REPO_ROOT/src/engine/ocaml/bin/dune"
 if grep -q 'build_version' "$DUNE_BIN" && grep -q 'VERSION' "$DUNE_BIN"; then
   echo "  ok: dune build rule reads VERSION file"
 else

@@ -64,7 +64,7 @@ dune fmt
 
 <!-- Complete this section if adding a new parser -->
 
-- [ ] Added parser module under `engine/ocaml/lib/parsers/`
+- [ ] Added parser module under `src/engine/ocaml/lib/parsers/`
 - [ ] Implemented both predicate (`is_X`) and parser function
 - [ ] Registered in the parsers dispatch module
 - [ ] Added example file in `examples/`

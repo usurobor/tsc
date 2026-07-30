@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # scripts/ci/self-measure-smoke.sh — end-to-end smoke for the
-# self-measurement surfaces declared by skills/self-measure/SKILL.md.
+# self-measurement surfaces declared by src/skills/self-measure/SKILL.md.
 #
 # Failure class this guards: the rendered command or the external witness
 # route (emit-prompt -> witness response -> ingest) regressing silently.
 # The LLM CI job is gated off by default, so without this smoke the
 # external route has no always-on proof. Consumer: CI (ci.yml
-# self-measure-smoke job) and anyone touching engine/ocaml/bin/main.ml,
+# self-measure-smoke job) and anyone touching src/engine/ocaml/bin/main.ml,
 # scripts/coh-self, or the skill.
 #
 # Proves, with a built engine and no credentials:
@@ -17,14 +17,14 @@
 #      artifact, no report) — negative space is mandatory
 #
 # Usage: scripts/ci/self-measure-smoke.sh [path-to-coh-binary]
-#   Default binary: engine/ocaml/_build/default/bin/main.exe
+#   Default binary: src/engine/ocaml/_build/default/bin/main.exe
 
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$REPO_ROOT"
 
-COH="${1:-engine/ocaml/_build/default/bin/main.exe}"
+COH="${1:-src/engine/ocaml/_build/default/bin/main.exe}"
 [[ -x "$COH" ]] || { echo "self-measure-smoke: engine binary not found at $COH" >&2; exit 2; }
 export COH_BIN="$REPO_ROOT/$COH"
 [[ -x "$COH_BIN" ]] || export COH_BIN="$COH"
@@ -57,7 +57,7 @@ echo "ok: emit-prompt (instruction + bundle present)"
 OUT_VALID="$(mktemp -d)"
 trap 'rm -rf "$OUT" "$OUT_VALID" "${OUT_INVALID:-}"' EXIT
 mkdir -p "$OUT_VALID/response"
-cp skills/self-measure/fixtures/witness-response-valid.json "$OUT_VALID/response/spec.json"
+cp src/skills/self-measure/fixtures/witness-response-valid.json "$OUT_VALID/response/spec.json"
 scripts/coh-self --ingest spec --output "$OUT_VALID" >/dev/null 2>&1 \
   || fail "--ingest spec (valid response) exited non-zero"
 report=$(ls "$OUT_VALID"/tsc-spec-*.json 2>/dev/null | grep -v raw || true)
@@ -70,7 +70,7 @@ echo "ok: ingest valid witness response (hybrid report)"
 #    render no report. Fixtures cover the funnel: prose, fenced JSON,
 #    missing base fields, computed coherence, wrong target, bad deltas.
 OUT_INVALID=""
-for fixture in skills/self-measure/fixtures/invalid/*.json; do
+for fixture in src/skills/self-measure/fixtures/invalid/*.json; do
   case_name=$(basename "$fixture" .json)
   expect_stage=$(cat "${fixture%.json}.expect")
   OUT_INVALID="$(mktemp -d)"
@@ -113,9 +113,9 @@ echo "ok: witness-medoid election (engine CLI)"
 #     workflow then records the no-valid-samples artifact instead of
 #     hard-failing ingest on a sample the funnel already refused).
 VALID_DIR="$(mktemp -d)"
-cp skills/self-measure/fixtures/witness-response-valid.json "$VALID_DIR/v1.json"
-cp skills/self-measure/fixtures/witness-response-valid.json "$VALID_DIR/v2.json"
-cp skills/self-measure/fixtures/invalid/cards-duplicate-id.json "$VALID_DIR/bad.json"
+cp src/skills/self-measure/fixtures/witness-response-valid.json "$VALID_DIR/v1.json"
+cp src/skills/self-measure/fixtures/witness-response-valid.json "$VALID_DIR/v2.json"
+cp src/skills/self-measure/fixtures/invalid/cards-duplicate-id.json "$VALID_DIR/bad.json"
 # Positive: invalid sample listed FIRST still loses; a valid sample is
 # elected (tie between identical valids breaks earliest).
 picked="$("$COH_BIN" witness-medoid --target spec \
@@ -132,7 +132,7 @@ echo "ok: witness-medoid funnel-valid election (invalid never adjudicated, zero-
 # 6. Source-of-truth guard (Issue A / F1): the consistency module must
 #    route the barrier through Coherence.phi, never define it locally.
 #    The k=5 pass caught exactly this regression once; grep keeps it dead.
-if grep -nE '1\.0 -\. delta|1\. -\. delta' engine/ocaml/lib/consistency.ml; then
+if grep -nE '1\.0 -\. delta|1\. -\. delta' src/engine/ocaml/lib/consistency.ml; then
   fail "consistency.ml re-implements the barrier locally (must route through Coherence.phi)"
 fi
 echo "ok: consistency barrier routed through Coherence (no local duplicate)"
@@ -143,7 +143,7 @@ echo "ok: consistency barrier routed through Coherence (no local duplicate)"
 #    witness found three in the v3.2.4 card errors). Multi-line string
 #    continuations (backslash-newline) are fine — OCaml eats the
 #    continuation whitespace — so only single-line literals are checked.
-if grep -nE '"[^"]*[^ "]  +[^ "][^"]*"' engine/ocaml/lib/response_schema.ml; then
+if grep -nE '"[^"]*[^ "]  +[^ "][^"]*"' src/engine/ocaml/lib/response_schema.ml; then
   fail "response_schema.ml: multi-space run inside a string literal (editing artifact)"
 fi
 echo "ok: response_schema error strings carry no baked multi-space runs"

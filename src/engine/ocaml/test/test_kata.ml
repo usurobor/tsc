@@ -1,7 +1,7 @@
 (** OCaml tests for the kata framework — AC6 of tsc issue #33,
     AC4 of tsc issue #34.
 
-    Tests run via: cd engine/ocaml && opam exec -- dune runtest
+    Tests run via: cd src/engine/ocaml && opam exec -- dune runtest
 
     Covered:
     - kata-01 (glider) config loads correctly (id, verdict, score_range)
@@ -30,7 +30,7 @@ let check cond label =
 (** Locate the katas/ directory.
 
     Under [dune runtest], the test binary runs from
-    [engine/ocaml/_build/default/test/].  The katas dir lives at the
+    [src/engine/ocaml/_build/default/test/].  The katas dir lives at the
     repo root, five levels up: [../../../../../katas].
 
     When [TSC_ROOT] is set (e.g. by CI or manual override), we use that.
@@ -41,8 +41,8 @@ let katas_dir =
   | None ->
     (* Candidates: dune _build path, then repo-root path (for manual runs) *)
     let candidates = [
-      "../../../../../katas";  (* from _build/default/test/ under engine/ocaml *)
-      "../../katas";           (* from engine/ocaml/ directly *)
+      "../../../../../../katas";  (* from _build/default/test/ under src/engine/ocaml *)
+      "../../../katas";           (* from src/engine/ocaml/ directly *)
       "katas";                 (* from repo root *)
     ] in
     match List.find_opt Sys.file_exists candidates with

@@ -61,7 +61,7 @@ We welcome:
 2. **Install OCaml dependencies**
 
 ```bash
-   cd engine/ocaml
+   cd src/engine/ocaml
    opam install . --deps-only --with-test
 ```
 
@@ -152,7 +152,7 @@ See [QUICKSTART.md](QUICKSTART.md) for full guide.
 
 **Quick checklist:**
 
-1. Create the parser module under `engine/ocaml/lib/parsers/`
+1. Create the parser module under `src/engine/ocaml/lib/parsers/`
 1. Implement:
    - A predicate (`is_your_format : string -> bool`)
    - A parser (`parse : path:string -> seed:int option -> parsed_input`)

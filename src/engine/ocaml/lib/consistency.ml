@@ -1,4 +1,4 @@
-(** Consistency protocol, LLM arm (skills/cm-of-cms/SKILL.md §3).
+(** Consistency protocol, LLM arm (src/skills/cm-of-cms/SKILL.md §3).
 
     delta_consistency = max absolute pairwise difference over the
     response contract's numeric fields (Witness_numeric); it maps
@@ -7,7 +7,7 @@
 
     The barrier itself is NOT defined here: Coherence.phi /
     Coherence.coherence_link are the one source of the transform
-    (engine/ocaml/lib/coherence.ml), and this module routes through
+    (src/engine/ocaml/lib/coherence.ml), and this module routes through
     them. The k=5 characterization pass caught the first draft of this
     module re-implementing the formula locally — the exact
     second-source-of-truth defect the P1 migration existed to remove;
@@ -89,5 +89,5 @@ let llm_spread_report ~target ~files : (Yojson.Safe.t, string) result =
           ("legacy", `String "max_pairwise");
           ("kfair", `String "mean_pairwise");
         ]);
-        ("protocol", `String "skills/cm-of-cms/SKILL.md section 3");
+        ("protocol", `String "src/skills/cm-of-cms/SKILL.md section 3");
       ])

@@ -3,7 +3,7 @@
 # C_sigma_num plus the evidence lines of its weakest signals. This is
 # the incumbent's registered form for held-out scoring.
 set -euo pipefail
-coh="${COH_BIN:-engine/ocaml/_build/default/bin/main.exe}"
+coh="${COH_BIN:-src/engine/ocaml/_build/default/bin/main.exe}"
 out="$(mktemp -d)"
 args=()
 for f in "$@"; do args+=(--files "$f"); done

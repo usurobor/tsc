@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/cm-consistency.sh — the consistency instrument of the 0th
-# coherence methodology (skills/cm-of-cms/SKILL.md §3).
+# coherence methodology (src/skills/cm-of-cms/SKILL.md §3).
 #
 # A methodology must be tested against the same input repeatedly and the
 # agreement of its outputs measured and reported — alpha applied to the
@@ -40,7 +40,7 @@ OUT_DIR=".tsc/cm/consistency"
 resolve_coh() {
   if [ -n "${COH_BIN:-}" ]; then echo "$COH_BIN"; return; fi
   if command -v coh >/dev/null 2>&1; then echo "coh"; return; fi
-  local build="engine/ocaml/_build/default/bin/main.exe"
+  local build="src/engine/ocaml/_build/default/bin/main.exe"
   [ -x "$build" ] && { echo "$REPO_ROOT/$build"; return; }
   echo "cm-consistency: no coh binary (set COH_BIN or dune build)" >&2
   exit 2
@@ -94,7 +94,7 @@ mechanical_arm() {
         '{kind: "cm_consistency_report", arm: "mechanical", target: $target,
           runs: $runs, verdict: $verdict,
           delta_consistency: $delta, coh_consistency: $coh,
-          protocol: "skills/cm-of-cms/SKILL.md section 3"}' \
+          protocol: "src/skills/cm-of-cms/SKILL.md section 3"}' \
         > "$OUT_DIR/$target.mechanical.json"
   echo "cm-consistency: $target mechanical -> $verdict (Coh_consistency $coh_c) -> $OUT_DIR/$target.mechanical.json"
   return "$status"

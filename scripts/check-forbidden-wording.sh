@@ -19,7 +19,7 @@
 #   - docs/archive/                    (explicit archive surface)
 #   - .git/                            (git internals)
 #   - _build/                          (dune build output)
-#   - engine/ocaml/_build/             (in-tree dune build output)
+#   - src/engine/ocaml/_build/             (in-tree dune build output)
 #   - CHANGELOG.md                     (migration narrative may reference retired phrases)
 #   - RELEASE.md                       (release narrative may reference retired phrases)
 #   - scripts/check-forbidden-wording.sh (this script — names the strings it forbids)
@@ -69,7 +69,7 @@ is_excluded_path() {
     docs/archive/*) return 0 ;;
     .git/*)         return 0 ;;
     _build/*)       return 0 ;;
-    engine/ocaml/_build/*) return 0 ;;
+    src/engine/ocaml/_build/*) return 0 ;;
     CHANGELOG.md)   return 0 ;;
     RELEASE.md)     return 0 ;;
     scripts/check-forbidden-wording.sh) return 0 ;;
