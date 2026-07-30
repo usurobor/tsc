@@ -22,8 +22,7 @@ This block, verbatim, is the entire model input.
           print("Hello, world!")
 
     Intent:
-      Account for and predict what happens when it is run under the declared
-      language, runtime, and environment.
+      Give the most complete account you can of what this program is.
 
 ## Harness note (not shown to the model)
 
@@ -75,14 +74,23 @@ force a single frame:
 
 ### Navigation
 
-    Intent requires explaining what happens when the program is run.
-    → selects the constitution branch; the identity branch is retained but is
-      not load-bearing for this goal.
+    Intent demands a complete account of what the program is, not merely an
+    identifier for it.
+    → the identity branch (source artifact) answers "what identifies it" and is
+      retained as a valid STABLE_STANCE, but it does not discharge the demand;
+    → selects the constitution branch (ASCENT_REQUIRED).
     Active branch:   constitution
     End-to-end path: unique after intent is applied
 
 (Navigation, not a claim that the natural-language compiler must return exactly
 one frame. The path is unique; the compilation is not forced to be.)
+
+**Pilot variance — flag now, not at viewpoint 40.** Intent does real
+navigation work here: it selects constitution over identity, and the entire
+ascent depends on that selection. Intent is therefore a **variance factor** in
+the pilot — it must be varied deliberately and logged, not held fixed and its
+influence rediscovered later. A different intent ("what identifies this build?")
+would rest at STABLE_STANCE with no ascent, from the same viewpoint.
 
 ### Closure core ξ*
 
