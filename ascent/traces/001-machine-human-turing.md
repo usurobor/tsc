@@ -1,6 +1,6 @@
 # Trace 001 — Machine imitation versus human thought
 
-**Status:** Hand trace
+**Status:** Deferred stress trace
 
 **Purpose:** Test whether Articulation Ascent can begin from one
 AI-relevant point of view, autonomously recover its human polarity,

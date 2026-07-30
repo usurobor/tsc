@@ -1,6 +1,6 @@
 # Trace 002 — Hard/soft flickering versus simultaneous decomposition
 
-**Status:** Hand trace
+**Status:** Deferred stress trace
 **Purpose:** Formal-calibration case — test whether the ascent kernel
 produces a non-decorative result carrying a strong `FORMAL_PROOF` warrant,
 with a migration audit that can reach `CONTRADICTORY_RESIDUE`.
