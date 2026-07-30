@@ -4,7 +4,10 @@
 **Specification:** 4.0.0 Normative
 **v4 conformance standing:** none
 
-TSC's foundational measurement construct is under revision.
+TSC v4 is the current normative warrant foundation. No implementation
+currently conforms to it. The current bounded research sprint develops
+Articulation Ascent as the generative program that uses this warrant
+infrastructure.
 
 ## Theory
 
@@ -50,3 +53,21 @@ docs/design/foundation-contract-reconciliation/CUTOVER-RECEIPT.md
 - [`docs/design/foundation-contract-reconciliation/DESIGN.md`](docs/design/foundation-contract-reconciliation/DESIGN.md) — revision motivation
 - [`docs/design/foundation-contract-reconciliation/ARCHAEOLOGY.md`](docs/design/foundation-contract-reconciliation/ARCHAEOLOGY.md) — historical evidence
 - [`spec/tsc-conformance.md`](spec/tsc-conformance.md) — proof obligations
+
+## Program priority
+
+Articulation Ascent is the primary program for the current bounded sprint.
+
+C≡ will provide its expression language. Articulation Ascent will perform
+autonomous frame compilation, closure inversion, and polar lift. TSC
+provides the warrant infrastructure: candidate fibers, comparison,
+warrant classes, refusal, and evidence lineage.
+
+Body Space is retained as a candidate empirical domain after the method
+demonstrates basic discrimination, calibrated refusal, and non-decorative
+lift generation. Existing TSC conformance work and the Body Space
+registered report are preserved, but they are not on the critical path
+for this sprint.
+
+This priority declaration changes neither the normative status of TSC v4
+nor the conformance standing of the current engine.
