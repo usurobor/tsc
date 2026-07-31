@@ -1,5 +1,25 @@
 # The TSC Thesis
 
+Several observations look different from one another. How can we test whether they are really expressions of one underlying lawful process — without forcing them into a single score, and without throwing away the alternative explanations that might also fit?
+
+TSC is a framework for answering that question carefully. Instead of collapsing the evidence into one number, it works in four plain steps and hands back a record you can inspect.
+
+1. **Declare how the domain will be observed.** Before drawing any conclusion, state what counts as an observation, how it is collected, and what its inputs and limits are. The rules of observation are fixed up front, not chosen afterward to fit the answer.
+
+2. **Keep every candidate explanation, and the maps between them.** More than one process might account for what we see. TSC retains the possible explanations, and the relationships (maps) that connect them, instead of picking a winner early.
+
+3. **Test what each explanation predicts next.** A real explanation should hold up on evidence it has not already seen. TSC checks whether a candidate keeps working under new observations or a deliberate intervention.
+
+4. **Return a receipt saying what was supported, what is still unresolved, and what was refuted.** The result is a record, not a verdict reduced to a number. It says which explanations survived, which remain undecided, and which failed — with the evidence for each.
+
+The aim is to turn a coherence claim — "these observations belong to one lawful process" — into something with a warrant behind it: scoped, inspectable, and open to disagreement.
+
+---
+
+## The formal account
+
+The rest of this document restates the same idea in the specification's own terms. It introduces vocabulary — C≡, the α/β/γ receipt roles, coherence methodologies (CMs), the admission verdict `V`, and the authorization decision `δ` — that the [glossary](../spec/tsc-glossary.md) and the [specification](../spec/README.md) define precisely.
+
 TSC is a theory of warranted coherence claims over optional polar source expressions and typed generative systems.
 
 It asks:

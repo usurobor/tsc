@@ -1,10 +1,20 @@
-# Docs
+# Documentation
 
-Start with [`THESIS.md`](THESIS.md), then read [`../spec/README.md`](../spec/README.md).
+This tree is organized by **reader intent**: each document answers one human need. Topics are navigated through this portal and through program maps, not by physical co-location. This follows the accepted [repository-planes decision](architecture/decisions/repository-planes.md): α/β/γ is TSC's measurement and role grammar — never a filing taxonomy.
 
-The documentation tree follows the system in [`beta/governance/DOCUMENTATION-SYSTEM.md`](beta/governance/DOCUMENTATION-SYSTEM.md).
+## I want to…
 
-## Current authority
+| I want to… | Go to |
+|---|---|
+| Understand the idea in plain language | [`THESIS.md`](THESIS.md) |
+| Try the current CLI | [`../QUICKSTART.md`](../QUICKSTART.md) |
+| Read the specification | [`../spec/README.md`](../spec/README.md) |
+| Follow the current research program | [`../research/ascent/README.md`](../research/ascent/README.md) |
+| See how architecture decisions were made | [`architecture/decisions/`](architecture/decisions/) |
+| Work through worked concepts and examples | [`concepts/illustrations/README.md`](concepts/illustrations/README.md) |
+| Contribute | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) |
+
+## Authority by question
 
 | Question | Source |
 |---|---|
@@ -13,16 +23,19 @@ The documentation tree follows the system in [`beta/governance/DOCUMENTATION-SYS
 | Why did the foundation change? | [`design/foundation-contract-reconciliation/DESIGN.md`](design/foundation-contract-reconciliation/DESIGN.md) |
 | What is the current executable? | [`../src/engine/ocaml/CONTRACT.md`](../src/engine/ocaml/CONTRACT.md) |
 | What is currently runnable? | [`../QUICKSTART.md`](../QUICKSTART.md) |
+| What is the detailed project status? | [`../STATUS.md`](../STATUS.md) |
 
-## Bundles
+## Design records
 
 | Bundle | Purpose |
 |---|---|
-| [`alpha/doctrine/`](alpha/doctrine/) | Specification reading map and frozen historical theory records |
-| [`alpha/engine/`](alpha/engine/) | Current repository-proxy engine records |
-| [`beta/guides/`](beta/guides/) | Current operator guides |
-| [`design/foundation-contract-reconciliation/`](design/foundation-contract-reconciliation/) | v4 foundation design, archaeology, cutover receipt, and review response |
+| [`architecture/decisions/`](architecture/decisions/) | Accepted architecture decisions |
+| [`design/foundation-contract-reconciliation/`](design/foundation-contract-reconciliation/) | v4 foundation design, archaeology, cutover receipt, and review responses |
 | [`design/polar-expression-recovery/`](design/polar-expression-recovery/) | 4.1 polar-language design and impact contract |
+
+## A note on history
+
+Earlier α/β/γ documentation snapshots are retained under `docs/alpha/`, `docs/beta/`, and `docs/gamma/`, and in git history. They record how the project once filed its documents; they are frozen, and they are not entry points for a newcomer. Start from the intent table above instead.
 
 ## Status boundary
 
