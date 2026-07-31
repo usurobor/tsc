@@ -107,7 +107,7 @@ falsification is recorded in the instruction's experiment record.
 
 ## Release Coherence Ledger
 
-Grades use the frozen v3.2 repository-proxy triadic axes, pinned in [`engine/ocaml/CONTRACT.md`](engine/ocaml/CONTRACT.md) — not the live `spec/` symbols, which under v4 denote non-substitutable receipt roles rather than independent scalar axes. Engineering levels per [cnos ENGINEERING-LEVELS.md](https://github.com/usurobor/cnos/blob/main/docs/gamma/ENGINEERING-LEVELS.md).
+Grades use the frozen v3.2 repository-proxy triadic axes, pinned in [`src/engine/ocaml/CONTRACT.md`](src/engine/ocaml/CONTRACT.md) — not the live `spec/` symbols, which under v4 denote non-substitutable receipt roles rather than independent scalar axes. Engineering levels per [cnos ENGINEERING-LEVELS.md](https://github.com/usurobor/cnos/blob/main/docs/gamma/ENGINEERING-LEVELS.md).
 
 | Version | C_Σ | α | β | γ | Level | Note |
 |---------|-----|---|---|---|-------|------|

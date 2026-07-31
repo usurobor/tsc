@@ -61,4 +61,4 @@ dune runtest
 
 Changes preserve the current proxy regression contract unless they explicitly revise that contract and its katas.
 
-A future v4 engine enters through the v4 CM lifecycle and passes [`spec/tsc-conformance.md`](../../spec/tsc-conformance.md). It must not reinterpret existing proxy reports as v4 evidence.
+A future v4 engine enters through the v4 CM lifecycle and passes [`spec/tsc-conformance.md`](../../../spec/tsc-conformance.md). It must not reinterpret existing proxy reports as v4 evidence.

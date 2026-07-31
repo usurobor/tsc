@@ -23,7 +23,7 @@ otherwise.
 
 ## Input
 
-Source: [`examples/philosophical/consciousness.md`](../../examples/philosophical/consciousness.md),
+Source: [`docs/concepts/illustrations/philosophical/consciousness.md`](../../docs/concepts/illustrations/philosophical/consciousness.md),
 copied verbatim into [`input/consciousness.md`](input/consciousness.md). The
 text is a didactic TSC exemplar for a philosophical-text reading of triadic
 coherence — well-formatted, internally consistent in *form*, and structurally

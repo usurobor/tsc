@@ -34,4 +34,4 @@ Their meaning is fixed by the methodology, code, prompts, schemas, and provenanc
 
 ## Successor contract
 
-A v4 implementation begins only when it satisfies the requirement IDs in [`spec/tsc-conformance.md`](../../spec/tsc-conformance.md) and emits a proof-carrying receipt under an authorized v4 CM.
+A v4 implementation begins only when it satisfies the requirement IDs in [`spec/tsc-conformance.md`](../../../spec/tsc-conformance.md) and emits a proof-carrying receipt under an authorized v4 CM.

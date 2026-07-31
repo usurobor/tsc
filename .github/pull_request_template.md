@@ -60,19 +60,6 @@ dune fmt
 - [ ] Any dependent changes have been merged and published
 - [ ] I have updated CHANGELOG.md (if this is a significant change)
 
-## For New Parsers
-
-<!-- Complete this section if adding a new parser -->
-
-- [ ] Added parser module under `src/engine/ocaml/lib/parsers/`
-- [ ] Implemented both predicate (`is_X`) and parser function
-- [ ] Registered in the parsers dispatch module
-- [ ] Added example file in `examples/`
-- [ ] Added conformance test in `tests/ocaml/conformance/`
-- [ ] Updated QUICKSTART.md or relevant docs
-- [ ] Parser handles errors gracefully (fallback to stub if needed)
-- [ ] Parser is deterministic given same seed
-
 ## Breaking Changes
 
 <!-- If this is a breaking change, describe: -->

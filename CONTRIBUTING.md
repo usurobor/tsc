@@ -10,7 +10,6 @@ This guide explains how to propose changes to TSC.
 - [Development Setup](#development-setup)
 - [Coding Standards](#coding-standards)
 - [Submitting Changes](#submitting-changes)
-- [Adding a New Parser](#adding-a-new-parser)
 - [Security](#security)
 - [License](#license)
 
@@ -43,7 +42,7 @@ Participation is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By contr
 We welcome:
 
 - Bug fixes
-- New parsers for additional data formats
+- Conformance fixtures (positive and negative cases)
 - Performance improvements
 - Documentation & examples
 - Test coverage improvements
@@ -138,45 +137,15 @@ Use `BREAKING CHANGE:` in commit footer for breaking API changes.
 
 **Merge policy:** Squash merges by default
 
-## Adding a New Parser
-
-See [QUICKSTART.md](QUICKSTART.md) for full guide.
-
-**Quick checklist:**
-
-1. Create the parser module under `src/engine/ocaml/lib/parsers/`
-1. Implement:
-   - A predicate (`is_your_format : string -> bool`)
-   - A parser (`parse : path:string -> seed:int option -> parsed_input`)
-1. Register the parser in the parsers dispatch module
-1. Add example: `examples/your_format/`
-1. Add test: `tests/ocaml/conformance/`
-1. Update docs
-
-**Parser requirements:**
-
-- Pure function (file I/O allowed)
-- Returns a valid `parsed_input`
-- Deterministic given `seed`
-- Graceful error handling
-- Documented in the `.mli` with type signature
-
 ## Security
 
 **Do not** file security issues publicly. Email peter@lisovin.com with "[SECURITY]" in subject line. We'll respond within 72 hours.
 
 ## License
 
-- **Code** (`engine/`, `tests/`): Apache-2.0
-- **Specifications** (`spec/`): CC BY 4.0
-- **Examples** (`examples/`): CC0 (Public Domain)
-
-By contributing, you agree your contributions are licensed under the same terms as the project files you're modifying.
-
-See [LICENSE](LICENSE) for full text.
+TSC is licensed under [CC BY 4.0](LICENSE). By contributing, you agree your contributions are licensed under the same terms.
 
 ## Questions?
 
 - Open an issue with the `question` label
 - Email: peter@lisovin.com
-- Check existing issues first

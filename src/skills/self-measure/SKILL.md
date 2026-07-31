@@ -176,7 +176,7 @@ self_measure:
 > **Frozen repository-proxy methodology — not TSC v4.** This skill
 > declares the CURRENT repository-proxy self-measurement methodology. Its
 > semantic contract is the immutable v3.2.2 pin recorded in
-> [`src/engine/ocaml/CONTRACT.md`](../../src/engine/ocaml/CONTRACT.md), not the
+> [`src/engine/ocaml/CONTRACT.md`](../../../src/engine/ocaml/CONTRACT.md), not the
 > live `spec/` bodies. The symbols α, β, γ used below are this proxy's
 > three independent scalar coherence axes. They are **not** TSC v4's
 > α/β/γ, which the normative spec defines as non-substitutable,
@@ -196,7 +196,7 @@ own repo. (The 0th is the CM of CMs — `src/skills/cm-of-cms/SKILL.md`, the
 methodology that measures methodologies, this one included; each
 methodology's corpus is measured as a closed system, so cross-methodology
 references are plain paths, not links.) The typed contract it satisfies —
-[`#CoherenceMethodology`](../../schemas/skill.cue) — is deliberately
+[`#CoherenceMethodology`](../../../schemas/skill.cue) — is deliberately
 general: a methodology names its corpus (registry + targets), its
 mechanical signal inventory, its LLM estimate contract and prohibitions,
 its output and ledger conventions. Anyone can supply their own CM (a
@@ -205,21 +205,21 @@ conforming to that schema; `coh` consuming a supplied methodology is the
 declared direction of travel.
 
 The declaration is executable.
-[scripts/render-self-measure.sh](../../scripts/render-self-measure.sh)
+[scripts/render-self-measure.sh](../../../scripts/render-self-measure.sh)
 renders the frontmatter above into three artifacts, each carrying a
 DO-NOT-EDIT header that points back here:
 
-- [scripts/coh-self](../../scripts/coh-self) — the local command. The
+- [scripts/coh-self](../../../scripts/coh-self) — the local command. The
   engine dispatches `coh self` to it (git-style external subcommand).
-- [.github/workflows/tsc-self-measure.yml](../../.github/workflows/tsc-self-measure.yml)
+- [.github/workflows/tsc-self-measure.yml](../../../.github/workflows/tsc-self-measure.yml)
   — the CI measurement surface.
-- [.github/workflows/tsc-coherence-ledger.yml](../../.github/workflows/tsc-coherence-ledger.yml)
+- [.github/workflows/tsc-coherence-ledger.yml](../../../.github/workflows/tsc-coherence-ledger.yml)
   — the per-release ledger writer (§6).
 
 CI re-renders and diffs on every change, so the rendered artifacts cannot
 drift from this file. The frontmatter is validated against
-[schemas/skill.cue](../../schemas/skill.cue) (`#SelfMeasure`), and the
-validator ([scripts/ci/validate-skill-frontmatter.sh](../../scripts/ci/validate-skill-frontmatter.sh))
+[schemas/skill.cue](../../../schemas/skill.cue) (`#SelfMeasure`), and the
+validator ([scripts/ci/validate-skill-frontmatter.sh](../../../scripts/ci/validate-skill-frontmatter.sh))
 additionally checks that every declared mechanical signal code exists in
 the engine source and that the declared LLM estimate fields equal exactly
 the scoring instruction's output-contract keys. What you read here is
@@ -229,7 +229,7 @@ what runs.
 
 ## 1. What is measured
 
-Three named targets from [targets/registry.tsc](../../targets/registry.tsc):
+Three named targets from [targets/registry.tsc](../../../targets/registry.tsc):
 
 | Target | Kind | Corpus |
 |--------|------|--------|
@@ -254,17 +254,17 @@ One table. Everything TSC self-measurement does, and who does it.
 
 | # | Step | Owner | Where |
 |---|------|-------|-------|
-| 1 | Resolve targets, expand globs, order files | mechanical | [target_registry.ml](../../src/engine/ocaml/lib/target_registry.ml) |
-| 2 | Build bundle: raw text + SHA-256 hashes | mechanical | [bundle.ml](../../src/engine/ocaml/lib/bundle.ml) |
-| 3 | Score 12 structural signals per axis | mechanical | [mechanical_scoring.ml](../../src/engine/ocaml/lib/mechanical_scoring.ml) |
-| 4 | Assemble the LLM prompt (instruction + metadata + bundle) | mechanical | [prompt.ml](../../src/engine/ocaml/lib/prompt.ml) |
-| 5 | **Estimate δ per axis pair + component scores + cite evidence** | **LLM** | [runtime/SELF-MEASURE.md](../../runtime/SELF-MEASURE.md) |
-| 6 | Validate the LLM response (strict v3.2 delta contract) | mechanical | [response_schema.ml](../../src/engine/ocaml/lib/response_schema.ml) |
-| 7 | Barrier transform φ(δ) = δ/(1−δ), Coh = exp(−λ·φ(δ)) | mechanical | [coherence.ml](../../src/engine/ocaml/lib/coherence.ml) |
-| 8 | Aggregate C_Σ^math / C_Σ^num (geometric forms, ε-floor) | mechanical | [coherence.ml](../../src/engine/ocaml/lib/coherence.ml) |
-| 9 | Bottleneck rule, provenance, report emission | mechanical | [report.ml](../../src/engine/ocaml/lib/report.ml), [hybrid_scoring.ml](../../src/engine/ocaml/lib/hybrid_scoring.ml) |
-| 10 | Cross-target aggregate | mechanical | [cross_target.ml](../../src/engine/ocaml/lib/cross_target.ml) |
-| 11 | CI gating, artifact upload, summaries | mechanical | [rendered workflow](../../.github/workflows/tsc-self-measure.yml) |
+| 1 | Resolve targets, expand globs, order files | mechanical | [target_registry.ml](../../../src/engine/ocaml/lib/target_registry.ml) |
+| 2 | Build bundle: raw text + SHA-256 hashes | mechanical | [bundle.ml](../../../src/engine/ocaml/lib/bundle.ml) |
+| 3 | Score 12 structural signals per axis | mechanical | [mechanical_scoring.ml](../../../src/engine/ocaml/lib/mechanical_scoring.ml) |
+| 4 | Assemble the LLM prompt (instruction + metadata + bundle) | mechanical | [prompt.ml](../../../src/engine/ocaml/lib/prompt.ml) |
+| 5 | **Estimate δ per axis pair + component scores + cite evidence** | **LLM** | [runtime/SELF-MEASURE.md](../../../runtime/SELF-MEASURE.md) |
+| 6 | Validate the LLM response (strict v3.2 delta contract) | mechanical | [response_schema.ml](../../../src/engine/ocaml/lib/response_schema.ml) |
+| 7 | Barrier transform φ(δ) = δ/(1−δ), Coh = exp(−λ·φ(δ)) | mechanical | [coherence.ml](../../../src/engine/ocaml/lib/coherence.ml) |
+| 8 | Aggregate C_Σ^math / C_Σ^num (geometric forms, ε-floor) | mechanical | [coherence.ml](../../../src/engine/ocaml/lib/coherence.ml) |
+| 9 | Bottleneck rule, provenance, report emission | mechanical | [report.ml](../../../src/engine/ocaml/lib/report.ml), [hybrid_scoring.ml](../../../src/engine/ocaml/lib/hybrid_scoring.ml) |
+| 10 | Cross-target aggregate | mechanical | [cross_target.ml](../../../src/engine/ocaml/lib/cross_target.ml) |
+| 11 | CI gating, artifact upload, summaries | mechanical | [rendered workflow](../../../.github/workflows/tsc-self-measure.yml) |
 
 Step 5 is the only cognitive step. In `mechanical` mode it is skipped
 entirely and the run is credential-free and offline. In `llm` / `hybrid`
@@ -318,7 +318,7 @@ geometric mean (zero if any axis is zero), C_Σ^num the ε-floored numerical
 form (ε = 10⁻⁵) that carries verdicts. No flat aggregate field exists;
 readers consult `provenance.aggregate_numeric.C_sigma_num`.
 
-Guarantee (from [mechanical_scoring.mli](../../src/engine/ocaml/lib/mechanical_scoring.mli)):
+Guarantee (from [mechanical_scoring.mli](../../../src/engine/ocaml/lib/mechanical_scoring.mli)):
 identical bundle + config → identical result. No LLM, no network, no
 semantic parsing. Mechanical scores are structural proxies — well-written
 prose can outrun them (kata 04 documents that ceiling; kata 05 pins the
@@ -360,7 +360,7 @@ The model must not:
 - **produce anything beyond the JSON** — no prose, no fences.
 
 Validation is unconditional and single-funneled
-([response_schema.ml](../../src/engine/ocaml/lib/response_schema.ml),
+([response_schema.ml](../../../src/engine/ocaml/lib/response_schema.ml),
 `validate_witness_response`). Every way a response
 can fail is classified into a stage — `parse` (prose, fenced JSON,
 malformed text), `base_schema` (missing/mistyped contract fields),
@@ -375,7 +375,7 @@ validation-failure artifact naming its stage, preserves the raw response,
 renders **no** report, and does **not** fall back to mechanical scoring.
 A refused witness is a recorded fact, not a silent downgrade. The
 per-stage fixtures live in [fixtures/invalid/](fixtures/invalid/) and the
-CI smoke ([scripts/ci/self-measure-smoke.sh](../../scripts/ci/self-measure-smoke.sh))
+CI smoke ([scripts/ci/self-measure-smoke.sh](../../../scripts/ci/self-measure-smoke.sh))
 replays each of them on every run.
 
 `hybrid` mode runs both backends on the same bundle and preserves both
@@ -470,7 +470,7 @@ increment — a `VERSION`-bump push or a release-tag push, patch
 increments included (the tag is materialized from CI when it does not
 exist yet; releases themselves are cut by `scripts/release.sh`, which
 gates on a `CHANGELOG.md` entry) — via
-[scripts/coherence-ledger.sh](../../scripts/coherence-ledger.sh);
+[scripts/coherence-ledger.sh](../../../scripts/coherence-ledger.sh);
 commits between releases do not write the ledger (per-run reports are CI
 artifacts instead).
 

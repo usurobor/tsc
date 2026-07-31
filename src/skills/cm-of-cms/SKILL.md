@@ -153,7 +153,7 @@ cm_of_cms:
 > **Frozen repository-proxy methodology — not TSC v4.** This skill
 > declares a CURRENT repository-proxy methodology. Its semantic contract
 > is the immutable v3.2.2 pin recorded in
-> [`src/engine/ocaml/CONTRACT.md`](../../src/engine/ocaml/CONTRACT.md), not the
+> [`src/engine/ocaml/CONTRACT.md`](../../../src/engine/ocaml/CONTRACT.md), not the
 > live `spec/` bodies. The symbols α, β, γ used below are this proxy's
 > three independent scalar coherence axes. They are **not** TSC v4's
 > α/β/γ, which the normative spec defines as non-substitutable,
@@ -172,7 +172,7 @@ same triadic instrument — and this skill declares how.
 This is the **0th coherence methodology**. The self-measurement skill
 (`src/skills/self-measure/SKILL.md`) is the 1st: the tsc-repo CM applied to
 tsc. Both satisfy the same comparable contract,
-[`#CoherenceMethodology`](../../schemas/skill.cue); the 1st is deployed
+[`#CoherenceMethodology`](../../../schemas/skill.cue); the 1st is deployed
 (command, render, ledger, CI bindings), the 0th is essence-only — it
 measures methodologies wherever they are, and it measures itself (§5).
 Each methodology's corpus is measured as a closed system, so
@@ -200,12 +200,12 @@ cannot be compared across its own versions).
 ## 2. The corpus
 
 Two CMs are registered as measurable targets in
-[targets/registry.tsc](../../targets/registry.tsc):
+[targets/registry.tsc](../../../targets/registry.tsc):
 
 | Target | Methodology | Corpus |
 |--------|-------------|--------|
-| `methodology` | 1st — tsc's self-measurement | its skill, schema, validator, renderer, rendered surfaces, scoring instruction, target manifests, and the engine modules its pipeline names ([targets/methodology.tsc](../../targets/methodology.tsc)) |
-| `cm-of-cms` | 0th — this skill | its skill, the comparable schema, the consistency instrument, its corpus declarations, and the calibration commons ([targets/cm-of-cms.tsc](../../targets/cm-of-cms.tsc)) |
+| `methodology` | 1st — tsc's self-measurement | its skill, schema, validator, renderer, rendered surfaces, scoring instruction, target manifests, and the engine modules its pipeline names ([targets/methodology.tsc](../../../targets/methodology.tsc)) |
+| `cm-of-cms` | 0th — this skill | its skill, the comparable schema, the consistency instrument, its corpus declarations, and the calibration commons ([targets/cm-of-cms.tsc](../../../targets/cm-of-cms.tsc)) |
 
 A CM's corpus is its three descriptions made into files. Measuring the
 corpus with the standard pipeline is exactly measuring whether the
@@ -223,9 +223,9 @@ single number spanning two different methodologies would mean nothing
 **A methodology must be tested against the same input repeatedly, and
 the agreement of its outputs measured and reported.** This is α applied
 to the meter itself, and it is part of the comparable contract
-(`consistency` in [`#CoherenceMethodology`](../../schemas/skill.cue)) —
+(`consistency` in [`#CoherenceMethodology`](../../../schemas/skill.cue)) —
 every conforming CM declares it; this skill provides the instrument,
-[scripts/cm-consistency.sh](../../scripts/cm-consistency.sh).
+[scripts/cm-consistency.sh](../../../scripts/cm-consistency.sh).
 
 **Mechanical arm — exact reproducibility.** The deterministic backend
 must satisfy `identical`: same bundle + config → same scores,
@@ -282,10 +282,10 @@ consistency protocol:
 |------|-------|-------|
 | Resolve the CM's corpus, bundle, hash | mechanical | engine pipeline (steps 1–2 of the 1st methodology's split, `src/skills/self-measure/SKILL.md` §2) |
 | Run the object-CM's own verification battery (validator, render check, smoke, katas, tests) | mechanical | the CM's declared CI surfaces |
-| Score 12 structural signals over the CM corpus | mechanical | [mechanical_scoring.ml](../../src/engine/ocaml/lib/mechanical_scoring.ml) |
-| N-run determinism check + repeat-spread computation | mechanical | [scripts/cm-consistency.sh](../../scripts/cm-consistency.sh) |
-| **Judge whether declaration, implementation, and instrument behavior still describe one system** | **LLM** | [runtime/SELF-MEASURE.md](../../runtime/SELF-MEASURE.md) over the CM bundle |
-| Validate the witness response, barrier, aggregate, report | mechanical | [response_schema.ml](../../src/engine/ocaml/lib/response_schema.ml), [coherence.ml](../../src/engine/ocaml/lib/coherence.ml) |
+| Score 12 structural signals over the CM corpus | mechanical | [mechanical_scoring.ml](../../../src/engine/ocaml/lib/mechanical_scoring.ml) |
+| N-run determinism check + repeat-spread computation | mechanical | [scripts/cm-consistency.sh](../../../scripts/cm-consistency.sh) |
+| **Judge whether declaration, implementation, and instrument behavior still describe one system** | **LLM** | [runtime/SELF-MEASURE.md](../../../runtime/SELF-MEASURE.md) over the CM bundle |
+| Validate the witness response, barrier, aggregate, report | mechanical | [response_schema.ml](../../../src/engine/ocaml/lib/response_schema.ml), [coherence.ml](../../../src/engine/ocaml/lib/coherence.ml) |
 
 The witness contract is identical to the 1st methodology's — same
 estimate fields, same prohibitions, same single-funnel validation. The
@@ -347,11 +347,11 @@ self-scores above all, therefore confer no standing. A CM's scores of
 others count only if the CM is **admissible**:
 
 1. **Calibration commons.** It must reproduce the shared anchors
-   ([katas/](../../katas/README.md)): pass the positive control, fail
+   ([katas/](../../../katas/README.md)): pass the positive control, fail
    the negative control, rank the comparative pair correctly, respect
    the prose ceiling, catch the adversarial trap. A meter that cannot
    read the commons has no standing to read anything else. The check is
-   executable — [scripts/cm-admissibility.sh](../../scripts/cm-admissibility.sh)
+   executable — [scripts/cm-admissibility.sh](../../../scripts/cm-admissibility.sh)
    runs any candidate scorer over the anchors **blind**: every anchor is
    staged into a neutral case directory (no kata path, no adjacent
    label manifest, case order ≠ kata order), the comparative anchor is
@@ -460,7 +460,7 @@ no anchor is held-out yet, and every standing claim below says so.
 
 **Held-out anchors earn unmemorizability, not externality.** The
 commit-reveal machinery is executable
-([scripts/cm-heldout.sh](../../scripts/cm-heldout.sh)): an anchor is
+([scripts/cm-heldout.sh](../../../scripts/cm-heldout.sh)): an anchor is
 generated with salted vocabulary and salted *filenames*, sealed, and
 its sha256 commitment committed; challengers register (source digest +
 commit) ; the bundle is revealed later and may score only challengers
