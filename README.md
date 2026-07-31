@@ -18,7 +18,7 @@ Read [`STATUS.md`](STATUS.md) before interpreting any score or report.
 | [`src/engine/ocaml/`](src/engine/ocaml/README.md) | Current `coh` repository-proxy executable | Canonical executable of the proxy methodology, not v4 |
 | [`src/skills/`](src/skills/README.md) | Current self-measurement and CM-of-CMs declarations | Authority for existing proxy methodologies |
 | [`katas/`](katas/README.md) | Regression inputs for the current proxy engine | Implementation regression only |
-| [`illustrations/`](illustrations/README.md) | Conceptual examples | Informative |
+| [`docs/concepts/illustrations/`](docs/concepts/illustrations/README.md) | Conceptual examples | Informative |
 | [`docs/`](docs/README.md) | Design, research, governance, and guides | Authority stated by each document |
 | [`.tsc/`](.tsc/COHERENCE.md) | Generated reports and historical ledger | Generated state; not theory |
 

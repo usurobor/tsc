@@ -67,6 +67,10 @@ data) are tooling/data, not repository content.
 - Established `research/` as the pre-normative plane; moved `ascent/` →
   `research/ascent/` (zero references — safe).
 - Established `docs/architecture/decisions/` (this ADR).
+- Established `docs/concepts/` and moved `illustrations/` →
+  `docs/concepts/illustrations/` (reader-intent: *concepts* = explanation).
+  Two references (README map row, this ADR) rewritten; no outbound links inside
+  the illustrations broke (all same-directory). Markdown + links only.
 - **Consolidated the executable planes under `src/`:** `engine/` → `src/engine/`,
   `skills/` → `src/skills/` (branch `cycle/repo-planes-src`, **CI-gated**). All
   live path references rewritten; frozen `.cdd/`, `docs/alpha/`, and CHANGELOG
@@ -78,11 +82,20 @@ data) are tooling/data, not repository content.
 
 **Deferred to CI-gated iterations (recorded, not loose ends):**
 
-- **Docs reader-intent portal population** — `concepts/`, `guides/`,
-  `reference/`, etc.; split the foundation docs by job
-  (`DESIGN.md` → `docs/architecture/decisions/`, `ARCHAEOLOGY.md` →
-  `research/foundation/archaeology/`, `CUTOVER-RECEIPT.md` → `docs/evidence/`);
-  `illustrations/` → `docs/concepts/illustrations/`. Safe (markdown + links).
+- **Docs reader-intent portal population** — `guides/`, `reference/`, etc. as
+  real content lands (empty scaffolding is YAGNI, not resolution).
+- **Foundation-contract-reconciliation bundle** — deferred, and *not* the
+  mechanical three-way fragmentation first sketched (`DESIGN.md` → decisions,
+  `ARCHAEOLOGY.md` → research/foundation, `CUTOVER-RECEIPT.md` → evidence).
+  On inspection the folder is one cross-referenced review thread — `DESIGN.md`,
+  `ARCHAEOLOGY.md`, `CUTOVER-RECEIPT.md`, and `ROUND2/3/4-REVIEW-RESPONSE.md`
+  all answer each other — so a by-file split would orphan the review responses
+  and break the thread. It also sits in a genuinely open plane: it is design
+  *history* of something now **authoritative** (ratified 4.0.0), which fits
+  neither `research/` (defined as *not yet* authoritative) nor a live-reference
+  plane. The coherent home (intact bundle under an archive/history plane vs.
+  `docs/explanation/`) is a decision to take with the operator's frame, not to
+  force here.
 - **Remaining `src/` moves** — `targets/` folded into the engine, `katas/` to a
   tests plane, `runtime/SELF-MEASURE.md` co-located with its skill, schemas
   co-located with owners. Each a further CI-gated change.

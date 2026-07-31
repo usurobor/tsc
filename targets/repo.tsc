@@ -17,7 +17,7 @@ include = [
   "conformance/**",
   "schemas/conformance-fixture.cue",
   "src/engine/ocaml/CONTRACT.md",
-  "illustrations/**",
+  "docs/concepts/illustrations/**",
   "runtime/SELF-MEASURE.md",
   "targets/README.md",
   "targets/registry.tsc",
