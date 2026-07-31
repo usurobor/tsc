@@ -48,17 +48,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Link check (Markdown)
-        uses: lycheeverse/lychee-action@v1
-        with:
-          args: >-
-            --verbose
-            --no-progress
-            --max-concurrency 4
-            --accept 200..299,403,429
-            --exclude-path "CHANGELOG.md|LICENSE|heldout/revealed"
-            -- *.md **/*.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # #108: linkcheck previously (a) checked only markdown at depth <= 2,
+        # (b) honored no --exclude-path value, and (c) stayed green with dozens
+        # of broken links. Causes: the runner shell's globstar is off (an
+        # unquoted **/*.md collapses to depth <= 2); the action's bundled lychee
+        # used glob (not regex) --exclude-path semantics; and lychee-action did
+        # not propagate lychee's error exit. Fixed by pinning lychee and running
+        # it directly: quoted globs let lychee recurse every depth; v0.20.1
+        # treats --exclude-path as a regex substring; a direct run propagates
+        # the non-zero exit. --offline checks relative/local links only (the
+        # exact class #108 is about), so the gate is deterministic and free of
+        # external-URL flakiness.
+        #
+        # Excluded (non-live surfaces): vendored .cdd .cn-sigma .cell .tsc,
+        # build output _build, the heldout corpus, kata negative-control inputs
+        # (listed explicitly), frozen snapshots docs/{alpha,beta,gamma},
+        # CHANGELOG.md, LICENSE. Live docs, spec/, src/**, conformance/,
+        # research/, katas/*/README.md and schemas/fixtures/** are checked.
+        run: |
+          set -euo pipefail
+          ver=lychee-v0.20.1
+          curl -fsSL "https://github.com/lycheeverse/lychee/releases/download/${ver}/lychee-x86_64-unknown-linux-gnu.tar.gz" | tar xz lychee
+          ./lychee --version
+          ./lychee --offline --no-progress --max-concurrency 4 \
+            --exclude-path '\.cdd/' \
+            --exclude-path '\.cn-sigma/' \
+            --exclude-path '\.cell/' \
+            --exclude-path '\.tsc/' \
+            --exclude-path '_build/' \
+            --exclude-path 'heldout/' \
+            --exclude-path 'katas/02-random-soup/input/' \
+            --exclude-path 'katas/03-comparative/input/' \
+            --exclude-path 'katas/05-adversarial/input/' \
+            --exclude-path 'docs/alpha/' \
+            --exclude-path 'docs/beta/' \
+            --exclude-path 'docs/gamma/' \
+            --exclude-path 'CHANGELOG\.md' \
+            --exclude-path 'LICENSE' \
+            -- '*.md' '**/*.md'
 
   spec-validate:
     runs-on: ubuntu-latest
