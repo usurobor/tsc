@@ -2,7 +2,7 @@
 
 **Software release:** 0.12.0
 **Specification:** 4.1.0 Draft
-**Last ratified specification:** 4.0.0 Normative
+**Last ratified specification:** 4.0.0 Normative ([readable at commit `4da1122`](https://github.com/usurobor/tsc/tree/4da1122/spec))
 **4.1 conformance standing:** none
 
 TSC 4.1.0 is a Draft candidate: it extends the ratified 4.0.0 Normative foundation with polar-expression recovery. 4.0.0 remains the last ratified contract until 4.1 passes foundation and repository review and a ratification-only commit is independently reviewed. The current engine is nonconforming to 4.1; no engine or methodology conforms yet.
@@ -41,12 +41,6 @@ The first v4 conformance fixtures are specified under `conformance/`. A specifie
 
 No current implementation has emitted a passing TSC 4.1 conformance receipt.
 
-A historical v2.3 braided witness emitted a failed receipt. The failure is retained and explicitly disposed in:
-
-```text
-docs/design/foundation-contract-reconciliation/CUTOVER-RECEIPT.md
-```
-
 ## Read next
 
 - [`spec/README.md`](spec/README.md) — authority and reading order
@@ -56,7 +50,7 @@ docs/design/foundation-contract-reconciliation/CUTOVER-RECEIPT.md
 
 ## Program priority
 
-Articulation Ascent is the primary program for the current bounded sprint.
+Articulation Ascent is the primary program for the current bounded sprint. It lives in [`research/ascent/`](research/ascent/), which defines its program vocabulary; the TSC terms below (candidate fibers, warrant classes, refusal, evidence lineage) are defined in the [glossary](spec/tsc-glossary.md).
 
 C≡ will provide its expression language. Articulation Ascent will perform
 autonomous frame compilation, closure inversion, and polar lift. TSC

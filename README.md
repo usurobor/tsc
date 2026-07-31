@@ -2,6 +2,8 @@
 
 TSC defines how a declared methodology may warrant that observations belong to one lawful generative process.
 
+**New to TSC?** Start with [`docs/THESIS.md`](docs/THESIS.md) for a plain-language overview, and keep the [glossary](spec/tsc-glossary.md) open for unfamiliar terms.
+
 The repository currently contains two different surfaces:
 
 - **TSC specification 4.1.0 Draft** — the candidate theory and conformance contract;
@@ -19,6 +21,7 @@ Read [`STATUS.md`](STATUS.md) before interpreting any score or report.
 | [`src/skills/`](src/skills/README.md) | Current self-measurement and CM-of-CMs declarations | Authority for existing proxy methodologies |
 | [`katas/`](katas/README.md) | Regression inputs for the current proxy engine | Implementation regression only |
 | [`docs/concepts/illustrations/`](docs/concepts/illustrations/README.md) | Conceptual examples | Informative |
+| [`research/`](research/README.md) | Pre-normative investigation — Articulation Ascent (the current primary program) and its traces | Nothing here binds an implementation |
 | [`docs/`](docs/README.md) | Design, research, governance, and guides | Authority stated by each document |
 | [`.tsc/`](.tsc/COHERENCE.md) | Generated reports and historical ledger | Generated state; not theory |
 
@@ -30,12 +33,12 @@ Read [`STATUS.md`](STATUS.md) before interpreting any score or report.
 4. [`spec/tsc-observation-dynamics.md`](spec/tsc-observation-dynamics.md) — lineage, comparison, intervention, lift, and failure persistence;
 5. [`spec/tsc-conformance.md`](spec/tsc-conformance.md) — permanent proof obligations.
 
-The motivation and historical evidence live outside the normative specification:
+The design motivation lives outside the normative specification:
 
-- [`DESIGN.md`](docs/design/foundation-contract-reconciliation/DESIGN.md)
-- [`ARCHAEOLOGY.md`](docs/design/foundation-contract-reconciliation/ARCHAEOLOGY.md)
-- [`CUTOVER-RECEIPT.md`](docs/design/foundation-contract-reconciliation/CUTOVER-RECEIPT.md)
-- [`Polar expression recovery`](docs/design/polar-expression-recovery/DESIGN.md)
+- [`DESIGN.md`](docs/design/foundation-contract-reconciliation/DESIGN.md) — foundation-contract reconciliation
+- [`Polar expression recovery`](docs/design/polar-expression-recovery/DESIGN.md) — the 4.1 Draft design
+
+Prior-cycle design records (archaeology, cutover receipts) live under [`docs/`](docs/README.md).
 
 ## Run the current repository proxy
 
@@ -43,7 +46,7 @@ The motivation and historical evidence live outside the normative specification:
 curl -fsSL https://raw.githubusercontent.com/usurobor/tsc/main/install.sh | sh
 git clone https://github.com/usurobor/tsc.git
 cd tsc
-coh --mode mechanical --files spec/ --output .tsc/
+coh --mode mechanical --files 'spec/**/*.md' --output .tsc/
 ```
 
 Run the declared self-measurement route:
@@ -52,7 +55,7 @@ Run the declared self-measurement route:
 coh self --mode mechanical
 ```
 
-These commands emit v3.2-era repository-proxy results. They are useful for regression, defect discovery, and historical comparison within that methodology. They are **not** v4 coherence receipts and carry no v4 conformance standing.
+These commands emit v3.2-era repository-proxy results. They are useful for regression and structural defect discovery. They are **not** v4 coherence receipts and carry no v4 conformance standing.
 
 See [`QUICKSTART.md`](QUICKSTART.md) for the current executable path.
 
@@ -61,6 +64,8 @@ See [`QUICKSTART.md`](QUICKSTART.md) for the current executable path.
 No implementation currently conforms to TSC 4.1. The first fixture families are specified under [`conformance/`](conformance/README.md). A specified fixture earns no standing until its generator, oracle, positive case, negative case, and evidence are implemented and verified.
 
 The candidate 4.1 normative headers carry `Status: Draft` until mathematical, document, and conformance review closes and a ratification-only commit is independently reviewed.
+
+The last **ratified** Normative contract is TSC **4.0.0** — the working `spec/` on `main` is its 4.1.0 Draft extension. The ratified 4.0.0 `spec/` tree (headers `Version: 4.0.0` / `Status: Normative`) is readable at [commit `4da1122`](https://github.com/usurobor/tsc/tree/4da1122/spec). This matches [`STATUS.md`](STATUS.md): 4.0.0 Normative is the standing warrant infrastructure; nothing conforms to 4.1 yet.
 
 ## Version domains
 

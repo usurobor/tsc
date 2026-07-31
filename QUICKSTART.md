@@ -29,7 +29,7 @@ cd tsc
 ## 4 · Run against files
 
 ```bash
-coh --mode mechanical --files spec/ --output .tsc/
+coh --mode mechanical --files 'spec/**/*.md' --output .tsc/
 ```
 
 ## 5 · Run a named target
