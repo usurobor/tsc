@@ -451,14 +451,20 @@ when no credentials are configured, never degrading to mechanical.
 by the ledger workflow, never edited by hand) carries one row per release. A row is the **hybrid** measurement — the
 mechanical backend plus the Claude CLI witness — whenever the witness
 credential is present; when it is not, the row is mechanical and says so
-(every row names its mode and instrument). Historical backfill rows are
+(every row names its mode and instrument).
+
+Historical backfill rows are
 mechanical by construction: a fixed engine re-measuring an old tree is
-reproducible; a semantic judgment of one would not be. A hybrid row
+reproducible; a semantic judgment of one would not be.
+
+A hybrid row
 takes the same k=3 sampled witness route as the measurement workflow
 and records its own reliability — validated sample count, worst
 per-target Coh_consistency, and the standing that reading carries; a
 `single-sample: no standing` row may not be cited as release-grade
-semantic history. The rendered
+semantic history.
+
+The rendered
 `tsc-coherence-ledger` workflow appends the row on every version
 increment — a `VERSION`-bump push or a release-tag push, patch
 increments included (the tag is materialized from CI when it does not
@@ -466,12 +472,16 @@ exist yet; releases themselves are cut by `scripts/release.sh`, which
 gates on a `CHANGELOG.md` entry) — via
 [scripts/coherence-ledger.sh](../../scripts/coherence-ledger.sh);
 commits between releases do not write the ledger (per-run reports are CI
-artifacts instead). The authoritative release surface is `main`: only a
+artifacts instead).
+
+The authoritative release surface is `main`: only a
 `main` push, a tag push, or a `main`-ref dispatch materializes a tag or
 writes the row. A `VERSION`-bump push on any other branch measures and
 uploads artifacts but writes nothing — a run started at an older SHA
 would otherwise tag and record a tree the branch had already moved
-past; the release is cut by the merge itself. Historical rows were backfilled by measuring each
+past; the release is cut by the merge itself.
+
+Historical rows were backfilled by measuring each
 tag's tree — its own `targets/registry.tsc` — with one fixed engine, so
 the curve is comparable across releases; the instrument column names the
 engine that measured each row.

@@ -4,7 +4,7 @@ TSC defines how a declared methodology may warrant that observations belong to o
 
 **New to TSC?** Start with [`docs/THESIS.md`](docs/THESIS.md) for a plain-language overview, and keep the [glossary](spec/tsc-glossary.md) open for unfamiliar terms.
 
-The repository currently contains two different surfaces:
+The repository contains two surfaces:
 
 - **TSC specification 4.1.0 Draft** — the candidate theory and conformance contract;
 - **`coh` software 0.12.0** — the current repository-proxy engine, which does not implement TSC v4.
@@ -65,7 +65,7 @@ No implementation currently conforms to TSC 4.1. The first fixture families are 
 
 The candidate 4.1 normative headers carry `Status: Draft` until mathematical, document, and conformance review closes and a ratification-only commit is independently reviewed.
 
-The last **ratified** Normative contract is TSC **4.0.0** — the working `spec/` on `main` is its 4.1.0 Draft extension. The ratified 4.0.0 `spec/` tree (headers `Version: 4.0.0` / `Status: Normative`) is readable at [commit `4da1122`](https://github.com/usurobor/tsc/tree/4da1122/spec). This matches [`STATUS.md`](STATUS.md): 4.0.0 Normative is the standing warrant infrastructure; nothing conforms to 4.1 yet.
+The last **ratified** Normative contract is TSC **4.0.0** — the working `spec/` on `main` is its 4.1.0 Draft extension. The ratified 4.0.0 `spec/` tree (headers `Version: 4.0.0` / `Status: Normative`) is readable at [commit `4da1122`](https://github.com/usurobor/tsc/tree/4da1122/spec).
 
 ## Version domains
 

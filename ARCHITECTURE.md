@@ -1,6 +1,6 @@
 # TSC Architecture
 
-This document explains the repository's authority boundaries while TSC 4.1 extends the ratified v4 foundation with an optional polar source language.
+This document explains the repository's authority boundaries.
 
 ## 1 · Surfaces
 

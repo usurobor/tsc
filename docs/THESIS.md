@@ -16,7 +16,7 @@ TSC retains three differently typed receipt roles:
 - **β — relational atlas** — do the maps and generator presentations form joint realization candidates that globalize into one relational account?
 - **γ — continuation** — do applicable candidates predict and continue lawfully under held-out observation or intervention?
 
-The roles are non-substitutable and asymmetrically dependent. They are not three independent views and are not freely permutable axes.
+The roles are non-substitutable and asymmetrically dependent.
 
 ## What coherence means
 

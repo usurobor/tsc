@@ -1,6 +1,6 @@
 # Contributing to TSC (Triadic Self-Coherence)
 
-Thanks for your interest in contributing! This guide explains how to propose changes and what we expect.
+This guide explains how to propose changes to TSC.
 
 ## Table of Contents
 
@@ -35,8 +35,7 @@ Participation is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By contr
 
 ### Suggesting Enhancements
 
-- Explain the use case and proposed behavior
-- Why would this benefit most users?
+- Explain the use case, proposed behavior, and who benefits
 - Link to prior art if helpful
 
 ### Contributing Code
@@ -80,13 +79,6 @@ We welcome:
 - Follow standard OCaml conventions; use `ocamlformat` (run `dune fmt`)
 - Prefer pure functions and immutable data
 - Keep modules small and focused; provide `.mli` interface files for public surfaces
-
-### Code Organization
-
-- **Functional style preferred**: pure functions, immutable data structures
-- Keep functions small and focused
-- Use module interfaces (`.mli`) to constrain public API surface
-- Avoid mutable state unless necessary
 
 ### Type Signatures
 
@@ -188,5 +180,3 @@ See [LICENSE](LICENSE) for full text.
 - Open an issue with the `question` label
 - Email: peter@lisovin.com
 - Check existing issues first
-
-Thank you for contributing to TSC!

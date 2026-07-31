@@ -5,9 +5,9 @@
 **Last ratified specification:** 4.0.0 Normative ([readable at commit `4da1122`](https://github.com/usurobor/tsc/tree/4da1122/spec))
 **4.1 conformance standing:** none
 
-TSC 4.1.0 is a Draft candidate: it extends the ratified 4.0.0 Normative foundation with polar-expression recovery. 4.0.0 remains the last ratified contract until 4.1 passes foundation and repository review and a ratification-only commit is independently reviewed. The current engine is nonconforming to 4.1; no engine or methodology conforms yet.
+TSC 4.1.0 is a Draft candidate: it extends the ratified 4.0.0 Normative foundation with polar-expression recovery. 4.0.0 remains the last ratified contract until 4.1 passes foundation and repository review and a ratification-only commit is independently reviewed. No engine or methodology conforms to 4.1 yet.
 
-The ratified foundation is the current normative warrant infrastructure. The current bounded research sprint develops Articulation Ascent as the generative program that uses it (see `## Program priority`).
+The ratified foundation is the current normative warrant infrastructure.
 
 ## Theory
 
@@ -62,6 +62,3 @@ demonstrates basic discrimination, calibrated refusal, and non-decorative
 lift generation. Existing TSC conformance work and the Body Space
 registered report are preserved, but they are not on the critical path
 for this sprint.
-
-This priority declaration changes neither the normative status of TSC v4
-nor the conformance standing of the current engine.
