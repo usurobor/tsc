@@ -59,3 +59,27 @@ conformance PASS; 0 broken relative links on live surfaces.
 The `src/` move's latent link drift means CI linkcheck (lychee) does not reach
 deeply-nested markdown. That is a CI-coverage gap, not a cleaning item — it
 belongs to a separate engineering cell, noted here so it is not lost.
+
+## Round 04 — remediation of `reviews/04-convergence.md`
+
+β confirmed rounds 02–03 held with no regression, and caught that round 03's
+"repo-wide parser sweep" claim overreached — `SECURITY.md` was never audited. I
+was wrong to call it repo-wide; it was doc-set-wide. Fixed the 3 residuals:
+
+- `SECURITY.md` — replaced fabricated boilerplate (fake `2.0.x/2.1.x` support
+  table; a "TSC parsers are Python functions / arbitrary Python" threat model;
+  a `usurobor@gmail.com` contact conflicting with CONTRIBUTING) with a minimal
+  truthful policy grounded in real facts: pre-1.0 support, the OCaml engine's
+  `mechanical` (no network) vs `llm`/`hybrid` (outbound HTTPS) I/O, and the
+  single `peter@lisovin.com` security contact.
+- `.github/pull_request_template.md` — removed the leftover "especially for new
+  parsers" comment.
+- `CONTRIBUTING.md` — replaced the two parser/data-format commit examples with
+  real ones (conformance fixture, mechanical scoring).
+
+Then closed the class repo-wide: swept every live surface for `parser`/`Python`/
+`reference implementation`. Remaining hits are all legitimate — the C≡ **polar**
+parser (a real spec concept) and **frozen historical records** of the genuine
+Python→OCaml migration (CHANGELOG, ARCHAEOLOGY). No present-tense fiction remains.
+
+Gates: 0 broken live links; render clean; security contact consistent.

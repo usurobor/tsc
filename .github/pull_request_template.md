@@ -44,7 +44,7 @@ dune fmt
 
 **Manual testing performed:**
 
-<!-- Describe any manual testing, especially for new parsers -->
+<!-- Describe any manual testing performed -->
 
 ## Checklist
 

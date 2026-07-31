@@ -107,10 +107,10 @@ git checkout -b feat/your-feature-name
 ### Commit Messages (Conventional Commits)
 
 ```text
-feat: add time-series parser
-fix: correct temporal coherence calculation
+feat: add stochastic-law conformance fixture
+fix: correct mechanical scoring aggregation
 docs: update QUICKSTART with new examples
-test: add conformance test for audio data
+test: add negative case for a conformance fixture
 ```
 
 Types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`
