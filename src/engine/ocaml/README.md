@@ -4,7 +4,7 @@
 
 It is the canonical executable of the current repository-proxy methodology. It is **not** an implementation of TSC v4.
 
-The exact status and immutable semantic pin live in [`CONTRACT.md`](CONTRACT.md).
+The exact engine status and immutable semantic pin live in [`CONTRACT.md`](CONTRACT.md); repository-wide version and specification status live in [`STATUS.md`](../../../STATUS.md).
 
 ## Current pipeline
 

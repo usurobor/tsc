@@ -53,6 +53,8 @@ Domain rules remain outside the foundation.
 
 ## 4 · Current engine boundary
 
+Current: TSC 4.1 Draft; `coh` 0.12 is the non-v4 repository proxy. Details: [`STATUS.md`](STATUS.md).
+
 `src/engine/ocaml/` ships software release `0.12.0` and `coh`.
 
 The engine currently resolves file bundles, runs structural-proxy and semantic-judgment routes, validates provider output, and emits v3.2-era score reports.
