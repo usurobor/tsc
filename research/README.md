@@ -25,3 +25,16 @@ fibers, comparison, warrant classes, refusal, evidence lineage).
 Future: if the kernel survives its traces, an executable package lands under
 `src/` and normative semantics are authored under `spec/`; a conformance family
 lands under `conformance/ascent/`.
+
+### Repository Self-Coherence CM — [`repo-self-coherence/`](repo-self-coherence/)
+
+A declared methodology that measures whether this repository presents one
+truthful, navigable, operable whole to a first-time technical reader — TSC
+applied to its own repository. It measures and emits defects; it does not
+repair.
+
+- [`repo-self-coherence/CM.md`](repo-self-coherence/CM.md) — the methodology.
+- [`repo-self-coherence/requirements.md`](repo-self-coherence/requirements.md) —
+  the stable `REPO-*` requirement IDs.
+- [`repo-self-coherence/runs/`](repo-self-coherence/runs/) — retained per-commit
+  receipts; `0001` measures current `main` (`DEFECTS_FOUND`).
