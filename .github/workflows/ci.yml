@@ -60,11 +60,15 @@ jobs:
         # exact class #108 is about), so the gate is deterministic and free of
         # external-URL flakiness.
         #
-        # Excluded (non-live surfaces): vendored .cdd .cn-sigma .cell .tsc,
-        # build output _build, the heldout corpus, kata negative-control inputs
-        # (listed explicitly), frozen snapshots docs/{alpha,beta,gamma},
-        # CHANGELOG.md, LICENSE. Live docs, spec/, src/**, conformance/,
-        # research/, katas/*/README.md and schemas/fixtures/** are checked.
+        # Excluded (not reader-navigable Markdown surface): vendored
+        # .cdd .cn-sigma .cell .tsc, build output _build, the heldout corpus,
+        # kata negative-control inputs (listed explicitly), the
+        # docs/{alpha,beta,gamma} trees (mostly frozen prior-cycle snapshots,
+        # plus the live docs/beta/governance/ machine-dependency JSON and
+        # prereg, which are guarded by their own consumers — the engine and
+        # the factorized-beta workflow — not by linkcheck), CHANGELOG.md,
+        # LICENSE. Live docs, spec/, src/**, conformance/, research/,
+        # katas/*/README.md and schemas/fixtures/** are checked.
         run: |
           set -euo pipefail
           ver=lychee-v0.20.1
