@@ -83,3 +83,10 @@ parser (a real spec concept) and **frozen historical records** of the genuine
 Python→OCaml migration (CHANGELOG, ARCHAEOLOGY). No present-tense fiction remains.
 
 Gates: 0 broken live links; render clean; security contact consistent.
+
+## Round 05 — GO
+
+β-05 audited all 64 live `.md` files (full coverage, enumerated) and returned
+GO — 0 residual cleaning defects; rounds 02–04 held. The cell is `accepted`;
+γ closeout is in `CLOSEOUT.md`. Two out-of-scope items recorded there as
+follow-ups (CODE_OF_CONDUCT body; conformance ID/dir naming).
