@@ -9,8 +9,11 @@ proposal's owned-concerns list goes beyond the ratified policy, the CM declines
 The v1.1 amendment ratified the docs-taxonomy-closure, generated-vs-source, and
 historical-labelling concerns — now `STRUCT-DOCSET-001`, `STRUCT-DERIVED-001`, and
 `STRUCT-HISTLABEL-001`; cross-plane name-predictiveness stays declined. IDs are
-permanent; wording may sharpen. Fixture coverage is seed-stage — not every ID has
-both a positive and a negative fixture yet (see [Fixtures](#fixtures)).
+permanent; wording may sharpen. All fifteen IDs are unchanged at v0.2 — the v0.2
+bump is execution discipline (commit-pinned fixtures, an explicit consumer-search
+contract), not a new requirement (see [v0.2 execution discipline](#v02-execution-discipline)).
+Fixture coverage is still seed-stage — not every ID has both a positive and a
+negative fixture yet (see [Fixtures](#fixtures)).
 
 | ID | Requirement | Class | Severity | ADR clause |
 |---|---|---|---|---|
@@ -67,34 +70,72 @@ satisfied them, but it does not itself move files or close.
 
 The target is a **positive** fixture (a path that satisfies the ID in its
 canonical plane) and a **negative** fixture (a state that violates it, with the
-exact evidence the CM should surface) for each ID. Coverage at v0.1 is honest
-seed-stage, not complete:
+exact evidence the CM should surface) for each ID. Every fixture is pinned to an
+exact `repository_commit` (v0.2). Coverage is honest seed-stage, not complete:
 
 - Grounded by both a positive and a negative: `STRUCT-PLANE-001`,
-  `STRUCT-RULE-001`, `STRUCT-NAME-001`, `STRUCT-DOCSET-001` (positive: the eight
-  ratified folders; negatives: the two `docs/design/` bundles).
-- Positive + described negative: `STRUCT-DERIVED-001` (positive: `_build/`,
-  generated-and-excluded; the mislabeled-generated negative is described, the
-  tree offers none).
+  `STRUCT-RULE-001` (positive: the F1/F2 repaired homes `docs/quickstart/README.md`
+  and `docs/architecture/README.md` @ `a01fbb8`; negative: root `QUICKSTART.md` /
+  `ARCHITECTURE.md` @ `7514a21` — the frozen F1/F2 **regression pair**),
+  `STRUCT-NAME-001`, `STRUCT-DOCSET-001` (positive: the eight ratified folders;
+  negatives: the two `docs/design/` bundles @ `7514a21`).
+- Grounded by both (new at v0.2): `STRUCT-MIXED-001` — negative `docs/beta/`
+  @ `7514a21` (frozen snapshot + live engine/CI/test governance under one live
+  tree). v0.1 wrongly declined MIXED here; v0.2 flips the fixture. Requirement
+  wording unchanged.
+- Positive + described negative: `STRUCT-DERIVED-001` (positive: `_build/`
+  @ `7514a21`, generated-and-excluded; the mislabeled-generated negative is
+  described, the tree offers none).
 - Positive only: `STRUCT-CANON-001` (spec / engine / foundation-conformance in
-  their canonical homes), `STRUCT-EXCLUDE-001` (the do-not-touch set excluded),
-  and `STRUCT-HISTLABEL-001` (`docs/evidence/releases/0.12.0.md` "Historical"
-  banner; no unlabelled-history negative in the tree — recorded honestly).
+  their canonical homes @ `7514a21`), `STRUCT-EXCLUDE-001` (the do-not-touch set
+  excluded), and `STRUCT-HISTLABEL-001` (`docs/evidence/releases/0.12.0.md`
+  "Historical" banner @ `7514a21`; no unlabelled-history negative in the tree —
+  recorded honestly).
 - Consumer case: `STRUCT-CONSUMER-001` (`docs/beta/governance/fixtures/…json`
-  with its three enumerated consumers).
+  with its **seven** enumerated consumers pinned @ `7514a21` — v0.1 pinned only
+  three; run 0001 found the richer graph). The scoring surfaces are fixed by the
+  consumer-search contract in [`CM.md`](./CM.md). This ID also carries the
+  **near-miss regression fixture**: a methodology that reads the whole α/β/γ tree
+  as deletable frozen history without building the consumer graph must FAIL
+  @ `7514a21` — the repository's strongest structural regression test.
 - Refusal case: `STRUCT-REFUSE-001` (the foundation bundle's *destination* stays
-  open even though its placement is now a defect).
-- **No fixture yet:** `STRUCT-FUNC-001`, `STRUCT-OWNER-001`, and
-  `STRUCT-MIXED-001` — the current tree offers no clean live-inside-frozen-tree
-  negative for `STRUCT-MIXED-001`, no duplicate-live-copy negative for
-  `STRUCT-OWNER-001`, and no single-occupant-plane example for `STRUCT-FUNC-001`.
-  Seeding these is future work.
+  open even though its placement is now a defect, @ `7514a21`).
+- **No fixture yet:** `STRUCT-FUNC-001` and `STRUCT-OWNER-001` — the current tree
+  offers no duplicate-live-copy negative for `STRUCT-OWNER-001` and no
+  single-occupant-plane example for `STRUCT-FUNC-001`. Seeding these is future
+  work.
 - Process IDs (`STRUCT-REPAIR-001`, `STRUCT-REVIEW-001`) constrain the downstream
   wave, not the tree, so they carry no tree fixture.
 
-Fixtures are drawn from this repository's own tree and the ADR's recorded
-deferrals, so the CM demonstrably fires on real known debt (root `QUICKSTART.md`
-/ `ARCHITECTURE.md` outside the docs planes; `docs/beta/governance/` filing by
-α/β/γ role grammar; the two `docs/design/` bundles outside the closed docs
-taxonomy) while still refusing to name a *destination* the ADR leaves open. See
-[`fixtures/`](./fixtures/).
+Fixtures are drawn from this repository's own tree at pinned commits and the ADR's
+recorded deferrals, so the CM demonstrably fires on real known debt (root
+`QUICKSTART.md` / `ARCHITECTURE.md` @ `7514a21`, repaired @ `a01fbb8`;
+`docs/beta/governance/` filing by α/β/γ role grammar; the two `docs/design/`
+bundles outside the closed docs taxonomy) while still refusing to name a
+*destination* the ADR leaves open. See [`fixtures/`](./fixtures/).
+
+## v0.2 execution discipline
+
+No new `STRUCT-*`; no new ADR policy.
+
+The v0.2 bump adds **no** requirement ID and changes **no** ADR policy. It is
+execution discipline authored from run 0001's escaped defects. Each change and the
+escaped defect it closes:
+
+```text
+1  Commit-pinned fixtures        Every fixture carries a repository_commit. The
+   closes: fixture staleness      F1/F2 QUICKSTART/ARCHITECTURE before/after is a
+                                  frozen regression pair (defect @ 7514a21 → pass
+                                  @ a01fbb8); the first repair no longer makes the
+                                  fixture stale, it completes the pair.
+2  Consumer-search contract      CM.md fixes the search surfaces and receipt
+   closes: under-searched graph   fields; the factorized-beta consumer fixture is
+                                  repinned to the real 7-consumer graph @ 7514a21,
+                                  replacing the stale "three."
+3  STRUCT-MIXED-001 fixture flip  docs/beta/ becomes the MIXED negative @ 7514a21;
+   closes: false MIXED decline    v0.1 wrongly said docs/beta/ was "neither frozen
+                                  nor a snapshot tree." Wording unchanged.
+4  Near-miss regression fixture   A methodology that calls the α/β/γ tree deletable
+   closes: consumer-graph bypass  frozen history without a consumer graph must
+                                  FAIL @ 7514a21 (STRUCT-CONSUMER-001).
+```

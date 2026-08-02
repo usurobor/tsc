@@ -2,11 +2,17 @@
 
 ## Registry
 
-| Aspect | Status | Current profile |
+This registry carries current state. It splits the **timeless methodology** an
+aspect declares from the **mutable execution state** of its runs — the CM
+contracts stay timeless (they state how the methodology works); this table states
+what has run. Current profiles: Legibility `technical-newcomer-human`, Structure
+`repository-planes-v1.1`, Operability none.
+
+| Aspect | Methodology | Execution state |
 |---|---|---|
-| Legibility | Implemented v0.1 | technical-newcomer-human |
-| Structure | Draft v0.1 — authored, not yet run | repository-planes-v1.1 |
-| Operability | Planned | none |
+| Legibility | Implemented v0.1 | verified runs exist |
+| Structure | Implemented v0.1 (run 0001 frozen); v0.2 authored this cell | run 0001 frozen @ 7514a21; first repair (F1/F2) landed @ a01fbb8 |
+| Operability | Planned | not implemented |
 
 ## Decomposition rule
 

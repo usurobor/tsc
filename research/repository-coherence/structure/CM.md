@@ -1,7 +1,16 @@
 # Repository Structural Coherence CM
 
-**Status:** pre-normative research · v0.1
+**Status:** pre-normative research · v0.2
 **Owns:** the declared methodology. Not the repair skill, not the reviewer.
+
+`cm_version: 0.2`. v0.1→v0.2 is **execution discipline**, not new taste: it
+sharpens the consumer-search contract and pins every fixture to an exact commit
+after the first structural execution (run 0001). It introduces no new `STRUCT-*`
+requirement and no new plane policy; all fifteen `STRUCT-*` IDs and
+[`repository-planes-v1.1`](../../../docs/architecture/decisions/repository-planes.md)
+are unchanged. The v0.1 contract is preserved by git at commit `7514a21`; the
+v0.1→v0.2 delta is recorded in [`README.md`](./README.md) and
+[`requirements.md`](./requirements.md).
 
 ## Governing claim
 
@@ -136,11 +145,52 @@ The CM builds one artifact and reads the tree against it:
   Mechanical (exclusion, marker, render-check presence), semantic adjudication of
   "is this path derived."
 - **Consumer graph.** For every path proposed for a move, resolve its inbound
-  live consumers — grep code references, CI workflows, `targets/`, and tests, plus
-  markdown-link resolution — and bind that consumer set to the finding. A move is
-  coherent only if it rehomes every consumer's reference. Mechanical (scriptable
-  grep + link resolution). Grounds the ADR move invariants ("targets resolve;
-  conformance validator exits 0 …; no document's meaning changes").
+  live consumers and bind that consumer set to the finding. A move is coherent
+  only if it rehomes every consumer's reference. Mechanical (scriptable grep +
+  link resolution). Grounds the ADR move invariants ("targets resolve;
+  conformance validator exits 0 …; no document's meaning changes"). The exact
+  surfaces the enumeration searches, and the receipt fields it must record, are
+  fixed by the [consumer-search contract](#consumer-search-contract) below.
+
+## Consumer-search contract
+
+`STRUCT-CONSUMER-001` is only as strong as the surfaces the enumeration actually
+searches. To make a consumer set reproducible and its completeness auditable, the
+search is defined over an exact surface list, and the receipt records what it
+searched and what it left unsearched. This adds no new requirement — it is the
+observation discipline `STRUCT-CONSUMER-001` already implies, made explicit after
+run 0001 found a richer consumer graph than the v0.1 fixture had pinned.
+
+Consumer enumeration searches exactly these surfaces:
+
+```text
+source code            tracked implementation (e.g. src/**)
+tests                  tracked test suites (e.g. dune test targets)
+CI workflows           .github/workflows/**
+scripts                scripts/**
+targets                targets/** build/target declarations
+schemas                schemas/** and co-located schema literals
+Markdown links         resolvable links in tracked *.md
+configuration literals path strings embedded in config / literals
+generated-path declarations  render/build bindings that emit a path
+```
+
+For every consumer set the receipt records, verbatim fields:
+
+```text
+search_surfaces:       which of the surfaces above were searched
+search_strength:       per surface — mechanical grep, link resolution, or semantic
+consumer_set:          the enumerated inbound consumers (path : line)
+consumer_set_digest:   a stable digest over the sorted consumer_set
+unsearched_surfaces:   any surface above not searched, with the reason
+```
+
+A consumer set is pinned to the fixture's commit, never asserted as timeless: the
+count and members of any expected consumer set are a property of a specific
+`repository_commit`, so a fixture states "N consumers at commit X," not "N
+consumers." A run that searches fewer surfaces than it claims, or omits
+`unsearched_surfaces`, has an incomplete consumer graph and cannot ground a
+coherent move.
 
 ```text
 Mechanical   tree enumeration · plane classification by explicit rule ·
@@ -167,7 +217,7 @@ Each run emits the parent's common child receipt envelope
 
 ```text
 aspect:               structure
-cm_version:           structure-cm/0.1
+cm_version:           structure-cm/0.2
 profile:              repository-planes-v1.1
 repository_commit:    <SHA>
 scope:                <declared plane set + excluded paths + policy commit>
@@ -281,6 +331,7 @@ drawn from the ADR's own recorded deferrals so the CM demonstrably fires on real
 known debt, and the surviving refusal (a misplaced bundle whose *destination*
 the ADR still leaves open). See [`fixtures/`](./fixtures/).
 
-No run receipt is authored yet — no runs exist. A `runs/` directory follows
-convergence, mirroring the sibling legibility layout (which has `runs/` because
-it has runs); measurement is a later, separate invocation.
+Retained per-commit receipts live in `runs/`, and the latest-run pointer is kept
+in [`README.md`](./README.md). Each measurement is a separate invocation from this
+timeless contract: the contract states how the methodology works; the runs state
+what has been measured.
