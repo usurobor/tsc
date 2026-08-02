@@ -60,9 +60,8 @@ FORBIDDEN=(
 )
 
 # Path-prefix excludes — newly-added lines under these paths do not fail the
-# check. Frozen version directories match the X.Y.Z pattern under each tier
-# bundle (e.g. docs/alpha/doctrine/3.2.0/, docs/alpha/engine/0.5.0/,
-# docs/design/0.5.0/, docs/beta/governance/1.0.0/, etc.).
+# check. Frozen version directories match the X.Y.Z pattern under a bundle
+# (e.g. a path segment like `.../0.5.0/`).
 is_excluded_path() {
   local path="$1"
   case "$path" in

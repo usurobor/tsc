@@ -35,7 +35,7 @@ This tree is organized by **reader intent**: each document answers one human nee
 
 ## A note on history
 
-Earlier α/β/γ documentation snapshots are retained under `docs/alpha/`, `docs/beta/`, and `docs/gamma/`, and in git history. They record how the project once filed its documents. They are retained prior-cycle snapshots, and none are entry points for a newcomer — start from the intent table above instead. One exception is `docs/beta/governance/`, which is not frozen history but a live input the engine and CI still consume.
+The project once filed documentation under `α/β/γ` role trees. Those snapshots were retired from the tree and remain in Git history; their still-live material was rehomed by reader intent (see the table above).
 
 ## Status boundary
 

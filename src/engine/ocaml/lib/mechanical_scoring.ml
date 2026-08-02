@@ -296,7 +296,7 @@ let extract_md_links content =
 
 (** Extract X.Y.Z version strings from content. A match with a '/'
     immediately adjacent is a path segment (a reference to a versioned
-    directory, e.g. docs/alpha/engine/0.1.0/README.md), not a version
+    directory, e.g. path/to/0.1.0/README.md), not a version
     claim, and is skipped. *)
 let extract_versions content =
   let len = String.length content in

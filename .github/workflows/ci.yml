@@ -62,11 +62,7 @@ jobs:
         #
         # Excluded (not reader-navigable Markdown surface): vendored
         # .cdd .cn-sigma .cell .tsc, build output _build, the heldout corpus,
-        # kata negative-control inputs (listed explicitly), the
-        # docs/{alpha,beta,gamma} trees (mostly frozen prior-cycle snapshots,
-        # plus the live docs/beta/governance/ machine-dependency JSON and
-        # prereg, which are guarded by their own consumers — the engine and
-        # the factorized-beta workflow — not by linkcheck), CHANGELOG.md,
+        # kata negative-control inputs (listed explicitly), CHANGELOG.md,
         # LICENSE. Live docs, spec/, src/**, conformance/, research/,
         # katas/*/README.md and schemas/fixtures/** are checked.
         run: |
@@ -84,9 +80,6 @@ jobs:
             --exclude-path 'katas/02-random-soup/input/' \
             --exclude-path 'katas/03-comparative/input/' \
             --exclude-path 'katas/05-adversarial/input/' \
-            --exclude-path 'docs/alpha/' \
-            --exclude-path 'docs/beta/' \
-            --exclude-path 'docs/gamma/' \
             --exclude-path 'CHANGELOG\.md' \
             --exclude-path 'LICENSE' \
             -- '*.md' '**/*.md'

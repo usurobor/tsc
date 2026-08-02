@@ -4,7 +4,7 @@
 
 > **Frozen repository-proxy methodology — not TSC v4.** The engine's
 > semantic contract is the immutable v3.2.2 pin recorded in
-> [`src/engine/ocaml/CONTRACT.md`](../../../src/engine/ocaml/CONTRACT.md), not the
+> [`src/engine/ocaml/CONTRACT.md`](../../src/engine/ocaml/CONTRACT.md), not the
 > live `spec/` bodies. Where this manual names α, β, γ, they are the
 > repository proxy's three independent scalar coherence axes — **not**
 > TSC v4's α/β/γ, which the normative spec defines as non-substitutable,
@@ -110,7 +110,7 @@ semantic paths.
 In CI, the rendered self-measurement workflow uses no raw API key: the
 witness runs via the Claude CLI, gated by the presence of the
 `CLAUDE_CODE_OAUTH_TOKEN` secret (see
-[src/skills/self-measure/SKILL.md](../../../src/skills/self-measure/SKILL.md) §5–6).
+[src/skills/self-measure/SKILL.md](../../src/skills/self-measure/SKILL.md) §5–6).
 
 ### Optional variables
 
@@ -182,7 +182,7 @@ Exactly one input selector is required: `--target`, `--files`, or
 
 `coh self` measures this repository against its own targets. The engine
 dispatches it (git-style external subcommand) to the `coh-self` command,
-which is rendered from [src/skills/self-measure/SKILL.md](../../../src/skills/self-measure/SKILL.md) —
+which is rendered from [src/skills/self-measure/SKILL.md](../../src/skills/self-measure/SKILL.md) —
 read that skill for the full procedure, including exactly which steps are
 mechanical and which single step is delegated to an LLM.
 
