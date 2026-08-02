@@ -129,7 +129,7 @@ self_measure:
     providers:
       local: >-
         engine HTTP route — LLM_PROVIDER / LLM_MODEL / LLM_API_KEY
-        (docs/beta/guides/OPERATOR-MANUAL.md section 3)
+        (docs/guides/OPERATOR-MANUAL.md section 3)
       ci: >-
         claude-cli — a pinned Claude CLI invocation in the rendered
         workflow (the renderer owns the version pin), permitted only to

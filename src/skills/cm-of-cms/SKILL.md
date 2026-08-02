@@ -120,7 +120,7 @@ cm_of_cms:
     providers:
       local: >-
         engine HTTP route — LLM_PROVIDER / LLM_MODEL / LLM_API_KEY
-        (docs/beta/guides/OPERATOR-MANUAL.md section 3)
+        (docs/guides/OPERATOR-MANUAL.md section 3)
       ci: >-
         claude-cli — the same external witness route as the 1st
         methodology (emit prompt, Claude CLI step, ingest), rooted at
