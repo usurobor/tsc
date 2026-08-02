@@ -2,7 +2,7 @@
 
 This guide runs software release `0.12.0`. It does not run a TSC v4-conforming methodology.
 
-Read [`STATUS.md`](STATUS.md) before interpreting output.
+Read [`STATUS.md`](../../STATUS.md) before interpreting output.
 
 ## 1 · Install
 
@@ -73,9 +73,9 @@ bash scripts/run-katas.sh
 
 ## 9 · Read v4
 
-- [`spec/README.md`](spec/README.md)
-- [`spec/tsc-conformance.md`](spec/tsc-conformance.md)
-- [`conformance/README.md`](conformance/README.md)
-- [`src/engine/ocaml/CONTRACT.md`](src/engine/ocaml/CONTRACT.md)
+- [`spec/README.md`](../../spec/README.md)
+- [`spec/tsc-conformance.md`](../../spec/tsc-conformance.md)
+- [`conformance/README.md`](../../conformance/README.md)
+- [`src/engine/ocaml/CONTRACT.md`](../../src/engine/ocaml/CONTRACT.md)
 
 No command currently emits a passing v4 conformance receipt.

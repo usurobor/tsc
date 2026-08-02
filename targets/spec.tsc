@@ -15,6 +15,6 @@ exclude = [
   "examples/**",
   "targets/**",
   "README.md",
-  "QUICKSTART.md",
-  "ARCHITECTURE.md"
+  "docs/quickstart/README.md",
+  "docs/architecture/README.md"
 ]

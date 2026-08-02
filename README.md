@@ -20,7 +20,7 @@ It returns a proof-carrying receipt — not a single score — so a coherence de
 | I want to… | Go to |
 |---|---|
 | Understand the idea | [`docs/THESIS.md`](docs/THESIS.md) |
-| Try the current CLI | [`QUICKSTART.md`](QUICKSTART.md) |
+| Try the current CLI | [`docs/quickstart/README.md`](docs/quickstart/README.md) |
 | Read the spec | [`spec/README.md`](spec/README.md) |
 | Follow Articulation Ascent | [`research/ascent/README.md`](research/ascent/README.md) |
 | Contribute | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
@@ -37,7 +37,7 @@ cd tsc
 coh --mode mechanical --files 'spec/**/*.md' --output .tsc/
 ```
 
-Its outputs are v3.2-era proxy results, useful for regression and structural defect discovery. They carry no v4 coherence meaning and no v4 conformance standing. See [`QUICKSTART.md`](QUICKSTART.md) for the full executable path.
+Its outputs are v3.2-era proxy results, useful for regression and structural defect discovery. They carry no v4 coherence meaning and no v4 conformance standing. See [`docs/quickstart/README.md`](docs/quickstart/README.md) for the full executable path.
 
 ## Learn more
 

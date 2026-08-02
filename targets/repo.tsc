@@ -10,8 +10,8 @@ include_targets = [
 
 include = [
   "README.md",
-  "ARCHITECTURE.md",
-  "QUICKSTART.md",
+  "docs/architecture/README.md",
+  "docs/quickstart/README.md",
   "STATUS.md",
   "CITATION.cff",
   "conformance/**",

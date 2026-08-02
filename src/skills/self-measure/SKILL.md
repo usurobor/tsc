@@ -244,7 +244,7 @@ aggregates, per the frozen v3.2.2 proxy contract in
 `src/engine/ocaml/CONTRACT.md`) covers all three.
 
 Reports land in `.tsc/self/`. Generated state is never canonical
-(ARCHITECTURE.md); the directory is gitignored.
+(docs/architecture/README.md); the directory is gitignored.
 
 ---
 

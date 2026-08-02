@@ -21,6 +21,6 @@ exclude = [
   "targets/**",
   "src/engine/ocaml/_build/**",
   "README.md",
-  "ARCHITECTURE.md",
-  "QUICKSTART.md"
+  "docs/architecture/README.md",
+  "docs/quickstart/README.md"
 ]

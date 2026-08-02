@@ -71,7 +71,7 @@ package skill
 		instruction: !=""
 
 		// Where generated measurement state lands. Must stay inside .tsc/
-		// (generated state is never canonical — ARCHITECTURE.md).
+		// (generated state is never canonical — docs/architecture/README.md).
 		output_root: string & =~"^\\.tsc(/|$)"
 
 		default_mode: "mechanical" | "llm" | "hybrid" | "auto"
