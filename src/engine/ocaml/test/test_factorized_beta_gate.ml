@@ -196,7 +196,7 @@ let responses_for fixtures ~pick =
 
 let test_b3_controls_agree () =
   let path = Filename.concat (Lazy.force repo_root)
-      "docs/beta/governance/fixtures/factorized-beta-controls.json" in
+      "research/self-measure/consistency-factorization/fixtures/factorized-beta-controls.json" in
   let fixtures = Yojson.Safe.from_string (read_file path) in
   let responses = responses_for fixtures ~pick:(fun exp -> exp) in
   (match G.controls_check ~fixtures_json:fixtures ~responses_json:responses with
@@ -207,7 +207,7 @@ let test_b3_controls_agree () =
 
 let test_b3_controls_mismatch () =
   let path = Filename.concat (Lazy.force repo_root)
-      "docs/beta/governance/fixtures/factorized-beta-controls.json" in
+      "research/self-measure/consistency-factorization/fixtures/factorized-beta-controls.json" in
   let fixtures = Yojson.Safe.from_string (read_file path) in
   (* Flip every expected verdict to 'supports' — the contradicts and
      insufficient controls now disagree. *)
@@ -221,7 +221,7 @@ let test_b3_controls_mismatch () =
 let test_b3_controls_evidence_side () =
   (* A contradicts response missing the target evidence side fails B3. *)
   let path = Filename.concat (Lazy.force repo_root)
-      "docs/beta/governance/fixtures/factorized-beta-controls.json" in
+      "research/self-measure/consistency-factorization/fixtures/factorized-beta-controls.json" in
   let fixtures = Yojson.Safe.from_string (read_file path) in
   let responses =
     match get "controls" fixtures with
@@ -247,7 +247,7 @@ let test_b3_controls_evidence_side () =
 
 let test_controls_prompt () =
   let path = Filename.concat (Lazy.force repo_root)
-      "docs/beta/governance/fixtures/factorized-beta-controls.json" in
+      "research/self-measure/consistency-factorization/fixtures/factorized-beta-controls.json" in
   let fixtures = Yojson.Safe.from_string (read_file path) in
   (match G.controls_prompt fixtures with
    | Ok prompt ->

@@ -321,7 +321,7 @@ let read_file path =
 
 let test_b3_fixture_typed_gate () =
   let path = Filename.concat (Lazy.force repo_root)
-      "docs/beta/governance/fixtures/factorized-beta-controls.json" in
+      "research/self-measure/consistency-factorization/fixtures/factorized-beta-controls.json" in
   let json = Yojson.Safe.from_string (read_file path) in
   match FB.validate_controls json with
   | Ok n ->

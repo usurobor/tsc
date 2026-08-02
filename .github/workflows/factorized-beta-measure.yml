@@ -1,6 +1,6 @@
 # factorized-beta-measure.yml — the VERDICT cell of the factorized-β wave
 # (Sub-2 of #73, issue #75). Runs the FROZEN experiment
-# (docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md rev 4) over the
+# (research/self-measure/consistency-factorization/CONSISTENCY-FACTORIZATION-PREREG.md rev 4) over the
 # five held-out targets and emits the terminal PASS | FAIL | NO-DECISION
 # against the pre-registered A/B/C gate.
 #

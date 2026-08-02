@@ -9,15 +9,15 @@ Status: PRE-REGISTRATION — awaiting operator review of the revised gate.
 No code, instrument, engine, runtime, or workflow change is authorized
 by this note.
 Operator dispatch: yes (2026-07-05 conversation).
-Companion: [METER-LOOP-DECISION.md](METER-LOOP-DECISION.md) — the
+Companion: [self-measure-meter-loop.md](../../../docs/architecture/decisions/self-measure-meter-loop.md) — the
 binding stop rule this note re-enters against, and
-[DEFECT-HARVESTING.md](DEFECT-HARVESTING.md) — the parallel replacement
+[defect-harvesting.md](../defect-harvesting.md) — the parallel replacement
 line that continues regardless.
 Fixture source of truth (B3):
 [fixtures/factorized-beta-controls.json](fixtures/factorized-beta-controls.json)
 — committed with this revision; frozen before implementation.
 
-## Re-entry conditions (from METER-LOOP-DECISION.md)
+## Re-entry conditions (from self-measure-meter-loop.md)
 
 The meter-loop stop rule permits a new consistency experiment only with
 ALL of: (1) operator dispatch; (2) a written theory of variance that
@@ -324,14 +324,14 @@ Two-sided; both sides must pass, per target.
   non-regression guard, not evidence of semantic discrimination.
 - **B3. β local semantic controls — the discrimination gate.** The
   fixture set at
-  [`docs/beta/governance/fixtures/factorized-beta-controls.json`](fixtures/factorized-beta-controls.json)
+  [`research/self-measure/consistency-factorization/fixtures/factorized-beta-controls.json`](fixtures/factorized-beta-controls.json)
   (committed with this revision; may not be edited in the
   implementation PR except to fix a syntax error caught before any
   measurement run) must pass. Each fixture carries: `id`, `kind`,
   `source_text`, `target_text`, `source_path`, `target_path`,
   `mechanical_status`, `expected_verdict`, `required_evidence_sides`,
   `llm_called`. Typed fixture rules (checked before any run):
-  - the file parses: `jq -e . docs/beta/governance/fixtures/factorized-beta-controls.json`;
+  - the file parses: `jq -e . research/self-measure/consistency-factorization/fixtures/factorized-beta-controls.json`;
   - `kind ∈ {citation_bears_claim, authority_claim, target_file_fit}`;
   - `expected_verdict ∈ {supports, contradicts, insufficient, unresolved}`;
   - `expected_verdict = unresolved` **iff** `mechanical_status =
@@ -459,7 +459,7 @@ infrastructure / contract hardening with **no consistency claim**.
 role from scalar judge to defect-proposer + ambiguity-detector; treat
 remaining disagreement as a measured property of the artifact. Tracked
 in **#76** (meter-found semantic ambiguity queue) under
-`docs/beta/governance/DEFECT-HARVESTING.md`. One flagged nuance for the
+`research/self-measure/defect-harvesting.md`. One flagged nuance for the
 record: `spec`'s A2 miss cannot be distinguished from logs alone between
 "baseline absent (<2 valid scalar samples)" and "present but below the
 +0.10 margin"; immaterial to the verdict since A1/A3 already fail on

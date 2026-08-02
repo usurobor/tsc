@@ -1,7 +1,7 @@
 (** Factorized β: deterministic locus enumeration + mechanical aggregation.
 
     Implements the FROZEN pre-registration
-    docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md (rev 4):
+    research/self-measure/consistency-factorization/CONSISTENCY-FACTORIZATION-PREREG.md (rev 4):
 
     - the engine enumerates a deterministic, pre-witness β locus inventory
       (kills the witness's selection freedom);
@@ -709,7 +709,7 @@ let adjudication_instruction (loci : locus list) =
 (* B3 discrimination-gate fixture (typed rules, checked before any run) *)
 
 (** One B3 control from
-    docs/beta/governance/fixtures/factorized-beta-controls.json. *)
+    research/self-measure/consistency-factorization/fixtures/factorized-beta-controls.json. *)
 type control = {
   c_id                      : string;
   c_kind                    : string;

@@ -214,7 +214,7 @@ val summarize_result : result -> string
     on. Exposed so [Factorized_beta] can enumerate its β loci on the SAME
     mechanical surface the scalar β signals score — the locus set cannot
     diverge from the signal it claims to anchor (see
-    docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md §"β locus
+    research/self-measure/consistency-factorization/CONSISTENCY-FACTORIZATION-PREREG.md §"β locus
     enumerators"). No behaviour of the scalar path changes; these were
     already computed, only their visibility widens. *)
 

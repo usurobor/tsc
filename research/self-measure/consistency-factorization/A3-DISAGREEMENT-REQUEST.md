@@ -5,8 +5,8 @@ Author: κ (Herald) — recording operator intent as a typed request.
 Status: **REQUEST** — no protocol change authorized by this note. Get the
 data first; classify; only then decide whether a new experiment is justified.
 Companions: [CONSISTENCY-FACTORIZATION-PREREG.md](CONSISTENCY-FACTORIZATION-PREREG.md)
-(the frozen experiment + recorded FAIL), [METER-LOOP-DECISION.md](METER-LOOP-DECISION.md),
-[DEFECT-HARVESTING.md](DEFECT-HARVESTING.md).
+(the frozen experiment + recorded FAIL), [self-measure-meter-loop.md](../../../docs/architecture/decisions/self-measure-meter-loop.md),
+[defect-harvesting.md](../defect-harvesting.md).
 Feeds: **#76** (meter-found semantic ambiguity queue) — this is its first concrete work item.
 
 ## The finding this request exists to investigate

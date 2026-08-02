@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/factorized-beta-measure.sh — run the FROZEN factorized-β
-# experiment (docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md
+# experiment (research/self-measure/consistency-factorization/CONSISTENCY-FACTORIZATION-PREREG.md
 # rev 4) for one held-out target (Sub-2 of #73, issue #75).
 #
 # Per target it:

@@ -1,6 +1,6 @@
 (** Factorized β: deterministic locus enumeration + mechanical aggregation.
 
-    Implements docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md
+    Implements research/self-measure/consistency-factorization/CONSISTENCY-FACTORIZATION-PREREG.md
     (rev 4). Pure module — no I/O, no LLM call, no network. Identical
     bundle -> identical inventory and identical locus ids.
 

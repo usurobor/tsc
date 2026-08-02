@@ -1,7 +1,7 @@
 (** Factorized-β measurement gate (Sub-2 of #73, issue #75).
 
     Evaluates the FROZEN pre-registered A/B/C gate of
-    docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md (rev 4) over
+    research/self-measure/consistency-factorization/CONSISTENCY-FACTORIZATION-PREREG.md (rev 4) over
     the per-target factorized-β measurements the credentialed CI witness
     produces. Pure module — no I/O, no LLM call, no network.
 
@@ -239,7 +239,7 @@ let gate_result_to_json gr =
                 ("passed", `Bool c.chk_passed);
                 ("detail", `String c.chk_detail) ]) gr.gr_checks));
     ("prereg",
-     `String "docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md rev 4");
+     `String "research/self-measure/consistency-factorization/CONSISTENCY-FACTORIZATION-PREREG.md rev 4");
     ("note",
      `String "C4: >1 held-out locus_sparse -> NO-DECISION; C5: any A/B miss -> FAIL.");
   ]

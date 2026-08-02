@@ -1,7 +1,7 @@
 (** Factorized-β measurement gate (Sub-2 of #73, issue #75).
 
     Evaluates the FROZEN pre-registered A/B/C gate of
-    docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md (rev 4) over
+    research/self-measure/consistency-factorization/CONSISTENCY-FACTORIZATION-PREREG.md (rev 4) over
     the per-target factorized-β measurements the CI witness produces. Pure
     module — no I/O, no LLM call, no network.
 

@@ -3,7 +3,7 @@
 Date: 2026-07-04
 Status: Design (Issue 6 of the post-loop stabilization wave; no code
 implemented by this note)
-Companion: [METER-LOOP-DECISION.md](METER-LOOP-DECISION.md) — the
+Companion: [self-measure-meter-loop.md](../../docs/architecture/decisions/self-measure-meter-loop.md) — the
 binding record that stopped score optimization and dispatched this
 design.
 

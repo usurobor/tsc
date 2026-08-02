@@ -728,7 +728,7 @@ let () =
   if Array.length Sys.argv >= 2 && Sys.argv.(1) = "factorized-beta-controls-prompt" then begin
     let n = Array.length Sys.argv in
     let fixtures =
-      ref "docs/beta/governance/fixtures/factorized-beta-controls.json"
+      ref "research/self-measure/consistency-factorization/fixtures/factorized-beta-controls.json"
     and output = ref "" in
     let rec eat i =
       if i >= n then ()
@@ -756,7 +756,7 @@ let () =
   if Array.length Sys.argv >= 2 && Sys.argv.(1) = "factorized-beta-controls-check" then begin
     let n = Array.length Sys.argv in
     let fixtures =
-      ref "docs/beta/governance/fixtures/factorized-beta-controls.json"
+      ref "research/self-measure/consistency-factorization/fixtures/factorized-beta-controls.json"
     and response = ref "" and output = ref "" in
     let rec eat i =
       if i >= n then ()

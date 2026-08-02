@@ -74,7 +74,7 @@ optimization target:
    never for expected witness variance.
 2. **Defect harvesting** — repeated, cited witness findings become
    CDD issues through the queue defined in
-   [DEFECT-HARVESTING.md](DEFECT-HARVESTING.md); its metrics are
+   [defect-harvesting.md](../../../research/self-measure/defect-harvesting.md); its metrics are
    defect-yield metrics, not Coh-consistency.
 3. **External calibration design** — cross-route witnesses and
    externally-anchored calibration (the diversity ladder named in the
@@ -116,6 +116,6 @@ prompt/schema/locus tweak with a consistency-movement rationale. The
 replacement line advances instead: the meter becomes a defect-proposer +
 ambiguity-detector, and disagreement becomes a measured artifact
 property — **#76** (semantic ambiguity queue) under
-[DEFECT-HARVESTING.md](DEFECT-HARVESTING.md), extending replacement item
+[defect-harvesting.md](../../../research/self-measure/defect-harvesting.md), extending replacement item
 2 above; external/cross-route calibration (item 3) remains the eventual
 consistency-evidence path.
