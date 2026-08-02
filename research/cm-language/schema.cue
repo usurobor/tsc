@@ -56,6 +56,17 @@ package cm
 	refusals:            [...] | {...}
 	unobserved_surfaces: _
 	evidence_refs:       _
+
+	// Increment-2 extension. Aspect CMs carry aspect-specific TYPED fields beyond
+	// the shared ten (Structure: plane_classification, canonical_path_map,
+	// policy_authority; per-finding repairability + consumer_search). The envelope
+	// was a closed definition and rejected them. Opening it lets each aspect add
+	// its own typed fields, while the parent composition still reads ONLY the
+	// shared result_class / status / status_mapping interface — so the
+	// generic-vs-aspect-private boundary is preserved by which fields the parent
+	// reads, not by closedness. The parent instance adds no extra fields, so its
+	// exported IR is unchanged.
+	...
 }
 
 // #AspectSource is how a parent references a child aspect CM: a registered
@@ -160,10 +171,14 @@ package cm
 	note:         string | *"Parent and child CMs measure only; repair and independent review remain separate invocations."
 }
 
-// #Requirement is one stable RCM-* requirement.
+// #Requirement is one stable RCM-* / STRUCT-* requirement.
 #Requirement: {
 	id:   =~"^[A-Z]+(-[A-Z]+)+-[0-9]+$"
 	text: string
+	// Increment-2 extension (optional, parent-safe). A leaf CM's requirements each
+	// trace to a clause of their governing policy (the ADR); the composite's RCM-*
+	// requirements simply omit it. Absent on the parent → not emitted in its IR.
+	adr_clause?: string
 }
 
 // #Methodology is a composite (parent) CM: it composes aspect receipts on a
@@ -208,4 +223,101 @@ package cm
 
 	// What the parent explicitly does not own.
 	does_not_own: [...string]
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Leaf / aspect methodology (increment 2).
+//
+// #Methodology above is COMPOSITE: it derives its result by composing child
+// receipts — #ResultComposition walks a precedence over the children's
+// result_classes — and emits a #CompositeReceipt. A LEAF (aspect) CM composes no
+// children: it runs a PROCEDURE over a repository + policy snapshot and derives
+// its own result_class from a Result RULE evaluated on that procedure's output.
+// None of `children`, #ResultComposition, #CompositeReceipt, or the parent
+// α/β/γ manifestation fields apply to a leaf. #AspectMethodology is that leaf
+// shape; it emits a #ChildReceiptEnvelope (the same generic receipt the parent
+// composes), so a leaf plugs into a composite unchanged.
+
+// #ProcedureInput is one named, typed input a leaf procedure consumes.
+#ProcedureInput: {
+	name: string
+	role: string // what a fresh executor supplies for it
+}
+
+// #ProcedureStep is one ordered, numbered step a fresh executor applies.
+// `checks` names the requirement ids the step enforces (may be empty).
+#ProcedureStep: {
+	n:      int & >0
+	action: string
+	checks: [...string] | *[]
+}
+
+// #ResultRuleClause is one guarded outcome: if `when` holds over the procedure
+// output, result_class = `class`. Clauses are ordered highest-precedence first.
+#ResultRuleClause: {
+	when:  string
+	class: #ResultClass
+}
+
+// #ResultRule makes a leaf's result derivation DATA — the leaf analog of the
+// composite's #ResultComposition. Where the composite walks a precedence over
+// CHILD result_classes, a leaf walks guarded CLAUSES over its own procedure
+// output. A fresh reader evaluates `clauses` top-to-bottom; the first clause
+// whose `when` holds yields result_class = clause.class; if none fires,
+// result_class = `otherwise`.
+#ResultRule: {
+	clauses: [...#ResultRuleClause]
+	otherwise: #ResultClass
+}
+
+// #Procedure is the executable core of a leaf CM: typed inputs, ordered steps,
+// and the result rule — all DATA, so a fresh executor applies it from the
+// compiled IR alone.
+#Procedure: {
+	inputs: [...#ProcedureInput]
+	steps: [...#ProcedureStep]
+	result: #ResultRule
+}
+
+// #RetiredRequirement records a permanently retired requirement id (ids are
+// stable and never reused).
+#RetiredRequirement: {
+	id:   =~"^[A-Z]+(-[A-Z]+)+-[0-9]+$"
+	note: string
+}
+
+// #AspectMethodology is a leaf (aspect) CM.
+#AspectMethodology: {
+	id:       string
+	version:  string
+	question: string // governing claim
+	profile:  string
+
+	// The leaf's own closed status vocabulary and its declared status ->
+	// result_class mapping. The status is retained verbatim on every receipt; the
+	// parent composition reads only the derived result_class.
+	statuses: [...string]
+	status_mapping: {[string]: #ResultClass}
+
+	// The generic composition interface's definitions, carried once.
+	result_class_definitions: #ResultClassDefinitions
+
+	// The executable procedure + result rule (DATA).
+	procedure: #Procedure
+
+	// Measure-only boundary (shared with the composite).
+	boundary: #Boundary
+
+	// The stable requirement set this leaf checks (id · claim · adr_clause).
+	requirements: [...#Requirement]
+
+	// Permanently retired requirement ids, if any.
+	retired_requirements: [...#RetiredRequirement] | *[]
+
+	// The output receipt shape this leaf emits: the generic child envelope,
+	// optionally carrying aspect-specific typed extensions.
+	receipt: #ChildReceiptEnvelope
+
+	// What the leaf explicitly does not own.
+	does_not_own: [...string] | *[]
 }
