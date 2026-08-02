@@ -1,9 +1,9 @@
 # Repository coherence aspects
 
-| Aspect | Methodology | Execution |
+| Aspect | Methodology | Latest execution |
 |---|---|---|
-| Legibility | v0.2 implemented | runs 0001–0002 (v0.1) frozen; v0.2 fresh run pending |
-| Structure  | v0.2 implemented | run 0001 (v0.1) frozen; v0.2 authored, not yet run |
+| Legibility | v0.2 implemented | run 0003 @ `48b9a63` · PASS · fixture 6/6 |
+| Structure  | v0.2 implemented | run 0002 @ `48b9a63` · DEFECT |
 | Operability | not implemented | — |
 
 The three aspect questions:

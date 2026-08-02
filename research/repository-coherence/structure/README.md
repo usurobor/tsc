@@ -5,8 +5,13 @@ name, owner, lifecycle, and relationship to the rest of the repository — judge
 against the ratified planes policy, not against the CM's own taste. It applies
 TSC to its own repository.
 
-**Status:** pre-normative research. CM at **v0.2** (a minimal executable
-procedure). Run 0001 (v0.1) frozen. Not under `spec/` (not normative).
+**Status:** pre-normative research. Not under `spec/` (not normative).
+
+- methodology: v0.2
+- latest run: 0002 — [`runs/0002-current-main.md`](./runs/0002-current-main.md)
+- measured snapshot: `48b9a63`
+- result: `DEFECTS_FOUND → DEFECT`
+- run 0001 (v0.1): frozen
 
 ## Navigation
 
@@ -22,9 +27,10 @@ procedure). Run 0001 (v0.1) frozen. Not under `spec/` (not normative).
   destination refusal.
 - [`runs/`](./runs/) — frozen measurement receipts.
 
-**Latest run:** [`runs/0001-current-main.md`](./runs/0001-current-main.md) —
-v0.1, commit `7514a21`, `DEFECTS_FOUND` (F1–F12 + refusal R1). Frozen and
-immutable; it remains interpretable exactly as authored under v0.1.
+**Latest run:** [`runs/0002-current-main.md`](./runs/0002-current-main.md) —
+v0.2, snapshot `48b9a63`, `DEFECTS_FOUND → DEFECT`. Run 0001 (v0.1, commit
+`7514a21`) is frozen and immutable; it remains interpretable exactly as authored
+under v0.1.
 
 ## v0.1 → v0.2 delta
 

@@ -4,8 +4,13 @@ A declared methodology that measures whether this repository presents one
 truthful, navigable, operable whole to the reader it claims to serve. It applies
 TSC to its own repository.
 
-**Status:** pre-normative research, v0.1. Not under `spec/` (not normative) and
-not yet executable. Review-run for now.
+**Status:** pre-normative research. Not under `spec/` (not normative).
+
+- methodology: v0.2
+- latest run: 0003 — [`runs/0003-current-main.md`](./runs/0003-current-main.md)
+- measured snapshot: `48b9a635c59ec6ba00dd80ee7a48d1160d1e0656` (`48b9a63`)
+- result: `COHERENT_WITHIN_DECLARED_SCOPE → PASS` (fixture 6/6)
+- prior v0.1 runs: 0001, 0002 (+0002-review) frozen
 
 ## What is here
 
@@ -15,7 +20,7 @@ not yet executable. Review-run for now.
 - `requirements.md` — the stable `REPO-*` requirement IDs.
 - `fixtures/` — positive and negative fixtures; `newcomer-tasks.md` is the
   primary semantic fixture (six front-door questions).
-- `runs/` — retained per-commit receipts. `0001` measures current `main`.
+- `runs/` — retained per-commit receipts. `0003` measures current `main`.
 - `results/` — cross-run comparisons (e.g. before/after cleanup).
 
 ## The one rule that shapes everything

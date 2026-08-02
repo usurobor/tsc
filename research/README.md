@@ -33,18 +33,19 @@ operational — over one repository snapshot, retaining their conflicts instead 
 averaging them. TSC applied to its own repository. It measures and emits defects;
 it does not repair.
 
-- [`repository-coherence/CM.md`](repository-coherence/CM.md) — the parent
-  contract: composition, coverage, and the `RCM-*` requirement IDs.
-- [`repository-coherence/ASPECTS.md`](repository-coherence/ASPECTS.md) — the
-  aspect registry and the decompose-by-property rule.
-
-The Legibility aspect is implemented at
-[`repository-coherence/legibility/`](repository-coherence/legibility/):
-
-- [`repository-coherence/legibility/CM.md`](repository-coherence/legibility/CM.md)
-  — the methodology.
-- [`repository-coherence/legibility/requirements.md`](repository-coherence/legibility/requirements.md)
-  — the stable `REPO-*` requirement IDs.
-- [`repository-coherence/legibility/runs/`](repository-coherence/legibility/runs/)
-  — retained per-commit receipts; `0001` measures current `main`
-  (`DEFECTS_FOUND`).
+- parent contract: [`repository-coherence/CM.md`](repository-coherence/CM.md) —
+  composition, coverage, and the `RCM-*` requirement IDs.
+- parent requirements: [`repository-coherence/requirements.md`](repository-coherence/requirements.md)
+  — the parent requirement set (moved out of `CM.md`).
+- aspect registry: [`repository-coherence/ASPECTS.md`](repository-coherence/ASPECTS.md)
+  — the aspect registry and the decompose-by-property rule.
+- implemented aspects: legibility
+  ([`legibility/`](repository-coherence/legibility/)), structure
+  ([`structure/`](repository-coherence/structure/)).
+- latest composite: [`repository-coherence/runs/0001-composite.md`](repository-coherence/runs/0001-composite.md)
+  — BASELINE, `DEFECTS_FOUND`.
+  - measured snapshot: `48b9a635c59ec6ba00dd80ee7a48d1160d1e0656`
+  - receipt publication commit: `920eba24f2f2224fa5b31c8721947693b4734e62`
+    (one-commit lag: the snapshot is measured, then the receipt is published in a
+    descendant commit).
+- operability: registered, not implemented.
