@@ -31,10 +31,10 @@ reader is a **profile** fed to an aspect, not an aspect.
 
 | Audience | Structure | Legibility | Operability |
 |---|---|---|---|
-| Operator | useful | light | primary |
-| Human newcomer | indirect | primary | useful |
-| LLM agent | required | required | primary |
-| Future contributor | required | required | required |
+| Operator | primary | useful | useful |
+| Human newcomer | indirect | primary | light |
+| LLM agent | indirect | required | primary |
+| Future contributor | useful | required | required |
 
 Each row spans columns; none collapses to one. Hence three aspects, each taking
 an audience as a profile — not one CM per audience.
