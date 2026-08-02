@@ -5,7 +5,7 @@
 | Aspect | Status | Current profile |
 |---|---|---|
 | Legibility | Implemented v0.1 | technical-newcomer-human |
-| Structure | Next — CM under design | repository-planes-v1 |
+| Structure | Draft v0.1 — authored, not yet run | repository-planes-v1 |
 | Operability | Planned | none |
 
 ## Decomposition rule
@@ -58,7 +58,9 @@ These are **not** new top-level aspects. Each routes to one of the three:
 A new top-level aspect is justified only when it asks a genuinely different
 question that cannot be represented under the current three.
 
-## No scaffolding
+## Scaffolding
 
-`structure/` and `operability/` are registered here, not scaffolded. They get no
-directory and no hollow files until their CMs exist. Only `legibility/` is real.
+A directory appears only when its CM exists. `legibility/` and `structure/` are
+real — each holds an authored CM, requirements, and fixtures. `operability/` is
+registered here but not scaffolded: it gets no directory and no hollow files
+until its CM is authored.
