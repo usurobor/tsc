@@ -1,4 +1,4 @@
-# research/repo-self-coherence/ — Repository Self-Coherence CM
+# research/repository-coherence/legibility/ — Repository Legibility Coherence CM
 
 A declared methodology that measures whether this repository presents one
 truthful, navigable, operable whole to the reader it claims to serve. It applies
@@ -35,6 +35,6 @@ architecture than a historical scalar.
 
 ## Graduation
 
-If it survives its fixtures and real runs, `src/skills/repo-self-coherence/` can
+If it survives its fixtures and real runs, `src/skills/legibility-coherence/` can
 own the executable procedure. A normative contract under `spec/` is a later
 question.

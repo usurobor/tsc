@@ -1,4 +1,4 @@
-# Repository Self-Coherence CM
+# Repository Legibility Coherence CM
 
 **Status:** pre-normative research · v0.1
 **Owns:** the declared methodology. Not the repair skill, not the reviewer.
@@ -32,7 +32,7 @@ The CM **observes, checks, and emits defects with warrant**. It does not change
 files. Repair and review are separate contracts, run as separate invocations:
 
 ```text
-Repository Self-Coherence CM   observe → check → defect receipt (frozen)
+Repository Legibility Coherence CM   observe → check → defect receipt (frozen)
 Repository repair wave         consume receipt → change files
 Independent review             verify defects closed, no new incoherence
 ```
@@ -159,6 +159,6 @@ cross-run comparisons in `results/`.
 ## Graduation
 
 While pre-normative and review-run, this stays under `research/`. If it survives
-its fixtures and real runs, `src/skills/repo-self-coherence/` can own the
+its fixtures and real runs, `src/skills/legibility-coherence/` can own the
 executable procedure while this record remains. A normative contract under
 `spec/` is a later question, authored only if warranted.

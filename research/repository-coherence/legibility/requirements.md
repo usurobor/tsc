@@ -1,4 +1,4 @@
-# Repository Self-Coherence — requirements
+# Repository Legibility Coherence — requirements
 
 Stable requirement IDs the CM checks. Each carries a class (mechanical or
 semantic), a default severity, and needs a positive and a negative fixture under

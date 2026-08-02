@@ -26,15 +26,25 @@ Future: if the kernel survives its traces, an executable package lands under
 `src/` and normative semantics are authored under `spec/`; a conformance family
 lands under `conformance/ascent/`.
 
-### Repository Self-Coherence CM — [`repo-self-coherence/`](repo-self-coherence/)
+### Repository Coherence CM — [`repository-coherence/`](repository-coherence/)
 
-A declared methodology that measures whether this repository presents one
-truthful, navigable, operable whole to a first-time technical reader — TSC
-applied to its own repository. It measures and emits defects; it does not
-repair.
+A parent methodology that composes coherence aspects — structural, legibility,
+operational — over one repository snapshot, retaining their conflicts instead of
+averaging them. TSC applied to its own repository. It measures and emits defects;
+it does not repair.
 
-- [`repo-self-coherence/CM.md`](repo-self-coherence/CM.md) — the methodology.
-- [`repo-self-coherence/requirements.md`](repo-self-coherence/requirements.md) —
-  the stable `REPO-*` requirement IDs.
-- [`repo-self-coherence/runs/`](repo-self-coherence/runs/) — retained per-commit
-  receipts; `0001` measures current `main` (`DEFECTS_FOUND`).
+- [`repository-coherence/CM.md`](repository-coherence/CM.md) — the parent
+  contract: composition, coverage, and the `RCM-*` requirement IDs.
+- [`repository-coherence/ASPECTS.md`](repository-coherence/ASPECTS.md) — the
+  aspect registry and the decompose-by-property rule.
+
+The Legibility aspect is implemented at
+[`repository-coherence/legibility/`](repository-coherence/legibility/):
+
+- [`repository-coherence/legibility/CM.md`](repository-coherence/legibility/CM.md)
+  — the methodology.
+- [`repository-coherence/legibility/requirements.md`](repository-coherence/legibility/requirements.md)
+  — the stable `REPO-*` requirement IDs.
+- [`repository-coherence/legibility/runs/`](repository-coherence/legibility/runs/)
+  — retained per-commit receipts; `0001` measures current `main`
+  (`DEFECTS_FOUND`).
