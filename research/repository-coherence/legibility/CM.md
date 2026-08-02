@@ -1,6 +1,6 @@
 # Repository Legibility Coherence CM
 
-**Status:** pre-normative research · v0.1
+**Status:** pre-normative research · v0.2
 **Owns:** the declared methodology. Not the repair skill, not the reviewer.
 
 ## Governing claim
@@ -142,13 +142,44 @@ then each answer is verified against its authority source.
 
 ## Receipt
 
-Each run emits a structured receipt (`runs/`): run identity, commit SHA, CM
-version, reader profile, scope and exclusions, inventory digest, findings
-(`id · class · severity · affected paths · claim · evidence · violated
-requirement · repair class · confidence · status`), unresolved surfaces, the
-authority graph, the status matrix, the newcomer-task results, and the overall
-categorical status with warrant scope. A receipt on a fixed commit is
-reproducible.
+Each run emits the parent's **Generic child receipt envelope**
+([`../CM.md`](../CM.md)), with `aspect_id: legibility`. The envelope's four-value
+`result_class` is derived from this CM's own categorical `status` by the declared
+mapping:
+
+```text
+status COHERENT_WITHIN_DECLARED_SCOPE → result_class PASS
+status DEFECTS_FOUND                  → result_class DEFECT
+status UNDERDETERMINED                → result_class INCOMPLETE
+status INCOMPLETE_OBSERVATION         → result_class INCOMPLETE
+status CM_EXECUTION_FAILED            → result_class FAILED
+```
+
+`result_class` is the generic value the parent composes; `status` retains this
+CM's richer categorical vocabulary verbatim and is never collapsed.
+
+Envelope fields, as emitted:
+
+```text
+aspect_id:            legibility
+cm_version:           0.2
+profile:              technical-newcomer-human
+repository_commit:    <sha>
+result_class:         PASS | DEFECT | INCOMPLETE | FAILED
+status:               COHERENT_WITHIN_DECLARED_SCOPE | DEFECTS_FOUND |
+                      UNDERDETERMINED | INCOMPLETE_OBSERVATION | CM_EXECUTION_FAILED
+scope:                declared reader profile · live-surface policy · excluded paths with reasons
+findings:             [ per finding: id · class(mechanical|semantic) · severity ·
+                        affected_paths · claim · evidence · violated_requirement(REPO-*) ·
+                        repair_class · confidence · status ]
+refusals:             [ per refusal: id · INCOMPLETE_OBSERVATION | UNDERDETERMINED |
+                        CM_EXECUTION_FAILED · surface · reason ]
+unobserved_surfaces:  surfaces left unread, with reason
+evidence_refs:        authority graph · status matrix · newcomer-task results ·
+                      inventory digest
+```
+
+A receipt on a fixed commit is reproducible.
 
 ## Requirements and fixtures
 

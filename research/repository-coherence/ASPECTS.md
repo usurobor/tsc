@@ -2,7 +2,7 @@
 
 | Aspect | Methodology | Execution |
 |---|---|---|
-| Legibility | v0.1 implemented | verified runs exist |
+| Legibility | v0.2 implemented | runs 0001–0002 (v0.1) frozen; v0.2 fresh run pending |
 | Structure  | v0.2 implemented | run 0001 (v0.1) frozen; v0.2 authored, not yet run |
 | Operability | not implemented | — |
 
