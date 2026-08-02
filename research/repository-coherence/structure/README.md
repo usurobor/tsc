@@ -10,7 +10,7 @@ taste. It applies TSC to its own repository.
 
 ## What is here
 
-- `CM.md` — the methodology: governing claim, the `repository-planes-v1`
+- `CM.md` — the methodology: governing claim, the `repository-planes-v1.1`
   profile, four subcontracts, the parent-envelope receipt mapping, categorical
   statuses, refusal, and the measure→repair→review boundary.
 - `requirements.md` — the stable `STRUCT-*` requirement IDs, each tied to the

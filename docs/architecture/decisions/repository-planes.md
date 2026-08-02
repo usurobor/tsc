@@ -1,7 +1,7 @@
 # ADR — Repository planes
 
-**Status:** Accepted · partial migration in progress
-**Date:** 2026-07-30
+**Status:** Accepted · v1.1 · partial migration in progress
+**Date:** 2026-07-30 (v1) · 2026-08-02 (v1.1 amendments)
 
 ## Context
 
@@ -56,6 +56,53 @@ grammar — never a filing taxonomy.
 
 `.cdd/` (vendored, manifest-pinned), `.cn-sigma/`, `heldout/` (CM self-test
 data) are tooling/data, not repository content.
+
+## Amendments (v1.1 · 2026-08-02)
+
+Three operator policy decisions, encoded here. The v1 Decision text, decision
+rule, Do-NOT-touch set, and Program maps above stand unchanged.
+
+### 1 · The docs reader-intent taxonomy is closed
+
+The eight reader-intent folders — `quickstart · concepts · guides · reference ·
+architecture · development · papers · evidence` — are the **exhaustive** set of
+`docs/` subfolders. A `docs/` subfolder outside them is a structural **defect to
+rehome**, not merely undetermined. This closes what v1 left as a
+named-but-unfenced list. *Rationale: an open taxonomy let real filing debt hide
+as refusal.*
+
+Consequently `docs/design/` is **not a ratified plane** — its contents are
+misplaced and need a real home. This settles *misplacement* only. The correct
+**destination** of the foundation-contract-reconciliation bundle remains the open
+operator decision the "Deferred" note already records ("a decision to take with
+the operator's frame, not to force here"). Misplacement is now determined;
+destination is a separate, still-open question — no contradiction.
+
+### 2 · generated-vs-source is ratified
+
+Derived or generated artifacts must be distinguishable from hand-authored source
+— by an excluded build directory, a generated marker, or a clearly-derived path.
+*Precedent:* the render byte-identity invariant
+(`scripts/render-self-measure.sh --check`) already treats a rendered artifact as
+derived-and-verified, and `_build/` is excluded dune output. *Rationale: source a
+reader may edit must not be mistaken for output a tool regenerates.*
+
+### 3 · historical-labelling is ratified
+
+Historical, archived, or frozen material retained on the live tree must carry a
+lifecycle label — a banner or a marker. *Precedent:*
+`docs/evidence/releases/0.12.0.md` carries a "Historical" banner, and
+`docs/{alpha,beta,gamma}` are declared frozen snapshots. *Rationale: unlabelled
+history on a live tree reads as current.*
+
+### 4 · Cross-plane names-predict-content — considered and declined
+
+A general rule that *every* plane's names predict their content was considered
+and **declined** as a structure rule. It is a **legibility** value — can a reader
+predict what a path holds — not a placement rule, and belongs to the legibility
+aspect. Structure ratifies only "docs file by reader intent," the closed docs
+taxonomy (§1), and "α/β/γ … never a filing taxonomy." Recorded here, not silently
+dropped.
 
 ## Migration state
 

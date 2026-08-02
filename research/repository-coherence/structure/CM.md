@@ -11,14 +11,14 @@ judged against the ratified planes policy, not against the CM's own taste?
 
 This is a policy-conformance claim with evidence and failure cases. The CM does
 not invent what "clean and simple" means; it checks the tree against
-[`repository-planes-v1`](../../../docs/architecture/decisions/repository-planes.md)
+[`repository-planes-v1.1`](../../../docs/architecture/decisions/repository-planes.md)
 and returns a categorical status with an evidence-bound defect list. Where the
 policy is silent, the CM refuses rather than legislates.
 
 ## Profile
 
 ```text
-profile: repository-planes-v1
+profile: repository-planes-v1.1
 authority: docs/architecture/decisions/repository-planes.md
 ```
 
@@ -66,28 +66,42 @@ misplaced content. Mostly mechanical (the rule is explicit); the *help a person*
 vs *still change* boundary can need judgment. → `STRUCT-PLANE-001`,
 `STRUCT-RULE-001`, `STRUCT-CANON-001`, `STRUCT-EXCLUDE-001`.
 
-### 2 · Naming — docs file by reader intent
+### 2 · Naming — docs file by reader intent, taxonomy closed
 The docs tree files by **reader intent** (`quickstart · concepts · guides ·
 reference · architecture · development · papers · evidence`), and TSC's own
-α/β/γ role grammar is never used as a filing taxonomy — the one naming rule the
-ADR explicitly ratifies ("α/β/γ … never a filing taxonomy"). The CM does not
-judge whether other names "predict content"; that is a legibility value the
-planes policy does not ratify (see [Policy gaps](#policy-gaps)). Mechanical +
-semantic. → `STRUCT-NAME-001`.
+α/β/γ role grammar is never used as a filing taxonomy ("α/β/γ … never a filing
+taxonomy"). As of v1.1 the eight intents are the **exhaustive** set of `docs/`
+subfolders: a `docs/` subfolder outside them is a defect to rehome, not
+`UNDERDETERMINED` (v1.1 Amendment 1, which closes what v1 left as a
+named-but-unfenced list). The CM still does not judge whether *other planes'*
+names "predict content" — that stays a declined legibility value (see
+[Policy notes](#policy-notes--considered-and-declined)). Mechanical + semantic.
+→ `STRUCT-NAME-001`, `STRUCT-DOCSET-001`.
 
-### 3 · Ownership & function — one home, no premature planes
+### 3 · Ownership & function — one home, no premature planes, consumers enumerated
 Each artifact has one authoritative home with no duplicate live copies (the
 ADR organizes by plane and navigates topics through indexes / program-maps, not
 physical co-location); and no plane is a single-occupant or premature catch-all
 standing in for a real home (ADR Iteration 3: not a single-occupant `config/`
-plane). Mechanical + semantic. → `STRUCT-FUNC-001`, `STRUCT-OWNER-001`.
+plane). Every placement/ownership finding enumerates the artifact's live
+**consumers** — code references, CI workflows, `targets/`, tests, markdown links
+— because a relocation that breaks a consumer without rehoming its reference
+cannot satisfy the ADR move invariants ("targets resolve; conformance validator
+exits 0 …; no document's meaning changes"). This is the observation-side
+complement to `STRUCT-REPAIR-001`. Mechanical + semantic. → `STRUCT-FUNC-001`,
+`STRUCT-OWNER-001`, `STRUCT-CONSUMER-001`.
 
-### 4 · Lifecycle — live and history do not mix
+### 4 · Lifecycle — live/history separated and labelled, source distinct from generated
 No live directory interleaves live-mutable content with frozen, snapshot, or
-archived content — the one lifecycle rule the ADR ratifies, grounded in its
-migration state, which preserves frozen snapshots intact. The CM does not judge
-generated-vs-source or historical labelling; those dimensions are unratified (see
-[Policy gaps](#policy-gaps)). Mechanical + semantic. → `STRUCT-MIXED-001`.
+archived content — the lifecycle rule v1 ratifies, grounded in its migration
+state, which preserves frozen snapshots intact. As of v1.1 two further rules
+apply: historical/archived/frozen material retained on the live tree carries a
+lifecycle label — banner or marker (v1.1 Amendment 3; precedent: the `0.12.0.md`
+"Historical" banner, the `docs/{alpha,beta,gamma}` frozen-snapshot declaration);
+and derived/generated output is distinguishable from hand-authored source — by an
+excluded build dir, generated marker, or clearly-derived path (v1.1 Amendment 2;
+precedent: render byte-identity, excluded `_build/`). Mechanical + semantic.
+→ `STRUCT-MIXED-001`, `STRUCT-HISTLABEL-001`, `STRUCT-DERIVED-001`.
 
 A cross-cutting refusal rule (`STRUCT-REFUSE-001`) governs all four: when the ADR
 does not fix a path's home, the finding is `UNDERDETERMINED`, not a defect.
@@ -112,15 +126,34 @@ The CM builds one artifact and reads the tree against it:
 - **Mixed live/history check.** Flag live-mutable content inside a frozen,
   snapshot, or archive tree. Mechanical signal (snapshot/version-pinned parents),
   semantic adjudication.
+- **History-label check.** For historical/archived/frozen material on the live
+  tree, confirm a lifecycle label is present (banner or marker). Mechanical scan
+  (banner/marker presence on snapshot/version-pinned or archive paths), semantic
+  adjudication of "is this material historical."
+- **Derived-vs-source check.** Confirm generated/derived output is distinguishable
+  from hand-authored source — excluded from tracked content (build dir), carrying
+  a generated marker, or on a clearly-derived path with a render/build binding.
+  Mechanical (exclusion, marker, render-check presence), semantic adjudication of
+  "is this path derived."
+- **Consumer graph.** For every path proposed for a move, resolve its inbound
+  live consumers — grep code references, CI workflows, `targets/`, and tests, plus
+  markdown-link resolution — and bind that consumer set to the finding. A move is
+  coherent only if it rehomes every consumer's reference. Mechanical (scriptable
+  grep + link resolution). Grounds the ADR move invariants ("targets resolve;
+  conformance validator exits 0 …; no document's meaning changes").
 
 ```text
 Mechanical   tree enumeration · plane classification by explicit rule ·
              canonical-path existence · duplicate live copies · single-occupant
              plane detection · α/β/γ role-grammar directory names ·
-             snapshot/version-pinned parents
+             docs-subfolder membership in the closed eight ·
+             snapshot/version-pinned parents · lifecycle-label presence ·
+             generated exclusion / marker / render-check ·
+             consumer grep (code · CI · targets · tests) + link resolution
 Semantic     help-a-person vs still-change boundary · is a docs path filed by
              intent or by role grammar · is a plane a premature catch-all ·
-             is a tree live or frozen
+             is a tree live or frozen · is this material historical ·
+             is this path derived
 ```
 
 The semantic layer may use an LLM, but it must retain evidence and permit
@@ -135,7 +168,7 @@ Each run emits the parent's common child receipt envelope
 ```text
 aspect:               structure
 cm_version:           structure-cm/0.1
-profile:              repository-planes-v1
+profile:              repository-planes-v1.1
 repository_commit:    <SHA>
 scope:                <declared plane set + excluded paths + policy commit>
 status:               <categorical, see below>
@@ -183,11 +216,14 @@ retains both, and the parent surfaces both without averaging
 
 The CM refuses rather than guesses; refusal is a finding.
 
-- `UNDERDETERMINED` — the ADR does not fix a path's home. The canonical case is
-  the **foundation-contract-reconciliation bundle**, whose home the ADR
-  explicitly leaves open: *"a decision to take with the operator's frame, not to
-  force here."* The CM records the open question and the ADR clause, and does not
-  assign a plane. Inventing one would be the CM legislating policy it does not own.
+- `UNDERDETERMINED` — the ADR does not fix a path's correct home. Post-v1.1 the
+  canonical case narrows: the **foundation-contract-reconciliation bundle** is now
+  a placement **defect** — it sits in `docs/design/`, a plane v1.1 declares
+  non-ratified (`STRUCT-DOCSET-001`) — yet its *destination* stays open, the
+  Deferred note still leaving it as *"a decision to take with the operator's
+  frame, not to force here."* The CM flags the misplacement and refuses to name a
+  destination: misplacement is decided, destination is not. Inventing a
+  destination would be the CM legislating policy it does not own.
 - `INCOMPLETE_OBSERVATION` — the tree cannot be fully enumerated, or a canonical
   home the ADR names does not exist.
 - `CM_EXECUTION_FAILED` — a mechanical check cannot run.
@@ -195,35 +231,39 @@ The CM refuses rather than guesses; refusal is a finding.
 This is the structural face of the parent's measure-only boundary
 (`RCM-BOUNDARY-001`): the CM measures against policy, it does not author policy.
 
-## Policy gaps
+## Policy notes — considered and declined
 
-The governing proposal's owned-concerns list for this aspect includes dimensions
-that `repository-planes-v1` does **not** yet ratify. At v0.1 the CM does **not**
-measure them, because inventing a rule would violate `STRUCT-REFUSE-001` — the
-same discipline that refuses an undecided path's home:
+`repository-planes-v1.1` (2026-08-02) ratified two dimensions this CM formerly
+recorded as gaps, and closed the docs taxonomy. They are now **measured**, not
+deferred:
 
 ```text
-generated-vs-source distinction   no ADR clause distinguishes generated output
-                                  from hand-authored source.
-historical-artifact labelling     no ADR clause requires a lifecycle label on
-                                  historical material.
-all-planes name-predictiveness    the ADR ratifies only "docs file by reader
-                                  intent" and "α/β/γ is never a filing taxonomy";
-                                  it states no general "names predict content" rule.
+generated-vs-source distinction   v1.1 Amendment 2 → STRUCT-DERIVED-001.
+historical-artifact labelling     v1.1 Amendment 3 → STRUCT-HISTLABEL-001.
+closed docs taxonomy              v1.1 Amendment 1 → STRUCT-DOCSET-001 (a docs/
+                                  subfolder outside the eight is now a defect,
+                                  no longer UNDERDETERMINED).
 ```
 
-These were carried as requirements in an earlier draft and removed in review as
-unratified (see [`requirements.md`](./requirements.md), *Removed in review*). They
-are recorded here — not silently dropped — so the operator can decide whether to
-ratify them into the policy authority. They become measurable only if and when
-the ADR (or its successor) adds the corresponding clause; until then the honest
-answer is that the policy is silent, not that the tree is coherent on these axes.
+One dimension from the governing proposal's owned-concerns list stays unratified
+**by deliberate decision**, not by omission:
 
-The reader-intent taxonomy itself is a related, softer gap: the ADR names the
-eight intents but states no *closed prohibition* on other docs directories, so a
-docs path outside the list (e.g. `docs/design/`) is `UNDERDETERMINED`, not a
-defect — only the α/β/γ bar carries an explicit "never." See the fixtures'
-asymmetry rule.
+```text
+all-planes name-predictiveness    considered at v1.1 and declined as a structure
+                                  rule (v1.1 Amendment 4). It is a legibility
+                                  value — can a reader predict what a path holds
+                                  — not a placement rule, and belongs to the
+                                  legibility aspect. Structure ratifies only
+                                  "docs file by reader intent," the closed docs
+                                  taxonomy, and "α/β/γ … never a filing taxonomy";
+                                  no general cross-plane "names predict content"
+                                  rule.
+```
+
+The CM does not measure cross-plane name-predictiveness: doing so would enforce a
+rule the policy authority explicitly declined. Recorded here — not silently
+dropped — as the operator's considered decision, so the note reads truthfully
+post-amendment.
 
 ## Graduation
 
@@ -238,7 +278,8 @@ executable procedure while this record remains. A normative contract under
 structure is policy-conformance, the discriminating fixture is not a fresh-reader
 task but a **classification against the tree**: canonical positives, negatives
 drawn from the ADR's own recorded deferrals so the CM demonstrably fires on real
-known debt, and one `UNDERDETERMINED` case. See [`fixtures/`](./fixtures/).
+known debt, and the surviving refusal (a misplaced bundle whose *destination*
+the ADR still leaves open). See [`fixtures/`](./fixtures/).
 
 No run receipt is authored yet — no runs exist. A `runs/` directory follows
 convergence, mirroring the sibling legibility layout (which has `runs/` because

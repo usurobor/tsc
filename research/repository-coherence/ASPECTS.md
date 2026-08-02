@@ -5,7 +5,7 @@
 | Aspect | Status | Current profile |
 |---|---|---|
 | Legibility | Implemented v0.1 | technical-newcomer-human |
-| Structure | Draft v0.1 — authored, not yet run | repository-planes-v1 |
+| Structure | Draft v0.1 — authored, not yet run | repository-planes-v1.1 |
 | Operability | Planned | none |
 
 ## Decomposition rule
