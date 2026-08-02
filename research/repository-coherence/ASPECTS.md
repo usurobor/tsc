@@ -3,7 +3,7 @@
 | Aspect | Methodology | Execution |
 |---|---|---|
 | Legibility | v0.1 implemented | verified runs exist |
-| Structure  | v0.2 implemented | v0.2 implemented; run 0001 (v0.1) frozen |
+| Structure  | v0.2 implemented | run 0001 (v0.1) frozen; v0.2 authored, not yet run |
 | Operability | not implemented | — |
 
 The three aspect questions:

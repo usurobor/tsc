@@ -74,7 +74,8 @@ Procedure:
      (consumer-search contract).
   6. Emit the plane manifest, findings, refusals, and consumer graph.
 Result:
-  FAILED      if a required mechanical check cannot execute.
+  FAILED      if a required mechanical check cannot execute, or a move/split/delete
+              finding is emitted without its mandatory consumer_search block.
   INCOMPLETE  if inventory or consumer search is incomplete, or policy leaves
               every actionable destination unresolved.
   DEFECT      if at least one policy violation is established.

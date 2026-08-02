@@ -32,21 +32,9 @@ both a positive and a negative fixture yet (see [Fixtures](#fixtures)).
 
 ## v0.2 receipt obligations
 
-No new structural policy; these are receipt-shape obligations the v0.2 CM emits,
-grounded in existing IDs:
-
-- **Consumer-search contract** (`STRUCT-CONSUMER-001`). Every move/split/delete
-  finding carries a `consumer_search` block over the declared surfaces (source
-  code · tests · CI workflows · scripts · targets · schemas · configuration
-  literals · Markdown links · generated-path declarations) with a
-  `search_strength` of `complete | complete_within_bound | heuristic`. A finding
-  without it is not repair-ready.
-- **Typed repairability** (`STRUCT-REPAIR-001`). Every structural finding ends
-  with `repairability: MECHANICAL | POLICY_REQUIRED | DEFERRED` — MECHANICAL when
-  policy names the destination and consumers are complete; POLICY_REQUIRED when
-  misplacement is established but the ADR does not decide the destination;
-  DEFERRED when the destination is decided but the ADR explicitly stages the
-  migration.
+v0.2 adds two receipt obligations on existing IDs: `STRUCT-CONSUMER-001` → the
+`consumer_search` block; `STRUCT-REPAIR-001` → a `repairability` value; both
+specified in [`CM.md`](./CM.md).
 
 ## Subcontract → requirement map
 
