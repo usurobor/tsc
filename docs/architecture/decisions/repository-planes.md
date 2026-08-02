@@ -1,7 +1,7 @@
 # ADR — Repository planes
 
-**Status:** Accepted · v1.1 · partial migration in progress
-**Date:** 2026-07-30 (v1) · 2026-08-02 (v1.1 amendments)
+**Status:** Accepted · v1.2 · partial migration in progress
+**Date:** 2026-07-30 (v1) · 2026-08-02 (v1.1 amendments) · 2026-08-02 (v1.2 amendments)
 
 ## Context
 
@@ -103,6 +103,100 @@ predict what a path holds — not a placement rule, and belongs to the legibilit
 aspect. Structure ratifies only "docs file by reader intent," the closed docs
 taxonomy (§1), and "α/β/γ … never a filing taxonomy." Recorded here, not silently
 dropped.
+
+## Amendments (v1.2 · 2026-08-02)
+
+One operator decision: extend the v1 decision rule with the **lifecycle
+interpretation** needed to place historical and experimental material, and record
+the ratified current dispositions as its application. The v1 Decision, decision
+rule, Do-NOT-touch set, Program maps, and the v1.1 Amendments above stand
+unchanged. No file moves in this amendment; the dispositions **authorize** later
+CI-gated repair cells, they do not migrate anything now.
+
+### 1 · The lifecycle destination rule
+
+The v1 rule (*bind* → `spec/`; *run* → `src/`; *prove* → `conformance/`;
+*investigate / still change* → `research/`; *help a person* → `docs/`; *automate*
+→ `scripts/`) is extended, by **artifact lifecycle and role**, to place material
+the plane-question alone does not resolve:
+
+```
+Current binding decision                                    → docs/architecture/decisions/
+Current human-readable evidence for a standing claim        → docs/evidence/<subject>/
+Pre-normative design, experiment, preregistration,
+  or proposed methodology                                   → research/<program>/
+Machine-consumed artifact                                   → the plane of the artifact
+  that owns its MEANING (not automatically the plane of the code that reads it)
+Superseded snapshot with no current evidentiary or
+  operational role                                          → Git history only; absent from main HEAD
+```
+
+Two load-bearing principles hold this rule together:
+
+- **(a) Machine consumption does not override semantic ownership.** A fixture read
+  by the engine can still belong with the experiment that owns its meaning; the
+  plane is chosen by *what the artifact means*, not by *what code happens to read
+  it*. Consumers follow the artifact.
+- **(b) "Git history only" is conditional.** It applies to a path *only after* its
+  live consumers and any current evidentiary or operational role are exhausted.
+  Nothing with a live consumer or a standing-claim role is discarded; live material
+  is extracted to its lifecycle home first, and only the residual superseded
+  snapshot is dropped from `main` HEAD.
+
+This rule is general (by lifecycle/role); the dispositions below are its
+application, not the rule itself.
+
+### 2 · Ratified current dispositions
+
+Recorded as the rule's application. These **authorize** the repair cells; they
+move nothing now.
+
+```
+docs/beta/governance/METER-LOOP-DECISION.md
+  → docs/architecture/decisions/self-measure-meter-loop.md   (current binding decision)
+
+docs/beta/governance/CONSISTENCY-FACTORIZATION-PREREG.md
+docs/beta/governance/fixtures/factorized-beta-controls.json
+  → research/self-measure/consistency-factorization/         (completed experiment + its frozen
+      fixture; the failure is research provenance, not current architecture. 7 engine/test/CI
+      consumers follow atomically — consumers track semantic ownership, per principle (a))
+
+docs/beta/governance/DEFECT-HARVESTING.md
+  → research/self-measure/defect-harvesting.md               (unimplemented design note — pre-normative)
+
+docs/design/foundation-contract-reconciliation/
+  → docs/evidence/foundation-v4-reconciliation/              (human-readable evidence for the
+      ALREADY-RATIFIED foundation 4.0.0; the cross-referenced bundle is kept intact. This
+      closes R1 — the destination the v1.1 "Deferred" note left open is now ratified)
+
+docs/design/polar-expression-recovery/
+  → research/foundation/polar-expression-recovery/           (pre-normative research for the
+      still-Draft 4.1 — not yet authoritative)
+
+docs/alpha/ , docs/gamma/ , and the remaining frozen docs/beta/ (after the live β
+material above is extracted)
+  → Git history only; removed from main HEAD.  These are superseded α/β/γ snapshots
+      whose live consumers and standing-claim material have been extracted first (per
+      principle (b)); the residual carries no current evidentiary or operational role.
+      Do NOT create an archive/ tree — that would preserve the retired α/β/γ taxonomy as
+      present structure and recreate the noise the plane discipline removes.
+
+Any other file in these subtrees is classified by the rule in §1, NOT moved merely
+because it was adjacent to a listed path.
+```
+
+### 3 · Effect on the standing findings
+
+This makes structure findings **F3–F8 mechanical** — each now has a concrete
+destination above, or falls to the explicit "classified by the rule in §1"
+procedure — and **closes R1**: the foundation-reconciliation bundle's destination,
+left open by the v1.1 §1 note and the "Deferred" migration note, is now ratified to
+`docs/evidence/foundation-v4-reconciliation/`.
+
+Findings **F9–F12** (`targets/`, `katas/`, `schemas/`, `runtime/` folds) remain
+**DEFERRED** exactly as the frozen Structure receipt types them — they are `src/`
+plane placement, not docs-lifecycle policy, and are out of scope for this
+amendment.
 
 ## Migration state
 
