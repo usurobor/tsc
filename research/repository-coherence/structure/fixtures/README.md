@@ -5,8 +5,9 @@ against [`repository-planes-v1`](../../../../docs/architecture/decisions/reposit
 
 - [`plane-conformance.md`](./plane-conformance.md) — the primary fixture:
   positive paths in their canonical plane, negative paths drawn from the ADR's
-  own recorded deferrals (so the CM fires on real known debt), and the one
-  `UNDERDETERMINED` case the ADR explicitly leaves open.
+  own recorded deferrals (so the CM fires on real known debt), and the
+  `UNDERDETERMINED` cases the ADR leaves open — governed by an explicit
+  asymmetry rule (an ADR bar → defect; ADR silence → refusal).
 
 Structure is policy-conformance, so — unlike the legibility aspect's fresh-reader
 task — the fixture classifies concrete tracked paths against the ratified planes

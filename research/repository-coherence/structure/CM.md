@@ -66,24 +66,28 @@ misplaced content. Mostly mechanical (the rule is explicit); the *help a person*
 vs *still change* boundary can need judgment. → `STRUCT-PLANE-001`,
 `STRUCT-RULE-001`, `STRUCT-CANON-001`, `STRUCT-EXCLUDE-001`.
 
-### 2 · Naming — names predict content
-Names within a plane are consistent and let a reader predict what a path holds
-without opening it; the docs tree files by **reader intent** (`quickstart ·
-concepts · guides · reference · architecture · development · papers · evidence`),
-never by TSC's own α/β/γ role grammar, which the ADR bars as a filing taxonomy.
-Mechanical + semantic. → `STRUCT-NAME-001`.
+### 2 · Naming — docs file by reader intent
+The docs tree files by **reader intent** (`quickstart · concepts · guides ·
+reference · architecture · development · papers · evidence`), and TSC's own
+α/β/γ role grammar is never used as a filing taxonomy — the one naming rule the
+ADR explicitly ratifies ("α/β/γ … never a filing taxonomy"). The CM does not
+judge whether other names "predict content"; that is a legibility value the
+planes policy does not ratify (see [Policy gaps](#policy-gaps)). Mechanical +
+semantic. → `STRUCT-NAME-001`.
 
-### 3 · Ownership & function — one directory, one job
-Each directory serves one function; each artifact has one owner (one authoritative
-home, no duplicate live copies); no plane is a single-occupant catch-all standing
-in for a real home. Mechanical + semantic. → `STRUCT-FUNC-001`, `STRUCT-OWNER-001`.
+### 3 · Ownership & function — one home, no premature planes
+Each artifact has one authoritative home with no duplicate live copies (the
+ADR organizes by plane and navigates topics through indexes / program-maps, not
+physical co-location); and no plane is a single-occupant or premature catch-all
+standing in for a real home (ADR Iteration 3: not a single-occupant `config/`
+plane). Mechanical + semantic. → `STRUCT-FUNC-001`, `STRUCT-OWNER-001`.
 
 ### 4 · Lifecycle — live and history do not mix
-`current / draft / historical / generated` are distinguishable and are not
-interleaved inside one live directory: a frozen or snapshot tree does not host
-live infrastructure, generated artifacts do not read as hand-authored sources,
-and historical material carries a lifecycle label rather than sitting as current
-content. Mechanical + semantic. → `STRUCT-MIXED-001`, `STRUCT-LIFECYCLE-001`.
+No live directory interleaves live-mutable content with frozen, snapshot, or
+archived content — the one lifecycle rule the ADR ratifies, grounded in its
+migration state, which preserves frozen snapshots intact. The CM does not judge
+generated-vs-source or historical labelling; those dimensions are unratified (see
+[Policy gaps](#policy-gaps)). Mechanical + semantic. → `STRUCT-MIXED-001`.
 
 A cross-cutting refusal rule (`STRUCT-REFUSE-001`) governs all four: when the ADR
 does not fix a path's home, the finding is `UNDERDETERMINED`, not a defect.
@@ -99,24 +103,24 @@ The CM builds one artifact and reads the tree against it:
   (e.g. spec→`spec/`, engine→`src/engine/ocaml/`, foundation conformance→
   `conformance/foundation-v4/`, ascent history→`research/ascent/`), confirm the
   artifact sits there. Mechanical.
-- **Naming check.** Within each plane, flag names that do not predict content and
-  docs paths filed outside the reader-intent taxonomy. Mechanical scan, semantic
-  adjudication.
-- **Ownership / function check.** Detect duplicate live copies of one artifact,
-  directories serving more than one function, and single-occupant placeholder
-  planes. Mechanical detection, semantic adjudication of "one function."
+- **Naming check.** Flag docs paths filed by α/β/γ role grammar rather than by
+  the reader-intent taxonomy. Mechanical scan (role-grammar directory names),
+  semantic adjudication of intent.
+- **Ownership / function check.** Detect duplicate live copies of one artifact
+  and single-occupant placeholder planes. Mechanical detection, semantic
+  adjudication of "premature catch-all."
 - **Mixed live/history check.** Flag live-mutable content inside a frozen,
-  snapshot, or archive tree, and generated artifacts presented as sources.
-  Mechanical signals (snapshot/version-pinned parents, generated markers),
+  snapshot, or archive tree. Mechanical signal (snapshot/version-pinned parents),
   semantic adjudication.
 
 ```text
 Mechanical   tree enumeration · plane classification by explicit rule ·
              canonical-path existence · duplicate live copies · single-occupant
-             plane detection · name-pattern scan · snapshot/generated markers
-Semantic     help-a-person vs still-change boundary · does a name predict
-             content · is a directory one function · is a tree live or frozen ·
-             is a docs path filed by intent or by role grammar
+             plane detection · α/β/γ role-grammar directory names ·
+             snapshot/version-pinned parents
+Semantic     help-a-person vs still-change boundary · is a docs path filed by
+             intent or by role grammar · is a plane a premature catch-all ·
+             is a tree live or frozen
 ```
 
 The semantic layer may use an LLM, but it must retain evidence and permit
@@ -190,6 +194,36 @@ The CM refuses rather than guesses; refusal is a finding.
 
 This is the structural face of the parent's measure-only boundary
 (`RCM-BOUNDARY-001`): the CM measures against policy, it does not author policy.
+
+## Policy gaps
+
+The governing proposal's owned-concerns list for this aspect includes dimensions
+that `repository-planes-v1` does **not** yet ratify. At v0.1 the CM does **not**
+measure them, because inventing a rule would violate `STRUCT-REFUSE-001` — the
+same discipline that refuses an undecided path's home:
+
+```text
+generated-vs-source distinction   no ADR clause distinguishes generated output
+                                  from hand-authored source.
+historical-artifact labelling     no ADR clause requires a lifecycle label on
+                                  historical material.
+all-planes name-predictiveness    the ADR ratifies only "docs file by reader
+                                  intent" and "α/β/γ is never a filing taxonomy";
+                                  it states no general "names predict content" rule.
+```
+
+These were carried as requirements in an earlier draft and removed in review as
+unratified (see [`requirements.md`](./requirements.md), *Removed in review*). They
+are recorded here — not silently dropped — so the operator can decide whether to
+ratify them into the policy authority. They become measurable only if and when
+the ADR (or its successor) adds the corresponding clause; until then the honest
+answer is that the policy is silent, not that the tree is coherent on these axes.
+
+The reader-intent taxonomy itself is a related, softer gap: the ADR names the
+eight intents but states no *closed prohibition* on other docs directories, so a
+docs path outside the list (e.g. `docs/design/`) is `UNDERDETERMINED`, not a
+defect — only the α/β/γ bar carries an explicit "never." See the fixtures'
+asymmetry rule.
 
 ## Graduation
 
