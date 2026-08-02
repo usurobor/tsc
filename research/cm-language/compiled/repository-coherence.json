@@ -1,0 +1,188 @@
+{
+    "id": "repository-coherence",
+    "version": "0.1",
+    "question": "At this exact repository snapshot, do the selected coherence aspects jointly support treating the repository as one coherent system, and where do they conflict or remain unmeasured?",
+    "input": {
+        "repository_snapshot": "repository_snapshot",
+        "selected_aspects": "selected_aspects"
+    },
+    "children": {
+        "legibility": {
+            "aspect_id": "legibility",
+            "source": "./legibility",
+            "implemented": true,
+            "selected": true
+        },
+        "structure": {
+            "aspect_id": "structure",
+            "source": "./structure",
+            "implemented": true,
+            "selected": true
+        },
+        "operability": {
+            "aspect_id": "operability",
+            "source": "./operability",
+            "implemented": false,
+            "selected": false
+        }
+    },
+    "invariants": {
+        "same_snapshot": true,
+        "retain_child_receipts": true,
+        "allow_scalar_aggregation": false
+    },
+    "result_class_definitions": {
+        "PASS": "The aspect executed fully and found no in-scope defect.",
+        "DEFECT": "The aspect executed and established at least one in-scope defect.",
+        "INCOMPLETE": "The aspect executed but its observation is incomplete or underdetermined (e.g. inventory or consumer search incomplete, or policy leaves the actionable question unresolved). Boundary: ran but could not fully conclude.",
+        "FAILED": "The aspect CM could not execute a required mechanical step at all. Boundary: could not run."
+    },
+    "result": {
+        "statuses": [
+            "COHERENT_WITHIN_MEASURED_ASPECTS",
+            "DEFECTS_FOUND",
+            "INCOMPLETE",
+            "CM_EXECUTION_FAILED"
+        ],
+        "precedence": [
+            "FAILED",
+            "INCOMPLETE",
+            "DEFECT",
+            "PASS"
+        ],
+        "mapping": {
+            "FAILED": "CM_EXECUTION_FAILED",
+            "INCOMPLETE": "INCOMPLETE",
+            "DEFECT": "DEFECTS_FOUND",
+            "PASS": "COHERENT_WITHIN_MEASURED_ASPECTS"
+        }
+    },
+    "manifestation": {
+        "same_snapshot_binding": true,
+        "records": "selected / unimplemented / incomplete children"
+    },
+    "atlas": {
+        "gating": false,
+        "note": "Cross-aspect relations surfaced for the reader; not used to gate the parent result in v0.1."
+    },
+    "continuation_baseline": "BASELINE — no prior composite receipt",
+    "boundary": {
+        "measure_only": true,
+        "note": "Parent and child CMs measure only; repair and independent review remain separate invocations."
+    },
+    "does_not_own": [
+        "artifact manifest",
+        "shared schema registry",
+        "universal ontology",
+        "common inventory"
+    ],
+    "receipt": {
+        "repository_commit": "48b9a63",
+        "coverage": {
+            "selected": [
+                "legibility",
+                "structure"
+            ],
+            "executed": [
+                "legibility",
+                "structure"
+            ],
+            "unavailable": [],
+            "failed": [],
+            "registered_unselected": [
+                "operability"
+            ]
+        },
+        "child_receipts": {
+            "legibility": {
+                "aspect_id": "legibility",
+                "cm_version": "0.2",
+                "profile": "reader-profiles-v1",
+                "repository_commit": "48b9a63",
+                "result_class": "PASS",
+                "status": "COHERENT_WITHIN_DECLARED_SCOPE",
+                "status_mapping": {
+                    "COHERENT_WITHIN_DECLARED_SCOPE": "PASS",
+                    "DEFECTS_FOUND": "DEFECT",
+                    "UNDERDETERMINED": "INCOMPLETE",
+                    "CM_EXECUTION_FAILED": "FAILED"
+                },
+                "scope": "declared reader set",
+                "findings": [],
+                "refusals": [],
+                "unobserved_surfaces": "none recorded",
+                "evidence_refs": "run 0003 @ 48b9a63 · fixture 6/6"
+            },
+            "structure": {
+                "aspect_id": "structure",
+                "cm_version": "0.2",
+                "profile": "repository-planes-v1.1",
+                "repository_commit": "48b9a63",
+                "result_class": "DEFECT",
+                "status": "DEFECTS_FOUND",
+                "status_mapping": {
+                    "DEFECTS_FOUND": "DEFECT",
+                    "COHERENT_WITHIN_DECLARED_SCOPE": "PASS",
+                    "UNDERDETERMINED": "INCOMPLETE",
+                    "INCOMPLETE_OBSERVATION": "INCOMPLETE",
+                    "CM_EXECUTION_FAILED": "FAILED"
+                },
+                "scope": "declared plane set · excluded paths · policy commit",
+                "findings": [
+                    "at least one policy violation established"
+                ],
+                "refusals": [],
+                "unobserved_surfaces": "paths not classified, with reason",
+                "evidence_refs": "run 0002 @ 48b9a63 · plane_manifest_digest · consumer graph"
+            }
+        },
+        "composite_status": "DEFECTS_FOUND",
+        "continuation": {
+            "status": "BASELINE — no prior composite receipt",
+            "improved": [],
+            "regressed": [],
+            "stayed_defective": [],
+            "new_issue": []
+        },
+        "atlas": [
+            {
+                "kind": "complement",
+                "aspects": [
+                    "legibility",
+                    "structure"
+                ],
+                "note": "Legibility passes within its declared reader set while structure establishes a placement defect at the same commit; retained without averaging."
+            }
+        ]
+    },
+    "requirements": [
+        {
+            "id": "RCM-SNAPSHOT-001",
+            "text": "Every child receipt binds the same exact repository commit."
+        },
+        {
+            "id": "RCM-SELECTION-001",
+            "text": "Every requested aspect either executes or is explicitly reported as unimplemented/incomplete."
+        },
+        {
+            "id": "RCM-RECEIPT-001",
+            "text": "Every executed aspect returns an evidence-bound categorical receipt satisfying the generic envelope, including a result_class in {PASS, DEFECT, INCOMPLETE, FAILED} mapped from the child's own status."
+        },
+        {
+            "id": "RCM-COVERAGE-001",
+            "text": "Every composite claim names exactly which aspects and profiles it covers."
+        },
+        {
+            "id": "RCM-CONFLICT-001",
+            "text": "Cross-aspect disagreement is retained and surfaced, never averaged away."
+        },
+        {
+            "id": "RCM-NO-AGGREGATE-001",
+            "text": "No scalar or parent verdict may erase a child finding."
+        },
+        {
+            "id": "RCM-BOUNDARY-001",
+            "text": "Parent and child CMs measure only; repair and independent review remain separate invocations."
+        }
+    ]
+}
