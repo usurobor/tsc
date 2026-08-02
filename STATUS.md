@@ -44,8 +44,8 @@ No current implementation has emitted a passing TSC 4.1 conformance receipt.
 ## Read next
 
 - [`spec/README.md`](spec/README.md) — authority and reading order
-- [`docs/design/foundation-contract-reconciliation/DESIGN.md`](docs/design/foundation-contract-reconciliation/DESIGN.md) — revision motivation
-- [`docs/design/foundation-contract-reconciliation/ARCHAEOLOGY.md`](docs/design/foundation-contract-reconciliation/ARCHAEOLOGY.md) — historical evidence
+- [`docs/evidence/foundation-v4-reconciliation/DESIGN.md`](docs/evidence/foundation-v4-reconciliation/DESIGN.md) — revision motivation
+- [`docs/evidence/foundation-v4-reconciliation/ARCHAEOLOGY.md`](docs/evidence/foundation-v4-reconciliation/ARCHAEOLOGY.md) — historical evidence
 - [`spec/tsc-conformance.md`](spec/tsc-conformance.md) — proof obligations
 
 ## Program priority

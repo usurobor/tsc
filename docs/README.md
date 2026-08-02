@@ -20,7 +20,7 @@ This tree is organized by **reader intent**: each document answers one human nee
 |---|---|
 | What does TSC 4.1 mean? | [`../spec/README.md`](../spec/README.md) |
 | What must a 4.1 implementation prove? | [`../spec/tsc-conformance.md`](../spec/tsc-conformance.md) |
-| Why did the foundation change? | [`design/foundation-contract-reconciliation/DESIGN.md`](design/foundation-contract-reconciliation/DESIGN.md) |
+| Why did the foundation change? | [`evidence/foundation-v4-reconciliation/DESIGN.md`](evidence/foundation-v4-reconciliation/DESIGN.md) |
 | What is the current executable? | [`../src/engine/ocaml/CONTRACT.md`](../src/engine/ocaml/CONTRACT.md) |
 | What is currently runnable? | [`quickstart/README.md`](quickstart/README.md) |
 | What is the detailed project status? | [`../STATUS.md`](../STATUS.md) |
@@ -30,8 +30,8 @@ This tree is organized by **reader intent**: each document answers one human nee
 | Bundle | Purpose |
 |---|---|
 | [`architecture/decisions/`](architecture/decisions/) | Accepted architecture decisions |
-| [`design/foundation-contract-reconciliation/`](design/foundation-contract-reconciliation/) | v4 foundation design, archaeology, cutover receipt, and review responses |
-| [`design/polar-expression-recovery/`](design/polar-expression-recovery/) | 4.1 polar-language design and impact contract |
+| [`evidence/foundation-v4-reconciliation/`](evidence/foundation-v4-reconciliation/) | Evidence for the ratified v4 foundation: design, archaeology, cutover receipt, and review responses |
+| [`../research/foundation/polar-expression-recovery/`](../research/foundation/polar-expression-recovery/) | Pre-normative research for the 4.1 polar-language design and impact contract |
 
 ## A note on history
 

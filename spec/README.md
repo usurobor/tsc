@@ -60,13 +60,13 @@ A change in one lineage does not imply a change in another.
 
 ## Design evidence
 
-The motivation, symbol migration, and impact graph live in [`../docs/design/foundation-contract-reconciliation/DESIGN.md`](../docs/design/foundation-contract-reconciliation/DESIGN.md).
+The motivation, symbol migration, and impact graph live in [`../docs/evidence/foundation-v4-reconciliation/DESIGN.md`](../docs/evidence/foundation-v4-reconciliation/DESIGN.md).
 
-The verified project archaeology lives in [`../docs/design/foundation-contract-reconciliation/ARCHAEOLOGY.md`](../docs/design/foundation-contract-reconciliation/ARCHAEOLOGY.md).
+The verified project archaeology lives in [`../docs/evidence/foundation-v4-reconciliation/ARCHAEOLOGY.md`](../docs/evidence/foundation-v4-reconciliation/ARCHAEOLOGY.md).
 
-The first explicit dispositions of prior failed claims live in [`../docs/design/foundation-contract-reconciliation/CUTOVER-RECEIPT.md`](../docs/design/foundation-contract-reconciliation/CUTOVER-RECEIPT.md).
+The first explicit dispositions of prior failed claims live in [`../docs/evidence/foundation-v4-reconciliation/CUTOVER-RECEIPT.md`](../docs/evidence/foundation-v4-reconciliation/CUTOVER-RECEIPT.md).
 
-The polar-expression recovery rationale and impact graph live in [`../docs/design/polar-expression-recovery/DESIGN.md`](../docs/design/polar-expression-recovery/DESIGN.md).
+The polar-expression recovery rationale and impact graph live in [`../research/foundation/polar-expression-recovery/DESIGN.md`](../research/foundation/polar-expression-recovery/DESIGN.md).
 
 These documents explain the revision. They do not override the normative definitions.
 
