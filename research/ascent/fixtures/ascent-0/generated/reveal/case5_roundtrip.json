@@ -1,0 +1,38 @@
+{
+  "case": "case5_roundtrip",
+  "heldout_output": "01",
+  "heldout_query": "ab",
+  "hidden_machine": {
+    "canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/1",
+    "initial_state": 0,
+    "states": 2,
+    "transition_output_table": [
+      {
+        "input": "a",
+        "next_state": 1,
+        "output": "0",
+        "state": 0
+      },
+      {
+        "input": "b",
+        "next_state": 0,
+        "output": "0",
+        "state": 0
+      },
+      {
+        "input": "a",
+        "next_state": 1,
+        "output": "1",
+        "state": 1
+      },
+      {
+        "input": "b",
+        "next_state": 1,
+        "output": "1",
+        "state": 1
+      }
+    ]
+  },
+  "note": "revealed only after predictions are frozen",
+  "salt": "59dbec3b3bad47de9673acf12a37464dc1a8102f03a58156ef1739c65f276736"
+}

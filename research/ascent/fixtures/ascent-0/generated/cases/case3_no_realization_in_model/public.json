@@ -1,0 +1,43 @@
+{
+  "case": "case3_no_realization_in_model",
+  "completeness_argument": "SearchClaim = complete_within_bound(N=2,|Sigma|=2,|Gamma|=2): every machine in the class was enumerated and none fits. Independently: a deterministic pointed transducer sends a fixed input history to a unique reply word from the fixed initial state, so two distinct required replies for the same history are unrealizable at ANY state count. Hence NO_REALIZATION_IN_MODEL, not UNRESOLVED.",
+  "contradiction": "input history \"a\" is required to reply both \"0\" and \"1\"",
+  "core_ir": {
+    "H_M": "deterministic pointed Mealy transducers with 1..N states over Sigma,Gamma; canonical enumeration in class.json",
+    "J_eval": [
+      "a",
+      "a"
+    ],
+    "J_train": [
+      "a",
+      "a"
+    ],
+    "K_M": "generator state count; admissible complexity bound kappa_M = N = 2",
+    "L_M": "count of training traces whose predicted reply word differs from the observed reply word; admissible fit bound tau_M = 0 (exact)",
+    "SearchClaim": "complete_within_bound(N=2, |Sigma|=2, |Gamma|=2)",
+    "candidate_fiber": "empty",
+    "empty_or_unresolved_set": "C_fit is empty (0 of enumerated_class_size machines fit)",
+    "equivalence": "behavioral equivalence ~=^J: identical reply word on every query in the indexing family J; refinement-monotone (wider J refines finer)",
+    "joint_realization": "generator G in H_M with the identity observation atlas: each candidate directly predicts the reply word for an input history; the atlas is trivial and retained",
+    "oracle": "none"
+  },
+  "derived_result": "NO_REALIZATION_IN_MODEL",
+  "distinct_from": {
+    "ASCENT_UNDERDETERMINED": "would require >= 1 fitting candidate; here there are 0",
+    "UNRESOLVED": "would require an INCOMPLETE search; here the search is complete"
+  },
+  "enumerated_class_size": 260,
+  "expected_result": "NO_REALIZATION_IN_MODEL",
+  "fitting_candidate_count": 0,
+  "purpose": "a complete search over the whole bounded class yields an EMPTY candidate set; empty-after-complete-search is not collapsed into uncertainty",
+  "training_traces": [
+    {
+      "input": "a",
+      "required_reply": "0"
+    },
+    {
+      "input": "a",
+      "required_reply": "1"
+    }
+  ]
+}

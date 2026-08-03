@@ -1,0 +1,470 @@
+{
+  "candidate_fiber_over_U": [
+    {
+      "behavior_signature_over_U": "0|0|01|01|01|01|011|011|011|011|011|011|011|011",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|01|00|011|010|001|000|011|010|001|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|01|01|011|011|010|010|011|011|010|010",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|01|00|011|010|000|000|011|010|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|01|000|001|010|011|000|001|010|011",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->1/0; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->1/0; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|01|000|001|010|010|000|001|010|010",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->1/0; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->1/0; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|01|01|010|010|011|011|010|010|011|011",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|01|00|010|010|001|000|010|010|001|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|01|01|010|010|010|010|010|010|010|010",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|01|00|010|010|000|000|010|010|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|01|000|000|010|011|000|000|010|011",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->0/0; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->0/0; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|01|000|000|010|010|000|000|010|010",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->0/0; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->0/0; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|011|011|011|011|001|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|011|010|001|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|011|011|010|010|001|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|011|010|000|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|001|010|011|000|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|001|010|010|000|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|010|010|011|011|001|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|010|010|001|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|010|010|010|010|001|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|010|010|000|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|000|010|011|000|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|000|010|010|000|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|01|000|000|001|001|011|011|011|011",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|00|000|000|001|000|011|010|001|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|01|000|000|001|001|011|011|010|010",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|00|000|000|001|000|011|010|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|00|01|000|000|000|001|000|001|010|011",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->1/0; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->1/0; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|00|01|000|000|000|001|000|001|010|010",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->1/0; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->1/0; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|01|000|000|001|001|010|010|011|011",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|00|000|000|001|000|010|010|001|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|01|000|000|001|001|010|010|010|010",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|00|000|000|001|000|010|010|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|00|01|000|000|000|001|000|000|010|011",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->0/0; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->0/0; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|00|01|000|000|000|001|000|000|010|010",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->0/0; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->0/0; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|00|00|000|000|000|000|000|000|000|000",
+      "complexity_K_M": 1,
+      "member_canonical_ids": [
+        "n1; 0a->0/0; 0b->0/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/0; 1b->0/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/0; 1b->0/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/0; 1b->1/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/0; 1b->1/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/1; 1b->0/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/1; 1b->0/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/1; 1b->1/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/1; 1b->1/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/0; 1b->0/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/0; 1b->0/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/0; 1b->1/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/0; 1b->1/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/1; 1b->0/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/1; 1b->0/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/1; 1b->1/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/1; 1b->1/1",
+        "n2; 0a->0/0; 0b->1/0; 1a->0/0; 1b->0/0",
+        "n2; 0a->0/0; 0b->1/0; 1a->0/0; 1b->1/0",
+        "n2; 0a->0/0; 0b->1/0; 1a->1/0; 1b->0/0",
+        "n2; 0a->0/0; 0b->1/0; 1a->1/0; 1b->1/0",
+        "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->0/0",
+        "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->1/0",
+        "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->0/0",
+        "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->1/0",
+        "n2; 0a->1/0; 0b->1/0; 1a->0/0; 1b->0/0",
+        "n2; 0a->1/0; 0b->1/0; 1a->0/0; 1b->1/0",
+        "n2; 0a->1/0; 0b->1/0; 1a->1/0; 1b->0/0",
+        "n2; 0a->1/0; 0b->1/0; 1a->1/0; 1b->1/0"
+      ],
+      "member_count": 29,
+      "representative_canonical_id": "n1; 0a->0/0; 0b->0/0"
+    }
+  ],
+  "case": "case2_ascent_underdetermined",
+  "complete_candidate_set_size": 65,
+  "core_ir": {
+    "H_M": "deterministic pointed Mealy transducers with 1..N states over Sigma,Gamma; canonical enumeration in class.json",
+    "J_eval": [
+      "a",
+      "b"
+    ],
+    "J_train": [
+      "a",
+      "b"
+    ],
+    "K_M": "generator state count; admissible complexity bound kappa_M = N = 2",
+    "L_M": "count of training traces whose predicted reply word differs from the observed reply word; admissible fit bound tau_M = 0 (exact)",
+    "SearchClaim": "complete_within_bound(N=2, |Sigma|=2, |Gamma|=2)",
+    "candidate_fiber": "candidate_fiber_over_U",
+    "empty_or_unresolved_set": "none (fiber is non-empty and non-singleton)",
+    "equivalence": "behavioral equivalence ~=^J: identical reply word on every query in the indexing family J; refinement-monotone (wider J refines finer)",
+    "joint_realization": "generator G in H_M with the identity observation atlas: each candidate directly predicts the reply word for an input history; the atlas is trivial and retained",
+    "oracle": "none (no held-out oracle run; identification stays underdetermined)"
+  },
+  "derived_result": "ASCENT_UNDERDETERMINED",
+  "exhibited_inequivalent_pair": {
+    "A_reply_on_query": "01",
+    "B_reply_on_query": "00",
+    "both_fit_training": true,
+    "candidate_A": {
+      "canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->1/1",
+      "initial_state": 0,
+      "states": 2,
+      "transition_output_table": [
+        {
+          "input": "a",
+          "next_state": 1,
+          "output": "0",
+          "state": 0
+        },
+        {
+          "input": "b",
+          "next_state": 1,
+          "output": "0",
+          "state": 0
+        },
+        {
+          "input": "a",
+          "next_state": 1,
+          "output": "1",
+          "state": 1
+        },
+        {
+          "input": "b",
+          "next_state": 1,
+          "output": "1",
+          "state": 1
+        }
+      ]
+    },
+    "candidate_B": {
+      "canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->1/0",
+      "initial_state": 0,
+      "states": 2,
+      "transition_output_table": [
+        {
+          "input": "a",
+          "next_state": 1,
+          "output": "0",
+          "state": 0
+        },
+        {
+          "input": "b",
+          "next_state": 1,
+          "output": "0",
+          "state": 0
+        },
+        {
+          "input": "a",
+          "next_state": 1,
+          "output": "1",
+          "state": 1
+        },
+        {
+          "input": "b",
+          "next_state": 1,
+          "output": "0",
+          "state": 1
+        }
+      ]
+    },
+    "distinguishing_query_not_in_training": "ab",
+    "equal_complexity_K_M": 2
+  },
+  "expected_result": "ASCENT_UNDERDETERMINED",
+  "inequivalent_class_count_over_U": 37,
+  "no_oracle_run": true,
+  "purpose": ">= 2 inequivalent candidates survive a complete bounded search; no tie-break is provided",
+  "training_traces": [
+    {
+      "input": "a",
+      "observed_reply": "0"
+    },
+    {
+      "input": "b",
+      "observed_reply": "0"
+    }
+  ]
+}

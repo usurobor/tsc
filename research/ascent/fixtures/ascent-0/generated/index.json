@@ -1,0 +1,37 @@
+{
+  "artifact": "ascent-0 source=behavior fixture set (#119)",
+  "cases": [
+    {
+      "case": "case1_lift_validated",
+      "oracle_commitment_sha256": "c9bb2e42a252d449bc72d5a444033ac5b9f6f4b1be06c5c38e25009f04eb3f92",
+      "public_json_sha256": "c886607e717fd71dd9eab86e16b5f24f8cd8a7a647eb2413bc3422e478e24789",
+      "reveal_file": "reveal/case1_lift_validated.json"
+    },
+    {
+      "case": "case2_ascent_underdetermined",
+      "public_json_sha256": "75fadec58573d1ceed133038e67b7cb844f9319ff09a170751a6c6b0b67cfa6d"
+    },
+    {
+      "case": "case3_no_realization_in_model",
+      "public_json_sha256": "c3ed8b808334744769c0b8e32500802935795c7982d84e84cd0a6a458eaa83ca"
+    },
+    {
+      "case": "case4_decorative_lift",
+      "public_json_sha256": "f2c941eac5c0acbb440bbb6db46a490257cda04884defe9451300ec4008b85ca"
+    },
+    {
+      "case": "case5_roundtrip",
+      "oracle_commitment_sha256": "802f32fee1bdbe1bb0ac9ce41b4903ec83082e85e5520175a6ca3147f2923dc9",
+      "public_json_sha256": "3e1ea32fda44b74822e5e827e110ee13079af7325de783a5cfc75588af614746",
+      "reveal_file": "reveal/case5_roundtrip.json"
+    }
+  ],
+  "config": {
+    "Gamma_size": 2,
+    "N": 2,
+    "Sigma_size": 2,
+    "class_size": 260,
+    "query_universe_max_length": 3
+  },
+  "result_rule": "not admissible -> DECORATIVE_LIFT; else |C_train|=0 -> NO_REALIZATION_IN_MODEL; else oracle_run & separating & pass>=1 & tested_fiber=1 -> LIFT_VALIDATED; else |F_id|>=2 -> ASCENT_UNDERDETERMINED; else IDENTIFIED_IN_MODEL"
+}

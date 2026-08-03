@@ -1,0 +1,38 @@
+{
+  "case": "case1_lift_validated",
+  "heldout_output": "01",
+  "heldout_query": "ab",
+  "hidden_machine": {
+    "canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/1",
+    "initial_state": 0,
+    "states": 2,
+    "transition_output_table": [
+      {
+        "input": "a",
+        "next_state": 1,
+        "output": "0",
+        "state": 0
+      },
+      {
+        "input": "b",
+        "next_state": 0,
+        "output": "0",
+        "state": 0
+      },
+      {
+        "input": "a",
+        "next_state": 1,
+        "output": "1",
+        "state": 1
+      },
+      {
+        "input": "b",
+        "next_state": 1,
+        "output": "1",
+        "state": 1
+      }
+    ]
+  },
+  "note": "revealed only after predictions are frozen; the runtime (Sub 3) may read this bundle only via a dedicated oracle step",
+  "salt": "99c3b97903050a3b88109b5349818d1905e142c29057972ff023548bb285c2ac"
+}

@@ -1,0 +1,15 @@
+VIEWPOINT (one point of view)
+  This component is a black box. The only account of it you are given is
+  the finite list of input/response observations below. You send it an
+  input word over the symbols {a, b}; it answers with one reply symbol
+  (0 or 1) for each input symbol you send. Treat the observations below as
+  the complete account of what the component is.
+
+OBSERVATIONS (the given account, in full)
+  input "a"  ->  reply "0"
+  input "b"  ->  reply "0"
+  input "bb"  ->  reply "00"
+
+INTENT
+  Give the most complete account you can of what this component is, and
+  predict its reply to the input word "ab", which does not appear above.

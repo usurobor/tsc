@@ -1,0 +1,43 @@
+{
+  "admissibility_gate_passed": false,
+  "case": "case4_decorative_lift",
+  "derived_result": "DECORATIVE_LIFT",
+  "distinct_from": {
+    "ASCENT_UNDERDETERMINED": "there >= 2 typed candidates survive; here nothing typed is proposed at all",
+    "NO_REALIZATION_IN_MODEL": "there the data is well-typed but unrealizable after a complete search; here the data is realizable and the PROPOSAL is refused"
+  },
+  "expected_result": "DECORATIVE_LIFT",
+  "proposed_whole_prose": "source and behavior are complementary manifestations of the program's underlying identity, each expressing the whole through its own aspect",
+  "purpose": "fluency without executable generativity is refused BEFORE realization; the proposal never enters the generator fiber",
+  "refused_before_realization": true,
+  "required_witnesses": [
+    {
+      "present": false,
+      "reason": "the proposal is prose; it exposes no state set, initial state, or transition/output law that could be admitted into H_M",
+      "witness": "typed_generator_presentation"
+    },
+    {
+      "present": false,
+      "reason": "no operator predict(candidate, input) is supplied; the proposal cannot answer any query",
+      "witness": "prediction_operator"
+    },
+    {
+      "present": false,
+      "reason": "nothing to enumerate, fit, or bound; the proposal is not a member of the declared candidate class",
+      "witness": "admissible_realization_in_H_M"
+    },
+    {
+      "present": false,
+      "reason": "the obstruction (finite traces underdetermine reply on unattempted inputs) is restated, not dissolved",
+      "witness": "obstruction_dissolution_witness"
+    },
+    {
+      "present": false,
+      "reason": "the proposal yields no checkable held-out consequence",
+      "witness": "heldout_consequence"
+    }
+  ],
+  "search_run": false,
+  "underlying_training_fitting_candidate_count": 130,
+  "underlying_training_is_realizable": true
+}

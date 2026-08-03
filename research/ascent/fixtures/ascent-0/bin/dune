@@ -1,0 +1,4 @@
+(executable
+ (name ascent0_gen)
+ (libraries unix)
+ (modules sha256 mealy serialize cases ascent0_gen))

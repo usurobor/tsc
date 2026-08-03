@@ -1,0 +1,24 @@
+{
+  "Gamma": [
+    "0",
+    "1"
+  ],
+  "N_state_bound": 2,
+  "Sigma": [
+    "a",
+    "b"
+  ],
+  "articulations": {
+    "behavior": "the reply-word function over the declared query family (the behavior-primary POV; the only public semantic input)",
+    "higher_generator_W": "the pointed transducer producing both",
+    "polar_projection": "the canonical transition-law presentation (canonical_id); a PROJECTION available only from a recovered candidate, never handed to the invocation"
+  },
+  "canonical_enumeration": "n ascending 1..N; within n, cells ordered (state outer, input inner); each cell a mixed-radix digit over (delta in 0..n-1, lambda in 0..|Gamma|-1), first cell most significant",
+  "class_size": 260,
+  "determinism": "delta and lambda are total functions of (state, input)",
+  "equivalence_separation_bound": "two <=2-state machines are behaviorally equivalent iff they agree on all strings of length <= n1+n2-1 <= 3 = ulen; hence U is a complete separator for the class",
+  "equivalence_separation_verified_mechanically": true,
+  "initial_state": 0,
+  "object": "deterministic pointed Mealy transducer W = (S, s0, Sigma, Gamma, delta, lambda)",
+  "query_universe_U": "all Sigma-strings of length 1..3 (|U| = 14), shortlex"
+}

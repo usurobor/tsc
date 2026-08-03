@@ -1,0 +1,147 @@
+{
+  "candidate_fiber_over_U": [
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|011|011|011|011|001|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|011|010|001|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|011|011|010|010|001|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|011|010|000|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|010|010|011|011|001|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|010|010|001|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|010|010|010|010|001|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|010|010|000|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/0"
+    }
+  ],
+  "case": "case1_lift_validated",
+  "complete_candidate_set_size": 8,
+  "core_ir": {
+    "H_M": "deterministic pointed Mealy transducers with 1..N states over Sigma,Gamma; canonical enumeration in class.json",
+    "J_eval": [
+      "a",
+      "aa",
+      "b",
+      "ba",
+      "ab"
+    ],
+    "J_train": [
+      "a",
+      "aa",
+      "b",
+      "ba"
+    ],
+    "K_M": "generator state count; admissible complexity bound kappa_M = N = 2",
+    "L_M": "count of training traces whose predicted reply word differs from the observed reply word; admissible fit bound tau_M = 0 (exact)",
+    "SearchClaim": "complete_within_bound(N=2, |Sigma|=2, |Gamma|=2)",
+    "candidate_fiber": "candidate_fiber_over_U",
+    "empty_or_unresolved_set": "C_fail (candidates refuted by the held-out) has size expected_fail_count",
+    "equivalence": "behavioral equivalence ~=^J: identical reply word on every query in the indexing family J; refinement-monotone (wider J refines finer)",
+    "joint_realization": "generator G in H_M with the identity observation atlas: each candidate directly predicts the reply word for an input history; the atlas is trivial and retained",
+    "oracle": "commit/reveal sealed held-out; commitment above, reveal bundle separate"
+  },
+  "derived_result": "LIFT_VALIDATED",
+  "expected_fail_count": 4,
+  "expected_pass_count": 4,
+  "expected_result": "LIFT_VALIDATED",
+  "expected_tested_fiber_size_after_reveal": 1,
+  "fiber_split_by_heldout_over_J_eval": 2,
+  "heldout_distinct_predictions": [
+    "00",
+    "01"
+  ],
+  "heldout_is_out_of_fit": true,
+  "heldout_is_separating": true,
+  "heldout_query_public": "ab",
+  "oracle_commitment_formula": "sha256( canonical_document( reveal/case1_lift_validated.json ) )",
+  "oracle_commitment_sha256": "c9bb2e42a252d449bc72d5a444033ac5b9f6f4b1be06c5c38e25009f04eb3f92",
+  "purpose": "a genuinely new (held-out, out-of-fit) articulation is generated and validated by the sealed oracle",
+  "recovered_class_contains_hidden_machine": true,
+  "training_fiber_over_J_train": 1,
+  "training_identification_fiber_over_U": 8,
+  "training_traces": [
+    {
+      "input": "a",
+      "observed_reply": "0"
+    },
+    {
+      "input": "aa",
+      "observed_reply": "01"
+    },
+    {
+      "input": "b",
+      "observed_reply": "0"
+    },
+    {
+      "input": "ba",
+      "observed_reply": "00"
+    }
+  ]
+}

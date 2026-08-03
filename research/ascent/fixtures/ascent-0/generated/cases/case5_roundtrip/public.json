@@ -1,0 +1,372 @@
+{
+  "candidate_fiber_over_U_after_fold": [
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|011|011|011|011|001|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|011|011|010|010|001|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|001|010|011|000|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|001|010|010|000|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|010|010|011|011|001|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|010|010|010|010|001|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|000|010|011|000|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|000|010|010|000|001|000|000",
+      "complexity_K_M": 2,
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->0/1"
+    }
+  ],
+  "candidate_fiber_over_U_before": [
+    {
+      "behavior_signature_over_U": "0|0|01|00|01|00|011|010|001|000|011|010|001|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|01|00|011|010|000|000|011|010|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->1/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|01|00|010|010|001|000|010|010|001|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|01|00|010|010|000|000|010|010|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->1/0; 1a->0/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|011|011|011|011|001|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|011|010|001|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|011|011|010|010|001|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|011|010|000|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|001|010|011|000|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|001|010|010|000|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|010|010|011|011|001|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|010|010|001|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|01|00|00|010|010|010|010|001|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|01|00|00|00|010|010|000|000|001|000|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|000|010|011|000|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->1/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->1/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|01|00|00|000|000|010|010|000|001|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "01",
+      "member_canonical_ids": [
+        "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->0/1"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->0/1"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|00|000|000|001|000|011|010|001|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|00|000|000|001|000|011|010|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->1/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|00|000|000|001|000|010|010|001|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->1/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->1/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|01|00|000|000|001|000|010|010|000|000",
+      "complexity_K_M": 2,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->0/0"
+      ],
+      "member_count": 1,
+      "representative_canonical_id": "n2; 0a->0/0; 0b->1/0; 1a->0/1; 1b->0/0"
+    },
+    {
+      "behavior_signature_over_U": "0|0|00|00|00|00|000|000|000|000|000|000|000|000",
+      "complexity_K_M": 1,
+      "frozen_prediction_on_heldout": "00",
+      "member_canonical_ids": [
+        "n1; 0a->0/0; 0b->0/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/0; 1b->0/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/0; 1b->0/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/0; 1b->1/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/0; 1b->1/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/1; 1b->0/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/1; 1b->0/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/1; 1b->1/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->0/1; 1b->1/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/0; 1b->0/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/0; 1b->0/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/0; 1b->1/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/0; 1b->1/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/1; 1b->0/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/1; 1b->0/1",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/1; 1b->1/0",
+        "n2; 0a->0/0; 0b->0/0; 1a->1/1; 1b->1/1",
+        "n2; 0a->0/0; 0b->1/0; 1a->0/0; 1b->0/0",
+        "n2; 0a->0/0; 0b->1/0; 1a->0/0; 1b->1/0",
+        "n2; 0a->0/0; 0b->1/0; 1a->1/0; 1b->0/0",
+        "n2; 0a->0/0; 0b->1/0; 1a->1/0; 1b->1/0",
+        "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->0/0",
+        "n2; 0a->1/0; 0b->0/0; 1a->0/0; 1b->1/0",
+        "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->0/0",
+        "n2; 0a->1/0; 0b->0/0; 1a->1/0; 1b->1/0",
+        "n2; 0a->1/0; 0b->1/0; 1a->0/0; 1b->0/0",
+        "n2; 0a->1/0; 0b->1/0; 1a->0/0; 1b->1/0",
+        "n2; 0a->1/0; 0b->1/0; 1a->1/0; 1b->0/0",
+        "n2; 0a->1/0; 0b->1/0; 1a->1/0; 1b->1/0"
+      ],
+      "member_count": 29,
+      "representative_canonical_id": "n1; 0a->0/0; 0b->0/0"
+    }
+  ],
+  "case": "case5_roundtrip",
+  "complete_candidate_set_size_after_fold": 8,
+  "complete_candidate_set_size_before": 49,
+  "core_ir": {
+    "H_M": "deterministic pointed Mealy transducers with 1..N states over Sigma,Gamma; canonical enumeration in class.json",
+    "J_eval": [
+      "a",
+      "b",
+      "bb",
+      "ab"
+    ],
+    "J_train": [
+      "a",
+      "b",
+      "bb"
+    ],
+    "K_M": "generator state count; admissible complexity bound kappa_M = N = 2",
+    "L_M": "count of training traces whose predicted reply word differs from the observed reply word; admissible fit bound tau_M = 0 (exact)",
+    "SearchClaim": "complete_within_bound(N=2, |Sigma|=2, |Gamma|=2)",
+    "candidate_fiber": "candidate_fiber_over_U_before / _after_fold",
+    "empty_or_unresolved_set": "none",
+    "equivalence": "behavioral equivalence ~=^J: identical reply word on every query in the indexing family J; refinement-monotone (wider J refines finer)",
+    "joint_realization": "generator G in H_M with the identity observation atlas: each candidate directly predicts the reply word for an input history; the atlas is trivial and retained",
+    "oracle": "commit/reveal sealed held-out; q* is separating"
+  },
+  "derived_result": "LIFT_VALIDATED",
+  "expected_result": "LIFT_VALIDATED (validated continuation / round-trip)",
+  "expected_tested_fiber_size_after_reveal": 1,
+  "fiber_over_U_after_fold": 8,
+  "fiber_over_U_before": 21,
+  "heldout_distinct_predictions_before": [
+    "00",
+    "01"
+  ],
+  "heldout_is_separating": true,
+  "heldout_query_public": "ab",
+  "oracle_commitment_formula": "sha256( canonical_document( reveal/case5_roundtrip.json ) )",
+  "oracle_commitment_sha256": "802f32fee1bdbe1bb0ac9ce41b4903ec83082e85e5520175a6ca3147f2923dc9",
+  "purpose": "Ascend(D_train U Descend(W,q*)) ~= W under the declared equivalence, with q* strongly separating",
+  "roundtrip_class_contains_hidden_machine": true,
+  "roundtrip_class_over_J_eval_after_fold": 1,
+  "strong_separation_fiber_strictly_shrinks": true,
+  "training_traces": [
+    {
+      "input": "a",
+      "observed_reply": "0"
+    },
+    {
+      "input": "b",
+      "observed_reply": "0"
+    },
+    {
+      "input": "bb",
+      "observed_reply": "00"
+    }
+  ]
+}

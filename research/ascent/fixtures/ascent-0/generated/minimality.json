@@ -1,0 +1,21 @@
+{
+  "Gamma_geq_2_required": {
+    "conclusion": "Gamma >= 2 required",
+    "demonstration": "with a single output symbol every machine has identical behavior, so no fiber has >= 2 classes and no held-out can separate: neither LIFT_VALIDATED separation nor ASCENT_UNDERDETERMINED is demonstrable",
+    "distinct_behaviors_over_U_at_Gamma_equals_1": 1
+  },
+  "N_geq_2_required": {
+    "conclusion": "N >= 2 required",
+    "demonstration": "case 1's augmented dataset D_train U {(ab, sealed output)} has an EMPTY complete fit set at N=1 (memoryless) but a non-empty one at N=2: the validated held-out descent is unrealizable without state",
+    "fitting_candidates_at_N_equals_1": 0,
+    "fitting_candidates_at_N_equals_2": 4
+  },
+  "Sigma_geq_2_required": {
+    "b_queries_split_count": 142,
+    "classes_under_a_only_family": 6,
+    "classes_under_full_family": 148,
+    "conclusion": "Sigma >= 2 required",
+    "demonstration": "the bound obligation 'input-indexed equivalence / behavior on unattempted INPUTS' is vacuous at |Sigma|=1 (one input symbol: widening the input family cannot split a class by input). At |Sigma|=2, widening the indexing family from a-only queries to {a,b} queries splits classes, so the obligation is non-trivial"
+  },
+  "claim": "the smallest object the five cases demonstrate is N=2, |Sigma|=2, |Gamma|=2"
+}
