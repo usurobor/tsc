@@ -9,6 +9,9 @@ here.
 > **Where is this going?** See [`DIRECTION.md`](DIRECTION.md) — the product
 > direction: the layered architecture, frozen principles, what is proven today,
 > and the roadmap (the coherent whole that the CM-language issues are slices of).
+> Its companion [`ADOPTION.md`](ADOPTION.md) is the go-to-market direction — who
+> adopts, what to ship first (a built-in Repository Coherence CM + a GitHub
+> Action, not the language), how to frame and prove it.
 
 ## Architecture
 

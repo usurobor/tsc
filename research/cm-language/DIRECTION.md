@@ -3,6 +3,10 @@
 > **Status:** living direction doc. Tracks the north star, the architecture, what
 > is proven today, and what remains. Execution detail lives in the linked GitHub
 > issues; this doc is the coherent whole they are slices of.
+>
+> Companion: [`ADOPTION.md`](ADOPTION.md) — the *adoption* north star (who, why,
+> what to ship first, how to frame and prove it). DIRECTION is the technical
+> direction; ADOPTION is the go-to-market direction.
 
 ## 1. The product, in one sentence
 
