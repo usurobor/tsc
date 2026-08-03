@@ -1,0 +1,58 @@
+# NEGATIVE PROBE (issue #115 composite). Identical to repository_coherence.cm
+# EXCEPT the `forbid` clause drops `averaging`. The no-aggregate boundary is
+# load-bearing: a composite that permits scalar aggregation could erase a child
+# finding (RCM-NO-AGGREGATE-001). The surface makes the boundary structurally
+# mandatory and complete, so the front-end REJECTS this source at compile time —
+# it never emits a projection. (cue vet cannot catch it: #Methodology leaves
+# invariants.allow_scalar_aggregation an unconstrained bool, so the boundary must
+# bite at the surface.)
+
+cm repository-coherence v0.1 (repo, aspects) -> CompositeReceipt {
+
+  question "At this exact repository snapshot, do the selected coherence aspects jointly support treating the repository as one coherent system, and where do they conflict or remain unmeasured?"
+
+  # Children registry: the parent composes aspects (never audiences), by source ref.
+  # legibility + structure are implemented and selected; operability is registered
+  # but neither implemented nor selected (ASPECTS.md).
+  child legibility  from ./legibility  implemented selected
+  child structure   from ./structure   implemented selected
+  child operability from ./operability
+
+  # The composition body: run every selected aspect CM over the shared snapshot,
+  # in parallel. Captured structurally by the children registry + result rule, so
+  # it is projected out of the methodology IR (like a leaf's run).
+  let! receipts = parallel cm.run over aspects
+
+  # Invariants: same commit under every child; retain child receipts verbatim;
+  # never aggregate to a scalar (forbid averaging, below).
+  require same_snapshot
+  retain child_receipts
+
+  # The parent's own status vocabulary, and the deterministic step-6 derivation as
+  # DATA: walk the precedence highest-first; the first result_class present among
+  # the children maps to the parent status. A fresh reader executes it from here.
+  statuses COHERENT_WITHIN_MEASURED_ASPECTS, DEFECTS_FOUND, INCOMPLETE, CM_EXECUTION_FAILED
+  decide by precedence
+    | FAILED     -> CM_EXECUTION_FAILED
+    | INCOMPLETE -> INCOMPLETE
+    | DEFECT     -> DEFECTS_FOUND
+    | PASS       -> COHERENT_WITHIN_MEASURED_ASPECTS
+
+  # The seven stable RCM-* requirements.
+  requirement RCM-SNAPSHOT-001 "Every child receipt binds the same exact repository commit."
+  requirement RCM-SELECTION-001 "Every requested aspect either executes or is explicitly reported as unimplemented/incomplete."
+  requirement RCM-RECEIPT-001 "Every executed aspect returns an evidence-bound categorical receipt satisfying the generic envelope, including a result_class in {PASS, DEFECT, INCOMPLETE, FAILED} mapped from the child's own status."
+  requirement RCM-COVERAGE-001 "Every composite claim names exactly which aspects and profiles it covers."
+  requirement RCM-CONFLICT-001 "Cross-aspect disagreement is retained and surfaced, never averaged away."
+  requirement RCM-NO-AGGREGATE-001 "No scalar or parent verdict may erase a child finding."
+  requirement RCM-BOUNDARY-001 "Parent and child CMs measure only; repair and independent review remain separate invocations."
+
+  # What the parent explicitly does not own.
+  disowns "artifact manifest", "shared schema registry", "universal ontology", "common inventory"
+
+  # Measure-only + no-aggregate boundary, structurally mandatory and complete: the
+  # parent measures and composes; it does NOT average (RCM-NO-AGGREGATE-001), repair,
+  # admit, or authorize (RCM-BOUNDARY-001). `averaging` sets allow_scalar_aggregation
+  # false; repair/admit/authorize set the measure-only boundary.
+  forbid repair, admit, authorize
+}

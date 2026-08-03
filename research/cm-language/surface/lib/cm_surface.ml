@@ -95,18 +95,21 @@ module Lex = struct
     | COMMA
     | EQ
     | AT (* @ — introduces a content-address digest *)
+    | PIPE (* | — a decide-clause bullet *)
     | ARROW (* -> *)
     | EOF
 
   type lexeme = { tok : token; line : int }
 
   (* `!` for the effectful binders `let!`/`and!`; `-` for hyphenated ids like
-     `refusal-rubric`. `->` is matched before the atom rule so ARROW still wins. *)
+     `refusal-rubric`; `/` for source paths (`./legibility`) and `.` for dotted
+     provider names (`cm.run`). `->` is matched before the atom rule so ARROW
+     still wins. *)
   let is_atom_char c =
     (c >= 'a' && c <= 'z')
     || (c >= 'A' && c <= 'Z')
     || (c >= '0' && c <= '9')
-    || c = '_' || c = '.' || c = '!' || c = '-'
+    || c = '_' || c = '.' || c = '!' || c = '-' || c = '/'
 
   let tokenize (src : string) : lexeme list =
     let n = String.length src in
@@ -132,6 +135,7 @@ module Lex = struct
       else if c = ',' then (push COMMA; incr i)
       else if c = '=' then (push EQ; incr i)
       else if c = '@' then (push AT; incr i)
+      else if c = '|' then (push PIPE; incr i)
       else if c = '-' && !i + 1 < n && src.[!i + 1] = '>' then (push ARROW; i := !i + 2)
       else if c = '"' then begin
         let start = !i + 1 in
@@ -208,6 +212,27 @@ module Ast = struct
     boundary_note : string;
     forbids : string list;
   }
+
+  (* ── composite (parent) CM: #Methodology, methodology-only projection. ──── *)
+  type child = { cname : string; source : string; implemented : bool; selected : bool }
+  type requirement = { rid : string; text : string }
+  type clause = { rc : string; status : string } (* result_class -> parent status *)
+
+  type composite = {
+    cm_name : string;
+    cm_version : string;
+    cm_question : string;
+    children : child list;
+    same_snapshot : bool;
+    retain_receipts : bool;
+    statuses : string list;
+    clauses : clause list; (* precedence order; also the mapping *)
+    requirements : requirement list;
+    disowns : string list;
+    cforbids : string list; (* averaging, repair, admit, authorize *)
+  }
+
+  type parsed = Leaf of cm | Composite of composite
 end
 
 (* ────────────────────────────────────────────────────────────────────────
@@ -227,7 +252,7 @@ module Parse = struct
     | STR s -> Printf.sprintf "string %S" s
     | LPAREN -> "'('" | RPAREN -> "')'"
     | LBRACE -> "'{'" | RBRACE -> "'}'"
-    | COLON -> "':'" | COMMA -> "','" | EQ -> "'='" | AT -> "'@'"
+    | COLON -> "':'" | COMMA -> "','" | EQ -> "'='" | AT -> "'@'" | PIPE -> "'|'"
     | ARROW -> "'->'" | EOF -> "end of input"
 
   let expect st t =
@@ -261,6 +286,15 @@ module Parse = struct
   let atom_list st =
     let rec loop acc =
       let a = atom st in
+      let acc = a :: acc in
+      match (peek st).tok with COMMA -> advance st; loop acc | _ -> List.rev acc
+    in
+    loop []
+
+  (* comma-separated list of quoted strings, e.g. `disowns "a", "b"` *)
+  let str_list st =
+    let rec loop acc =
+      let a = str st in
       let acc = a :: acc in
       match (peek st).tok with COMMA -> advance st; loop acc | _ -> List.rev acc
     in
@@ -354,19 +388,8 @@ module Parse = struct
     { Ast.id; kind; provider_kind; provider_id; provider_digest; failure; binder;
       input; output_contract; evidence_contract }
 
-  let parse_cm st : Ast.cm =
-    keyword st "cm";
-    let name = atom st in
-    let version = strip_v (atom st) in
-    expect st LPAREN;
-    let input_param = atom st in
-    expect st COLON;
-    let input_type = atom st in
-    expect st RPAREN;
-    expect st ARROW;
-    let output_type = atom st in
-    expect st LBRACE;
-
+  (* leaf/instrument body (CM0 family). Header already consumed through LBRACE. *)
+  let parse_leaf_body st ~name ~version ~input_param ~input_type ~output_type : Ast.cm =
     let question = ref None and target_kind = ref None and target_description = ref None in
     let source_digest = ref None and standing = ref None and binding = ref None in
     let boundary_note = ref None and derivation = ref None and forbids = ref None in
@@ -433,7 +456,125 @@ module Parse = struct
       forbids = req "forbid" !forbids;
     }
 
-  let parse toks = parse_cm { toks }
+  (* composite/parent body (#Methodology family). Header consumed through LBRACE. *)
+  let parse_composite_body st ~name ~version : Ast.composite =
+    let question = ref None and same_snapshot = ref false and retain_receipts = ref false in
+    let statuses = ref [] and clauses = ref [] and forbids = ref None in
+    let children = ref [] and requirements = ref [] and disowns = ref None in
+
+    (* decide by precedence:  | RC -> STATUS  (one clause per precedence level) *)
+    let parse_clauses () =
+      let rec loop acc =
+        match (peek st).tok with
+        | PIPE ->
+            advance st;
+            let rc = atom st in
+            expect st ARROW;
+            let status = atom st in
+            loop ({ Ast.rc; status } :: acc)
+        | _ -> List.rev acc
+      in
+      loop []
+    in
+    let rec body () =
+      match (peek st).tok with
+      | RBRACE -> advance st
+      | EOF -> err "line %d: unexpected end of input inside composite `cm` block" (cur_line st)
+      | ATOM "question" -> advance st; question := Some (str st); body ()
+      | ATOM "child" ->
+          advance st;
+          let cname = atom st in
+          keyword st "from";
+          let source = atom st in
+          (* optional `implemented` / `selected` flags (present ⇒ true) *)
+          let impl = ref false and sel = ref false in
+          let rec flags () =
+            if is_atom st "implemented" then (advance st; impl := true; flags ())
+            else if is_atom st "selected" then (advance st; sel := true; flags ())
+          in
+          flags ();
+          children := { Ast.cname; source; implemented = !impl; selected = !sel } :: !children;
+          body ()
+      | ATOM "let!" ->
+          (* the composition body: `let! receipts = parallel cm.run over aspects`.
+             Parsed for fidelity to #114; captured structurally by children+result,
+             so it is projected OUT of the methodology IR (like a leaf's run). *)
+          advance st;
+          let _binder = atom st in
+          expect st EQ;
+          keyword st "parallel";
+          let _op = atom st in
+          keyword st "over";
+          let _target = atom st in
+          body ()
+      | ATOM "require" -> advance st; keyword st "same_snapshot"; same_snapshot := true; body ()
+      | ATOM "retain" -> advance st; keyword st "child_receipts"; retain_receipts := true; body ()
+      | ATOM "statuses" -> advance st; statuses := !statuses @ atom_list st; body ()
+      | ATOM "decide" ->
+          advance st;
+          keyword st "by";
+          keyword st "precedence";
+          clauses := !clauses @ parse_clauses ();
+          body ()
+      | ATOM "requirement" ->
+          advance st;
+          let rid = atom st in
+          let text = str st in
+          requirements := { Ast.rid; text } :: !requirements;
+          body ()
+      | ATOM "disowns" -> advance st; disowns := Some (str_list st); body ()
+      | ATOM "forbid" -> advance st; forbids := Some (atom_list st); body ()
+      | other -> err "line %d: unexpected %s in composite `cm` block" (cur_line st) (tok_str other)
+    in
+    body ();
+    expect st EOF;
+    let req nm = function Some x -> x | None -> err "cm %s: missing required `%s` declaration" name nm in
+    {
+      Ast.cm_name = name;
+      cm_version = version;
+      cm_question = req "question" !question;
+      children = List.rev !children;
+      same_snapshot = !same_snapshot;
+      retain_receipts = !retain_receipts;
+      statuses = !statuses;
+      clauses = !clauses;
+      requirements = List.rev !requirements;
+      disowns = req "disowns" !disowns;
+      cforbids = req "forbid" !forbids;
+    }
+
+  (* header parameter list: `p` or `p: Type`, comma-separated. *)
+  let parse_params st =
+    let rec loop acc =
+      let n = atom st in
+      let t = if (peek st).tok = COLON then (advance st; Some (atom st)) else None in
+      let acc = (n, t) :: acc in
+      match (peek st).tok with COMMA -> advance st; loop acc | _ -> List.rev acc
+    in
+    loop []
+
+  let parse toks : Ast.parsed =
+    let st = { toks } in
+    keyword st "cm";
+    let name = atom st in
+    let version = strip_v (atom st) in
+    expect st LPAREN;
+    let params = parse_params st in
+    expect st RPAREN;
+    expect st ARROW;
+    let output_type = atom st in
+    expect st LBRACE;
+    match output_type with
+    | "InstrumentAssessment" ->
+        let input_param, input_type =
+          match params with
+          | (n, t) :: _ -> (n, Option.value ~default:"" t)
+          | [] -> err "cm %s: leaf CM needs an input subject parameter" name
+        in
+        Ast.Leaf (parse_leaf_body st ~name ~version ~input_param ~input_type ~output_type)
+    | "CompositeReceipt" -> Ast.Composite (parse_composite_body st ~name ~version)
+    | other ->
+        err "cm %s: unknown output type %S (expected `InstrumentAssessment` or `CompositeReceipt`)" name other
 end
 
 (* ────────────────────────────────────────────────────────────────────────
@@ -577,6 +718,97 @@ module Lower = struct
               ("emits_boundary_decision", Bool false);
             ] );
       ]
+
+  (* ── composite projection: the #Methodology methodology-only program
+     (== `cue export … -e repository_coherence_source`). The composite has no
+     separate normalized IR in this increment (that is #112 slice 2), so both
+     `cmc` and `cmc --source` emit this one projection. ─────────────────────── *)
+
+  (* Constants CUE materializes from schema defaults (#Manifestation, #Atlas,
+     #Boundary, #ResultClassDefinitions) — reconstructed here so the surface need
+     not restate them, exactly as CM0's `--source` reconstructs its constants. *)
+  let manifestation_records = "selected / unimplemented / incomplete children"
+  let atlas_note = "Cross-aspect relations surfaced for the reader; not used to gate the parent result in v0.1."
+  let boundary_note_default = "Parent and child CMs measure only; repair and independent review remain separate invocations."
+  let continuation_baseline = "BASELINE \xe2\x80\x94 no prior composite receipt" (* em dash U+2014 *)
+
+  let result_class_definitions =
+    let open Json in
+    Obj
+      [
+        ("PASS", S "The aspect executed fully and found no in-scope defect.");
+        ("DEFECT", S "The aspect executed and established at least one in-scope defect.");
+        ( "INCOMPLETE",
+          S
+            "The aspect executed but its observation is incomplete or underdetermined (e.g. inventory or consumer search incomplete, or policy leaves the actionable question unresolved). Boundary: ran but could not fully conclude." );
+        ("FAILED", S "The aspect CM could not execute a required mechanical step at all. Boundary: could not run.");
+      ]
+
+  (* The composite measure-only + no-averaging boundary is structurally mandatory:
+     a parent CM MUST forbid the full set. Dropping any (e.g. `averaging`) is a
+     compile error — load-bearing (RCM-NO-AGGREGATE-001 / RCM-BOUNDARY-001). *)
+  let composite_required_forbids = [ "averaging"; "repair"; "admit"; "authorize" ]
+
+  let validate_composite (c : composite) =
+    List.iter
+      (fun r ->
+        if not (List.mem r c.cforbids) then
+          err
+            "cm %s: composite boundary must `forbid` all of [%s]; missing %S. The boundary is \
+             load-bearing (RCM-NO-AGGREGATE-001: no scalar aggregation; RCM-BOUNDARY-001: measure only)."
+            c.cm_name (String.concat ", " composite_required_forbids) r)
+      composite_required_forbids;
+    List.iter
+      (fun f -> if not (List.mem f composite_required_forbids) then err "cm %s: unknown authority %S in `forbid`" c.cm_name f)
+      c.cforbids;
+    if not c.same_snapshot then err "cm %s: composite must `require same_snapshot`" c.cm_name;
+    if not c.retain_receipts then err "cm %s: composite must `retain child_receipts`" c.cm_name;
+    if c.children = [] then err "cm %s: composite has no `child` registry" c.cm_name;
+    if c.clauses = [] then err "cm %s: composite has no `decide by precedence` clauses" c.cm_name
+
+  let composite (c : composite) : Json.t =
+    validate_composite c;
+    let open Json in
+    let child ch =
+      ( ch.cname,
+        Obj
+          [
+            ("aspect_id", S ch.cname);
+            ("source", S ch.source);
+            ("implemented", Bool ch.implemented);
+            ("selected", Bool ch.selected);
+          ] )
+    in
+    let allow_scalar_aggregation = not (List.mem "averaging" c.cforbids) in
+    Obj
+      [
+        ("id", S c.cm_name);
+        ("version", S c.cm_version);
+        ("question", S c.cm_question);
+        ("input", Obj [ ("repository_snapshot", S "repository_snapshot"); ("selected_aspects", S "selected_aspects") ]);
+        ("children", Obj (List.map child c.children));
+        ( "invariants",
+          Obj
+            [
+              ("same_snapshot", Bool c.same_snapshot);
+              ("retain_child_receipts", Bool c.retain_receipts);
+              ("allow_scalar_aggregation", Bool allow_scalar_aggregation);
+            ] );
+        ( "result",
+          Obj
+            [
+              ("statuses", Arr (List.map (fun s -> S s) c.statuses));
+              ("precedence", Arr (List.map (fun cl -> S cl.rc) c.clauses));
+              ("mapping", Obj (List.map (fun cl -> (cl.rc, S cl.status)) c.clauses));
+            ] );
+        ("manifestation", Obj [ ("same_snapshot_binding", Bool true); ("records", S manifestation_records) ]);
+        ("atlas", Obj [ ("gating", Bool false); ("note", S atlas_note) ]);
+        ("continuation_baseline", S continuation_baseline);
+        ("boundary", Obj [ ("measure_only", Bool true); ("note", S boundary_note_default) ]);
+        ("requirements", Arr (List.map (fun r -> Obj [ ("id", S r.rid); ("text", S r.text) ]) c.requirements));
+        ("does_not_own", Arr (List.map (fun s -> S s) c.disowns));
+        ("result_class_definitions", result_class_definitions);
+      ]
 end
 
 (* ────────────────────────────────────────────────────────────────────────
@@ -585,8 +817,12 @@ end
 type mode = Ir | Source
 
 let compile_string ?(mode = Ir) (src : string) : string =
-  let cm = src |> Lex.tokenize |> Parse.parse in
-  let json = match mode with Ir -> Lower.ir cm | Source -> Lower.source cm in
+  let json =
+    match src |> Lex.tokenize |> Parse.parse with
+    | Ast.Leaf cm -> ( match mode with Ir -> Lower.ir cm | Source -> Lower.source cm)
+    (* the composite has one methodology-only projection; both modes emit it. *)
+    | Ast.Composite c -> Lower.composite c
+  in
   Json.to_string json
 
 let compile_file ?(mode = Ir) (path : string) : string =

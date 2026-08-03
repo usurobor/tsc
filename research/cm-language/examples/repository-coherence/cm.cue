@@ -153,3 +153,12 @@ repository_coherence: #Methodology & {
 		]
 	}
 }
+
+// Methodology-only projection (issue #115 composite spike): the composition
+// PROGRAM = repository_coherence minus its concrete run (`receipt`). Additive —
+// does NOT touch the `repository_coherence` expr above, whose export stays
+// byte-identical to compiled/repository-coherence.json. This is the `.cm`
+// composite byte-identity target (cue export -e repository_coherence_source).
+repository_coherence_source: {
+	for k, v in repository_coherence if k != "receipt" {(k): v}
+}

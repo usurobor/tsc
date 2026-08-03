@@ -1,4 +1,4 @@
-# CM surface language — spike increment 1 (CM0)
+# CM surface language — spike (CM0 leaf + Repository Coherence composite)
 
 Issue **#115** (sub of **#114**). Proves the `.cm` → OCaml → normalized-IR loop
 end-to-end on the one clean methodology-only target, **CM0**: a compact ML-shaped
@@ -20,6 +20,13 @@ cm0.cm ── lex/parse ──┤                         cue vet -d '#Normalize
                                                  cue vet -d '#CMSource'
 ```
 
+**Follow-on (composite form).** The surface now spans the **composite** (parent)
+CM as well as leaves: `repository_coherence.cm` is the Repository Coherence
+`#Methodology` — children registry, `parallel cm.run` composition, invariants,
+the precedence `decide`, the seven `RCM-*` requirements — compiling **byte-identical**
+to the methodology-only projection `cue export … -e repository_coherence_source`.
+See *Composite CM* below.
+
 ## Layout
 
 | Path | Role |
@@ -27,8 +34,10 @@ cm0.cm ── lex/parse ──┤                         cue vet -d '#Normalize
 | `dune-project` | Its **own** build root — `dune build` in `src/engine/ocaml` never descends here; shares no dependency with the frozen `coh` engine. |
 | `lib/cm_surface.ml` | Lexer + recursive-descent parser + lowering + a hand-written JSON serializer that reproduces `cue export`'s exact bytes. **Stdlib only** (no yojson/menhir/ppx). |
 | `bin/main.ml` | `cmc` CLI: `cmc <file.cm>` → IR; `cmc --source <file.cm>` → full `#CMSource`. |
-| `cm0.cm` | CM0 in the compact surface (full-source faithful). |
+| `cm0.cm` | CM0 (leaf/instrument) in the compact surface (full-source faithful). |
 | `cm0_no_admit.cm` | Negative probe: drops `admit` from `forbid`. |
+| `repository_coherence.cm` | Repository Coherence (composite/parent) in the compact surface. |
+| `repository_coherence_no_averaging.cm` | Composite negative probe: drops `averaging` from `forbid`. |
 
 ## Build & run
 
@@ -49,8 +58,12 @@ $ dune exec bin/main.exe -- --source cm0.cm   # → full #CMSource (cue export -
 | **AC2-full** full-source byte-identity | `diff <(cmc --source cm0.cm) <(cue export ../schema.cue ../examples/cm0/cm.cue --out json -e cm0)` | **empty**; `cmp` identical (7726 bytes, digests included). CUE-exact. |
 | **AC3** CUE oracle (IR) | `cue vet <ir.json> ../schema.cue -d '#NormalizedCMIR'` | exit **0** |
 | AC3 CUE oracle (source) | `cue vet <source.json> ../schema.cue -d '#CMSource'` | exit **0** |
-| **AC4** no semantics reopened | `git status`; `git diff main -- schema.cue examples compiled` | only `surface/` changed; frozen files byte-identical (empty diff). |
-| Negative probe | `cmc cm0_no_admit.cm` (and `--source`) | **rejected**, exit **2** (see below). |
+| **Composite byte-identity** | `diff <(cmc --source repository_coherence.cm) <(cue export ../schema.cue ../examples/repository-coherence/cm.cue --out json -e repository_coherence_source)` | **empty** (CUE-exact). |
+| Composite oracle | `cue vet <cmc-output ∪ frozen receipt> ../schema.cue -d '#Methodology'` | exit **0** (see *Composite CM → oracle*; bare `-d '#Methodology'` on the receipt-less projection is incomplete **identically** for `cmc` and `cue export`). |
+| Composite negative probe | `cmc --source repository_coherence_no_averaging.cm` | **rejected**, exit **2**. |
+| CM0 no-regression | `cmc cm0.cm == compiled/cm0.json`; `cmc --source cm0.cm == cue export -e cm0` | both byte-identical. |
+| **AC4** no semantics reopened | `git diff main -- schema.cue compiled` empty; `examples/` changed only by the additive `repository_coherence_source` expr (full `-e repository_coherence` still byte-identical) | holds. |
+| Negative probe (CM0) | `cmc cm0_no_admit.cm` (and `--source`) | **rejected**, exit **2** (see below). |
 
 ## Surface → IR mapping (how the notation collapses)
 
@@ -105,6 +118,59 @@ The `--source` emitter reconstructs the constant scaffolding CUE materializes
 the fixed `emits_*`/`may_*` = false of a measure-only CM) so the surface need not
 restate it.
 
+## Composite CM — Repository Coherence (`#Methodology`)
+
+The surface spans the **composite** (parent) form, not just leaves.
+`repository_coherence.cm` compiles **byte-identical** to the methodology-only
+projection of the parent — `repository_coherence` **minus its concrete run**
+(`receipt`):
+
+```
+$ dune exec bin/main.exe -- --source repository_coherence.cm
+# == cue export ../schema.cue ../examples/repository-coherence/cm.cue \
+#      --out json -e repository_coherence_source
+```
+
+That projection expression is an **additive** one-liner added to
+`examples/repository-coherence/cm.cue` (`repository_coherence_source: {for k, v in
+repository_coherence if k != "receipt" {(k): v}}`); the original
+`repository_coherence` expr is untouched and its full IR
+(`compiled/repository-coherence.json`) stays byte-identical.
+
+Composite grammar added (small, reuses the leaf lexer/JSON machinery):
+
+| `.cm` construct | `#Methodology` field |
+|---|---|
+| `cm repository-coherence v0.1 (repo, aspects) -> CompositeReceipt` | `id` (verbatim), `version`, and the constant `input` `{repository_snapshot, selected_aspects}` |
+| `child <name> from <src> [implemented] [selected]` | one `children[name]` `{aspect_id, source, implemented, selected}` (flag present ⇒ true) |
+| `let! receipts = parallel cm.run over aspects` | the composition body — captured structurally by `children` + `result`, so **projected out** of the methodology IR (a composite has no `procedure`) |
+| `require same_snapshot` / `retain child_receipts` / `forbid averaging` | the `invariants` block `{same_snapshot, retain_child_receipts, allow_scalar_aggregation}` |
+| `statuses …` + `decide by precedence \| RC -> STATUS` | `result` `{statuses, precedence (clause order), mapping (RC→status)}` |
+| `requirement RCM-… "…"` (×7) | `requirements[*]` `{id, text}` |
+| `disowns "…", …` | `does_not_own` |
+| `forbid …, repair, admit, authorize` | `boundary.measure_only: true` |
+
+The emitter reconstructs the composite's constant scaffolding from schema defaults —
+`manifestation`, `atlas.note`, `boundary.note`, `continuation_baseline`, and the
+`result_class_definitions` block — exactly as CM0's `--source` reconstructs its
+constants. The composite has no separate normalized IR in this increment (that is
+#112 slice 2), so both `cmc` and `cmc --source` emit this one methodology-only
+projection.
+
+### The `#Methodology` oracle, honestly
+
+`#Methodology` **mandates a concrete `receipt`** (repository_commit,
+composite_status, continuation.status). The methodology-only projection omits it, so
+`cue vet <projection> -d '#Methodology'` reports those three as incomplete —
+**identically for `cmc`'s output and for `cue export … -e repository_coherence_source`
+itself** (verified). That is a property of the *projection vs. the full contract*,
+not a defect in the emitter. The achievable, meaningful oracle: the projection
+**unified with the frozen `receipt`** validates as a complete `#Methodology`
+(`cue vet <cmc-output ∪ receipt> -d '#Methodology'` → **0**) — i.e. `cmc`'s output is
+a valid `#Methodology` missing only its run. A `#MethodologySource` definition
+(methodology-without-receipt) is the clean home for a direct oracle and is left to
+#112 slice 2, which introduces the source/run separation at the schema level.
+
 ### Overlapping invariant checks (compiler + CUE — #114 AC4)
 
 - **Compiler-enforced:** `forbid` completeness (all five authorities), the `let!`
@@ -134,6 +200,19 @@ at the *source* layer. The `.cm` surface makes that boundary **structurally
 mandatory**: a CM0-family CM that does not forbid the full authority set never
 lowers to an IR at all. The boundary bites at the surface, which is where the
 authored program declares it.
+
+The **composite** carries the same discipline. `repository_coherence_no_averaging.cm`
+drops `averaging` from `forbid` and is rejected at compile time (exit 2):
+
+```
+cmc: cm repository-coherence: composite boundary must `forbid` all of [averaging,
+repair, admit, authorize]; missing "averaging". The boundary is load-bearing
+(RCM-NO-AGGREGATE-001: no scalar aggregation; RCM-BOUNDARY-001: measure only).
+```
+
+`cue vet` cannot catch this: `#Methodology` leaves `invariants.allow_scalar_aggregation`
+an unconstrained `bool`, so — as with CM0 — the no-aggregate boundary must bite at
+the surface.
 
 ## Clarity judgment (AC5): `.cm` vs the CUE source for CM0
 
@@ -188,3 +267,14 @@ methodology it always was, and the record/envelope/precedence machinery collapse
 into the program it was encoding. CUE remains the right **IR contract + validator**.
 That is precisely the #114 split (`.cm` = surface, CUE = IR oracle), and CM0 is the
 first end-to-end proof of it.
+
+**Composite (Repository Coherence):** the gain is if anything larger. The 155-line
+CUE parent — `#ResultComposition` precedence/mapping records, the `#AspectSource`
+children map, seven requirement structs — becomes a ~30-line program whose
+composition (`parallel cm.run over aspects`), derivation (`decide by precedence`),
+and boundary (`forbid averaging, repair, admit, authorize`) are each one legible
+statement. The precedence walk that a fresh reader must reconstruct from
+`result.precedence` + `result.mapping` in the JSON is written as the `decide` ladder
+directly. Same two caveats as CM0 apply (CUE stays the executable oracle; the
+surface's typechecker is thinner than CUE's cross-field constraints — and here the
+composite has no receipt-less `#Methodology` oracle yet, deferred to #112 slice 2).
