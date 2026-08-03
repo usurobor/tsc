@@ -60,6 +60,24 @@ verdict is **computed by CUE**: the concrete instance is run 0002
 both rejected by `cue vet`, and the parent's IR is byte-identical after the
 change. (This reflects the post-review state; see the four fixes below.)
 
+**Increment 3 — second leaf, shape validation.** `examples/legibility/cm.cue`
+encodes the Repository Legibility Coherence CM
+(`research/repository-coherence/legibility/CM.md`, v0.2) — a **second, differently-
+shaped leaf** — against the SETTLED increment-2 leaf shape. The research question
+was exact: does that shape encode a differently-shaped leaf **without adding any
+schema construct**? **Yes — with ZERO change to `schema.cue`** (finding S6). Where
+Structure emits `DEFECT` from policy violations with move/split/delete findings,
+Legibility emits `PASS` (`COHERENT_WITHIN_DECLARED_SCOPE`) from a passing newcomer
+fixture (6/6), its profile is a human newcomer (`technical-newcomer-human`) not a
+policy version, and it carries a **bounded refusal** (`RUN-EXEC-01` — coh/kata exit
+codes not executed). Legibility's own typed fields (per-requirement `REPO-*` check
+verdicts, the blind newcomer fixture, a scoped refusal) ride the corralled
+`aspect_ext` region + the already-open `findings`/`refusals` lists — no top-level
+definition and no field on a closed shared shape was added. The concrete instance
+is run 0003 (`COHERENT_WITHIN_DECLARED_SCOPE → PASS` @ `48b9a63`);
+`derived_result_class` is CUE-computed and unified with `result_class`; the parent
+and Structure IRs are byte-identical after this increment.
+
 ## How to compile
 
 Both files declare `package cm`; CUE unifies files passed on the command line
@@ -82,6 +100,15 @@ cue export schema.cue examples/structure/cm.cue \
 
 # regression — the parent still vets after the shared schema change
 cue vet schema.cue examples/repository-coherence/cm.cue
+
+# increment 3 — the Legibility leaf CM (ZERO schema change)
+cue vet    schema.cue examples/legibility/cm.cue
+cue export schema.cue examples/legibility/cm.cue \
+  --out json -e legibility > compiled/legibility.json
+
+# regression — both prior leaves/parent still vet and re-export byte-identical
+cue vet schema.cue examples/repository-coherence/cm.cue
+cue vet schema.cue examples/structure/cm.cue
 ```
 
 All commands exit 0. `cue` v0.13.2.
@@ -93,8 +120,10 @@ All commands exit 0. `cue` v0.13.2.
 | `schema.cue` | The abstract model: `#Methodology` (composite) + `#AspectMethodology` (leaf), `#ChildReceiptEnvelope`, `#CompositeReceipt`, `#ResultClass`, `#ResultComposition`, `#Procedure`, `#ResultRule`, etc. |
 | `examples/repository-coherence/cm.cue` | The parent Repository Coherence CM (composite) encoded against the schema. |
 | `examples/structure/cm.cue` | The Structure Coherence CM (leaf, v0.2) encoded against `#AspectMethodology`. |
+| `examples/legibility/cm.cue` | The Legibility Coherence CM (leaf, v0.2) encoded against `#AspectMethodology` — **zero schema change** (S6). |
 | `compiled/repository-coherence.json` | The parent's canonical IR — real `cue export` output. |
 | `compiled/structure.json` | The Structure leaf's canonical IR — real `cue export` output. |
+| `compiled/legibility.json` | The Legibility leaf's canonical IR — real `cue export` output. |
 
 ## Lossless-comparison — Markdown parent → CUE field
 
@@ -327,3 +356,148 @@ Every one of those fact-sets and booleans is present in the compiled IR, and
   true`, `consumer_search: null`) makes `move_candidates_missing_search: ["FX"]`
   and `derived_result_class: "FAILED"` — proving the FAILED arm is not dead code but
   genuinely detects the near-miss fixture's `CM_EXECUTION_FAILED` scenario.
+
+---
+
+## Increment 3 — the Legibility leaf CM (shape validation, zero extension)
+
+`examples/legibility/cm.cue` encodes the Repository Legibility Coherence CM (leaf,
+v0.2) against the schema. The increment's core research question: **does the
+increment-2 leaf shape encode a second, differently-shaped leaf CM without any new
+schema construct?** It does. **Nothing in `schema.cue` changed** — verified by an
+empty `git diff` on `schema.cue` and by both prior IRs re-exporting byte-identical.
+
+### Why Legibility is a genuinely different leaf (so this is a real test)
+
+| axis | Structure (increment 2) | Legibility (increment 3) |
+|---|---|---|
+| verdict at HEAD | `DEFECTS_FOUND → DEFECT` | `COHERENT_WITHIN_DECLARED_SCOPE → PASS` |
+| profile | a **policy version** (`repository-planes-v1.1`) | a **human reader** (`technical-newcomer-human`) |
+| check shape | move/split/delete findings + `consumer_search` | per-requirement `REPO-*` verdicts + a blind newcomer fixture (6/6) |
+| refusal | destination refusal (`R1`, silent policy) | **bounded** single-check refusal (`RUN-EXEC-01`, exec not run) |
+| defect list at HEAD | 10 findings (F3–F12) | **empty** (no in-scope defect) |
+
+Structure's `move_candidate` / `consumer_search` / `destination_resolved` fields do
+**not** apply to Legibility and were **not** forced on. Legibility's own typed
+fields live entirely in the leaf package (`#RequirementCheck`, `#NewcomerQuestion`,
+`#LegibilityRefusal`, `#LegibilityFinding`, `#LegibilityReceipt`) and hang under the
+one corralled `aspect_ext` region + the already-open `findings` / `refusals` lists
+— exactly the mechanism S2 introduced. Using an open region that already exists is
+**not** a schema extension.
+
+### S6 — the leaf shape sufficed with ZERO extension (the validating finding)
+
+This is the increment's finding. The settled increment-2 leaf shape
+(`#AspectMethodology` + `#Procedure` + `#ResultRule` + corralled `#ChildReceiptEnvelope`
+with `aspect_ext?` + `#Requirement.class`) encoded Legibility **losslessly with no
+new top-level definition and no new field on any closed shared shape.** Concretely,
+the four things that make Legibility *look* like it needs new machinery each landed
+on an existing affordance:
+
+1. **PASS instead of DEFECT** — the leaf `#ResultRule` already walks
+   `FAILED > INCOMPLETE > DEFECT` guards over procedure output with `otherwise:
+   "PASS"`. Legibility's run-0003 trips no guard, so it lands on `otherwise` = PASS.
+   No shape change: PASS was always the else-arm.
+2. **A newcomer human profile** — `profile` is a free `string` on both
+   `#AspectMethodology` and `#ChildReceiptEnvelope`; `"technical-newcomer-human"`
+   fits with no change. (The parent never learns the leaf's profile vocabulary.)
+3. **Per-requirement checks + a blind fixture** (a different *evidence* shape than
+   Structure's findings) — carried as `requirement_checks` and `newcomer_fixture`
+   under `aspect_ext`, plus `#Requirement.class` (reused, not added) driving
+   `mechanical_requirements`. The defect list `findings` is simply empty this run.
+4. **The bounded refusal** — carried on the already-open `refusals` list with a
+   leaf-private `#LegibilityRefusal` type; its typed `scope` field is the whole
+   trick (below). No envelope change.
+
+**Minimality ledger: ZERO schema changes.** The ideal outcome. The increment-2 leaf
+shape is validated by a second, differently-shaped leaf: `schema.cue` is untouched,
+`compiled/repository-coherence.json` and `compiled/structure.json` re-export
+byte-identical, and Legibility still vets and exports. No S6-plus **extension** was
+forced; S6 records the **absence** of one. (Had any real element of Legibility been
+inexpressible, it would appear here as a justified extension with the same rigor as
+S1–S3; none was.)
+
+### The bounded refusal — a scope boundary, not a defect and not an INCOMPLETE
+
+The load-bearing subtlety. `RUN-EXEC-01` is `kind: INCOMPLETE_OBSERVATION` — the
+`coh` / `run-katas.sh` exit codes were not executed (no opam/network) — yet the run
+is `PASS`, not `INCOMPLETE`. CM.md and the run state exactly why: the refusal
+**bounds one check, not the inventory, and does not flip the categorical status.**
+That reading is encoded as **typed data**, not inferred: every `#LegibilityRefusal`
+carries a `scope: "single_check" | "inventory"`, and `derivation.incomplete_guard`
+fires only for `inventory_incomplete_refusals` — refusals whose `scope` is in
+`derivation.status_flipping_refusal_scopes` (`["inventory"]`). `RUN-EXEC-01` has
+`scope: "single_check"`, so it lands in `bounded_refusals` (recorded, non-flipping)
+and trips nothing. REPO-RUN-001's *structural* face still passes, so it is not a
+`failed_requirement_check` either. A fresh executor reads this off the IR — no
+appeal to the prose.
+
+### Lossless-comparison — Legibility CM.md (v0.2) → CUE field
+
+| Markdown element (`legibility/CM.md`, `requirements.md`, run 0003) | CUE field |
+|---|---|
+| Title / `cm_version: 0.2` | `id: "tsc.repository-coherence.legibility"` / `version: "0.2"` |
+| Governing claim | `question` |
+| Reader profile (technical newcomer, no TSC vocabulary) | `profile: "technical-newcomer-human"` |
+| Four subcontracts (local clarity · relational/authority · lifecycle/lineage · operability) | `procedure.steps` (7 ordered steps mapping the four subcontracts + newcomer fixture + α/β/γ) |
+| Executable inputs (snapshot · reader profile · live-surface policy · exclusions) | `procedure.inputs: [...#ProcedureInput]` (4 typed inputs) |
+| Result rule (FAILED / INCOMPLETE / DEFECT / PASS) | `procedure.result: #ResultRule` — 3 ordered `clauses` (each `when` names the typed `derivation.*` fields) + `otherwise: "PASS"`; verdict CUE-computed in `receipt.aspect_ext.derivation` |
+| Status vocabulary (5 values) + status→result_class mapping | `statuses` + `status_mapping` (`COHERENT_WITHIN_DECLARED_SCOPE→PASS`, `DEFECTS_FOUND→DEFECT`, `UNDERDETERMINED→INCOMPLETE`, `INCOMPLETE_OBSERVATION→INCOMPLETE`, `CM_EXECUTION_FAILED→FAILED`) |
+| 11 `REPO-*` requirements (id · claim · **class** · **severity**) | `requirements: [...#Requirement]` (all 11, `id`+`text`+`class`+`severity`; no `adr_clause` — Legibility traces to its own fixtures, not an ADR) |
+| Refusal semantics (bounded vs inventory; refusal is a finding) | `#LegibilityRefusal` (`kind` + **`scope`**); `derivation.inventory_incomplete_refusals` vs `bounded_refusals` |
+| Generic child receipt envelope, `aspect_id: legibility` | `receipt: #LegibilityReceipt` (= `#ChildReceiptEnvelope & …`), `aspect_id: "legibility"` |
+| Envelope fields (scope · unobserved_surfaces · evidence_refs) | `receipt.scope` / `.unobserved_surfaces` / `.evidence_refs` (verbatim from run 0003) |
+| α — manifestation (commit observed, inventory complete) | `receipt.aspect_ext.manifestation` (+ `evidence_refs` inventory digest) |
+| β — relational/authority atlas (graph, not a scalar) | `receipt.aspect_ext.authority_atlas: [...]` |
+| Status matrix (lifecycle labels) | `receipt.aspect_ext.status_matrix: {…}` |
+| γ — continuation vs run 0002 (R7, N1 closed) | `receipt.aspect_ext.continuation` |
+| Newcomer-task fixture (6 questions, ≤1 hop, 6/6 PASS) | `receipt.aspect_ext.newcomer_fixture` (`questions` + computed `total`/`passed`/`all_pass`) |
+| Per-requirement Findings table (9 scored `REPO-*` PASS) | `receipt.aspect_ext.requirement_checks: [...#RequirementCheck]` |
+| No in-scope defect (empty defect list) | `receipt.findings: []` |
+| Bounded refusal `RUN-EXEC-01` | `receipt.refusals: [#LegibilityRefusal]` (kind `INCOMPLETE_OBSERVATION`, scope `single_check`) |
+| Overall `status COHERENT_WITHIN_DECLARED_SCOPE → result_class PASS @ 48b9a63` | `receipt.status` / `.result_class` (= `derivation.derived_result_class`) / `.repository_commit`, mapping self-unified |
+| Measure-only boundary (`REPO-REPAIR/REVIEW-001`, parent `RCM-BOUNDARY-001`) | `boundary: #Boundary` |
+| "does not repair, does not review, structure is a separate aspect" | `does_not_own: [...]` |
+
+**Capture gap: none.** Every load-bearing element of the leaf CM and run 0003 is a
+typed CUE field, and the verdict is CUE-computed and compiler-checked.
+
+### Two-executor readiness — deriving PASS from `compiled/legibility.json` alone
+
+A fresh executor derives Legibility's `result_class` for run-0003 using **only** the
+compiled IR, walking `procedure.result.clauses` top-to-bottom over the named
+`receipt.aspect_ext.derivation.*` fields:
+
+1. **FAILED?** `execution_failed_refusals` non-empty. In the IR it is `[]` — the sole
+   refusal `RUN-EXEC-01` is `kind: INCOMPLETE_OBSERVATION`, not `CM_EXECUTION_FAILED`.
+   → `failed_guard = false`.
+2. **INCOMPLETE?** `inventory_incomplete_refusals` non-empty. In the IR it is `[]`:
+   `RUN-EXEC-01` has `scope: "single_check"`, which is **not** in
+   `status_flipping_refusal_scopes: ["inventory"]`, so it is a `bounded_refusal`
+   (`["RUN-EXEC-01"]`) that does **not** flip the run. Inventory is complete; no
+   claimed authority missing. → `incomplete_guard = false`. **This is the crux: the
+   bounded refusal does not trip INCOMPLETE, read straight off the typed `scope`.**
+3. **DEFECT?** `defect_findings` **OR** `failed_requirement_checks` **OR**
+   `failed_newcomer_questions` non-empty. In the IR all three are `[]`: the defect
+   list `findings` is empty, all nine scored `REPO-*` `requirement_checks` are
+   `PASS`, and the `newcomer_fixture` is 6/6 (`all_pass: true`). → `defect_guard =
+   false`.
+4. No guard fired → `otherwise` = **`PASS`.**
+
+`derived_result_class: "PASS"` is computed by CUE and unified with `result_class`
+and `status_mapping["COHERENT_WITHIN_DECLARED_SCOPE"]` — all three resolve to `PASS`.
+Determinism is compiler-checked, not asserted:
+
+- `derivation.derived_result_class == receipt.result_class == status_mapping[status]
+  == "PASS"` (unified).
+- **Negative probe A** — forcing `result_class: "DEFECT"` on this
+  `COHERENT_WITHIN_DECLARED_SCOPE` receipt → `cue vet` **rejects** (conflicts with
+  both the derived `PASS` and the `status_mapping`).
+- **Negative probe C (corralled)** — a typo'd top-level `result_clas` field →
+  `cue vet` **rejects** (`field not allowed`; the shared ten stay closed).
+- **Liveness of every arm** (`examples`-independent evaluation of the exact guard
+  formula over injected inputs): empty sets → `PASS`; a failing newcomer question →
+  `DEFECT`; a `FAIL` `REPO-*` check → `DEFECT`; an **inventory**-scoped observation
+  refusal → `INCOMPLETE`; a `CM_EXECUTION_FAILED` refusal → `FAILED`; a **bounded**
+  single-check refusal alone → `PASS`. None of the four arms is dead code, and the
+  PASS/INCOMPLETE boundary genuinely turns on the refusal's typed `scope`.
