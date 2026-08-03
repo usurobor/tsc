@@ -19,6 +19,10 @@ abstract CM model
 
 A CM is a **package** (a directory), not one file.
 
+> **Authoring the `.cm` surface language?** See [`LANGUAGE.md`](LANGUAGE.md) — the
+> reference + short walkthrough for the ML-shaped `.cm` language the OCaml
+> front-end (`surface/`) compiles to this IR.
+
 ## CUE-first rationale
 
 No custom DSL yet. CUE is used first; a bespoke construct is added ONLY when a
