@@ -73,7 +73,7 @@ projection): `#CMSource` · `#NormalizedCMIR` · `#CompiledCM` · `#RunRequest` 
 
 Ordered by leverage, not urgency. Each is a tracked slice.
 
-- **`#MethodologySource`** (kernel of #112 slice 2) — methodology-only projections vet directly; erases the step-8 validation friction. *In flight.*
+- **`#MethodologySource`** (kernel of #112 slice 2) — methodology-only projections vet directly; erases the step-8 validation friction. **Done** (`8b7f94e`): additive `#MethodologySource`/`#AspectMethodologySource`, existing IRs byte-identical, all five projections vet direct, `LANGUAGE.md` §8 simplified to a one-line `cue vet`.
 - **#112 slice 2–4** — `#RunRequest`/`#MeasurementReceipt` (separate methodology from run), `#CompilationReceipt`, and the runtime artifacts (`#CompiledCM`/`#CalibrationReceipt`/`#AuthorizedCM`).
 - **#113** — the standard **provider library** (`providers.cue`), `AUTHORING.md`, the Hello-World-first curriculum, and the `coh cm` toolchain (`check/compile/link/test/assess/run`, `receipt verify`).
 - **#116** — **assessed property libraries** + the Core-warrant binding (the IR carries `H_M`/search-claims/bounds/identification behind every warrant-bearing construct).
