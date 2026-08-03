@@ -1,0 +1,99 @@
+{
+    "format": "tsc-cm-ir/0.1",
+    "cm_id": "tsc.cm0",
+    "cm_version": "0.1",
+    "source_digest": "sha256:a1b45680fcca5f254ba4d3e204d75fc32d6feef9a7a735d697882da48e9da3dc",
+    "input_contract": {
+        "kind": "instrument_subject",
+        "required_artifacts": [
+            {
+                "role": "source",
+                "kind": "cm_source",
+                "required": true
+            },
+            {
+                "role": "normalized_ir",
+                "kind": "normalized_cm_ir",
+                "required": true
+            },
+            {
+                "role": "compiled",
+                "kind": "compiled_cm",
+                "required": false
+            }
+        ],
+        "artifact_lists": [
+            "implementation_refs",
+            "calibrations",
+            "fixtures",
+            "lineage"
+        ],
+        "runtime_binding": "INCOMPLETE"
+    },
+    "procedure": {
+        "steps": [
+            {
+                "id": "contract_integrity",
+                "kind": "mechanical",
+                "provider_kind": "tool",
+                "failure": "FAILED"
+            },
+            {
+                "id": "repeatability",
+                "kind": "oracle",
+                "provider_kind": "oracle",
+                "failure": "INCOMPLETE"
+            },
+            {
+                "id": "discrimination",
+                "kind": "invoke_cm",
+                "provider_kind": "cm",
+                "failure": "INCOMPLETE"
+            },
+            {
+                "id": "refusal",
+                "kind": "semantic_judgment",
+                "provider_kind": "llm",
+                "failure": "INCOMPLETE"
+            },
+            {
+                "id": "evolution",
+                "kind": "mechanical",
+                "provider_kind": "tool",
+                "failure": "FAILED"
+            }
+        ]
+    },
+    "result_contract": {
+        "kind": "instrument_assessment",
+        "subcontracts": [
+            "contract_integrity",
+            "repeatability",
+            "discrimination",
+            "refusal",
+            "evolution"
+        ],
+        "runtime_binding": "INCOMPLETE",
+        "emits": {
+            "admission_verdict": false,
+            "authorization": false,
+            "boundary_decision": false
+        },
+        "derivation": "deferred to a measurement run (increment 4C); no result computed in the source/IR"
+    },
+    "receipt_contract": {
+        "kind": "instrument_assessment",
+        "reports": [
+            "parts_present",
+            "relations_fit",
+            "evolution_rules",
+            "repeat_consistency",
+            "discrimination",
+            "refusal_behavior",
+            "calibration_evidence",
+            "defects",
+            "uncertainty"
+        ],
+        "measure_only": true
+    }
+}

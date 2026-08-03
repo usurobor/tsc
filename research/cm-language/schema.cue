@@ -167,9 +167,34 @@ package cm
 }
 
 // #Boundary — measure-only boundary (RCM-BOUNDARY-001).
+//
+// Increment 4A generalizes the boundary from a single `measure_only` flag to a
+// typed authority declaration: a leaf may (or may not) compile, admit, authorize,
+// or repair. The four `may_*` fields are OPTIONAL and default-free, so the three
+// frozen aspect/parent instances — which set none of them — export byte-identical
+// (an added `bool | *false` would have materialized four new keys in every IR).
+// A measure-only leaf forbids all four; the constraint BITES — a boundary that
+// sets `measure_only: true` alongside any `may_*: true` fails `cue vet`, which is
+// the language-level enforcement of OPER-AUTH-001 ("CM0 cannot admit itself") and
+// tsc-oper.md §1.4/§2 ("CM0 measures. It does not compile, admit, authorize, or
+// decide a boundary action").
 #Boundary: {
 	measure_only: bool | *true
 	note:         string | *"Parent and child CMs measure only; repair and independent review remain separate invocations."
+
+	may_compile?:   bool
+	may_admit?:     bool
+	may_authorize?: bool
+	may_repair?:    bool
+
+	// measure-only ⇒ no action authority. Optional-false constraints: absent on the
+	// frozen instances (no export change), conflicting with any `may_*: true`.
+	if measure_only {
+		may_compile?:   false
+		may_admit?:     false
+		may_authorize?: false
+		may_repair?:    false
+	}
 }
 
 // #Requirement is one stable RCM-* / STRUCT-* requirement.
@@ -189,6 +214,11 @@ package cm
 
 // #Methodology is a composite (parent) CM: it composes aspect receipts on a
 // shared commit and retains their conflicts — nothing more.
+// #Methodology is the COMPOSITE authored form of a CM — one #CMSource role (see the
+// increment-4A section below). It is related to #CMSource by DOCUMENTATION, not by
+// `&`: embedding #CMSource reorders this struct's exported fields (CUE orders by
+// declaration position) and breaks the parent IR's byte-identity, so the type is
+// left untouched and the correspondence is recorded as finding G4.
 #Methodology: {
 	id:       string
 	version:  string
@@ -292,12 +322,27 @@ package cm
 	note: string
 }
 
-// #AspectMethodology is a leaf (aspect) CM.
-#AspectMethodology: {
-	id:       string
-	version:  string
-	question: string // governing claim
-	profile:  string
+// #AspectMethodology is a leaf (aspect) CM — now a SPECIALIZATION of the generic
+// #LeafMethodology (defined in the increment-4A section below): an aspect leaf is
+// an ordinary leaf whose target is a git repository and which emits the
+// repository-shaped #ChildReceiptEnvelope. Increment 4A adds NO field to the three
+// frozen aspect/parent IRs (verified byte-identical); the only additions here are
+//   - the git-repository target contract, bound as a HIDDEN field `_target_contract`
+//     (a regular `target_contract` would add a key to structure.json / legibility.json
+//     — see README finding G2), and
+//   - `aspect_id?` (optional; the three instances carry aspect_id on the receipt,
+//     not at the top level, so it stays absent from their exports).
+// #LeafMethodology is an OPEN base (specializations add their own vocabulary), so
+// this specialization keeps every aspect-specific field it had before, unchanged.
+#AspectMethodology: #LeafMethodology & {
+	// Aspect target: a git repository (finding G2 — hidden to preserve byte-identity).
+	_target_contract: #TargetContract & {kind: "git_repository"}
+
+	id:         string
+	version:    string
+	question:   string // governing claim
+	aspect_id?: string
+	profile:    string
 
 	// The leaf's own closed status vocabulary and its declared status ->
 	// result_class mapping. The status is retained verbatim on every receipt; the
@@ -327,3 +372,321 @@ package cm
 	// What the leaf explicitly does not own.
 	does_not_own: [...string] | *[]
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// GENERIC LEAF BOUNDARY (increment 4A)
+//
+// Everything ABOVE this line is the repository-coherence specialization settled in
+// increments 1–3: #Methodology (composite over git-repository aspects),
+// #AspectMethodology (an aspect leaf), #ChildReceiptEnvelope (aspect_id / profile /
+// repository_commit). Everything BELOW is the smallest GENERIC leaf abstraction
+// beneath it, so a methodology whose target is ANOTHER methodology — CM0 — is an
+// ordinary #LeafMethodology, not a special case. The generalization forces nothing
+// on the settled layer: it adds only OPTIONAL or HIDDEN fields to the shared/aspect
+// shapes, and the three frozen IRs re-export byte-for-byte (the "beneath" proof).
+// There is deliberately NO CM0-specific root type — CM0 is `#LeafMethodology & {…}`.
+
+// #ArtifactRef — a content-addressed reference to an artifact. Never an embedded
+// copy: a subject names its parts by (id, kind, digest), so CM0 carries references,
+// not duplicated child receipts / IRs (AC7).
+#ArtifactRef: {
+	id:       string
+	kind:     string
+	digest:   string
+	version?: string
+}
+
+// #TargetRef — a content-addressed reference to a specific target instance.
+#TargetRef: {
+	kind:     string
+	id:       string
+	digest:   string
+	version?: string
+}
+
+// #MethodologyRef — a reference to a methodology (a target whose kind is a
+// methodology, e.g. the candidate CM0 measures).
+#MethodologyRef: #ArtifactRef & {kind: "methodology"}
+
+// #TargetContract — the CONTRACT of acceptable targets a leaf measures (distinct
+// from #TargetRef, which points at one concrete target). An aspect leaf's is
+// {kind: "git_repository"}; CM0's is {kind: "coherence_methodology"}.
+#TargetContract: {
+	kind: string
+	...
+}
+
+// #ReceiptEnvelope — the GENERIC receipt interface a leaf emits: the measuring
+// methodology, the target measured, the four-value result_class, the leaf's own
+// status + status→result_class mapping (self-unified), scope, findings, refusals,
+// and evidence references. #ChildReceiptEnvelope (above) is the repository
+// SPECIALIZATION of this shape — it carries aspect_id / profile / repository_commit
+// in place of methodology / target. The two are related by DOCUMENTATION, not by
+// subtyping: `#ChildReceiptEnvelope: #ReceiptEnvelope & {…}` would add methodology /
+// target keys to the three frozen child receipts and break byte-identity (finding
+// G3), so #ChildReceiptEnvelope is kept as-is and the correspondence is recorded.
+#ReceiptEnvelope: {
+	methodology:    #MethodologyRef
+	target:         #TargetRef
+	result_class:   #ResultClass
+	status:         string
+	status_mapping: {[string]: #ResultClass}
+	status_mapping: (status): result_class
+	scope:         _
+	findings:      [...] | {...}
+	refusals:      [...] | {...}
+	evidence_refs: _
+	...
+}
+
+// #ArtifactSlot — one artifact ROLE in an instrument subject. A methodology
+// DECLARES its subject contract without a run: at declaration time a slot is
+// unbound (`ref: null`); a run binds it to a content-addressed #ArtifactRef. The
+// type admits only #ArtifactRef or null, so an embedded copy (a whole child /
+// receipt object in place of a ref) fails `cue vet` (AC7). This is the honest
+// reconciliation of "each artifact is an #ArtifactRef" with "CM0 has no run": a
+// declaration cannot carry a real digest for a target it has not measured, so it
+// declares the slot (kind · required) and leaves the ref unbound.
+#ArtifactSlot: {
+	kind:     string
+	required: bool | *true
+	ref:      #ArtifactRef | *null
+}
+
+// #InstrumentSubject — the subject CM0 measures: a candidate methodology presented
+// as content-addressed artifacts. NormalizedCMIR vs CompiledCM is distinguished
+// HONESTLY (AC5): `normalized_ir` (this CUE export) is a required slot and grounds
+// LANGUAGE-LEVEL contract integrity; `compiled` (the later runtime CompiledCM) is a
+// NON-required slot, and until it is bound `runtime_binding.status` is INCOMPLETE.
+// The COMPLETE claim is CUE-ENFORCED to require a bound compiled ref, so CM0 cannot
+// fabricate runtime completeness from a normalized IR alone.
+#InstrumentSubject: {
+	source:        #ArtifactSlot & {kind: "cm_source"}
+	normalized_ir: #ArtifactSlot & {kind: "normalized_cm_ir"}
+	compiled:      #ArtifactSlot & {kind: "compiled_cm", required: false}
+
+	implementation_refs: [...#ArtifactRef] | *[]
+	calibrations: [...#ArtifactRef] | *[]
+	fixtures: [...#ArtifactRef] | *[]
+	lineage: [...#ArtifactRef] | *[]
+
+	standing_scope: {
+		declared: string
+		...
+	}
+
+	// Language-level contract integrity is assessable from the normalized IR alone.
+	contract_integrity: "assessable_from_normalized_ir"
+
+	// Runtime binding / execution-plan integrity: INCOMPLETE until a CompiledCM is
+	// bound.
+	runtime_binding: {
+		status: *"INCOMPLETE" | "COMPLETE"
+	}
+
+	// Honesty guard (hidden, not exported). `_compiled_bound` tracks whether the
+	// compiled slot actually holds a ref; a COMPLETE claim forces it true. So a
+	// subject claiming runtime_binding.status "COMPLETE" while its compiled slot is
+	// unbound (ref: null) fails `cue vet` (false conflicts with true) — CM0 cannot
+	// assert runtime completeness from a normalized IR alone.
+	_compiled_bound: compiled.ref != null
+	if runtime_binding.status == "COMPLETE" {
+		_compiled_bound: true
+	}
+}
+
+// ── Typed step / provider algebra (increment 4A centerpiece).
+//
+// The settled leaf's #ProcedureStep (above) carries a free-form `action: string` —
+// adequate to DESCRIBE an aspect leaf's six steps, but not an instruction SET a
+// second executor could bind and run. CM0 forces the missing algebra: a methodology
+// that measures another methodology composes typed, provider-bound steps rather than
+// prose. #TypedStep COEXISTS with #ProcedureStep — the three settled examples keep
+// #ProcedureStep unchanged (byte-identical), and only #LeafMethodology-family leaves
+// (CM0) use #TypedStep. Migrating the settled examples to typed steps is deferred
+// (#113 slice E).
+
+// #StepKind — the instruction set. Each kind is a MEASUREMENT move; NONE compiles,
+// admits, authorizes, or repairs, so a step of kind "compile"/"authorize" (not in
+// this enum) fails `cue vet` (boundary bite).
+#StepKind: "mechanical" | "semantic_judgment" | "invoke_cm" | "oracle" | "transform"
+
+// #ProviderRef — a reference to the provider that executes a step (a tool, an LLM,
+// a child CM, an oracle). Content-addressable via optional digest.
+#ProviderRef: {
+	kind:    string
+	id:      string
+	digest?: string
+}
+
+// #TypedStep — one typed, provider-bound step: what KIND of move it is, WHICH
+// provider performs it, its input, and the CONTRACTS its output and evidence must
+// satisfy. `failure` names the #ResultClass a provider failure maps to. It is a
+// step/contract only — NO run, no receipt computed here (4A).
+#TypedStep: {
+	id:                string
+	kind:              #StepKind
+	provider:          #ProviderRef
+	input:             _
+	output_contract:   _
+	evidence_contract: _
+	failure?:          #ResultClass
+}
+
+// #InstrumentAssessment — the OUTPUT shape a methodology-measuring leaf emits
+// (tsc-oper.md §1.4). It reports parts present, relations fit, evolution rules,
+// repeat consistency, discrimination, refusal behavior, calibration evidence,
+// defects, and uncertainty — all OPTIONAL, because 4A computes NO results (no
+// runs). It inherits the subject's runtime-binding completeness (AC5). And it
+// MEASURES only: `emits_admission_verdict` / `emits_authorization` /
+// `emits_boundary_decision` are fixed false, so an assessment claiming to admit or
+// authorize fails `cue vet` — the language-level face of OPER-AUTH-001 (CM0 cannot
+// admit itself).
+#InstrumentAssessment: {
+	subject:               #InstrumentSubject
+	subcontracts_assessed: [...string]
+
+	parts_present?:        _
+	relations_fit?:        _
+	evolution_rules?:      _
+	repeat_consistency?:   _
+	discrimination?:       _
+	refusal_behavior?:     _
+	calibration_evidence?: _
+	defects?: [...]
+	uncertainty?: _
+	result_class?: #ResultClass
+	status?:       string
+
+	runtime_binding_status: subject.runtime_binding.status
+
+	emits_admission_verdict: false
+	emits_authorization:     false
+	emits_boundary_decision: false
+}
+
+// #LeafMethodology — the generic leaf CM: identity, a governing question, the
+// accepted-target contract, an input contract, an executable procedure of typed
+// steps, a measure-only boundary, and a declared output shape. It is an OPEN base:
+// a leaf FAMILY specializes it with its own vocabulary — #AspectMethodology adds
+// the status vocabulary / #Procedure / #ChildReceiptEnvelope of a repository
+// aspect; CM0 adds an #InstrumentSubject input, provider-bound #CheckSteps, and an
+// #InstrumentAssessment output. The base carries no default-valued regular field,
+// so specializing it onto the three frozen instances changes no exported byte
+// (finding G1). `target_contract`, `input`, `output`, and `receipt` are optional
+// at the base: an aspect leaf declares its output via `receipt`; CM0 via `output`.
+//
+// #LeafMethodology is one AUTHORED FORM of a #CMSource (below) — the pre-normalization
+// methodology PROGRAM. It is related to #CMSource by DOCUMENTATION (finding G4): a
+// leaf CM PLAYS the #CMSource role, but embedding #CMSource here would reorder the
+// aspect leaves' exported fields and break byte-identity, so the settled types stay
+// untouched. CM0 — the new artifact with no byte baseline — is authored as an
+// explicit `#CMSource & #LeafMethodology`, so the source contract is exercised where
+// it costs nothing.
+#LeafMethodology: {
+	id:       string
+	version:  string
+	question: string
+
+	// The accepted-target contract (what kind of target this leaf measures).
+	target_contract?: #TargetContract
+
+	// The input contract the leaf consumes (CM0: an #InstrumentSubject).
+	input?: _
+
+	// The executable procedure. Open: an aspect narrows this to #Procedure
+	// (inputs · steps · #ResultRule); CM0 uses provider-bound #CheckSteps.
+	procedure: {
+		steps: [...]
+		...
+	}
+
+	// Measure-only boundary.
+	boundary: #Boundary
+
+	// The declared OUTPUT shape (CM0: an #InstrumentAssessment).
+	output?: _
+
+	// A concrete emitted receipt instance, when the leaf has a frozen run (aspect
+	// leaves carry one; CM0 has no run in 4A, so it declares `output` only).
+	receipt?: _
+
+	// Open base — specializations add their own fields.
+	...
+}
+
+// #CMSource — the AUTHORED methodology PROGRAM, before normalization: identity,
+// imports / defaults / profiles, symbolic provider and child references,
+// requirements, a procedure declaration, a result derivation, a receipt contract,
+// and permissions. This is the role #Methodology (composite), #LeafMethodology, and
+// #AspectMethodology already play; #CMSource is the explicit NAME for it. It is an
+// OPEN base — every field but id/version is optional. The settled types are related
+// to it by DOCUMENTATION rather than by `&` (finding G4): embedding #CMSource into
+// them reorders their exported fields (CUE orders by declaration position) and
+// breaks the byte-identity gate, so they stay untouched, while CM0 is authored as an
+// explicit `#CMSource & #LeafMethodology`. #CMSource is DISTINCT from #NormalizedCMIR
+// below: source is authored (may carry symbols/expressions/defaults); the IR is the
+// concrete, content-addressed normalized form.
+#CMSource: {
+	id:      string
+	version: string
+
+	question?: string
+	imports?: [...string]
+	defaults?: {...}
+	profiles?: [...string]
+
+	// Symbolic references (resolved at normalization).
+	provider_refs?: [...(#MethodologyRef | #ArtifactRef | string)]
+	child_refs?: [...(#MethodologyRef | string)]
+
+	requirements?: [...#Requirement]
+
+	// Declarations the compiler later normalizes.
+	procedure?: {...}
+	result?: {...}
+	receipt_contract?: {...}
+
+	// Declared permissions / resource envelope.
+	permissions?: {...}
+
+	// Open — an authored CM carries its family's own vocabulary.
+	...
+}
+
+// #NormalizedCMIR — the CONCRETE contract for the normalized JSON emitted from a
+// #CMSource (what `cue export` of a methodology PROGRAM produces). It is closed and
+// every required value is concrete and content-addressed: NOT a CUE expression, NOT
+// an unresolved symbol. It is a methodology PROGRAM only — input_contract /
+// procedure / result_contract / receipt_contract — and carries NO measurement
+// receipt. This names what the CUE export IS: a normalized IR, explicitly NOT a
+// normative `#CompiledCM` (the later runtime descriptor with resolved provider
+// bindings, execution plan, and sandbox policy — absent here). CM0, which has no run
+// in 4A, is the first clean carrier of this source→IR separation: `compiled/cm0.json`
+// validates against #NormalizedCMIR (finding G5).
+#NormalizedCMIR: close({
+	format:        "tsc-cm-ir/0.1"
+	cm_id:         string
+	cm_version:    string
+	source_digest: string
+
+	input_contract: {
+		kind: string
+		...
+	}
+	procedure: {
+		steps: [...]
+		...
+	}
+	result_contract: {
+		...
+	}
+	receipt_contract: {
+		kind: string
+		...
+	}
+
+	// A normalized IR MAY declare the permissions/resource envelope it was normalized
+	// with; still no runtime bindings (those are #CompiledCM's, deferred).
+	permissions?: {...}
+})

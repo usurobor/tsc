@@ -78,6 +78,21 @@ is run 0003 (`COHERENT_WITHIN_DECLARED_SCOPE → PASS` @ `48b9a63`);
 `derived_result_class` is CUE-computed and unified with `result_class`; the parent
 and Structure IRs are byte-identical after this increment.
 
+**Increment 4A — the generic leaf boundary + CM0 (no assessment runs).** The prior
+schema is a *repository-coherence* language: `#ChildReceiptEnvelope`,
+`#Methodology`, and `#AspectMethodology` all assume a git-repository/aspect world.
+4A adds the smallest **generic leaf-CM** boundary *beneath* that specialization, so
+a methodology whose target is *another methodology* — **CM0** — is an ordinary
+`#LeafMethodology`, not a CM0 special case. `#AspectMethodology` is re-expressed as
+a specialization (`#LeafMethodology & {…git_repository…}`), and `examples/cm0/cm.cue`
+encodes CM0 as a pure `#CMSource & #LeafMethodology` — **no `#CM0Methodology` root
+type exists**. The generalization **forces nothing**: it adds only optional/hidden
+fields, and the three prior IRs re-export **byte-for-byte**. CM0 has **no run** in
+4A (that is 4B/4C/4D): the five subcontracts are typed, provider-bound *check steps*
+with **no receipts computed**, the boundary is measure-only and CUE-enforced, and
+the CUE export is honestly typed as a `#NormalizedCMIR` (a methodology program, not
+a `#CompiledCM`). See the increment-4A section (findings G1–G5) below.
+
 ## How to compile
 
 Both files declare `package cm`; CUE unifies files passed on the command line
@@ -109,6 +124,19 @@ cue export schema.cue examples/legibility/cm.cue \
 # regression — both prior leaves/parent still vet and re-export byte-identical
 cue vet schema.cue examples/repository-coherence/cm.cue
 cue vet schema.cue examples/structure/cm.cue
+
+# increment 4A — CM0, an ordinary #LeafMethodology whose target is a methodology
+cue vet    schema.cue examples/cm0/cm.cue
+cue export schema.cue examples/cm0/cm.cue \
+  --out json -e cm0_ir > compiled/cm0.json      # CM0's NormalizedCMIR
+
+# CM0's IR validates against the concrete #NormalizedCMIR contract
+cue vet compiled/cm0.json schema.cue -d '#NormalizedCMIR'
+
+# regression — the three prior IRs still re-export byte-identical (the "beneath" proof)
+cue export schema.cue examples/repository-coherence/cm.cue --out json -e repository_coherence | diff - compiled/repository-coherence.json
+cue export schema.cue examples/structure/cm.cue --out json -e structure | diff - compiled/structure.json
+cue export schema.cue examples/legibility/cm.cue --out json -e legibility | diff - compiled/legibility.json
 ```
 
 All commands exit 0. `cue` v0.13.2.
@@ -124,6 +152,13 @@ All commands exit 0. `cue` v0.13.2.
 | `compiled/repository-coherence.json` | The parent's canonical IR — real `cue export` output. |
 | `compiled/structure.json` | The Structure leaf's canonical IR — real `cue export` output. |
 | `compiled/legibility.json` | The Legibility leaf's canonical IR — real `cue export` output. |
+| `examples/cm0/cm.cue` | **CM0** (increment 4A): the methodology whose target is another methodology, as an ordinary `#CMSource & #LeafMethodology` — plus its `#NormalizedCMIR` projection `cm0_ir`. No run. |
+| `compiled/cm0.json` | CM0's **NormalizedCMIR** — real `cue export -e cm0_ir` output; validates against `#NormalizedCMIR`. A methodology program only; **no measurement receipt**. |
+
+The increment-4A generic layer added beneath the specialization: `#LeafMethodology`,
+`#CMSource`, `#NormalizedCMIR`, `#ArtifactRef`, `#TargetRef`, `#MethodologyRef`,
+`#TargetContract`, `#ReceiptEnvelope`, `#ArtifactSlot`, `#InstrumentSubject`,
+`#CheckStep`, `#InstrumentAssessment`, and the extended `#Boundary`.
 
 ## Lossless-comparison — Markdown parent → CUE field
 
@@ -532,3 +567,177 @@ duplication demonstrably costs more than the coupling would. Likewise the leaf
 `derivation` guard→`#ResultClass` skeleton is now duplicated verbatim across both
 leaf CMs — a candidate to promote to a shared `#LeafDerivation` once a third leaf
 (e.g. CM0) lands.
+
+---
+
+## Increment 4A — the generic leaf boundary + CM0 (no assessment runs)
+
+The prior schema was a *repository-coherence* language: `#ChildReceiptEnvelope`
+(`aspect_id`/`profile`/`repository_commit`), `#Methodology`
+(`repository_snapshot`/`selected_aspects`), and `#AspectMethodology` (an aspect
+leaf) all assume a git-repository/aspect world. 4A adds the **smallest generic
+leaf-CM boundary beneath** that specialization, so a methodology whose target is
+*another methodology* — **CM0** — is an ordinary `#LeafMethodology`, not a special
+case. It authors **CM0's source only**: no assessment runs, no `InstrumentAssessment`
+result computed, no fixtures/calibration data (4B/4C/4D).
+
+The design is governed by one hard constraint: **the three existing IRs must
+re-export byte-for-byte.** That is the proof the generalization is *beneath* — that
+it forces nothing on the settled layer. Every design choice below falls out of
+reconciling the generic layer with that constraint.
+
+### What was added (all beneath the specialization)
+
+- **Reference algebra:** `#ArtifactRef` (content-addressed `id`·`kind`·`digest`,
+  optional `version`), `#TargetRef`, `#MethodologyRef`, `#TargetContract`.
+- **Generic receipt:** `#ReceiptEnvelope` (`methodology`·`target`·`result_class`·
+  `status`·`status_mapping`·`scope`·`findings`·`refusals`·`evidence_refs`).
+- **Generic leaf:** `#LeafMethodology` (id·version·question·`target_contract?`·
+  `input?`·`procedure`·`boundary`·`output?`·`receipt?`), an **open base** so a leaf
+  family specializes it with its own vocabulary.
+- **Instrument types:** `#ArtifactSlot`, `#InstrumentSubject`, `#InstrumentAssessment`.
+- **Typed step / provider algebra (the centerpiece):** `#StepKind`, `#ProviderRef`,
+  `#TypedStep`.
+- **Source/IR types:** `#CMSource`, `#NormalizedCMIR`.
+- **Extended `#Boundary`:** `may_compile?`/`may_admit?`/`may_authorize?`/`may_repair?`.
+- **`#AspectMethodology` re-expressed** as `#LeafMethodology & {…git_repository…}`.
+- **`examples/cm0/cm.cue`** — CM0 as `#CMSource & #LeafMethodology`, plus its
+  `#NormalizedCMIR` projection `cm0_ir`; **`compiled/cm0.json`** = `cue export -e cm0_ir`.
+
+### Findings
+
+**G1 — the generic layer adds only OPTIONAL or HIDDEN fields, so it forces nothing.**
+`cue export` emits every concrete regular field, including default-valued ones —
+so a single `bool | *false` added to a shared shape would materialize a new key in
+every frozen IR. Every generic addition to a shared/aspect shape is therefore
+*optional* (`may_*?`, `target_contract?`, `input?`, `output?`, `aspect_id?`) or
+*hidden* (`_target_contract`, `_compiled_bound`). Proven: `repository-coherence`,
+`structure`, and `legibility` re-export **byte-identical** to the committed
+`compiled/*.json` (three empty diffs).
+
+**G2 — the aspect's git-repository target is a HIDDEN field.** `#AspectMethodology:
+#LeafMethodology & {…}` should bind `target_contract: {kind: "git_repository"}`, but
+a *regular* `target_contract` adds a `target_contract` key to `structure.json` /
+`legibility.json` (verified: a concrete field on a definition exports on every
+instance). To keep byte-identity, the binding is a **hidden** field
+`_target_contract: #TargetContract & {kind: "git_repository"}` — type-checked, never
+exported. `aspect_id?` is optional for the same reason (the aspects carry `aspect_id`
+on the *receipt*, not at the top level). CM0 — a fresh instance with no byte
+baseline — carries `target_contract` as ordinary exported data.
+
+**G3 — `#ChildReceiptEnvelope` is related to `#ReceiptEnvelope` by documentation,
+not subtyping.** A clean `#ChildReceiptEnvelope: #ReceiptEnvelope & {…}` would add
+`methodology`/`target` keys to the three frozen child receipts (which carry
+`aspect_id`/`profile`/`repository_commit` instead). That perturbs instance data, so
+per the increment brief `#ChildReceiptEnvelope` is **kept as-is** and the
+correspondence recorded here: `#ReceiptEnvelope` is the generic interface;
+`#ChildReceiptEnvelope` is its repository specialization, differing only in identity
+fields.
+
+**G4 — `#CMSource` is related to the settled types by documentation, not `&`.**
+`#CMSource` names the *authored methodology program* — the role `#Methodology`,
+`#LeafMethodology`, and `#AspectMethodology` play. Wiring them structurally
+(`#Methodology: #CMSource & {…}`) was tried and **reverted**: `cue export` orders
+fields by declaration position, so embedding `#CMSource` reordered `requirements` /
+`procedure` / `result` ahead of `boundary` and **broke byte-identity** (the values
+were identical; the field ORDER changed). So the settled types stay untouched and
+their `#CMSource` role is documented; **CM0** — with no byte baseline — is authored
+as an explicit `#CMSource & #LeafMethodology`, exercising the source contract where
+it costs nothing. (Same principle as G3: byte-identity wins over clean subtyping;
+the relation is recorded as a finding.)
+
+**G5 — the CUE export is honestly a `#NormalizedCMIR`, not a `#CompiledCM`.**
+`#NormalizedCMIR` is a closed, fully-concrete, content-addressed contract
+(`format`·`cm_id`·`cm_version`·`source_digest`·`input_contract`·`procedure`·
+`result_contract`·`receipt_contract`) — the normalized JSON a methodology *program*
+produces. It is explicitly **not** a normative `#CompiledCM` (the later runtime
+descriptor with resolved provider bindings, execution plan, and sandbox policy —
+absent here). CM0, which has **no run** in 4A, is the first clean carrier of this
+source→IR separation: `compiled/cm0.json` is a methodology program only (no
+measurement receipt) and **validates against `#NormalizedCMIR`**
+(`cue vet compiled/cm0.json schema.cue -d '#NormalizedCMIR'` → 0). The honesty is
+enforced structurally in `#InstrumentSubject`: `normalized_ir` is a required slot
+and grounds *language-level* contract integrity, while `compiled` is a non-required
+slot and `runtime_binding.status` is `INCOMPLETE` until a CompiledCM is bound. A
+subject claiming `runtime_binding.status: "COMPLETE"` with no compiled ref bound
+**fails `cue vet`** (`_compiled_bound: false` conflicts `true`) — CM0 cannot
+fabricate runtime completeness from a normalized IR (negative probe P5; positive
+control P6 passes when a real compiled ref is bound).
+
+**G6 — the typed step / provider algebra, coexisting with `#ProcedureStep`.**
+`#ProcedureStep` carries a free-form `action: string` — enough to *describe* an
+aspect leaf's six steps, but not an instruction *set* a second executor could bind
+and run. CM0 forces the missing algebra: `#StepKind`
+(`mechanical`·`semantic_judgment`·`invoke_cm`·`oracle`·`transform`), `#ProviderRef`
+(`kind`·`id`·`digest?`), and `#TypedStep` (`id`·`kind`·`provider`·`input`·
+`output_contract`·`evidence_contract`·`failure?`). CM0's five subcontracts are
+ordinary `#TypedStep` compositions — **not prose**: `contract_integrity` and
+`evolution` are `mechanical` tool steps over the normalized IR; `repeatability` is an
+`oracle`; `discrimination` is an `invoke_cm` step binding a `#MethodologyRef` with a
+MeasurementReceipt-*shaped* `output_contract` (the type itself deferred to #112);
+`refusal` is a `semantic_judgment` binding an LLM provider to a digested skill
+`#ArtifactRef` with `evidence_contract: {citations_required, disagreement_retained}`.
+Crucially `#TypedStep` **coexists** with `#ProcedureStep`: the three settled examples
+keep `#ProcedureStep` unchanged, only `#LeafMethodology`-family leaves (CM0) use
+`#TypedStep`, and the three IRs stay byte-identical (migration of the settled
+examples to typed steps is deferred to #113 slice E). No `#StepKind` value compiles,
+admits, or authorizes, so a step of kind `"compile"`/`"authorize"` fails `cue vet`
+(negative probe P2).
+
+### The boundary bites (measure-only is enforced, not asserted)
+
+`#Boundary` gains typed authority fields `may_compile?`/`may_admit?`/`may_authorize?`/
+`may_repair?`; a measure-only boundary constrains each to `false`. This is the
+language-level enforcement of **OPER-AUTH-001** (`spec/tsc-conformance.md`, "CM0
+cannot admit itself") and **tsc-oper.md §1.4/§2** ("CM0 measures. It does not
+compile, admit, authorize, or decide a boundary action"). Enforcement is proven by
+negative probes that all **fail `cue vet`**:
+
+- **P1** — a `#Boundary & {measure_only: true, may_compile: true}` →
+  `may_compile: conflicting values false and true`.
+- **P2** — a `#TypedStep` of `kind: "compile"` → `3 errors in empty disjunction`
+  (not a member of `#StepKind`).
+- **P3** — an `#InstrumentAssessment & {emits_admission_verdict: true}` →
+  `conflicting values false and true` (an assessment measures; it does not admit).
+- **P4** — an `#InstrumentSubject` whose `source.ref` is an embedded object rather
+  than an `#ArtifactRef` → `field not allowed` / `null vs struct` (references are
+  canonical — AC7; CM0 embeds no child/receipt copies).
+- **P5** — a subject claiming `runtime_binding.status: "COMPLETE"` with no compiled
+  ref (G5 above).
+
+Positive control **P6** (COMPLETE *with* a bound compiled `#ArtifactRef`) passes,
+proving the AC5 guard is live rather than always-failing.
+
+### Closedness note (a small, recorded relaxation)
+
+`#LeafMethodology` is an **open** base (`...`): a leaf family adds its own fields via
+`&`, which a closed definition rejects (`field not allowed`). Consequently
+`#AspectMethodology`, previously a closed definition, is now open at the methodology
+top level. This is a deliberate, minor relaxation — the **load-bearing** closedness
+is the S2-corralled *receipt* envelope (`#ChildReceiptEnvelope`), which is
+**unchanged**, and the three IRs remain byte-identical. `close()` does not restore
+top-level protection here because the open base's `...` defeats it (verified).
+
+### `#ArtifactSlot` — declaring a subject without fabricating a digest
+
+`#InstrumentSubject`'s artifact roles (`source`, `normalized_ir`, `compiled`) are
+`#ArtifactSlot`s (`kind`·`required`·`ref: #ArtifactRef | *null`), not bare
+`#ArtifactRef`s. Reason: CM0 has **no run**, so it *declares* the subject contract
+without a bound target — and a declaration cannot carry a real content-address for a
+target it has not measured. A slot declares the role and leaves `ref` unbound
+(`null`); a run binds it to an `#ArtifactRef`. The type admits only `#ArtifactRef` or
+`null`, so an embedded copy in place of a ref fails `cue vet` (P4) — AC7 holds. The
+list roles (`implementation_refs`/`calibrations`/`fixtures`/`lineage`) are
+`[...#ArtifactRef]` directly.
+
+### Deferred (recorded, not done in 4A)
+
+- **Run/receipt separation of the three fused examples** — they intentionally fuse a
+  CM with a concrete run-0002/0003 receipt (correct for #109). Splitting them into
+  `#CMSource` + `#RunRequest` + `#MeasurementReceipt` re-baselines their IRs and is
+  **#112 slice 2**; `#RunRequest`/`#MeasurementReceipt` are **not** introduced here.
+- **Migration of the settled examples to `#TypedStep`** — **#113 slice E**.
+- **Provider/fixture corpus and calibration data** — **#113 slice B / 4B**.
+- **`#LeafDerivation` promotion** — CM0 is now the third leaf, but the shared
+  `derivation` skeleton is **not** promoted (a later, earned step).
+- **Assessment runs / self-application** — **4C / 4D**.
