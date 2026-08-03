@@ -27,6 +27,7 @@ module Json = struct
   type t =
     | S of string
     | Bool of bool
+    | Int of int
     | Null
     | Arr of t list
     | Obj of (string * t) list
@@ -54,6 +55,7 @@ module Json = struct
   let rec render ind = function
     | S s -> "\"" ^ escape s ^ "\""
     | Bool b -> if b then "true" else "false"
+    | Int i -> string_of_int i
     | Null -> "null"
     | Arr [] -> "[]"
     | Arr xs ->
@@ -91,6 +93,8 @@ module Lex = struct
     | RPAREN
     | LBRACE
     | RBRACE
+    | LBRACKET (* [ *)
+    | RBRACKET (* ] *)
     | COLON
     | COMMA
     | EQ
@@ -131,6 +135,8 @@ module Lex = struct
       else if c = ')' then (push RPAREN; incr i)
       else if c = '{' then (push LBRACE; incr i)
       else if c = '}' then (push RBRACE; incr i)
+      else if c = '[' then (push LBRACKET; incr i)
+      else if c = ']' then (push RBRACKET; incr i)
       else if c = ':' then (push COLON; incr i)
       else if c = ',' then (push COMMA; incr i)
       else if c = '=' then (push EQ; incr i)
@@ -232,7 +238,31 @@ module Ast = struct
     cforbids : string list; (* averaging, repair, admit, authorize *)
   }
 
-  type parsed = Leaf of cm | Composite of composite
+  (* ── aspect (repository) leaf CM: #AspectMethodology, free-form procedure,
+     methodology-only projection. ─────────────────────────────────────────── *)
+  type proc_input = { in_name : string; in_role : string }
+  type proc_step = { n : int; action : string; checks : string list }
+  type result_clause = { when_ : string; cls : string } (* guard · #ResultClass *)
+  type areq = { arid : string; atext : string; aclass : string; aseverity : string }
+
+  type aspect = {
+    a_name : string;
+    a_version : string;
+    a_question : string;
+    a_profile : string;
+    a_statuses : string list;
+    a_status_mapping : (string * string) list; (* status -> result_class *)
+    a_inputs : proc_input list;
+    a_steps : proc_step list;
+    a_clauses : result_clause list;
+    a_otherwise : string;
+    a_requirements : areq list;
+    a_disowns : string list;
+    a_measure_only : bool;
+    a_boundary_note : string;
+  }
+
+  type parsed = Leaf of cm | Composite of composite | Aspect of aspect
 end
 
 (* ────────────────────────────────────────────────────────────────────────
@@ -252,6 +282,7 @@ module Parse = struct
     | STR s -> Printf.sprintf "string %S" s
     | LPAREN -> "'('" | RPAREN -> "')'"
     | LBRACE -> "'{'" | RBRACE -> "'}'"
+    | LBRACKET -> "'['" | RBRACKET -> "']'"
     | COLON -> "':'" | COMMA -> "','" | EQ -> "'='" | AT -> "'@'" | PIPE -> "'|'"
     | ARROW -> "'->'" | EOF -> "end of input"
 
@@ -297,6 +328,40 @@ module Parse = struct
       let a = str st in
       let acc = a :: acc in
       match (peek st).tok with COMMA -> advance st; loop acc | _ -> List.rev acc
+    in
+    loop []
+
+  (* a value that may be a bareword or a quoted string (e.g. requirement `class`:
+     `semantic` or `"mechanical + semantic"`). *)
+  let atom_or_str st =
+    match (peek st).tok with STR s -> advance st; s | _ -> atom st
+
+  (* bracketed, comma-separated atom list, possibly empty: `[a, b]` or `[]`. *)
+  let bracket_atoms st =
+    expect st LBRACKET;
+    if (peek st).tok = RBRACKET then (advance st; [])
+    else begin
+      let rec loop acc =
+        let a = atom st in
+        let acc = a :: acc in
+        match (peek st).tok with COMMA -> advance st; loop acc | _ -> List.rev acc
+      in
+      let xs = loop [] in
+      expect st RBRACKET;
+      xs
+    end
+
+  (* a `| KEY -> VALUE` ladder (status_mapping), returning ordered pairs. *)
+  let arrow_ladder st =
+    let rec loop acc =
+      match (peek st).tok with
+      | PIPE ->
+          advance st;
+          let k = atom st in
+          expect st ARROW;
+          let v = atom st in
+          loop ((k, v) :: acc)
+      | _ -> List.rev acc
     in
     loop []
 
@@ -543,6 +608,103 @@ module Parse = struct
       cforbids = req "forbid" !forbids;
     }
 
+  (* aspect/repository leaf body (#AspectMethodology, free-form procedure).
+     Header consumed through LBRACE. *)
+  let parse_aspect_body st ~name ~version : Ast.aspect =
+    let question = ref None and profile = ref None in
+    let statuses = ref [] and status_mapping = ref [] in
+    let inputs = ref [] and steps = ref [] in
+    let clauses = ref [] and otherwise = ref None in
+    let requirements = ref [] and disowns = ref None in
+    let measure_only = ref false and boundary_note = ref None in
+
+    (* the leaf result rule ladder: `| CLASS when "<cond>"` … then `otherwise C`. *)
+    let parse_result_rule () =
+      let rec loop acc =
+        match (peek st).tok with
+        | PIPE ->
+            advance st;
+            let cls = atom st in
+            keyword st "when";
+            let when_ = str st in
+            loop ({ Ast.when_; cls } :: acc)
+        | _ -> List.rev acc
+      in
+      let cs = loop [] in
+      keyword st "otherwise";
+      let ow = atom st in
+      (cs, ow)
+    in
+    let rec body () =
+      match (peek st).tok with
+      | RBRACE -> advance st
+      | EOF -> err "line %d: unexpected end of input inside aspect `cm` block" (cur_line st)
+      | ATOM "question" -> advance st; question := Some (str st); body ()
+      | ATOM "profile" -> advance st; profile := Some (str st); body ()
+      | ATOM "statuses" -> advance st; statuses := !statuses @ atom_list st; body ()
+      | ATOM "status_mapping" -> advance st; status_mapping := !status_mapping @ arrow_ladder st; body ()
+      | ATOM "input" ->
+          advance st;
+          let in_name = atom st in
+          expect st COLON;
+          let in_role = str st in
+          inputs := { Ast.in_name; in_role } :: !inputs;
+          body ()
+      | ATOM "step" ->
+          advance st;
+          let n = try int_of_string (atom st) with _ -> err "line %d: step number must be an integer" (cur_line st) in
+          expect st COLON;
+          let action = str st in
+          keyword st "checks";
+          let checks = bracket_atoms st in
+          steps := { Ast.n; action; checks } :: !steps;
+          body ()
+      | ATOM "decide" ->
+          advance st;
+          let cs, ow = parse_result_rule () in
+          clauses := cs;
+          otherwise := Some ow;
+          body ()
+      | ATOM "requirement" ->
+          advance st;
+          let arid = atom st in
+          let atext = str st in
+          keyword st "class";
+          let aclass = atom_or_str st in
+          keyword st "severity";
+          let aseverity = atom_or_str st in
+          requirements := { Ast.arid; atext; aclass; aseverity } :: !requirements;
+          body ()
+      | ATOM "disowns" -> advance st; disowns := Some (str_list st); body ()
+      | ATOM "boundary" ->
+          advance st;
+          keyword st "measure_only";
+          measure_only := true;
+          keyword st "note";
+          boundary_note := Some (str st);
+          body ()
+      | other -> err "line %d: unexpected %s in aspect `cm` block" (cur_line st) (tok_str other)
+    in
+    body ();
+    expect st EOF;
+    let req nm = function Some x -> x | None -> err "cm %s: missing required `%s` declaration" name nm in
+    {
+      Ast.a_name = name;
+      a_version = version;
+      a_question = req "question" !question;
+      a_profile = req "profile" !profile;
+      a_statuses = !statuses;
+      a_status_mapping = !status_mapping;
+      a_inputs = List.rev !inputs;
+      a_steps = List.rev !steps;
+      a_clauses = !clauses;
+      a_otherwise = req "decide" !otherwise;
+      a_requirements = List.rev !requirements;
+      a_disowns = req "disowns" !disowns;
+      a_measure_only = !measure_only;
+      a_boundary_note = req "boundary" !boundary_note;
+    }
+
   (* header parameter list: `p` or `p: Type`, comma-separated. *)
   let parse_params st =
     let rec loop acc =
@@ -573,8 +735,11 @@ module Parse = struct
         in
         Ast.Leaf (parse_leaf_body st ~name ~version ~input_param ~input_type ~output_type)
     | "CompositeReceipt" -> Ast.Composite (parse_composite_body st ~name ~version)
+    | "AspectReceipt" -> Ast.Aspect (parse_aspect_body st ~name ~version)
     | other ->
-        err "cm %s: unknown output type %S (expected `InstrumentAssessment` or `CompositeReceipt`)" name other
+        err
+          "cm %s: unknown output type %S (expected `InstrumentAssessment`, `CompositeReceipt`, or `AspectReceipt`)"
+          name other
 end
 
 (* ────────────────────────────────────────────────────────────────────────
@@ -809,6 +974,52 @@ module Lower = struct
         ("does_not_own", Arr (List.map (fun s -> S s) c.disowns));
         ("result_class_definitions", result_class_definitions);
       ]
+
+  (* ── aspect (repository) leaf projection: the #AspectMethodology methodology-only
+     program (== `cue export … -e legibility_source`). Free-form #ProcedureStep
+     (n · action · checks), a result-rule ladder, and class/severity requirements —
+     distinct from CM0's typed-step instrument leaf. Same source→projection split:
+     `legibility` minus its concrete `receipt` run. Both `cmc` and `cmc --source`
+     emit this one projection (the run/receipt IR is #112 slice 2). ───────────── *)
+  let validate_aspect (a : aspect) =
+    if not a.a_measure_only then err "cm %s: aspect leaf must declare `boundary measure_only …`" a.a_name;
+    if a.a_statuses = [] then err "cm %s: aspect leaf has no `statuses`" a.a_name;
+    if a.a_status_mapping = [] then err "cm %s: aspect leaf has no `status_mapping`" a.a_name;
+    if a.a_steps = [] then err "cm %s: aspect leaf has no procedure `step`s" a.a_name
+
+  let aspect (a : aspect) : Json.t =
+    validate_aspect a;
+    let open Json in
+    let input i = Obj [ ("name", S i.in_name); ("role", S i.in_role) ] in
+    let step s =
+      Obj [ ("n", Int s.n); ("action", S s.action); ("checks", Arr (List.map (fun c -> S c) s.checks)) ]
+    in
+    let clause cl = Obj [ ("when", S cl.when_); ("class", S cl.cls) ] in
+    let requirement r =
+      Obj [ ("id", S r.arid); ("text", S r.atext); ("class", S r.aclass); ("severity", S r.aseverity) ]
+    in
+    Obj
+      [
+        ("id", S a.a_name);
+        ("version", S a.a_version);
+        ("question", S a.a_question);
+        ("profile", S a.a_profile);
+        ("statuses", Arr (List.map (fun s -> S s) a.a_statuses));
+        ("status_mapping", Obj (List.map (fun (k, v) -> (k, S v)) a.a_status_mapping));
+        ( "procedure",
+          Obj
+            [
+              ("inputs", Arr (List.map input a.a_inputs));
+              ("steps", Arr (List.map step a.a_steps));
+              ("result", Obj [ ("clauses", Arr (List.map clause a.a_clauses)); ("otherwise", S a.a_otherwise) ]);
+            ] );
+        ("boundary", Obj [ ("measure_only", Bool true); ("note", S a.a_boundary_note) ]);
+        ("requirements", Arr (List.map requirement a.a_requirements));
+        ("does_not_own", Arr (List.map (fun s -> S s) a.a_disowns));
+        ("result_class_definitions", result_class_definitions);
+        (* #AspectMethodology default `retired_requirements: [...] | *[]`. *)
+        ("retired_requirements", Arr []);
+      ]
 end
 
 (* ────────────────────────────────────────────────────────────────────────
@@ -820,8 +1031,10 @@ let compile_string ?(mode = Ir) (src : string) : string =
   let json =
     match src |> Lex.tokenize |> Parse.parse with
     | Ast.Leaf cm -> ( match mode with Ir -> Lower.ir cm | Source -> Lower.source cm)
-    (* the composite has one methodology-only projection; both modes emit it. *)
+    (* composite and aspect leaf each have one methodology-only projection; both
+       modes emit it (their run/receipt IR is deferred to #112 slice 2). *)
     | Ast.Composite c -> Lower.composite c
+    | Ast.Aspect a -> Lower.aspect a
   in
   Json.to_string json
 

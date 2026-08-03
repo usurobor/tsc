@@ -1,0 +1,69 @@
+# NEGATIVE PROBE (issue #115 leaf). Identical to legibility.cm EXCEPT the boundary
+# declaration drops `measure_only` (`boundary note "…"` instead of
+# `boundary measure_only note "…"`). The measure-only boundary is load-bearing
+# (RCM-BOUNDARY-001: the CM observes and emits; it changes no files — a run that
+# edited while observing would destroy its own evidence). The surface makes the
+# measure-only boundary structurally mandatory, so the front-end REJECTS this
+# source at compile time — it never emits a projection. General over every aspect
+# leaf, not overfit to Legibility.
+
+cm tsc.repository-coherence.legibility v0.2 (repo, reader, policy) -> AspectReceipt {
+
+  question "At a given commit, can a first-time technical reader reconstruct what the project is, what is authoritative, what is runnable, what is experimental, and what to do next — without hitting contradictory status, stale paths, mixed artifact roles, or avoidable noise?"
+
+  profile "technical-newcomer-human"
+
+  # The leaf's own five-value status vocabulary and its declared mapping onto the
+  # generic four-value result_class interface.
+  statuses COHERENT_WITHIN_DECLARED_SCOPE, DEFECTS_FOUND, UNDERDETERMINED, INCOMPLETE_OBSERVATION, CM_EXECUTION_FAILED
+  status_mapping
+    | COHERENT_WITHIN_DECLARED_SCOPE -> PASS
+    | DEFECTS_FOUND                  -> DEFECT
+    | UNDERDETERMINED                -> INCOMPLETE
+    | INCOMPLETE_OBSERVATION         -> INCOMPLETE
+    | CM_EXECUTION_FAILED            -> FAILED
+
+  # Typed procedure inputs (what a fresh executor supplies).
+  input repository_snapshot: "the tracked tree at one exact commit (git ls-files)"
+  input reader_profile: "the declared reader: technically experienced, understands software repositories, unfamiliar with TSC, no TSC vocabulary"
+  input live_surface_policy: "the reader-navigable front door + everything reachable in ≤1 documented hop + the authority sources the fixture checks against"
+  input exclusions: "excluded paths with reasons (.cdd .cn-sigma .cell .tsc heldout, .claude/worktrees/**, docs/{alpha,beta,gamma} except docs/beta/governance/, katas/*/input, _build)"
+
+  # Ordered, free-form procedure steps: each numbered step names an action and the
+  # REPO-* requirement ids it enforces.
+  step 1: "Manifest the live reader surface (α): commit SHA, inventory over the live-surface policy, excluded paths + reasons, reader profile, generated/frozen classification, any surface left unread. An incomplete/uninventoried surface is INCOMPLETE_OBSERVATION, never 'coherent'." checks [REPO-ENTRY-001]
+  step 2: "Run the blind newcomer-task fixture FIRST, from README.md only: the six questions, each answered in ≤1 documented hop (no Git history, no glossary for basic identity), then verified against its authority source." checks [REPO-ENTRY-001, REPO-DOC-001]
+  step 3: "Local clarity per live document: one governing question; purpose + authority visible immediately; no stale future tense; no historical-as-current; no removable repetition." checks [REPO-DOC-001, REPO-NOISE-001]
+  step 4: "Relational & authority atlas (β): one authoritative home per stable fact; README↔STATUS agree; portal matches the tree; every Markdown link and canonical path on the live surface resolves; implementation claims match code." checks [REPO-AUTH-001, REPO-PATH-001, REPO-STRUCTURE-001, REPO-STATUS-001]
+  step 5: "Lifecycle & lineage: distinguish current/draft/normative/experimental/generated/historical/frozen/superseded; no draft-as-normative, no historical plan as current work, no generated artifact reading as authoritative, no stale current entry point after a move." checks [REPO-HISTORY-001, REPO-STATUS-001]
+  step 6: "Operability: documented commands run; targets/links/schemas resolve; rendered artifacts match sources. Where a mechanical check cannot execute in the declared environment, record a BOUNDED single-check refusal (not a whole-run incompleteness)." checks [REPO-RUN-001, REPO-PATH-001]
+  step 7: "Continuation (γ) + emit: compare to the prior run; emit the α inventory, β atlas, findings with warrant, refusals, and the categorical status + result_class via the Result rule." checks []
+
+  # The result rule as data: clauses highest-precedence first (FAILED > INCOMPLETE >
+  # DEFECT), else PASS. Each `when` names the typed IR fields an executor evaluates.
+  decide
+    | FAILED     when "FAILED — derivation.execution_failed_refusals is non-empty (a required mechanical check could not run at all; a refusal of kind CM_EXECUTION_FAILED)."
+    | INCOMPLETE when "INCOMPLETE — derivation.inventory_incomplete_refusals is non-empty (a refusal of kind INCOMPLETE_OBSERVATION or UNDERDETERMINED whose scope is 'inventory' — the inventory could not be completed, a claimed authority is missing, or a defect could not be confirmed from evidence). A BOUNDED single-check refusal (scope not in derivation.status_flipping_refusal_scopes, i.e. 'single_check') does NOT trip this arm — it is honest incompleteness of one check that does not flip the categorical status."
+    | DEFECT     when "DEFECT — a confirmed in-scope defect: derivation.defect_findings is non-empty, OR derivation.failed_requirement_checks is non-empty (some REPO-* check verdict is FAIL), OR derivation.failed_newcomer_questions is non-empty (some newcomer-fixture question did not PASS)."
+    otherwise PASS
+
+  # The 11 stable REPO-* requirements (id · claim · class · severity). `class` is
+  # load-bearing: the FAILED clause references "a required mechanical check".
+  requirement REPO-ENTRY-001 "The front door identifies the project, the runnable surface, the active research, and the next paths — in one screen." class semantic severity P0
+  requirement REPO-DOC-001 "Every live document answers one governing question, with purpose and authority visible immediately." class semantic severity P1
+  requirement REPO-AUTH-001 "Every stable fact has one authoritative home; no two documents claim incompatible authority." class "mechanical + semantic" severity P0
+  requirement REPO-STATUS-001 "Every status projection agrees with its authority source (spec version, software version, ratification, conformance standing)." class mechanical severity P1
+  requirement REPO-PATH-001 "Every current path and Markdown link on the live surface resolves." class mechanical severity P0
+  requirement REPO-STRUCTURE-001 "Directory placement matches the declared repository-plane contract; no two documentation systems are presented as authoritative at once." class "mechanical + semantic" severity P0
+  requirement REPO-HISTORY-001 "Historical, superseded, or generated artifacts cannot be read as current instructions." class semantic severity P1
+  requirement REPO-RUN-001 "Documented runnable commands execute under the declared environment." class mechanical severity P0
+  requirement REPO-NOISE-001 "Repetition, stale wrappers, and obsolete navigation do not obscure current project truth." class semantic severity P2
+  requirement REPO-REPAIR-001 "A repair run changes only findings in scope and preserves meaning (evidence-boundary rule)." class process severity P0
+  requirement REPO-REVIEW-001 "A COHERENT_WITHIN_DECLARED_SCOPE claim requires an independent full-scope review, separate from the repair actor." class process severity P0
+
+  disowns "repair (changing files to close defects)", "independent review closure", "structure/full-tree plane completeness (owned by the structure aspect; assigned away by repository-planes §4)"
+
+  # Measure-only boundary (structurally mandatory): the CM observes, checks, and
+  # emits defects with warrant; it changes no files.
+  boundary note "The CM observes, checks, and emits defects with warrant; it changes no files. Measure commit A → freeze the receipt → repair on commit B → re-run → compare A and B → an independent reviewer closes (REPO-REPAIR-001, REPO-REVIEW-001, parent RCM-BOUNDARY-001). A single invocation that edits files while observing them destroys its own evidence."
+}

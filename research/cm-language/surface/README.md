@@ -1,4 +1,4 @@
-# CM surface language — spike (CM0 leaf + Repository Coherence composite)
+# CM surface language — spike (CM0 leaf · Repository Coherence composite · Legibility aspect leaf)
 
 Issue **#115** (sub of **#114**). Proves the `.cm` → OCaml → normalized-IR loop
 end-to-end on the one clean methodology-only target, **CM0**: a compact ML-shaped
@@ -38,6 +38,8 @@ See *Composite CM* below.
 | `cm0_no_admit.cm` | Negative probe: drops `admit` from `forbid`. |
 | `repository_coherence.cm` | Repository Coherence (composite/parent) in the compact surface. |
 | `repository_coherence_no_averaging.cm` | Composite negative probe: drops `averaging` from `forbid`. |
+| `legibility.cm` | Repository Legibility (aspect/repository leaf, free-form procedure) in the compact surface. |
+| `legibility_no_measure_only.cm` | Aspect-leaf negative probe: drops `measure_only` from the boundary. |
 
 ## Build & run
 
@@ -61,7 +63,11 @@ $ dune exec bin/main.exe -- --source cm0.cm   # → full #CMSource (cue export -
 | **Composite byte-identity** | `diff <(cmc --source repository_coherence.cm) <(cue export ../schema.cue ../examples/repository-coherence/cm.cue --out json -e repository_coherence_source)` | **empty** (CUE-exact). |
 | Composite oracle | `cue vet <cmc-output ∪ frozen receipt> ../schema.cue -d '#Methodology'` | exit **0** (see *Composite CM → oracle*; bare `-d '#Methodology'` on the receipt-less projection is incomplete **identically** for `cmc` and `cue export`). |
 | Composite negative probe | `cmc --source repository_coherence_no_averaging.cm` | **rejected**, exit **2**. |
+| **Legibility byte-identity** | `diff <(cmc --source legibility.cm) <(cue export ../schema.cue ../examples/legibility/cm.cue --out json -e legibility_source)` | **empty** (CUE-exact). |
+| Legibility oracle | `cue vet <cmc-output ∪ frozen receipt> ../schema.cue -d '#AspectMethodology'` | exit **0** (bare `-d` on the receipt-less projection is incomplete **identically** for `cmc` and `cue export` — same wrinkle as the composite). |
+| Legibility negative probe | `cmc legibility_no_measure_only.cm` | **rejected**, exit **2**. |
 | CM0 no-regression | `cmc cm0.cm == compiled/cm0.json`; `cmc --source cm0.cm == cue export -e cm0` | both byte-identical. |
+| Composite no-regression | `cmc --source repository_coherence.cm == cue export -e repository_coherence_source` | byte-identical. |
 | **AC4** no semantics reopened | `git diff main -- schema.cue compiled` empty; `examples/` changed only by the additive `repository_coherence_source` expr (full `-e repository_coherence` still byte-identical) | holds. |
 | Negative probe (CM0) | `cmc cm0_no_admit.cm` (and `--source`) | **rejected**, exit **2** (see below). |
 
@@ -171,6 +177,53 @@ a valid `#Methodology` missing only its run. A `#MethodologySource` definition
 (methodology-without-receipt) is the clean home for a direct oracle and is left to
 #112 slice 2, which introduces the source/run separation at the schema level.
 
+## Aspect leaf CM — Legibility (`#AspectMethodology`, free-form procedure)
+
+The surface now spans **all three CM forms**: the CM0 instrument leaf (typed provider
+steps), the Repository Coherence composite, and now an **aspect/repository leaf** with
+a **free-form** procedure. `legibility.cm` compiles **byte-identical** to the
+methodology-only projection `legibility` **minus its concrete run** (`receipt`):
+
+```
+$ dune exec bin/main.exe -- --source legibility.cm
+# == cue export ../schema.cue ../examples/legibility/cm.cue --out json -e legibility_source
+```
+
+Same additive one-liner (`legibility_source: {for k, v in legibility if k != "receipt"
+{(k): v}}`) added to `examples/legibility/cm.cue`; the original `legibility` expr is
+untouched and its full IR stays byte-identical.
+
+Free-form-procedure grammar added (the third CM form; reuses the leaf/composite lexer
+and JSON machinery):
+
+| `.cm` construct | `#AspectMethodology` field |
+|---|---|
+| `cm tsc.repository-coherence.legibility v0.2 (…) -> AspectReceipt` | `id` (verbatim), `version`; dispatched as an aspect leaf on the output type |
+| `profile "…"` | `profile` |
+| `statuses …` + `status_mapping \| STATUS -> CLASS` | `statuses` + `status_mapping` (the `\| K -> V` ladder, five entries) |
+| `input <name>: "<role>"` (×4) | `procedure.inputs[*]` `{name, role}` |
+| `step <n>: "<action>" checks [REPO-…]` (×7) | `procedure.steps[*]` `{n (int), action, checks}` — free-form `#ProcedureStep`, not CM0's typed step |
+| `decide \| CLASS when "<cond>" … otherwise PASS` | `procedure.result` `{clauses [{when, class}], otherwise}` — a result-rule ladder (distinct from the composite's precedence ladder) |
+| `requirement REPO-… "<text>" class <c> severity <s>` (×11) | `requirements[*]` `{id, text, class, severity}` (`class` accepts `"mechanical + semantic"` as a quoted value) |
+| `disowns "…", …` | `does_not_own` |
+| `boundary measure_only note "<…>"` | `boundary` `{measure_only: true, note}` |
+
+New tokens: `[` `]` (bracket check-lists) and JSON integers (`step.n`). The emitter
+reconstructs the schema-default constants — `result_class_definitions` and
+`retired_requirements: []` (#AspectMethodology's default) — as before. Both `cmc` and
+`cmc --source` emit this one methodology-only projection.
+
+### The `#AspectMethodology` oracle, honestly
+
+Identical wrinkle to the composite: `#AspectMethodology` **mandates a concrete
+`receipt`** (the `#ChildReceiptEnvelope` run), which the methodology-only projection
+omits — so `cue vet <projection> -d '#AspectMethodology'` reports the receipt fields
+incomplete, **identically for `cmc`'s output and for `cue export … -e
+legibility_source` itself** (verified). The achievable oracle: the projection
+**unified with the frozen `receipt`** validates as a complete `#AspectMethodology`
+(`cue vet <cmc-output ∪ receipt> -d '#AspectMethodology'` → **0**). Same
+`#MethodologySource` deferral to #112 slice 2.
+
 ### Overlapping invariant checks (compiler + CUE — #114 AC4)
 
 - **Compiler-enforced:** `forbid` completeness (all five authorities), the `let!`
@@ -213,6 +266,13 @@ repair, admit, authorize]; missing "averaging". The boundary is load-bearing
 `cue vet` cannot catch this: `#Methodology` leaves `invariants.allow_scalar_aggregation`
 an unconstrained `bool`, so — as with CM0 — the no-aggregate boundary must bite at
 the surface.
+
+The **aspect leaf** carries it too. `legibility_no_measure_only.cm` drops
+`measure_only` from the boundary (`boundary note "…"` instead of `boundary
+measure_only note "…"`) and is rejected at compile time (exit 2): the surface makes
+`boundary measure_only note "…"` structurally mandatory for every aspect leaf
+(RCM-BOUNDARY-001 — a run that edited files while observing them would destroy its own
+evidence). General over the aspect-leaf family, not overfit to Legibility.
 
 ## Clarity judgment (AC5): `.cm` vs the CUE source for CM0
 
@@ -278,3 +338,16 @@ statement. The precedence walk that a fresh reader must reconstruct from
 directly. Same two caveats as CM0 apply (CUE stays the executable oracle; the
 surface's typechecker is thinner than CUE's cross-field constraints — and here the
 composite has no receipt-less `#Methodology` oracle yet, deferred to #112 slice 2).
+
+**Aspect leaf (Legibility):** the free-form procedure reads especially well — seven
+`step n: "…" checks […]` lines and a `decide | CLASS when "…" … otherwise PASS` ladder
+are exactly the executable core, where the CUE nests them under
+`procedure.steps`/`procedure.result.clauses` records. The `status_mapping` and
+`class`/`severity`-annotated requirements carry one-to-one. The honest limit is
+sharper here than for CM0: Legibility's *run* (the `#LegibilityReceipt` with its
+CUE-computed `derivation` — the two-executor result check that makes
+`derived_result_class` conflict with a wrong `result_class`) is exactly the part the
+methodology-only projection omits, and is where CUE's executable-constraint power is
+most load-bearing. The `.cm` surface authors the *program*; CUE still owns the
+*derivation check*. That is the intended #114 split, now demonstrated across all three
+CM forms (instrument leaf · composite · aspect leaf).

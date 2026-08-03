@@ -377,3 +377,12 @@ legibility: #AspectMethodology & {
 		]
 	}
 }
+
+// Methodology-only projection (issue #115 leaf spike): the aspect methodology
+// PROGRAM = legibility minus its concrete run (`receipt`). Additive — does NOT
+// touch the `legibility` expr above, whose export stays byte-identical to
+// compiled/legibility.json. This is the `.cm` leaf byte-identity target
+// (cue export -e legibility_source).
+legibility_source: {
+	for k, v in legibility if k != "receipt" {(k): v}
+}
