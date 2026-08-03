@@ -97,7 +97,7 @@
             "legibility": {
                 "aspect_id": "legibility",
                 "cm_version": "0.2",
-                "profile": "reader-profiles-v1",
+                "profile": "technical-newcomer-human",
                 "repository_commit": "48b9a63",
                 "result_class": "PASS",
                 "status": "COHERENT_WITHIN_DECLARED_SCOPE",
@@ -105,6 +105,7 @@
                     "COHERENT_WITHIN_DECLARED_SCOPE": "PASS",
                     "DEFECTS_FOUND": "DEFECT",
                     "UNDERDETERMINED": "INCOMPLETE",
+                    "INCOMPLETE_OBSERVATION": "INCOMPLETE",
                     "CM_EXECUTION_FAILED": "FAILED"
                 },
                 "scope": "declared reader set",

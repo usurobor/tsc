@@ -501,3 +501,34 @@ Determinism is compiler-checked, not asserted:
   refusal → `INCOMPLETE`; a `CM_EXECUTION_FAILED` refusal → `FAILED`; a **bounded**
   single-check refusal alone → `PASS`. None of the four arms is dead code, and the
   PASS/INCOMPLETE boundary genuinely turns on the refusal's typed `scope`.
+
+## Two-executor agreement (acceptance oracle) + a caught drift
+
+Two fresh, independent executors ran all three CMs **from this package alone**
+(no access to the Markdown source CMs, run receipts, or conversation), each
+deriving `result_class` by evaluating the Result rule / composition precedence
+over the typed fact-sets rather than reading the recorded verdict. Both reproduced
+the prior manual executions and agreed with each other and with the recorded IR:
+
+| cm | derived | recorded | manual baseline |
+|---|---|---|---|
+| structure | DEFECT | DEFECT | DEFECT |
+| legibility | PASS | PASS | PASS |
+| repository-coherence (composite) | DEFECTS_FOUND | DEFECTS_FOUND | DEFECTS_FOUND |
+
+The test earned its keep: both executors independently flagged that the parent's
+**embedded** `child_receipts.legibility` had drifted from the standalone legibility
+leaf IR — `profile: "reader-profiles-v1"` (stale) vs the leaf's
+`technical-newcomer-human`, and a `status_mapping` missing the
+`INCOMPLETE_OBSERVATION` key the leaf carries. Non-gating (legibility still composes
+as `PASS`), but a real inconsistency introduced when the parent example (increment 1)
+hand-authored a placeholder legibility child before the legibility leaf existed
+(increment 3). Synced here to the authoritative leaf values.
+
+**Open refinement (not yet earned):** the parent embeds hand-authored copies of its
+child receipts, which can drift from the leaves. A reference-based parent (composing
+the leaf IRs directly) would make drift structurally impossible; deferred until the
+duplication demonstrably costs more than the coupling would. Likewise the leaf
+`derivation` guard→`#ResultClass` skeleton is now duplicated verbatim across both
+leaf CMs — a candidate to promote to a shared `#LeafDerivation` once a third leaf
+(e.g. CM0) lands.
