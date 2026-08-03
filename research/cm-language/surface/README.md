@@ -1,4 +1,4 @@
-# CM surface language — spike (CM0 leaf · Repository Coherence composite · Legibility aspect leaf)
+# CM surface language — spike (all four CMs: CM0 instrument leaf · Repository Coherence composite · Legibility & Structure aspect leaves)
 
 Issue **#115** (sub of **#114**). Proves the `.cm` → OCaml → normalized-IR loop
 end-to-end on the one clean methodology-only target, **CM0**: a compact ML-shaped
@@ -40,6 +40,8 @@ See *Composite CM* below.
 | `repository_coherence_no_averaging.cm` | Composite negative probe: drops `averaging` from `forbid`. |
 | `legibility.cm` | Repository Legibility (aspect/repository leaf, free-form procedure) in the compact surface. |
 | `legibility_no_measure_only.cm` | Aspect-leaf negative probe: drops `measure_only` from the boundary. |
+| `structure.cm` | Repository Structure (aspect/repository leaf, free-form + `adr_clause` requirements) in the compact surface. |
+| `structure_no_measure_only.cm` | Aspect-leaf negative probe: drops `measure_only` from the boundary. |
 
 ## Build & run
 
@@ -66,8 +68,12 @@ $ dune exec bin/main.exe -- --source cm0.cm   # → full #CMSource (cue export -
 | **Legibility byte-identity** | `diff <(cmc --source legibility.cm) <(cue export ../schema.cue ../examples/legibility/cm.cue --out json -e legibility_source)` | **empty** (CUE-exact). |
 | Legibility oracle | `cue vet <cmc-output ∪ frozen receipt> ../schema.cue -d '#AspectMethodology'` | exit **0** (bare `-d` on the receipt-less projection is incomplete **identically** for `cmc` and `cue export` — same wrinkle as the composite). |
 | Legibility negative probe | `cmc legibility_no_measure_only.cm` | **rejected**, exit **2**. |
+| **Structure byte-identity** | `diff <(cmc --source structure.cm) <(cue export ../schema.cue ../examples/structure/cm.cue --out json -e structure_source)` | **empty** (CUE-exact). |
+| Structure oracle | `cue vet <cmc-output ∪ frozen receipt> ../schema.cue -d '#AspectMethodology'` | exit **0** (bare `-d` on the receipt-less projection incomplete **identically** for `cmc` and `cue export`). |
+| Structure negative probe | `cmc structure_no_measure_only.cm` | **rejected**, exit **2**. |
 | CM0 no-regression | `cmc cm0.cm == compiled/cm0.json`; `cmc --source cm0.cm == cue export -e cm0` | both byte-identical. |
 | Composite no-regression | `cmc --source repository_coherence.cm == cue export -e repository_coherence_source` | byte-identical. |
+| Legibility no-regression | `cmc --source legibility.cm == cue export -e legibility_source` | byte-identical. |
 | **AC4** no semantics reopened | `git diff main -- schema.cue compiled` empty; `examples/` changed only by the additive `repository_coherence_source` expr (full `-e repository_coherence` still byte-identical) | holds. |
 | Negative probe (CM0) | `cmc cm0_no_admit.cm` (and `--source`) | **rejected**, exit **2** (see below). |
 
@@ -224,6 +230,30 @@ legibility_source` itself** (verified). The achievable oracle: the projection
 (`cue vet <cmc-output ∪ receipt> -d '#AspectMethodology'` → **0**). Same
 `#MethodologySource` deferral to #112 slice 2.
 
+### Structure — a second aspect leaf, ~all reuse
+
+`structure.cm` reuses the Legibility aspect-leaf grammar wholesale (profile, statuses,
+`status_mapping` ladder, typed inputs, free-form `step`s, the `decide` result ladder,
+`disowns`, `boundary measure_only note`), compiling **byte-identical** to `structure`
+minus its `receipt`. Two small deltas, both handled additively:
+
+- **`adr_clause` on requirements.** Structure's 15 `STRUCT-*` requirements each trace to
+  a repository-planes ADR clause. Surface: `requirement STRUCT-… "<text>" class <c>
+  severity <s> adr "<clause>"` — an **optional** trailing `adr "…"`. It is emitted
+  between `text` and `class` (CUE field order). Several clauses carry embedded quotes
+  (e.g. `"…\"α/β/γ … never a filing taxonomy\"…"`); the surface escapes them `\"`, and
+  the serializer re-escapes on output — a clean round-trip.
+- **Authored `retired_requirements`.** Structure retires `STRUCT-LIFECYCLE-001`. Surface:
+  `retired STRUCT-LIFECYCLE-001 "<note>"`. Because it is *authored* (not the schema
+  default `[]` that Legibility leaves), CUE's projection comprehension emits it in
+  **source position** (after `requirements`, before `does_not_own`) — whereas
+  Legibility's default `[]` is appended *after* `result_class_definitions`. The emitter
+  reproduces both orderings: authored ⇒ in place; default ⇒ appended last. This is the
+  one place the "instance-authored fields first, schema defaults appended" rule of the
+  projection is visible as an ordering difference between two otherwise-identical leaves.
+
+Same `#AspectMethodology` receipt wrinkle and merged-receipt oracle as Legibility.
+
 ### Overlapping invariant checks (compiler + CUE — #114 AC4)
 
 - **Compiler-enforced:** `forbid` completeness (all five authorities), the `let!`
@@ -272,7 +302,8 @@ The **aspect leaf** carries it too. `legibility_no_measure_only.cm` drops
 measure_only note "…"`) and is rejected at compile time (exit 2): the surface makes
 `boundary measure_only note "…"` structurally mandatory for every aspect leaf
 (RCM-BOUNDARY-001 — a run that edited files while observing them would destroy its own
-evidence). General over the aspect-leaf family, not overfit to Legibility.
+evidence). General over the aspect-leaf family, not overfit to Legibility —
+`structure_no_measure_only.cm` is rejected identically (exit 2).
 
 ## Clarity judgment (AC5): `.cm` vs the CUE source for CM0
 
@@ -351,3 +382,13 @@ methodology-only projection omits, and is where CUE's executable-constraint powe
 most load-bearing. The `.cm` surface authors the *program*; CUE still owns the
 *derivation check*. That is the intended #114 split, now demonstrated across all three
 CM forms (instrument leaf · composite · aspect leaf).
+
+**All four target CMs (#114) now compile from `.cm` byte-identical to their approved
+IR:** CM0 (instrument leaf — normalized IR *and* full `#CMSource`), Repository Coherence
+(composite `#Methodology`), and Legibility + Structure (aspect `#AspectMethodology`
+leaves). Structure is the closing proof that the aspect-leaf grammar generalizes: a
+second, ADR-grounded leaf reuses it wholesale, with only an optional `adr_clause` and an
+authored `retired` requirement as deltas — no new machinery. The judgment holds across
+the set: `.cm` is the clearer authoring surface, CUE remains the IR contract and
+independent oracle, and the source→run separation (the receipt-less `#MethodologySource`
+oracle) is the one clean follow-up, deferred to #112 slice 2.

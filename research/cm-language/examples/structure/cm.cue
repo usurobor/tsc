@@ -455,3 +455,12 @@ structure: #AspectMethodology & {
 		]
 	}
 }
+
+// Methodology-only projection (issue #115 leaf spike): the aspect methodology
+// PROGRAM = structure minus its concrete run (`receipt`). Additive — does NOT
+// touch the `structure` expr above, whose export stays byte-identical to
+// compiled/structure.json. This is the `.cm` leaf byte-identity target
+// (cue export -e structure_source).
+structure_source: {
+	for k, v in structure if k != "receipt" {(k): v}
+}

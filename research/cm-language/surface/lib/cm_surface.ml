@@ -243,7 +243,16 @@ module Ast = struct
   type proc_input = { in_name : string; in_role : string }
   type proc_step = { n : int; action : string; checks : string list }
   type result_clause = { when_ : string; cls : string } (* guard · #ResultClass *)
-  type areq = { arid : string; atext : string; aclass : string; aseverity : string }
+
+  type areq = {
+    arid : string;
+    atext : string;
+    aadr : string option; (* adr_clause — present for Structure, absent for Legibility *)
+    aclass : string;
+    aseverity : string;
+  }
+
+  type retired = { retid : string; retnote : string }
 
   type aspect = {
     a_name : string;
@@ -257,6 +266,7 @@ module Ast = struct
     a_clauses : result_clause list;
     a_otherwise : string;
     a_requirements : areq list;
+    a_retired : retired list; (* authored retired_requirements (Structure); [] ⇒ schema default *)
     a_disowns : string list;
     a_measure_only : bool;
     a_boundary_note : string;
@@ -615,7 +625,7 @@ module Parse = struct
     let statuses = ref [] and status_mapping = ref [] in
     let inputs = ref [] and steps = ref [] in
     let clauses = ref [] and otherwise = ref None in
-    let requirements = ref [] and disowns = ref None in
+    let requirements = ref [] and retired = ref [] and disowns = ref None in
     let measure_only = ref false and boundary_note = ref None in
 
     (* the leaf result rule ladder: `| CLASS when "<cond>"` … then `otherwise C`. *)
@@ -673,7 +683,15 @@ module Parse = struct
           let aclass = atom_or_str st in
           keyword st "severity";
           let aseverity = atom_or_str st in
-          requirements := { Ast.arid; atext; aclass; aseverity } :: !requirements;
+          (* optional trailing `adr "<clause>"` (Structure carries it; Legibility not) *)
+          let aadr = if is_atom st "adr" then (advance st; Some (str st)) else None in
+          requirements := { Ast.arid; atext; aadr; aclass; aseverity } :: !requirements;
+          body ()
+      | ATOM "retired" ->
+          advance st;
+          let retid = atom st in
+          let retnote = str st in
+          retired := { Ast.retid; retnote } :: !retired;
           body ()
       | ATOM "disowns" -> advance st; disowns := Some (str_list st); body ()
       | ATOM "boundary" ->
@@ -700,6 +718,7 @@ module Parse = struct
       a_clauses = !clauses;
       a_otherwise = req "decide" !otherwise;
       a_requirements = List.rev !requirements;
+      a_retired = List.rev !retired;
       a_disowns = req "disowns" !disowns;
       a_measure_only = !measure_only;
       a_boundary_note = req "boundary" !boundary_note;
@@ -995,10 +1014,15 @@ module Lower = struct
       Obj [ ("n", Int s.n); ("action", S s.action); ("checks", Arr (List.map (fun c -> S c) s.checks)) ]
     in
     let clause cl = Obj [ ("when", S cl.when_); ("class", S cl.cls) ] in
+    (* adr_clause, when present, is emitted between `text` and `class`. *)
     let requirement r =
-      Obj [ ("id", S r.arid); ("text", S r.atext); ("class", S r.aclass); ("severity", S r.aseverity) ]
+      Obj
+        ([ ("id", S r.arid); ("text", S r.atext) ]
+        @ (match r.aadr with Some c -> [ ("adr_clause", S c) ] | None -> [])
+        @ [ ("class", S r.aclass); ("severity", S r.aseverity) ])
     in
-    Obj
+    let retired_json = Arr (List.map (fun r -> Obj [ ("id", S r.retid); ("note", S r.retnote) ]) a.a_retired) in
+    let head =
       [
         ("id", S a.a_name);
         ("version", S a.a_version);
@@ -1015,11 +1039,18 @@ module Lower = struct
             ] );
         ("boundary", Obj [ ("measure_only", Bool true); ("note", S a.a_boundary_note) ]);
         ("requirements", Arr (List.map requirement a.a_requirements));
-        ("does_not_own", Arr (List.map (fun s -> S s) a.a_disowns));
-        ("result_class_definitions", result_class_definitions);
-        (* #AspectMethodology default `retired_requirements: [...] | *[]`. *)
-        ("retired_requirements", Arr []);
       ]
+    in
+    let does_not_own = ("does_not_own", Arr (List.map (fun s -> S s) a.a_disowns)) in
+    let rcd = ("result_class_definitions", result_class_definitions) in
+    (* Field order follows CUE's projection comprehension: instance-authored fields
+       in source order, then schema-only defaults appended. When
+       `retired_requirements` is AUTHORED (Structure) it sits in source position
+       (after requirements, before does_not_own); when it is the schema default []
+       (Legibility) it is appended last, after result_class_definitions. *)
+    Obj
+      (if a.a_retired = [] then head @ [ does_not_own; rcd; ("retired_requirements", retired_json) ]
+       else head @ [ ("retired_requirements", retired_json); does_not_own; rcd ])
 end
 
 (* ────────────────────────────────────────────────────────────────────────

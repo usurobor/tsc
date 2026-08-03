@@ -1,0 +1,67 @@
+# Repository Structure Coherence — a LEAF (aspect) CM, v0.2, in the compact
+# ML-shaped .cm surface (issue #115 leaf spike). Like Legibility, a repository
+# aspect leaf with a FREE-FORM procedure (typed inputs, ordered {n, action, checks}
+# steps, a result-rule ladder). Its one delta from Legibility: each STRUCT-*
+# requirement traces to a repository-planes ADR clause (`adr "<clause>"`), and it
+# carries an authored `retired` requirement id.
+#
+#   cmc structure.cm            → the #AspectMethodology projection
+#   cmc --source structure.cm   → same (== cue export -e structure_source)
+# The run/receipt IR is deferred to #112 slice 2; the methodology-only form
+# (structure minus its `receipt`) is the byte-identity target.
+
+cm tsc.repository-coherence.structure v0.2 (repo, policy) -> AspectReceipt {
+
+  question "At a given commit, does every tracked artifact have exactly one clear place, name, owner, lifecycle, and relationship to the rest of the repository — judged against repository-planes, never against the CM's own taste."
+
+  profile "repository-planes-v1.1"
+
+  statuses COHERENT_WITHIN_DECLARED_SCOPE, DEFECTS_FOUND, UNDERDETERMINED, INCOMPLETE_OBSERVATION, CM_EXECUTION_FAILED
+  status_mapping
+    | COHERENT_WITHIN_DECLARED_SCOPE -> PASS
+    | DEFECTS_FOUND                  -> DEFECT
+    | UNDERDETERMINED                -> INCOMPLETE
+    | INCOMPLETE_OBSERVATION         -> INCOMPLETE
+    | CM_EXECUTION_FAILED            -> FAILED
+
+  input repository_snapshot: "the tracked tree at one exact commit (git ls-files)"
+  input policy_snapshot: "repository-planes ADR pinned at a commit (the sole placement/naming/function/lifecycle authority)"
+  input exclusions: "the do-not-touch set (.cdd/ .cn-sigma/ heldout/) + build/agent/infra paths, not content-classified"
+
+  step 1: "Enumerate all tracked paths in scope (git ls-files, minus exclusions)." checks [STRUCT-EXCLUDE-001]
+  step 2: "Classify each path against the policy (plane, canonical home, docs reader-intent taxonomy, ownership, lifecycle)." checks [STRUCT-PLANE-001, STRUCT-RULE-001, STRUCT-CANON-001, STRUCT-NAME-001, STRUCT-DOCSET-001, STRUCT-FUNC-001, STRUCT-OWNER-001, STRUCT-MIXED-001, STRUCT-HISTLABEL-001, STRUCT-DERIVED-001]
+  step 3: "Record violations where policy decides." checks []
+  step 4: "Refuse (UNDERDETERMINED) where policy is silent." checks [STRUCT-REFUSE-001]
+  step 5: "For every move/split/delete candidate, enumerate all live consumers (consumer-search contract)." checks [STRUCT-CONSUMER-001]
+  step 6: "Emit the plane manifest, findings, refusals, and consumer graph." checks []
+
+  decide
+    | FAILED     when "FAILED — derivation.failed_mechanical_checks is non-empty (a required mechanical check could not execute), OR derivation.move_candidates_missing_search is non-empty (some finding has move_candidate==true and consumer_search==null)."
+    | INCOMPLETE when "INCOMPLETE — derivation.heuristic_searches is non-empty (some consumer_search.search_strength is in derivation.incomplete_search_strengths, i.e. 'heuristic'; 'complete' and 'complete_within_bound' both count as COMPLETE), OR every finding has destination_resolved==false (derivation.unresolved_destinations == all findings)."
+    | DEFECT     when "DEFECT — at least one finding establishes a policy violation (findings non-empty; derivation.findings_establishing_defect non-empty)."
+    otherwise PASS
+
+  # The 15 stable STRUCT-* requirements (id · claim · ADR clause · class · severity).
+  requirement STRUCT-PLANE-001 "Every tracked path resolves to exactly one root plane; no path is a peer to the six planes or spans two." class mechanical severity P0 adr "Target planes (root)"
+  requirement STRUCT-RULE-001 "Each path's plane is the one the decision rule selects (bind→spec, run→src, prove→conformance, still change→research, help a person→docs, automate→scripts)." class "mechanical + semantic" severity P0 adr "Decision rule"
+  requirement STRUCT-CANON-001 "Every artifact the ADR program-maps give a canonical home sits at that home." class mechanical severity P0 adr "Program maps"
+  requirement STRUCT-NAME-001 "Documentation is filed by reader intent; the α/β/γ role grammar is never used as a filing taxonomy." class "mechanical + semantic" severity P1 adr "Docs reader-intent taxonomy (\"α/β/γ … never a filing taxonomy\")"
+  requirement STRUCT-DOCSET-001 "The eight reader-intent folders are the exhaustive set of docs/ subfolders; a docs/ subfolder outside them is a defect to rehome." class "mechanical + semantic" severity P1 adr "Amendments (v1.1) §1"
+  requirement STRUCT-FUNC-001 "No plane is a single-occupant or premature catch-all standing in for a real home." class semantic severity P1 adr "Iteration 3 (\"…not a single-occupant config/ plane\")"
+  requirement STRUCT-OWNER-001 "Each artifact has one authoritative home; no duplicate live copies." class mechanical severity P0 adr "Decision (organize by plane) + Program maps"
+  requirement STRUCT-CONSUMER-001 "Each move/split/delete finding enumerates the artifact's live consumers via the consumer-search contract — surfaces searched, search strength, consumer set, digest, unsearched surfaces; a relocation that breaks a consumer without rehoming its reference is not coherent." class "mechanical + semantic" severity P0 adr "Invariants any move commit must preserve (\"targets resolve; conformance validator exits 0 …; no document's meaning changes\")"
+  requirement STRUCT-MIXED-001 "No live directory mixes live-mutable content with frozen, snapshot, or archived content." class "mechanical + semantic" severity P0 adr "Migration state (frozen snapshots preserved intact)"
+  requirement STRUCT-HISTLABEL-001 "Historical/archived/frozen material retained on the live tree carries a lifecycle label (banner or marker)." class "mechanical + semantic" severity P1 adr "Amendments (v1.1) §3"
+  requirement STRUCT-DERIVED-001 "Derived/generated output is distinguishable from hand-authored source (excluded build dir, generated marker, or clearly-derived path)." class "mechanical + semantic" severity P1 adr "Amendments (v1.1) §2 + Invariants (render byte-identity)"
+  requirement STRUCT-EXCLUDE-001 "The do-not-touch set (.cdd/, .cn-sigma/, heldout/) is excluded from content classification, never flagged as misplaced content." class mechanical severity P0 adr "Do NOT touch"
+  requirement STRUCT-REFUSE-001 "When the ADR does not decide a path's home, the CM returns UNDERDETERMINED for that path and does not assign a plane." class process severity P0 adr "Deferred — foundation bundle"
+  requirement STRUCT-REPAIR-001 "A repair run changes only findings in scope and preserves meaning; a move commit changes no document's meaning (evidence-boundary rule)." class process severity P0 adr "Invariants (\"No meaning change, not no edits\")"
+  requirement STRUCT-REVIEW-001 "A COHERENT_WITHIN_DECLARED_SCOPE claim requires an independent full-scope review, separate from the repair actor." class process severity P0 adr "Parent RCM-BOUNDARY-001"
+
+  # STRUCT-LIFECYCLE-001 was retired at v0.1 (ids are permanent, never reused).
+  retired STRUCT-LIFECYCLE-001 "Retired at v0.1; never reused. Its dimensions returned under fresh ids STRUCT-DERIVED-001 (v1.1 §2) and STRUCT-HISTLABEL-001 (v1.1 §3); cross-plane name-predictiveness remains declined."
+
+  disowns "policy (the ADR is the sole authority on placement, naming, function, lifecycle)", "repair (moves, renames, deletes)", "independent review closure"
+
+  boundary measure_only note "The CM observes, classifies, and emits findings; it moves, renames, and deletes nothing. Measure → freeze the receipt → repair on a later commit → re-run → independent full-scope review closes (STRUCT-REPAIR-001, STRUCT-REVIEW-001, parent RCM-BOUNDARY-001)."
+}
