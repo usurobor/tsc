@@ -56,6 +56,10 @@ The pipeline is straight-line, stdlib-only, no provider runtime:
 <file.cm>` emits the IR, `cmc --source <file.cm>` emits the full `#CMSource`;
 validation is `cue vet … -d '#NormalizedCMIR'` / `-d '#CMSource'`. The intended
 unified frontend is **`coh cm`** (#114) — **FUTURE**; today it is `cmc` + `cue`.
+Until `coh cm` lands there is no installed `cmc` binary: from
+`research/cm-language/surface/`, `cmc` **is** `dune build` (once) then `dune exec
+bin/main.exe --` (e.g. `dune exec bin/main.exe -- cm0.cm`, `dune exec
+bin/main.exe -- --source cm0.cm`). Read `cmc <args>` below as that invocation.
 
 ---
 
@@ -73,17 +77,23 @@ cm <name> v<ver> ( <params> ) -> <ReceiptType> { … }
 - `<params>` is a comma-separated list of `name` or `name: Type`.
 - `<ReceiptType>` selects the form:
 
-| Output type | Form | Projection type | Example |
+| Output type | Form | Projection type (`cue vet -d`) | Example |
 |---|---|---|---|
 | `-> InstrumentAssessment` | **leaf** (reflective / instrument) | `#NormalizedCMIR` + `#CMSource` | `cm0.cm` |
-| `-> AspectReceipt` | **leaf** (aspect / repository) | `#AspectMethodology` | `legibility.cm`, `structure.cm` |
-| `-> CompositeReceipt` | **composite** (parent) | `#Methodology` | `repository_coherence.cm` |
+| `-> AspectReceipt` | **leaf** (aspect / repository) | `#AspectMethodologySource` | `legibility.cm`, `structure.cm` |
+| `-> CompositeReceipt` | **composite** (parent) | `#MethodologySource` | `repository_coherence.cm` |
 
 Any other output type is a compile error. The leaf `InstrumentAssessment` form is
 the only one that has two distinct byte-exact projections (IR *and* full source);
 the aspect leaf and composite each have **one** methodology-only projection today
 — both `cmc` and `cmc --source` emit it, because their run/receipt IR is
 **FUTURE** (#112 slice 2).
+
+The `-d` target above is the **methodology-only** contract: an aspect projection
+vets against `#AspectMethodologySource`, a composite against `#MethodologySource`
+(§8). These are the full `#AspectMethodology` / `#Methodology` with the concrete
+`receipt` made optional — the full definitions expect a `receipt`, which a run
+binds (`#112` slice 2, **FUTURE**).
 
 ---
 
@@ -339,16 +349,34 @@ Each has a matching negative probe (`*_no_*.cm`) that drops a load-bearing
 
 ## 8. Honest limits (not papered over)
 
-- **The methodology-only vet wrinkle.** `#Methodology` and `#AspectMethodology`
-  both **mandate a concrete `receipt`**, which the methodology-only projection
-  omits. So `cue vet <projection> -d '#Methodology'` (or `-d
-  '#AspectMethodology'`) reports the receipt fields incomplete — **identically for
-  `cmc`'s output and for `cue export … -e <name>_source` itself**. This is a
-  property of *projection vs. the full contract*, not an emitter defect. The
-  achievable oracle is `projection ∪ frozen receipt → 0` (the projection unified
-  with the receipt validates as a complete methodology missing only its run). A
-  clean `#MethodologySource` definition (methodology-without-receipt) is the direct
-  fix — **FUTURE**, #112 slice 2.
+- **Methodology-only projections vet directly.** The `.cm` surface emits a
+  methodology-only projection (the authored program — no run, no receipt). It vets
+  against the methodology-source contract with a single command:
+
+  ```
+  cue vet <projection> schema.cue -d '#MethodologySource'        # composite
+  cue vet <projection> schema.cue -d '#AspectMethodologySource'  # aspect leaf
+  ```
+
+  → exit **0**, for both `cmc`'s output and `cue export … -e <name>_source`. Worked:
+
+  ```
+  cue export schema.cue examples/repository-coherence/cm.cue --out json \
+    -e repository_coherence_source -o rc.json
+  cue vet rc.json schema.cue -d '#MethodologySource'                       # 0
+  cue export schema.cue examples/legibility/cm.cue --out json \
+    -e legibility_source -o leg.json
+  cue vet leg.json schema.cue -d '#AspectMethodologySource'                # 0
+  ```
+
+  `#MethodologySource` / `#AspectMethodologySource` (`schema.cue`) are the full
+  `#Methodology` / `#AspectMethodology` with the concrete `receipt` made
+  **optional** — the *authored-program* contract. They are standalone, closed, and
+  bite: a stray top-level key or a `status_mapping` value outside the four
+  `#ResultClass`es is still rejected. The full `#Methodology` / `#AspectMethodology`
+  (with a concrete `receipt`) is the **composed/run** contract, satisfied only once
+  a measurement run binds a receipt — the full `#RunRequest` / `#MeasurementReceipt`
+  separation is still **FUTURE**, #112 slice 2.
 - **No runtime.** Today's `.cm` *names* providers (`via tool ir_contract_checker
   @sha256:ic0`) but **nothing executes them** — the front-end does IR/source
   emission only. Typed provider/property **libraries** and the interpreter are

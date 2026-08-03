@@ -690,3 +690,114 @@ package cm
 	// with; still no runtime bindings (those are #CompiledCM's, deferred).
 	permissions?: {...}
 })
+
+// ───────────────────────────────────────────────────────────────────────────
+// METHODOLOGY-SOURCE CONTRACTS (#112 slice 2 — minimal kernel)
+//
+// #Methodology and #AspectMethodology each mandate a CONCRETE `receipt` — the
+// composed/run contract, satisfied only AFTER a measurement run produces a
+// receipt. But the `.cm` surface today emits a methodology-ONLY projection (the
+// authored program, no run, no receipt). Vetting that projection against the full
+// #Methodology / #AspectMethodology therefore reports the receipt fields
+// incomplete — not an emitter defect, just projection-vs-composed-contract.
+//
+// #MethodologySource / #AspectMethodologySource are the DIRECT contract for that
+// methodology-only projection: the SAME load-bearing fields, with `receipt` made
+// OPTIONAL so a projection that omits it vets directly (`cue vet <projection>
+// schema.cue -d '#MethodologySource'` → 0). They are STANDALONE ADDITIVE
+// definitions — never exported, so they touch no `compiled/*.json` byte — and they
+// are DELIBERATELY NOT built by embedding/refactoring #Methodology /
+// #AspectMethodology, because embedding a shared base reorders those structs'
+// exported fields and breaks the four IRs' byte-identity (finding G4). They mirror
+// the composed contracts field-for-field and stay CLOSED, so a typo'd or stray
+// field is still rejected — the constraint bites, it is not a bare `{...}` escape.
+//
+// This is the KERNEL of slice 2 only: it does NOT introduce the full
+// #RunRequest / #MeasurementReceipt separation (still FUTURE, #112). The full
+// #Methodology / #AspectMethodology remain the composed/run contract, satisfied
+// once a run binds a concrete receipt.
+
+// #MethodologySource — the composite (parent) methodology-only projection: every
+// #Methodology field, with `receipt` OPTIONAL. Closed: the composite projection
+// carries exactly these fields (minus its absent, run-only receipt).
+#MethodologySource: {
+	id:       string
+	version:  string
+	question: string
+
+	// Typed input signature (mirrors #Methodology).
+	input: {
+		repository_snapshot: string | *"repository_snapshot"
+		selected_aspects:    string | *"selected_aspects"
+	}
+
+	// Children: map of name -> source ref.
+	children: {[string]: #AspectSource}
+
+	invariants: #Invariants
+
+	// The generic composition interface's definitions, carried once.
+	result_class_definitions: #ResultClassDefinitions
+
+	// Deterministic derivation as DATA.
+	result: #ResultComposition
+
+	// Parent α / β / γ.
+	manifestation:         #Manifestation
+	atlas:                 #Atlas
+	continuation_baseline: string | *"BASELINE — no prior composite receipt"
+
+	boundary: #Boundary
+
+	// The composed/run output receipt — OPTIONAL here (a methodology-only
+	// projection omits it; a run binds it, satisfying the full #Methodology).
+	receipt?: #CompositeReceipt
+
+	// Reference to the stable RCM-* requirement set.
+	requirements: [...#Requirement]
+
+	// What the parent explicitly does not own.
+	does_not_own: [...string]
+}
+
+// #AspectMethodologySource — the aspect (leaf) methodology-only projection: every
+// #AspectMethodology field, with `receipt` (and the top-level `aspect_id`, which
+// the frozen aspects carry on the receipt, not here) OPTIONAL. Closed: the aspect
+// projection carries exactly these fields (minus its absent, run-only receipt).
+#AspectMethodologySource: {
+	// Aspect target: a git repository (hidden, mirrors #AspectMethodology's
+	// finding-G2 field; never exported, never required of the projection JSON).
+	_target_contract: #TargetContract & {kind: "git_repository"}
+
+	id:         string
+	version:    string
+	question:   string // governing claim
+	aspect_id?: string
+	profile:    string
+
+	// The leaf's own closed status vocabulary and its status -> result_class mapping.
+	statuses: [...string]
+	status_mapping: {[string]: #ResultClass}
+
+	// The generic composition interface's definitions, carried once.
+	result_class_definitions: #ResultClassDefinitions
+
+	// The executable procedure + result rule (DATA).
+	procedure: #Procedure
+
+	// Measure-only boundary.
+	boundary: #Boundary
+
+	// The stable requirement set this leaf checks.
+	requirements: [...#Requirement]
+
+	// Permanently retired requirement ids, if any.
+	retired_requirements: [...#RetiredRequirement] | *[]
+
+	// The composed/run child receipt — OPTIONAL here (a methodology-only
+	// projection omits it; a run binds it, satisfying the full #AspectMethodology).
+	receipt?: #ChildReceiptEnvelope
+
+	// What the leaf explicitly does not own.
+	does_not_own: [...string] | *[]
+}
