@@ -7,6 +7,7 @@ This tree is organized by **reader intent**: each document answers one human nee
 | I want to… | Go to |
 |---|---|
 | Understand the idea in plain language | [`THESIS.md`](THESIS.md) |
+| Know what TSC *is*, where it's going, and its current state | [`product/`](product/) — [`NORTH-STAR.md`](product/NORTH-STAR.md) · [`DIRECTION.md`](product/DIRECTION.md) · [`ADOPTION.md`](product/ADOPTION.md) · [`STATE.md`](product/STATE.md) |
 | Try the current CLI | [`quickstart/README.md`](quickstart/README.md) |
 | Read the specification | [`../spec/README.md`](../spec/README.md) |
 | Follow the current research program | [`../research/ascent/README.md`](../research/ascent/README.md) |

@@ -6,18 +6,19 @@ the model: the existing Markdown CMs under `research/repository-coherence/`
 remain the source of truth and the human/explanatory layer, and are not edited
 here.
 
-> **Why does this exist?** [`NORTH-STAR.md`](NORTH-STAR.md) governs — TSC is a
-> system for **generative reasoning with proof-carrying receipts** (recover a
-> higher-order generator from opposed articulations; warrant or refuse it). The
-> repository-coherence work below is the **first application and self-hosting
-> calibration**, not the identity.
+> **Why does this exist?** [`docs/product/NORTH-STAR.md`](../../docs/product/NORTH-STAR.md)
+> governs — TSC is a system for **generative reasoning with proof-carrying
+> receipts** (recover a higher-order generator from opposed articulations; warrant
+> or refuse it). The repository-coherence work below is the **first application and
+> self-hosting calibration**, not the identity.
 >
-> **Where is this going?** See [`DIRECTION.md`](DIRECTION.md) — the product
-> direction: the layered architecture, frozen principles, what is proven today,
-> and the roadmap (the coherent whole that the CM-language issues are slices of).
-> Its companion [`ADOPTION.md`](ADOPTION.md) is the go-to-market direction — who
-> adopts, what to ship first (a built-in Repository Coherence CM + a GitHub
-> Action, not the language), how to frame and prove it.
+> **Where is this going?** The TSC-wide product notes live in
+> [`docs/product/`](../../docs/product/): [`DIRECTION.md`](../../docs/product/DIRECTION.md)
+> (technical/product direction), [`ADOPTION.md`](../../docs/product/ADOPTION.md)
+> (go-to-market), [`STATE.md`](../../docs/product/STATE.md) (current state), and the
+> [`case-studies/`](../../docs/product/case-studies/). This package (`research/cm-language/`)
+> holds the cm-language artifacts themselves — `schema.cue`, `examples/`,
+> `surface/`, and [`LANGUAGE.md`](LANGUAGE.md).
 
 ## Architecture
 
