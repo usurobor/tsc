@@ -1,0 +1,64 @@
+# Repository Licensing Coherence — a LEAF (aspect) CM, v0.1, in the compact
+# ML-shaped .cm surface. The FIFTH worked CM, authored from LANGUAGE.md + the four
+# curriculum sources alone. It is a repository aspect leaf (like Legibility and
+# Structure): a FREE-FORM procedure (typed inputs, ordered {n, action, checks}
+# steps, a result-rule ladder) that measures whether a git repository declares its
+# licensing unambiguously, and emits an aspect receipt. Genuinely distinct subject
+# from the four: not reader-legibility, not tree-structure — legal legibility.
+# Here we author the methodology PROGRAM only (run/receipt IR is FUTURE, #112 s2).
+#
+#   cmc fifth.cm            → the #AspectMethodology projection
+#   cmc --source fifth.cm   → same methodology-only projection
+
+cm tsc.repository-coherence.licensing v0.1 (repo, policy) -> AspectReceipt {
+
+  question "At a given commit, does the repository declare its licensing unambiguously — exactly one authoritative root grant, consistent wherever licensing is stated (LICENSE file, package manifest, per-file SPDX headers), with no missing, contradictory, or unreconciled third-party terms?"
+
+  profile "distributor-or-integrator-human"
+
+  # The leaf's own five-value status vocabulary and its declared mapping onto the
+  # generic four-value result_class interface.
+  statuses LICENSE_CLEAR, LICENSE_CONFLICT, LICENSE_UNDECLARED, LICENSE_UNDERDETERMINED, CM_EXECUTION_FAILED
+  status_mapping
+    | LICENSE_CLEAR          -> PASS
+    | LICENSE_CONFLICT       -> DEFECT
+    | LICENSE_UNDECLARED     -> DEFECT
+    | LICENSE_UNDERDETERMINED -> INCOMPLETE
+    | CM_EXECUTION_FAILED    -> FAILED
+
+  # Typed procedure inputs (what a fresh executor supplies).
+  input repository_snapshot: "the tracked tree at one exact commit (git ls-files)"
+  input license_surfaces: "the declared places a license may appear: root LICENSE/COPYING, the package manifest license field, per-file SPDX headers, and any NOTICE / THIRD-PARTY file"
+
+  # Ordered, free-form procedure steps: each numbered step names an action and the
+  # LIC-* requirement ids it enforces.
+  step 1: "Enumerate every license-bearing surface present in scope (root LICENSE/COPYING, manifest license field, SPDX headers, NOTICE/THIRD-PARTY)." checks [LIC-PRESENT-001]
+  step 2: "Identify the single authoritative root grant (LICENSE or COPYING at the repository root); its absence, or more than one competing root grant, is a defect." checks [LIC-PRESENT-001, LIC-ROOT-001]
+  step 3: "Cross-check every secondary declaration (manifest license field, per-file SPDX identifiers) against the root grant; a declaration that names a different license is a conflict." checks [LIC-CONSISTENT-001, LIC-SPDX-001]
+  step 4: "Reconcile bundled third-party code: each vendored artifact records its own terms, and those terms are compatible with the root grant." checks [LIC-THIRDPARTY-001]
+  step 5: "Where no declared surface determines an in-scope file's license, record LICENSE_UNDERDETERMINED for that file and assert no grant (never guess a license)." checks [LIC-REFUSE-001]
+  step 6: "Emit the license manifest, established conflicts, unreconciled third-party terms, refusals, and the categorical status + result_class via the Result rule." checks []
+
+  # The result rule as data: clauses highest-precedence first (FAILED > INCOMPLETE >
+  # DEFECT), else PASS. Each `when` names the typed IR fields an executor evaluates.
+  decide
+    | FAILED     when "FAILED — derivation.execution_failed_refusals is non-empty (a required mechanical check, e.g. the license-surface scan, could not run at all; a refusal of kind CM_EXECUTION_FAILED)."
+    | INCOMPLETE when "INCOMPLETE — derivation.underdetermined_files is non-empty (some in-scope file's license could not be determined from any declared surface) and no conflict was established."
+    | DEFECT     when "DEFECT — a confirmed in-scope defect: derivation.license_conflicts is non-empty (a secondary declaration contradicts the root grant, or a bundled term is incompatible), OR derivation.missing_root_grant is true (no single authoritative root license), OR derivation.failed_requirement_checks is non-empty (some LIC-* check verdict is FAIL)."
+    otherwise PASS
+
+  # The 7 stable LIC-* requirements (id · claim · class · severity).
+  requirement LIC-PRESENT-001 "At least one license-bearing surface is present in the tracked tree." class mechanical severity P0
+  requirement LIC-ROOT-001 "Exactly one authoritative license grant lives at the repository root (LICENSE or COPYING)." class mechanical severity P0
+  requirement LIC-CONSISTENT-001 "Every secondary license declaration names the same license as the root grant; none contradicts it." class "mechanical + semantic" severity P0
+  requirement LIC-SPDX-001 "Every per-file SPDX identifier resolves to a known license and matches that file's actual grant." class mechanical severity P1
+  requirement LIC-THIRDPARTY-001 "Every bundled third-party artifact records its own terms, compatible with the root grant." class "mechanical + semantic" severity P1
+  requirement LIC-REFUSE-001 "When no declared surface determines a file's license, the CM returns LICENSE_UNDERDETERMINED for that file and asserts no grant." class process severity P0
+  requirement LIC-REVIEW-001 "A LICENSE_CLEAR claim requires an independent full-scope review, separate from any actor who edited license files." class process severity P0
+
+  disowns "repair (adding, editing, or relicensing files)", "adjudicating license compatibility or enforceability (records terms; gives no legal advice)", "independent review closure"
+
+  # Measure-only boundary (structurally mandatory): the CM reads and cross-checks
+  # license surfaces and emits conflicts with warrant; it changes no files.
+  boundary measure_only note "The CM reads license surfaces, cross-checks declarations, and emits conflicts and refusals with warrant; it adds, edits, or relicenses no files. Measure commit A → freeze the receipt → repair on commit B → re-run → compare A and B → an independent reviewer closes (LIC-REVIEW-001, parent RCM-BOUNDARY-001). A single invocation that edited license files while observing them would destroy its own evidence."
+}
