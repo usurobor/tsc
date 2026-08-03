@@ -49,12 +49,16 @@ children themselves are **not** encoded yet (designed for, not delivered).
 Coherence CM (`research/repository-coherence/structure/CM.md`, v0.2) — a **leaf**
 CM. Increment 1's `#Methodology` is *composite* (children + `#ResultComposition`);
 a leaf has no children and derives its `result_class` from a **Result rule** over
-its own procedure output. That required two minimal, justified schema extensions
-(below): a `#AspectMethodology` leaf shape (with `#Procedure` / `#ResultRule`),
-and opening `#ChildReceiptEnvelope` for aspect-specific typed fields. The
-concrete instance is run 0002 (`DEFECTS_FOUND → DEFECT` @ `48b9a63`); its
-mapping self-unification is accepted, and an inconsistent `result_class` is
-rejected by `cue vet`. The parent's IR is byte-identical after the change.
+its own procedure output. That required justified schema extensions (below): a
+`#AspectMethodology` leaf shape (with `#Procedure` / `#ResultRule`), a
+**corralled-open** `#ChildReceiptEnvelope` (closed shared fields + one
+`aspect_ext` region), and optional `adr_clause` / `class` / `severity` on
+`#Requirement`. The Result rule is grounded in typed per-finding fields and its
+verdict is **computed by CUE**: the concrete instance is run 0002
+(`DEFECTS_FOUND → DEFECT` @ `48b9a63`), `derived_result_class` is unified with
+`result_class`, an inconsistent `result_class` and a typo'd top-level field are
+both rejected by `cue vet`, and the parent's IR is byte-identical after the
+change. (This reflects the post-review state; see the four fixes below.)
 
 ## How to compile
 
@@ -148,8 +152,11 @@ intended and neither a loss:
 against the schema. A leaf runs a **procedure** and derives its `result_class`
 from a **Result rule** over that procedure's output; it composes no children.
 The increment-1 composite model could not express this, so the schema was
-extended twice — each extension is a recorded finding (a construct is earned
-only when a real CM needs it).
+extended — each extension is a recorded finding (a construct is earned only when
+a real CM needs it). This section reflects the post-review (β REVISE) state:
+Fix 1 (determinism — the Result rule is grounded in typed IR fields and the
+verdict is CUE-computed), Fix 2 (S2 corralled-open), Fix 3 (profile v1.1), Fix 4
+(requirement `class`/`severity` carried).
 
 ### Schema extensions (each with its justification)
 
@@ -170,29 +177,41 @@ precedence, but guards over procedure output instead of a precedence over
 children. The leaf still emits a `#ChildReceiptEnvelope`, so it plugs into the
 parent composition unchanged.
 
-**S2 — opened `#ChildReceiptEnvelope` for aspect-specific typed fields.**
+**S2 — corralled-open `#ChildReceiptEnvelope` (revised after review).**
 *A leaf receipt cannot be expressed by the increment-1 envelope because* Structure
 carries typed fields beyond the shared ten — `plane_classification`,
-`canonical_path_map`, `policy_authority`, and per-finding `repairability` +
-`consumer_search` — and `#ChildReceiptEnvelope` was a **closed** definition that
-rejects any field not declared on it. *Added* a single `...` opening the envelope
-so each aspect unifies its own typed extensions onto it (`#StructureReceipt =
-#ChildReceiptEnvelope & {…}` in the leaf package, where the leaf-private types
-`#Repairability`, `#ConsumerSearch`, `#StructureFinding`, `#StructureRefusal`
-live — they are not part of the generic model). The generic-vs-aspect-private
-boundary is now preserved by *which fields the parent reads* (only
-`result_class` / `status` / `status_mapping`), not by closedness. The parent
-instance adds no extra fields, so its exported IR is byte-identical (verified).
+`canonical_path_map`, `policy_authority`, a computed `derivation`, and per-finding
+`repairability` / `consumer_search` / `move_candidate` / `destination_resolved` —
+and `#ChildReceiptEnvelope` was a **closed** definition that rejects any field not
+declared on it. The first attempt opened the whole envelope with a bare `...`;
+**β proved that voided ALL field-name validation** on the shared, load-bearing
+interface (a receipt with a typo'd `result_clas` and a `totally_bogus` field
+passed `cue vet`). The genuinely minimal fix keeps the shared ten fields
+**closed** and adds **one** designated open sub-region, `aspect_ext?: {...}`,
+where aspects hang their typed extensions (per-finding extras ride the
+already-open `findings` list). `#StructureReceipt = #ChildReceiptEnvelope &
+{ aspect_ext: {…}, findings: [...#StructureFinding], … }`; the leaf-private types
+(`#Repairability`, `#ConsumerSearch`, `#StructureFinding`, `#StructureRefusal`)
+live in the leaf package, not the generic model. Now a typo'd top-level field is
+**rejected** by `cue vet` (verified) while the structure receipt still vets, and
+the parent — which sets no `aspect_ext` — exports a byte-identical IR (verified).
 
-**S3 — optional `adr_clause?` on `#Requirement` (minor, parent-safe).**
-Leaf requirements each trace to a clause of their governing policy (the ADR);
-the composite's `RCM-*` requirements do not. *Added* an **optional** `adr_clause?`
-field; the parent omits it, so it is absent from the parent IR and the parent
-still vets. (A `#RetiredRequirement` type was also added to carry the retired-id
-note as data.)
+**S3 — optional `adr_clause?`, `class?`, `severity?` on `#Requirement`
+(parent-safe).** Leaf requirements each trace to a policy (ADR) clause, carry a
+checking `class` (mechanical / semantic / process), and a `severity`; the
+composite's `RCM-*` requirements carry none of these. *Added* all three as
+**optional** fields. `class` is load-bearing, not cosmetic (Fix 4): the Result
+rule's FAILED clause references "a required **mechanical** check", so which
+requirements are mechanical must be in the IR — `derivation.mechanical_requirements`
+is computed from it. The parent omits all three, so they are absent from the
+parent IR and the parent still vets byte-identically. (A `#RetiredRequirement`
+type was also added to carry the retired-id note as data.)
 
 Nothing else in `schema.cue` changed. The composite `#Methodology` and every
-increment-1 construct are untouched.
+increment-1 construct are untouched. `#ResultRule` / `#Procedure` /
+`#AspectMethodology` (S1) are unchanged from the first submission — β accepted the
+leaf shape; the revisions live in the leaf encoding (typed finding fields + a
+CUE-computed `derivation`) and the two small schema tweaks above.
 
 ### Lossless-comparison — Structure CM.md (v0.2) → CUE field
 
@@ -200,43 +219,59 @@ increment-1 construct are untouched.
 |---|---|
 | Title / `cm_version: 0.2` | `id: "tsc.repository-coherence.structure"` / `version: "0.2"` |
 | Governing claim | `question` |
-| Profile / policy authority (`repository-planes`) | `profile: "repository-planes-v1.2"` (see version-skew note) |
+| Profile / policy authority (`repository-planes` **v1.1**) | `profile: "repository-planes-v1.1"` (matches CM.md/requirements/fixtures/run 0002; see S5) |
 | Executable core — `Inputs: repository snapshot · policy snapshot · exclusions` | `procedure.inputs: [...#ProcedureInput]` (3 typed inputs) |
 | Executable core — the 6 numbered steps | `procedure.steps: [...#ProcedureStep]` (`n` · `action` · `checks`→STRUCT-* ids) |
-| Result rule (FAILED / INCOMPLETE / DEFECT / PASS conditions) | `procedure.result: #ResultRule` — 3 ordered `clauses` + `otherwise: "PASS"`, executable as data |
+| Result rule (FAILED / INCOMPLETE / DEFECT / PASS conditions) | `procedure.result: #ResultRule` — 3 ordered `clauses` (each `when` names the typed `derivation.*` fields) + `otherwise: "PASS"`; the verdict is CUE-computed in `receipt.aspect_ext.derivation` |
 | Status vocabulary (5 values) + status→result_class mapping | `statuses: [...]` + `status_mapping: {…}` (`DEFECTS_FOUND→DEFECT`, `COHERENT_WITHIN_DECLARED_SCOPE→PASS`, `UNDERDETERMINED→INCOMPLETE`, `INCOMPLETE_OBSERVATION→INCOMPLETE`, `CM_EXECUTION_FAILED→FAILED`) |
 | The four `result_class` definitions | `result_class_definitions: #ResultClassDefinitions` (carried once) |
-| 15 `STRUCT-*` requirements (id · claim · ADR clause) | `requirements: [...#Requirement]` (all 15, `id`+`text`+`adr_clause`) |
+| 15 `STRUCT-*` requirements (id · claim · ADR clause · **class** · **severity**) | `requirements: [...#Requirement]` (all 15, `id`+`text`+`adr_clause`+`class`+`severity`) |
+| Requirement **class** (mechanical / semantic / process) + severity (requirements.md) | `#Requirement.class?` / `.severity?` (Fix 4; `class` feeds `derivation.mechanical_requirements`) |
 | Retired `STRUCT-LIFECYCLE-001` note | `retired_requirements: [{id, note}]` |
 | Generic child receipt envelope, `aspect_id: structure` | `receipt: #StructureReceipt` (= `#ChildReceiptEnvelope & …`), `aspect_id: "structure"` |
-| Envelope additions `+ plane_classification` / `+ canonical_path_map` / `+ policy_authority` | `receipt.plane_classification` / `.canonical_path_map` / `.policy_authority` (S2) |
-| Consumer-search contract (surfaces · strength · consumers · digest · unsearched) | `#ConsumerSearch` (per-finding `consumer_search`) |
+| Envelope additions `+ plane_classification` / `+ canonical_path_map` / `+ policy_authority` | `receipt.aspect_ext.plane_classification` / `.canonical_path_map` / `.policy_authority` (S2 corralled) |
+| Consumer-search contract (surfaces · strength · consumers · digest · unsearched) | `#ConsumerSearch` (per-finding `consumer_search`, or `null`) |
 | Typed repairability `MECHANICAL \| POLICY_REQUIRED \| DEFERRED` | `#Repairability` (per-finding `repairability`) |
-| Findings F3–F12 (run 0002), each id · requirement · claim · repairability · evidence (+ consumer_search on F4/F7/F8/F9/F10/F11/F12) | `receipt.findings: [...#StructureFinding]` |
+| Move/split/delete finding MUST carry a consumer graph (else not repair-ready) | per-finding `move_candidate: bool` + `consumer_search: #ConsumerSearch \| null`; the FAILED arm detects `move_candidate ∧ consumer_search==null` (Fix 1) |
+| Repairability typing implies whether policy decides the destination | per-finding `destination_resolved: bool` = `repairability != "POLICY_REQUIRED"` (drives the INCOMPLETE "every destination unresolved" arm) |
+| Result-rule verdict for run 0002 (the Overall §) | `receipt.aspect_ext.derivation` — CUE-computed guard sets + booleans + `derived_result_class`, unified with `result_class` |
+| Findings F3–F12 (run 0002), each id · requirement · claim · repairability · evidence · move_candidate (+ consumer_search on F4/F7/F8/F9–F12) | `receipt.findings: [...#StructureFinding]` |
 | Refusal R1 (`STRUCT-REFUSE-001`, destination operator-open) | `receipt.refusals: [...#StructureRefusal]` |
-| Overall `status DEFECTS_FOUND → result_class DEFECT @ 48b9a63` | `receipt.status` / `.result_class` / `.repository_commit`, mapping self-unified |
+| Overall `status DEFECTS_FOUND → result_class DEFECT @ 48b9a63` | `receipt.status` / `.result_class` (= `derivation.derived_result_class`) / `.repository_commit`, mapping self-unified |
 | Measure-only boundary (`STRUCT-REPAIR/REVIEW-001`, parent `RCM-BOUNDARY-001`) | `boundary: #Boundary` |
 | "defers to the ADR; authors no policy of its own" | `does_not_own: ["policy…", "repair…", "independent review closure"]` |
 
-### Capture gap + one deliberate deviation
+### S5 — profile v1.1 is a scope boundary, not a version skew (Fix 3)
 
-- **Version skew (deliberate, documented).** The CM's `profile` is encoded as
-  `repository-planes-v1.2` — the policy authority now on `main` (commit `2cb2932`
-  ratified v1.2). `structure/CM.md`, `requirements.md`, and `fixtures/` still read
-  v1.1 because those Markdown files are the source of truth and are **not edited**
-  here. The frozen run-0002 receipt is encoded **verbatim** at `profile:
-  repository-planes-v1.1` / `policy_authority … @ 48b9a63 (v1.1)` — it is an
-  immutable historical receipt and records the version it actually executed
-  under. So the CM tracks current policy while its frozen run keeps its own
-  version. This is the sole place the CUE encoding does not copy CM.md's literal
-  text, and it is intentional per the increment-2 brief.
-- **No other loss.** Every load-bearing element of the leaf CM (inputs, the six
-  steps, the Result rule, the 15 requirements, the receipt envelope + Structure
-  extensions, the consumer-search contract, typed repairability, the refusal) is
-  a typed CUE field. As with the parent, the Result rule's control flow (walk
-  clauses top-down; first guard true) is carried as data + a doc comment on
-  `#ResultRule`; executing it is the interpreter layer's job, and the DATA is
-  complete.
+The first submission labelled the CM `profile: repository-planes-v1.2` (the policy
+now on `main`) while its body was v1.1. **β showed that is a contradiction, not a
+cosmetic label:** ADR v1.2 §3 is substantive — it closes R1 (decides the
+foundation-bundle destination) and makes F3–F8 mechanical. But this CM's *body* is
+v1.1: every requirement `adr_clause` cites "(v1.1) §1/§2/§3", `STRUCT-REFUSE-001`
+is still open, and the R1 refusal is live. A v1.2 label on a v1.1 body is a
+receipt an executor would trip on.
+
+This increment is a **faithful, lossless encoding of Structure CM v0.2 as it
+exists** (v1.1-bodied). Reconciling the CM to v1.2 — closing R1, reclassifying
+F3–F8 as mechanical, retiring the refusal — is a **separate methodology cell**
+(a new run against the v1.2 policy), **out of scope for the language encoding**;
+folding it in here would break losslessness. So the active `profile` is
+`repository-planes-v1.1`, matching `structure/CM.md`, `requirements.md`,
+`fixtures/`, and run 0002. The frozen run-0002 receipt stays `v1.1 @ 48b9a63`
+verbatim (correct — immutable). **Deferred, recorded here:** Structure CM v0.2's
+body is now behind ADR v1.2 and wants a reconciliation cell.
+
+### Capture gap
+
+- **No loss.** Every load-bearing element of the leaf CM (inputs, the six steps,
+  the Result rule, the 15 requirements + their class/severity, the receipt
+  envelope + Structure extensions under `aspect_ext`, the consumer-search
+  contract, typed repairability, the refusal) is a typed CUE field. Unlike the
+  first submission, the Result rule is no longer prose-only: each clause `when`
+  names the typed `derivation.*` fields it reads, and the verdict itself is
+  **computed by CUE** in `receipt.aspect_ext.derivation` and unified with
+  `result_class`, so the IR is mechanically evaluable and the verdict is
+  compiler-checked (a broken finding fails `cue vet`).
 
 ### The coverage→INCOMPLETE fold — parent-only (carried forward)
 
@@ -245,36 +280,50 @@ Increment 1 recorded that the composite's `unavailable`/empty-selection →
 executed by CUE. **Does Structure exercise anything similar?** Yes, an analog but
 NOT the same fold: a leaf has no children to be `unavailable`, so the
 coverage-fold does not apply. Its equivalent is the Result rule's INCOMPLETE
-clause — *"inventory or consumer search is incomplete, or policy leaves every
-actionable destination unresolved"* — which folds an incomplete observation to
-`INCOMPLETE` at the leaf boundary (the same PASS/DEFECT/INCOMPLETE/FAILED
-interface the parent then composes). Like the parent's fold it is carried as an
-ordered `#ResultRule` clause (data) with a doc comment, not executed by CUE. Run
-0002 does **not** trigger it: inventory is complete (475 tracked / 255 classified,
-no inaccessible surface) and every move-candidate carries its consumer graph, so
-the INCOMPLETE and FAILED clauses are both false — the run lands on the DEFECT
-clause.
+clause — heuristic consumer search, or *every* actionable destination unresolved
+— which folds an incomplete observation to `INCOMPLETE` at the leaf boundary (the
+same PASS/DEFECT/INCOMPLETE/FAILED interface the parent then composes). Unlike the
+parent's fold, this one is **not** left to a doc comment: it is grounded in typed
+per-finding fields (`consumer_search.search_strength`, `destination_resolved`) and
+**computed by CUE** in `derivation.incomplete_guard`. Run 0002 does **not** trigger
+it: inventory is complete (475 tracked / 255 classified), no search is `heuristic`
+(`derivation.heuristic_searches == []`), and destinations are not all unresolved
+(`derivation.unresolved_destinations == [F4,F6,F7,F8]`, not all ten), so
+`incomplete_guard == false` — the run lands on the DEFECT clause.
 
 ### Two-executor readiness
 
-Could a fresh executor derive Structure's `result_class` for run-0002's inputs by
-applying the encoded Result rule from `compiled/structure.json` alone? **Yes —
-result `DEFECT`.** Walk `procedure.result.clauses` top-to-bottom:
+Could a fresh executor derive Structure's `result_class` for run-0002's inputs
+using **only** `compiled/structure.json` — with zero appeal to CM.md or domain
+knowledge? **Yes — result `DEFECT`,** and the IR carries the whole derivation as
+typed data under `receipt.aspect_ext.derivation`. The executor walks
+`procedure.result.clauses` top-to-bottom, evaluating each `when` over named IR
+fields:
 
-1. **FAILED?** *"a required mechanical check cannot execute, or a move/split/delete
-   finding is emitted without its mandatory consumer_search block."* Inventory ran
-   (475 tracked, 255 classified); every move-candidate finding (F4, F7, F8,
-   F9–F12) carries a `consumer_search` block. → **false.**
-2. **INCOMPLETE?** *"inventory or consumer search is incomplete, or policy leaves
-   every actionable destination unresolved."* Inventory complete; consumer graphs
-   complete/complete-within-bound; policy resolves the actionable destinations for
-   F3–F5, F7, F9–F12 (only R1's destination is refused, not *every* one). →
-   **false.**
-3. **DEFECT?** *"at least one policy violation is established."* F3–F12 establish
-   policy violations. → **true → `DEFECT`.**
+1. **FAILED?** `failed_mechanical_checks` non-empty **OR**
+   `move_candidates_missing_search` non-empty. In the IR both are `[]`
+   (`failed_mechanical_checks: []`; every finding with `move_candidate: true` —
+   F4, F7, F8, F9–F12 — has a non-null `consumer_search`). → `failed_guard = false`.
+2. **INCOMPLETE?** `heuristic_searches` non-empty **OR** `unresolved_destinations`
+   equals *all* findings. In the IR `heuristic_searches: []` (every
+   `search_strength` is `complete` or `complete_within_bound`, and
+   `incomplete_search_strengths: ["heuristic"]` states those both count as
+   complete); `unresolved_destinations: [F4,F6,F7,F8]` (the four POLICY_REQUIRED
+   findings) ≠ all ten findings. → `incomplete_guard = false`.
+3. **DEFECT?** `findings_establishing_defect` non-empty. In the IR it lists all ten
+   (F3–F12). → `defect_guard = true` → **`DEFECT`.**
 
-No re-reading of the Markdown is needed; the clauses, the findings, and the
-consumer-search completeness are all in the compiled IR. The receipt's own
-`result_class: "DEFECT"` matches this independent derivation, and `status_mapping`
-(`DEFECTS_FOUND → DEFECT`) is self-unified so an inconsistent receipt fails
-`cue vet` (verified with a negative probe).
+Every one of those fact-sets and booleans is present in the compiled IR, and
+`derived_result_class: "DEFECT"` is computed by CUE and unified with the receipt's
+`result_class`. Determinism is therefore compiler-checked, not asserted:
+
+- `derivation.derived_result_class == receipt.result_class == "DEFECT"` (unified).
+- **Negative probe A** — forcing `result_class: "PASS"` on this `DEFECTS_FOUND`
+  receipt → `cue vet` **rejects** (conflicts with both the derived `DEFECT` and the
+  `status_mapping`).
+- **Negative probe B** — a typo'd top-level `result_clas` / `totally_bogus` field →
+  `cue vet` **rejects** (`field not allowed`; the S2 corralling restored this).
+- **Liveness probe C** — appending a malformed move-candidate (`move_candidate:
+  true`, `consumer_search: null`) makes `move_candidates_missing_search: ["FX"]`
+  and `derived_result_class: "FAILED"` — proving the FAILED arm is not dead code but
+  genuinely detects the near-miss fixture's `CM_EXECUTION_FAILED` scenario.

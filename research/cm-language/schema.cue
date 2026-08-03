@@ -57,16 +57,17 @@ package cm
 	unobserved_surfaces: _
 	evidence_refs:       _
 
-	// Increment-2 extension. Aspect CMs carry aspect-specific TYPED fields beyond
-	// the shared ten (Structure: plane_classification, canonical_path_map,
-	// policy_authority; per-finding repairability + consumer_search). The envelope
-	// was a closed definition and rejected them. Opening it lets each aspect add
-	// its own typed fields, while the parent composition still reads ONLY the
-	// shared result_class / status / status_mapping interface — so the
-	// generic-vs-aspect-private boundary is preserved by which fields the parent
-	// reads, not by closedness. The parent instance adds no extra fields, so its
-	// exported IR is unchanged.
-	...
+	// Increment-2 extension S2 (corralled-open). Aspect CMs carry aspect-specific
+	// TYPED fields beyond the shared ten (Structure: plane_classification,
+	// canonical_path_map, policy_authority; per-finding extras ride the already-open
+	// findings list). The shared ten fields above stay CLOSED, so the parent's
+	// load-bearing interface keeps full field-name validation — a typo'd
+	// `result_clas` or a stray top-level field is REJECTED by `cue vet`. Aspects
+	// hang their extensions under this ONE designated open sub-region only. (A bare
+	// `...` on the whole envelope was rejected in review precisely because it voided
+	// that shape validation on the fields the parent composes.) The parent instance
+	// sets no `aspect_ext`, so its exported IR is unchanged.
+	aspect_ext?: {...}
 }
 
 // #AspectSource is how a parent references a child aspect CM: a registered
@@ -175,10 +176,15 @@ package cm
 #Requirement: {
 	id:   =~"^[A-Z]+(-[A-Z]+)+-[0-9]+$"
 	text: string
-	// Increment-2 extension (optional, parent-safe). A leaf CM's requirements each
-	// trace to a clause of their governing policy (the ADR); the composite's RCM-*
-	// requirements simply omit it. Absent on the parent → not emitted in its IR.
+	// Increment-2 extensions (all optional, parent-safe). A leaf CM's requirements
+	// each trace to a clause of their governing policy (the ADR), carry a checking
+	// `class`, and a default `severity`; the composite's RCM-* requirements omit
+	// them. `class` is load-bearing: the leaf Result rule's FAILED clause references
+	// "a required MECHANICAL check", so which requirements are mechanical must be in
+	// the IR. Absent on the parent → not emitted in its IR (stays byte-identical).
 	adr_clause?: string
+	class?:      "mechanical" | "semantic" | "mechanical + semantic" | "process"
+	severity?:   string
 }
 
 // #Methodology is a composite (parent) CM: it composes aspect receipts on a

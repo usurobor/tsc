@@ -2,7 +2,7 @@
     "id": "tsc.repository-coherence.structure",
     "version": "0.2",
     "question": "At a given commit, does every tracked artifact have exactly one clear place, name, owner, lifecycle, and relationship to the rest of the repository — judged against repository-planes, never against the CM's own taste.",
-    "profile": "repository-planes-v1.2",
+    "profile": "repository-planes-v1.1",
     "statuses": [
         "COHERENT_WITHIN_DECLARED_SCOPE",
         "DEFECTS_FOUND",
@@ -90,15 +90,15 @@
         "result": {
             "clauses": [
                 {
-                    "when": "a required mechanical check cannot execute, or a move/split/delete finding is emitted without its mandatory consumer_search block",
+                    "when": "FAILED — derivation.failed_mechanical_checks is non-empty (a required mechanical check could not execute), OR derivation.move_candidates_missing_search is non-empty (some finding has move_candidate==true and consumer_search==null).",
                     "class": "FAILED"
                 },
                 {
-                    "when": "inventory or consumer search is incomplete, or policy leaves every actionable destination unresolved",
+                    "when": "INCOMPLETE — derivation.heuristic_searches is non-empty (some consumer_search.search_strength is in derivation.incomplete_search_strengths, i.e. 'heuristic'; 'complete' and 'complete_within_bound' both count as COMPLETE), OR every finding has destination_resolved==false (derivation.unresolved_destinations == all findings).",
                     "class": "INCOMPLETE"
                 },
                 {
-                    "when": "at least one policy violation is established",
+                    "when": "DEFECT — at least one finding establishes a policy violation (findings non-empty; derivation.findings_establishing_defect non-empty).",
                     "class": "DEFECT"
                 }
             ],
@@ -113,77 +113,107 @@
         {
             "id": "STRUCT-PLANE-001",
             "text": "Every tracked path resolves to exactly one root plane; no path is a peer to the six planes or spans two.",
-            "adr_clause": "Target planes (root)"
+            "adr_clause": "Target planes (root)",
+            "class": "mechanical",
+            "severity": "P0"
         },
         {
             "id": "STRUCT-RULE-001",
             "text": "Each path's plane is the one the decision rule selects (bind→spec, run→src, prove→conformance, still change→research, help a person→docs, automate→scripts).",
-            "adr_clause": "Decision rule"
+            "adr_clause": "Decision rule",
+            "class": "mechanical + semantic",
+            "severity": "P0"
         },
         {
             "id": "STRUCT-CANON-001",
             "text": "Every artifact the ADR program-maps give a canonical home sits at that home.",
-            "adr_clause": "Program maps"
+            "adr_clause": "Program maps",
+            "class": "mechanical",
+            "severity": "P0"
         },
         {
             "id": "STRUCT-NAME-001",
             "text": "Documentation is filed by reader intent; the α/β/γ role grammar is never used as a filing taxonomy.",
-            "adr_clause": "Docs reader-intent taxonomy (\"α/β/γ … never a filing taxonomy\")"
+            "adr_clause": "Docs reader-intent taxonomy (\"α/β/γ … never a filing taxonomy\")",
+            "class": "mechanical + semantic",
+            "severity": "P1"
         },
         {
             "id": "STRUCT-DOCSET-001",
             "text": "The eight reader-intent folders are the exhaustive set of docs/ subfolders; a docs/ subfolder outside them is a defect to rehome.",
-            "adr_clause": "Amendments (v1.1) §1"
+            "adr_clause": "Amendments (v1.1) §1",
+            "class": "mechanical + semantic",
+            "severity": "P1"
         },
         {
             "id": "STRUCT-FUNC-001",
             "text": "No plane is a single-occupant or premature catch-all standing in for a real home.",
-            "adr_clause": "Iteration 3 (\"…not a single-occupant config/ plane\")"
+            "adr_clause": "Iteration 3 (\"…not a single-occupant config/ plane\")",
+            "class": "semantic",
+            "severity": "P1"
         },
         {
             "id": "STRUCT-OWNER-001",
             "text": "Each artifact has one authoritative home; no duplicate live copies.",
-            "adr_clause": "Decision (organize by plane) + Program maps"
+            "adr_clause": "Decision (organize by plane) + Program maps",
+            "class": "mechanical",
+            "severity": "P0"
         },
         {
             "id": "STRUCT-CONSUMER-001",
             "text": "Each move/split/delete finding enumerates the artifact's live consumers via the consumer-search contract — surfaces searched, search strength, consumer set, digest, unsearched surfaces; a relocation that breaks a consumer without rehoming its reference is not coherent.",
-            "adr_clause": "Invariants any move commit must preserve (\"targets resolve; conformance validator exits 0 …; no document's meaning changes\")"
+            "adr_clause": "Invariants any move commit must preserve (\"targets resolve; conformance validator exits 0 …; no document's meaning changes\")",
+            "class": "mechanical + semantic",
+            "severity": "P0"
         },
         {
             "id": "STRUCT-MIXED-001",
             "text": "No live directory mixes live-mutable content with frozen, snapshot, or archived content.",
-            "adr_clause": "Migration state (frozen snapshots preserved intact)"
+            "adr_clause": "Migration state (frozen snapshots preserved intact)",
+            "class": "mechanical + semantic",
+            "severity": "P0"
         },
         {
             "id": "STRUCT-HISTLABEL-001",
             "text": "Historical/archived/frozen material retained on the live tree carries a lifecycle label (banner or marker).",
-            "adr_clause": "Amendments (v1.1) §3"
+            "adr_clause": "Amendments (v1.1) §3",
+            "class": "mechanical + semantic",
+            "severity": "P1"
         },
         {
             "id": "STRUCT-DERIVED-001",
             "text": "Derived/generated output is distinguishable from hand-authored source (excluded build dir, generated marker, or clearly-derived path).",
-            "adr_clause": "Amendments (v1.1) §2 + Invariants (render byte-identity)"
+            "adr_clause": "Amendments (v1.1) §2 + Invariants (render byte-identity)",
+            "class": "mechanical + semantic",
+            "severity": "P1"
         },
         {
             "id": "STRUCT-EXCLUDE-001",
             "text": "The do-not-touch set (.cdd/, .cn-sigma/, heldout/) is excluded from content classification, never flagged as misplaced content.",
-            "adr_clause": "Do NOT touch"
+            "adr_clause": "Do NOT touch",
+            "class": "mechanical",
+            "severity": "P0"
         },
         {
             "id": "STRUCT-REFUSE-001",
             "text": "When the ADR does not decide a path's home, the CM returns UNDERDETERMINED for that path and does not assign a plane.",
-            "adr_clause": "Deferred — foundation bundle"
+            "adr_clause": "Deferred — foundation bundle",
+            "class": "process",
+            "severity": "P0"
         },
         {
             "id": "STRUCT-REPAIR-001",
             "text": "A repair run changes only findings in scope and preserves meaning; a move commit changes no document's meaning (evidence-boundary rule).",
-            "adr_clause": "Invariants (\"No meaning change, not no edits\")"
+            "adr_clause": "Invariants (\"No meaning change, not no edits\")",
+            "class": "process",
+            "severity": "P0"
         },
         {
             "id": "STRUCT-REVIEW-001",
             "text": "A COHERENT_WITHIN_DECLARED_SCOPE claim requires an independent full-scope review, separate from the repair actor.",
-            "adr_clause": "Parent RCM-BOUNDARY-001"
+            "adr_clause": "Parent RCM-BOUNDARY-001",
+            "class": "process",
+            "severity": "P0"
         }
     ],
     "retired_requirements": [
@@ -198,25 +228,128 @@
         "independent review closure"
     ],
     "receipt": {
-        "aspect_id": "structure",
-        "canonical_path_map": {
-            "spec/": "satisfied",
-            "src/engine/ocaml/": "satisfied",
-            "conformance/foundation-v4/": "satisfied",
-            "research/ascent/": "satisfied",
-            "research/repository-coherence/": "satisfied",
-            "research/foundation/": "N/A",
-            "docs/quickstart/README.md": "satisfied",
-            "docs/architecture/README.md": "satisfied",
-            "targets/": "violated",
-            "katas/": "violated",
-            "schemas/": "violated",
-            "runtime/SELF-MEASURE.md": "violated",
-            "docs/alpha/": "violated",
-            "docs/beta/": "violated",
-            "docs/gamma/": "violated",
-            "docs/design/": "violated"
+        "aspect_ext": {
+            "plane_classification": {
+                "spec/": {
+                    "files": 7,
+                    "resolved_plane": "spec (bind)",
+                    "verdict": "clean — canonical"
+                },
+                "src/": {
+                    "files": 80,
+                    "resolved_plane": "src (run)",
+                    "verdict": "clean — engine + skills canonical"
+                },
+                "conformance/": {
+                    "files": 12,
+                    "resolved_plane": "conformance (prove)",
+                    "verdict": "clean — foundation-v4 canonical"
+                },
+                "research/": {
+                    "files": 26,
+                    "resolved_plane": "research (still change)",
+                    "verdict": "clean — incl. this CM tree, legibility, ascent"
+                },
+                "docs/": {
+                    "files": 54,
+                    "resolved_plane": "docs (help person)",
+                    "verdict": "MIXED — 4 of 8 present subfolders defective"
+                },
+                "scripts/": {
+                    "files": 24,
+                    "resolved_plane": "scripts (automate)",
+                    "verdict": "clean"
+                },
+                "targets/": {
+                    "files": 7,
+                    "resolved_plane": "→ src/engine (ADR Iter 3)",
+                    "verdict": "DEFECT (STRUCT-PLANE-001, deferred) F9"
+                },
+                "katas/": {
+                    "files": 19,
+                    "resolved_plane": "→ a tests plane (ADR)",
+                    "verdict": "DEFECT (STRUCT-PLANE-001, deferred) F10"
+                },
+                "schemas/": {
+                    "files": 14,
+                    "resolved_plane": "→ co-located w/ owners",
+                    "verdict": "DEFECT (STRUCT-PLANE-001, deferred) F11"
+                },
+                "runtime/": {
+                    "files": 1,
+                    "resolved_plane": "→ co-located w/ skill",
+                    "verdict": "DEFECT (STRUCT-PLANE-001 + FUNC-001) F12"
+                },
+                "root files": {
+                    "files": 11,
+                    "resolved_plane": "ADR silent",
+                    "verdict": "UNDERDETERMINED (convention)"
+                }
+            },
+            "canonical_path_map": {
+                "spec/": "satisfied",
+                "src/engine/ocaml/": "satisfied",
+                "conformance/foundation-v4/": "satisfied",
+                "research/ascent/": "satisfied",
+                "research/repository-coherence/": "satisfied",
+                "research/foundation/": "N/A",
+                "docs/quickstart/README.md": "satisfied",
+                "docs/architecture/README.md": "satisfied",
+                "targets/": "violated",
+                "katas/": "violated",
+                "schemas/": "violated",
+                "runtime/SELF-MEASURE.md": "violated",
+                "docs/alpha/": "violated",
+                "docs/beta/": "violated",
+                "docs/gamma/": "violated",
+                "docs/design/": "violated"
+            },
+            "policy_authority": "docs/architecture/decisions/repository-planes.md @ 48b9a63 (v1.1)",
+            "derivation": {
+                "incomplete_search_strengths": [
+                    "heuristic"
+                ],
+                "mechanical_requirements": [
+                    "STRUCT-PLANE-001",
+                    "STRUCT-RULE-001",
+                    "STRUCT-CANON-001",
+                    "STRUCT-NAME-001",
+                    "STRUCT-DOCSET-001",
+                    "STRUCT-OWNER-001",
+                    "STRUCT-CONSUMER-001",
+                    "STRUCT-MIXED-001",
+                    "STRUCT-HISTLABEL-001",
+                    "STRUCT-DERIVED-001",
+                    "STRUCT-EXCLUDE-001"
+                ],
+                "failed_mechanical_checks": [],
+                "move_candidates_missing_search": [],
+                "heuristic_searches": [],
+                "unresolved_destinations": [
+                    "F4",
+                    "F6",
+                    "F7",
+                    "F8"
+                ],
+                "findings_establishing_defect": [
+                    "F3",
+                    "F4",
+                    "F5",
+                    "F6",
+                    "F7",
+                    "F8",
+                    "F9",
+                    "F10",
+                    "F11",
+                    "F12"
+                ],
+                "failed_guard": false,
+                "incomplete_guard": false,
+                "defect_guard": true,
+                "derived_result_class": "DEFECT"
+            }
         },
+        "aspect_id": "structure",
         "cm_version": "0.2",
         "evidence_refs": "plane_manifest_digest planes/9b220e4362cb · consumer graphs fb-json/427512531063 · beta-gov/2888e713ec59 · targets/7d556a62610e · katas/10eb412b3544 · schemas/b96c22a5e279 · runtime/abd4e1f0ef0a · f1f2-rehome/e19f39eaedee",
         "findings": [
@@ -230,6 +363,9 @@
                 "severity": "P1",
                 "claim": "docs/alpha/ files by α role grammar and is outside the closed eight.",
                 "repairability": "MECHANICAL",
+                "move_candidate": false,
+                "consumer_search": null,
+                "destination_resolved": true,
                 "evidence": "docs/alpha/README.md:1 \"Alpha (α) — Pattern coherence\"."
             },
             {
@@ -243,6 +379,7 @@
                 "severity": "P1",
                 "claim": "docs/beta/ files by β role grammar, outside the eight; its governance/ subtree carries live consumers.",
                 "repairability": "POLICY_REQUIRED",
+                "move_candidate": true,
                 "consumer_search": {
                     "surfaces_searched": [
                         "source code",
@@ -262,6 +399,7 @@
                     "digest": "beta-gov/2888e713ec59",
                     "unsearched_surfaces": []
                 },
+                "destination_resolved": false,
                 "evidence": "docs/beta/README.md:1 \"Beta (β) — Relational coherence\"; β consumer graph."
             },
             {
@@ -274,6 +412,9 @@
                 "severity": "P1",
                 "claim": "docs/gamma/ files by γ role grammar and is outside the closed eight.",
                 "repairability": "MECHANICAL",
+                "move_candidate": false,
+                "consumer_search": null,
+                "destination_resolved": true,
                 "evidence": "docs/gamma/README.md:1 \"Gamma (γ) — Process coherence\"."
             },
             {
@@ -285,6 +426,9 @@
                 "severity": "P1",
                 "claim": "docs/design/ is not one of the ratified eight; both bundles are placement defects to rehome. Destination refused → R1.",
                 "repairability": "POLICY_REQUIRED",
+                "move_candidate": false,
+                "consumer_search": null,
+                "destination_resolved": false,
                 "evidence": "docs/design/foundation-contract-reconciliation/** (6 files), docs/design/polar-expression-recovery/DESIGN.md."
             },
             {
@@ -297,6 +441,7 @@
                 "severity": "P0",
                 "claim": "factorized-beta-controls.json is a role-grammar-placed live fixture; a move MUST rehome its seven enumerated consumers.",
                 "repairability": "POLICY_REQUIRED",
+                "move_candidate": true,
                 "consumer_search": {
                     "surfaces_searched": [
                         "source code",
@@ -320,6 +465,7 @@
                         "targets/schemas literals searched, none reference the json"
                     ]
                 },
+                "destination_resolved": false,
                 "evidence": "β consumer_search (digest fb-json/427512531063)."
             },
             {
@@ -331,6 +477,7 @@
                 "severity": "P1",
                 "claim": "docs/beta/ interleaves declared-frozen snapshot content with live engine/CI-consumed governance under one tree.",
                 "repairability": "POLICY_REQUIRED",
+                "move_candidate": true,
                 "consumer_search": {
                     "surfaces_searched": [
                         "source code",
@@ -345,6 +492,7 @@
                     "digest": "beta-gov/2888e713ec59",
                     "unsearched_surfaces": []
                 },
+                "destination_resolved": false,
                 "evidence": "Frozen label docs/README.md:38; live content docs/beta/governance/** per β graph; ci.yml:67."
             },
             {
@@ -357,6 +505,7 @@
                 "severity": "P1",
                 "claim": "targets/ is a root peer to the six planes; ADR Iteration 3 folds it into the engine (src/).",
                 "repairability": "DEFERRED",
+                "move_candidate": true,
                 "consumer_search": {
                     "surfaces_searched": [
                         "source code",
@@ -374,6 +523,7 @@
                     "digest": "targets/7d556a62610e",
                     "unsearched_surfaces": []
                 },
+                "destination_resolved": true,
                 "evidence": "root targets/ (7 files); ADR-staged."
             },
             {
@@ -385,6 +535,7 @@
                 "severity": "P1",
                 "claim": "katas/ is a root peer to the six planes; ADR stages it to a tests plane.",
                 "repairability": "DEFERRED",
+                "move_candidate": true,
                 "consumer_search": {
                     "surfaces_searched": [
                         "source code",
@@ -399,6 +550,7 @@
                     "digest": "katas/10eb412b3544",
                     "unsearched_surfaces": []
                 },
+                "destination_resolved": true,
                 "evidence": "root katas/ (19 files); ADR-staged."
             },
             {
@@ -410,6 +562,7 @@
                 "severity": "P1",
                 "claim": "schemas/ is a root peer to the six planes; ADR stages it co-located with owners.",
                 "repairability": "DEFERRED",
+                "move_candidate": true,
                 "consumer_search": {
                     "surfaces_searched": [
                         "scripts",
@@ -423,6 +576,7 @@
                     "digest": "schemas/b96c22a5e279",
                     "unsearched_surfaces": []
                 },
+                "destination_resolved": true,
                 "evidence": "root schemas/ (14 files); ADR-staged."
             },
             {
@@ -435,6 +589,7 @@
                 "severity": "P1",
                 "claim": "runtime/ is a single-occupant root plane (one file); ADR co-locates SELF-MEASURE.md with its skill.",
                 "repairability": "DEFERRED",
+                "move_candidate": true,
                 "consumer_search": {
                     "surfaces_searched": [
                         "source code",
@@ -452,67 +607,10 @@
                     "digest": "runtime/abd4e1f0ef0a",
                     "unsearched_surfaces": []
                 },
+                "destination_resolved": true,
                 "evidence": "git ls-files runtime/ → runtime/SELF-MEASURE.md only; ADR-staged."
             }
         ],
-        "plane_classification": {
-            "spec/": {
-                "files": 7,
-                "resolved_plane": "spec (bind)",
-                "verdict": "clean — canonical"
-            },
-            "src/": {
-                "files": 80,
-                "resolved_plane": "src (run)",
-                "verdict": "clean — engine + skills canonical"
-            },
-            "conformance/": {
-                "files": 12,
-                "resolved_plane": "conformance (prove)",
-                "verdict": "clean — foundation-v4 canonical"
-            },
-            "research/": {
-                "files": 26,
-                "resolved_plane": "research (still change)",
-                "verdict": "clean — incl. this CM tree, legibility, ascent"
-            },
-            "docs/": {
-                "files": 54,
-                "resolved_plane": "docs (help person)",
-                "verdict": "MIXED — 4 of 8 present subfolders defective"
-            },
-            "scripts/": {
-                "files": 24,
-                "resolved_plane": "scripts (automate)",
-                "verdict": "clean"
-            },
-            "targets/": {
-                "files": 7,
-                "resolved_plane": "→ src/engine (ADR Iter 3)",
-                "verdict": "DEFECT (STRUCT-PLANE-001, deferred) F9"
-            },
-            "katas/": {
-                "files": 19,
-                "resolved_plane": "→ a tests plane (ADR)",
-                "verdict": "DEFECT (STRUCT-PLANE-001, deferred) F10"
-            },
-            "schemas/": {
-                "files": 14,
-                "resolved_plane": "→ co-located w/ owners",
-                "verdict": "DEFECT (STRUCT-PLANE-001, deferred) F11"
-            },
-            "runtime/": {
-                "files": 1,
-                "resolved_plane": "→ co-located w/ skill",
-                "verdict": "DEFECT (STRUCT-PLANE-001 + FUNC-001) F12"
-            },
-            "root files": {
-                "files": 11,
-                "resolved_plane": "ADR silent",
-                "verdict": "UNDERDETERMINED (convention)"
-            }
-        },
-        "policy_authority": "docs/architecture/decisions/repository-planes.md @ 48b9a63 (v1.1)",
         "profile": "repository-planes-v1.1",
         "refusals": [
             {
