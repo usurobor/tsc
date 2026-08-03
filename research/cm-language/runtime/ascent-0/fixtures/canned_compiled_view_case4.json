@@ -1,0 +1,18 @@
+{
+  "view": {
+    "governing_question": "What is the most complete account of this black-box component, given the single observation that 'a' is answered '0'?",
+    "preserved_local_claims": [
+      "input 'a' is answered '0'"
+    ],
+    "closure_assumption": "The finite observation list is treated as the complete account of the component; this closure is restated as a play of complementary aspects rather than withdrawn in favour of a runnable process.",
+    "polar_view": "source and behavior are complementary manifestations of the program's underlying identity, each expressing the whole through its own aspect",
+    "named_obstruction": "the tension between the seen and the unseen is dissolved by recognising each observation as one facet of a single indivisible identity"
+  },
+  "generative_commitment": {
+    "presents_typed_generator": false,
+    "generator_class_ref": null,
+    "prediction_operator": null,
+    "commits_heldout_consequence": false,
+    "dissolves_named_obstruction": false
+  }
+}

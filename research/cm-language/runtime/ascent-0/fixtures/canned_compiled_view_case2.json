@@ -1,0 +1,19 @@
+{
+  "view": {
+    "governing_question": "What is the most complete account of this black-box component, given only that 'a' is answered '0' and 'b' is answered '0'?",
+    "preserved_local_claims": [
+      "input 'a' is answered '0'",
+      "input 'b' is answered '0'"
+    ],
+    "closure_assumption": "The finite observation list is treated as the complete account of the component; this closure is WITHDRAWN, because a two-observation record does not fix the reply on any longer or unattempted input word.",
+    "polar_view": "Read the reply not as a lookup over the two seen words but as the output of a state-carrying process whose reply to the next symbol depends on the history so far; the two observations are consequences of one such process.",
+    "named_obstruction": "Two single-symbol observations are consistent with many inequivalent state-carrying processes; with no query that tells them apart, the account cannot be narrowed to one."
+  },
+  "generative_commitment": {
+    "presents_typed_generator": true,
+    "generator_class_ref": "a state-carrying process over the input symbols whose reply to the next symbol depends on the history so far (the declared bounded class)",
+    "prediction_operator": "run the recovered candidate process forward from its initial state over an input word, emitting one reply symbol per input symbol",
+    "commits_heldout_consequence": false,
+    "dissolves_named_obstruction": false
+  }
+}

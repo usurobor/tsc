@@ -3,13 +3,12 @@
     "governing_question": "What is the most complete account of this black-box component, and what does it reply to the input word 'ab', which is absent from the given observations?",
     "preserved_local_claims": [
       "input 'a' is answered '0'",
-      "input 'aa' is answered '01'",
       "input 'b' is answered '0'",
-      "input 'ba' is answered '00'"
+      "input 'bb' is answered '00'"
     ],
     "closure_assumption": "The finite observation list is treated as the complete account of the component; this closure is WITHDRAWN, because a finite reply-word record does not fix the reply on an unattempted input word.",
     "polar_view": "Read the reply not as a lookup over seen words but as the output of a state-carrying process whose reply to the next symbol depends on the history so far; the seen words are consequences of one such process, and 'ab' is one more consequence to be produced by running it.",
-    "named_obstruction": "A finite observed reply-word record underdetermines the reply on an unattempted input word, and may be reproduced by several inequivalent processes; only a candidate that yields a lawful prediction on the held-out word and survives its execution kills this obstruction."
+    "named_obstruction": "A finite observed reply-word record underdetermines the reply on an unattempted input word; only a candidate that yields a lawful prediction on the held-out word, survives its execution, and returns to the same account when that prediction is folded back kills this obstruction."
   },
   "generative_commitment": {
     "presents_typed_generator": true,

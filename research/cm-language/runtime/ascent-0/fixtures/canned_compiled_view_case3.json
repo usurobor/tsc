@@ -1,0 +1,19 @@
+{
+  "view": {
+    "governing_question": "What is the most complete account of this black-box component, given that the same input 'a' is recorded answering both '0' and '1'?",
+    "preserved_local_claims": [
+      "input 'a' is recorded answering '0'",
+      "input 'a' is recorded answering '1'"
+    ],
+    "closure_assumption": "The finite observation list is treated as the complete account of the component; this closure is WITHDRAWN, because it presents the same input history with two different replies.",
+    "polar_view": "Read the reply not as a lookup over seen words but as the output of a state-carrying process whose reply to the next symbol depends on the history so far; from a fixed start, a fixed input history drives a unique reply.",
+    "named_obstruction": "A deterministic state-carrying process sends a fixed input history to one reply; a record demanding two different replies for the identical history admits no such process at any size."
+  },
+  "generative_commitment": {
+    "presents_typed_generator": true,
+    "generator_class_ref": "a state-carrying process over the input symbols whose reply to the next symbol depends on the history so far (the declared bounded class)",
+    "prediction_operator": "run the recovered candidate process forward from its initial state over an input word, emitting one reply symbol per input symbol",
+    "commits_heldout_consequence": false,
+    "dissolves_named_obstruction": false
+  }
+}

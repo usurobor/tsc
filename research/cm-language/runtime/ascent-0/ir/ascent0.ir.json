@@ -59,7 +59,8 @@
                 "provider_class": "finite_model",
                 "reads": [
                     "H_M_declaration",
-                    "search_bounds"
+                    "search_bounds",
+                    "admissible_proposal"
                 ],
                 "produces": "enumerated_class",
                 "search_strength": "complete_within_bound",
@@ -165,7 +166,7 @@
             "authorization": false,
             "boundary_decision": false
         },
-        "derivation": "result_class is a pure function of derived facts (README result rule): not admissible -> DECORATIVE_LIFT; else |C_train|=0 (complete search) -> NO_REALIZATION_IN_MODEL; else oracle_run and separating and pass>=1 and tested_fiber=1 -> LIFT_VALIDATED; else |F_id|>=2 -> ASCENT_UNDERDETERMINED; else IDENTIFIED_IN_MODEL. Computed by the runtime at execute time, never hand-set."
+        "derivation": "result_class is a pure function of derived facts (README result rule): not admissible -> DECORATIVE_LIFT (the semantic step's admissibility gate withheld the admissible_proposal capability, so no realization step ran); else search_ran and |C_train|=0 (complete search) -> NO_REALIZATION_IN_MODEL; else oracle_run and separating and pass>=1 and tested_fiber=1 -> LIFT_VALIDATED; else |F_id|>=2 -> ASCENT_UNDERDETERMINED; else IDENTIFIED_IN_MODEL. Computed by the runtime at execute time, never hand-set. The admissibility gate on the semantic step produces the admissible_proposal surface that finite_model_enumerate reads; a decorative proposal is refused BEFORE realization by capability withholding."
     },
     "receipt_contract": {
         "kind": "ascent_measurement",

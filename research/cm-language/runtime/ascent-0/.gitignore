@@ -1,4 +1,9 @@
 _build/
-# emitted receipts carry absolute fixture paths (env-specific); regenerate with `make run`.
+# emitted receipts carry absolute fixture paths (env-specific); regenerate with
+# `make run-all` (deterministic arm, all five cases) or `make run` (case1 only).
 receipt.case1.json
+receipt.case2.json
+receipt.case3.json
+receipt.case4.json
+receipt.case5.json
 *.receipt.json
