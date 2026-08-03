@@ -173,6 +173,11 @@ consumer graph) → Run 2 (closed findings, independent verification) → **meas
 outcomes** (elapsed time, operator minutes, model calls, findings closed,
 regressions, incorrect repairs prevented). Far stronger than a theory paper.
 
+> **First draft written:** [`case-studies/repository-cleanup.md`](case-studies/repository-cleanup.md)
+> — grounded in the frozen receipts, the plane ADR (v1.2), and the repair-wave
+> commits; qualitative outcomes documented, quantitative metrics flagged
+> "to instrument."
+
 ## 12. Release sequence
 
 - **Research preview (now):** repo + Pages docs + architecture essay + CUE reference model + four example CMs + receipts from the TSC repo case + limitations & roadmap. Audience: researchers, agent-tool builders, design partners, formal-methods/policy-as-code people. *Not* marketed as production-ready.
