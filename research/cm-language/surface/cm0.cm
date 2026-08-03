@@ -1,0 +1,53 @@
+# CM0 — the coherence methodology whose target is another coherence methodology,
+# authored in the compact ML-shaped .cm surface (issue #115, per #114's example).
+#
+# CM0 measures a candidate methodology AS A MEASUREMENT INSTRUMENT. It measures
+# only: it does not compile, admit, authorize, repair, or self-authorize. This
+# source carries exactly the information `compiled/cm0.json` (#NormalizedCMIR)
+# encodes, and the OCaml front-end lowers it to that IR byte-for-byte.
+#
+# 4A authors the SOURCE only — no run, no receipt, no result computed. The five
+# subcontracts are declared as typed, provider-bound check steps.
+
+cm cm0 v0.1 (instrument: Methodology) -> InstrumentAssessment {
+
+  # Content address of the authored #CMSource (the sha256 of its canonical CUE
+  # export). Carried literally: the spike targets the approved digest rather than
+  # recomputing CUE's canonical hash from this surface form. See README (AC2).
+  source_digest sha256:a1b45680fcca5f254ba4d3e204d75fc32d6feef9a7a735d697882da48e9da3dc
+
+  # Input: an #InstrumentSubject. `normalized_ir` grounds language-level contract
+  # integrity and is required; `compiled` (the later runtime CompiledCM) is not,
+  # and with none bound the runtime binding stays INCOMPLETE (NormalizedCMIR is
+  # not a CompiledCM, honestly).
+  require source        : cm_source
+  require normalized_ir : normalized_cm_ir
+  require compiled      : compiled_cm optional
+  lists   implementation_refs, calibrations, fixtures, lineage
+  binding INCOMPLETE
+
+  # The five subcontracts as typed provider steps. Each names its #StepKind, the
+  # provider that performs it (`via <provider_kind> <provider_id>`), and the
+  # #ResultClass a provider failure maps to (`on <FAILURE>`). let! introduces the
+  # first bound step; and! adds independent parallel ones (F#-style workflow).
+  let! contract_integrity = mechanical         via tool   ir_contract_checker     on FAILED
+  and! repeatability      = oracle             via oracle determinism_oracle      on INCOMPLETE
+  and! discrimination     = invoke_cm          via cm     control_separation_cm   on INCOMPLETE
+  and! refusal            = semantic_judgment  via llm    refusal_judge           on INCOMPLETE
+  and! evolution          = mechanical         via tool   evolution_rule_checker  on FAILED
+
+  # The measure-only receipt's reported dimensions (all optional; 4A computes no
+  # results). This is receipt_contract.reports in the IR.
+  retain parts_present, relations_fit, evolution_rules, repeat_consistency,
+         discrimination, refusal_behavior, calibration_evidence, defects, uncertainty
+
+  # Result: an InstrumentAssessment over the subcontracts above, deferred to a
+  # measurement run (no result computed in the source/IR). Emits no admission
+  # verdict, no authorization, no boundary decision (measure-only).
+  decide from assessments deferred "deferred to a measurement run (increment 4C); no result computed in the source/IR"
+
+  # Measure-only boundary, structurally mandatory and complete: CM0 measures; it
+  # does NOT compile (compiler), admit (V), authorize (δ), repair, or self-
+  # authorize. The language-level face of OPER-AUTH-001 ("CM0 cannot admit itself").
+  forbid compile, admit, authorize, repair, self_authorize
+}

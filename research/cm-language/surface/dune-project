@@ -1,0 +1,9 @@
+(lang dune 3.0)
+
+(name cm_surface)
+
+; Isolated CM surface-language front-end (issue #115, sub of #114).
+; Deliberately its OWN dune-project so `dune build` in src/engine/ocaml never
+; descends here, and so this front-end shares no dependency with the frozen
+; `coh` engine. Stdlib only: no yojson / menhir / ppx / external libs — the JSON
+; serializer is hand-written to reproduce `cue export`'s exact bytes.

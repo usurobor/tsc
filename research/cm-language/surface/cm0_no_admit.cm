@@ -1,0 +1,30 @@
+# NEGATIVE PROBE (issue #115). Identical to cm0.cm EXCEPT the `forbid` clause
+# drops `admit`. The measure-only boundary is load-bearing: a CM0 that does not
+# forbid admission would be able to admit itself (OPER-AUTH-001 violation). The
+# surface makes the boundary structurally mandatory, so the front-end REJECTS
+# this source at compile time — it never emits an IR. See README (negative probe).
+
+cm cm0 v0.1 (instrument: Methodology) -> InstrumentAssessment {
+
+  source_digest sha256:a1b45680fcca5f254ba4d3e204d75fc32d6feef9a7a735d697882da48e9da3dc
+
+  require source        : cm_source
+  require normalized_ir : normalized_cm_ir
+  require compiled      : compiled_cm optional
+  lists   implementation_refs, calibrations, fixtures, lineage
+  binding INCOMPLETE
+
+  let! contract_integrity = mechanical         via tool   ir_contract_checker     on FAILED
+  and! repeatability      = oracle             via oracle determinism_oracle      on INCOMPLETE
+  and! discrimination     = invoke_cm          via cm     control_separation_cm   on INCOMPLETE
+  and! refusal            = semantic_judgment  via llm    refusal_judge           on INCOMPLETE
+  and! evolution          = mechanical         via tool   evolution_rule_checker  on FAILED
+
+  retain parts_present, relations_fit, evolution_rules, repeat_consistency,
+         discrimination, refusal_behavior, calibration_evidence, defects, uncertainty
+
+  decide from assessments deferred "deferred to a measurement run (increment 4C); no result computed in the source/IR"
+
+  # admit dropped — the boundary is incomplete.
+  forbid compile, authorize, repair, self_authorize
+}
