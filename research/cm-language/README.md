@@ -6,6 +6,10 @@ the model: the existing Markdown CMs under `research/repository-coherence/`
 remain the source of truth and the human/explanatory layer, and are not edited
 here.
 
+> **Where is this going?** See [`DIRECTION.md`](DIRECTION.md) — the product
+> direction: the layered architecture, frozen principles, what is proven today,
+> and the roadmap (the coherent whole that the CM-language issues are slices of).
+
 ## Architecture
 
 ```
