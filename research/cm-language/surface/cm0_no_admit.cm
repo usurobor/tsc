@@ -1,11 +1,13 @@
 # NEGATIVE PROBE (issue #115). Identical to cm0.cm EXCEPT the `forbid` clause
 # drops `admit`. The measure-only boundary is load-bearing: a CM0 that does not
-# forbid admission would be able to admit itself (OPER-AUTH-001 violation). The
-# surface makes the boundary structurally mandatory, so the front-end REJECTS
-# this source at compile time — it never emits an IR. See README (negative probe).
+# forbid admission could admit itself (OPER-AUTH-001 violation). The surface makes
+# the boundary structurally mandatory and general over all five authorities, so the
+# front-end REJECTS this source at compile time — it never emits an IR or source.
 
 cm cm0 v0.1 (instrument: Methodology) -> InstrumentAssessment {
 
+  question "Is this candidate coherence methodology fit, within its declared scope, to act as a measurement instrument?"
+  target coherence_methodology "a candidate coherence methodology, presented as CM source + its normalized IR (+ an optional later CompiledCM), assessed as a measurement instrument."
   source_digest sha256:a1b45680fcca5f254ba4d3e204d75fc32d6feef9a7a735d697882da48e9da3dc
 
   require source        : cm_source
@@ -13,18 +15,43 @@ cm cm0 v0.1 (instrument: Methodology) -> InstrumentAssessment {
   require compiled      : compiled_cm optional
   lists   implementation_refs, calibrations, fixtures, lineage
   binding INCOMPLETE
+  standing "the candidate methodology's own declared scope; CM0 asserts nothing beyond it, and a self-assessment is a hygiene check only, never sole standing (tsc-oper.md §4.4)."
 
-  let! contract_integrity = mechanical         via tool   ir_contract_checker     on FAILED
-  and! repeatability      = oracle             via oracle determinism_oracle      on INCOMPLETE
-  and! discrimination     = invoke_cm          via cm     control_separation_cm   on INCOMPLETE
-  and! refusal            = semantic_judgment  via llm    refusal_judge           on INCOMPLETE
-  and! evolution          = mechanical         via tool   evolution_rule_checker  on FAILED
+  let! contract_integrity = mechanical via tool ir_contract_checker @sha256:ic0 on FAILED {
+    reads    subject.normalized_ir, subject.source
+    output   parts_present: bool, relations_consistent: bool, scope: language_level
+    evidence ir_field_citations_required: true
+  }
+  and! repeatability = oracle via oracle determinism_oracle @sha256:rp0 on INCOMPLETE {
+    reads    subject.normalized_ir, subject.calibrations
+    protocol repeat_same_input
+    output   repeat_consistent: bool, divergences: list
+    evidence repeat_receipts_retained: true
+  }
+  and! discrimination = invoke_cm via cm control_separation_cm @sha256:ds0 on INCOMPLETE {
+    methodology candidate @sha256:cand
+    reads    subject.fixtures, subject.calibrations
+    output   shape: measurement_receipt, separates_positive_negative: bool
+    evidence control_receipts_retained: true
+  }
+  and! refusal = semantic_judgment via llm refusal_judge @sha256:rf0 on INCOMPLETE {
+    skill    refusal-rubric skill @sha256:sk0 v0.1
+    reads    subject.fixtures, subject.normalized_ir
+    output   refuses_out_of_domain: bool, refuses_malformed: bool, false_pass_detected: bool
+    evidence citations_required: true, disagreement_retained: true
+  }
+  and! evolution = mechanical via tool evolution_rule_checker @sha256:ev0 on FAILED {
+    reads    subject.normalized_ir, subject.lineage
+    output   stable_ids: bool, migration_rules_present: bool, retirement_rules_present: bool
+    evidence lineage_citations_required: true
+  }
 
   retain parts_present, relations_fit, evolution_rules, repeat_consistency,
          discrimination, refusal_behavior, calibration_evidence, defects, uncertainty
 
   decide from assessments deferred "deferred to a measurement run (increment 4C); no result computed in the source/IR"
 
+  boundary_note "CM0 measures a candidate methodology as an instrument and emits an InstrumentAssessment only. Compilation (compiler), admission (V), authorization (δ), boundary decisions (δ), and repair are distinct authorities; no surface assumes another's."
   # admit dropped — the boundary is incomplete.
   forbid compile, authorize, repair, self_authorize
 }

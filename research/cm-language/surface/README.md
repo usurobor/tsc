@@ -7,10 +7,17 @@ to the already-approved `research/cm-language/compiled/cm0.json`, validated by
 `cue vet` as `#NormalizedCMIR`. **No semantics reopened** — this changes notation,
 not meaning.
 
+**Follow-on (full-source faithfulness).** The `.cm` source is now a *lossless*
+carrier of the **full** authored `#CMSource`, not just the IR projection: it
+carries the content-addressed provider digests, the per-step input/output/evidence
+contracts, `target_contract`, `standing_scope`, and the boundary note. One source,
+two byte-exact projections:
+
 ```
-cm0.cm  --lex-->  tokens  --parse-->  AST  --lower-->  normalized JSON IR
-                                                            │
-                                          cue vet … -d '#NormalizedCMIR'  (oracle)
+                      ┌─ cmc cm0.cm ──────────→ normalized IR  (== compiled/cm0.json)
+cm0.cm ── lex/parse ──┤                         cue vet -d '#NormalizedCMIR'
+      (one AST)        └─ cmc --source cm0.cm ─→ full #CMSource (== cue export -e cm0)
+                                                 cue vet -d '#CMSource'
 ```
 
 ## Layout
@@ -19,15 +26,16 @@ cm0.cm  --lex-->  tokens  --parse-->  AST  --lower-->  normalized JSON IR
 |---|---|
 | `dune-project` | Its **own** build root — `dune build` in `src/engine/ocaml` never descends here; shares no dependency with the frozen `coh` engine. |
 | `lib/cm_surface.ml` | Lexer + recursive-descent parser + lowering + a hand-written JSON serializer that reproduces `cue export`'s exact bytes. **Stdlib only** (no yojson/menhir/ppx). |
-| `bin/main.ml` | `cmc` CLI: `cmc <file.cm>` → normalized JSON IR on stdout. |
-| `cm0.cm` | CM0 in the compact surface. |
+| `bin/main.ml` | `cmc` CLI: `cmc <file.cm>` → IR; `cmc --source <file.cm>` → full `#CMSource`. |
+| `cm0.cm` | CM0 in the compact surface (full-source faithful). |
 | `cm0_no_admit.cm` | Negative probe: drops `admit` from `forbid`. |
 
 ## Build & run
 
 ```
-$ dune build                              # in research/cm-language/surface/
-$ dune exec bin/main.exe -- cm0.cm        # → normalized JSON IR on stdout
+$ dune build                                  # in research/cm-language/surface/
+$ dune exec bin/main.exe -- cm0.cm            # → normalized IR (compiled/cm0.json)
+$ dune exec bin/main.exe -- --source cm0.cm   # → full #CMSource (cue export -e cm0)
 ```
 
 ## Gate results
@@ -38,9 +46,11 @@ $ dune exec bin/main.exe -- cm0.cm        # → normalized JSON IR on stdout
 | AC1 engine unaffected | `dune build` (in `src/engine/ocaml`) | exit 1 — **pre-existing**, only `otoml`/`ezcurl` missing in this sandbox; **0** references to `surface/`. Separate build roots (no shared/root `dune-project`), so my work cannot perturb the engine build outcome. |
 | AC1 compile | `dune exec bin/main.exe -- cm0.cm` | exit **0** |
 | **AC2** byte-identity | `diff <(cmc cm0.cm) ../compiled/cm0.json` | **empty**; `cmp` identical. **CUE-exact** — this reproduces `cue export`'s own bytes (4-space indent, insertion-order keys, `": "` separators, trailing `}\n`), **not** a re-serialization of both sides. No documented deviation on serialization. |
-| **AC3** CUE oracle | `cue vet <out.json> ../schema.cue -d '#NormalizedCMIR'` | exit **0** |
-| **AC4** no semantics reopened | `git status`; `git diff HEAD -- schema.cue examples compiled` | only `surface/` added; frozen files byte-identical (empty diff). |
-| Negative probe | `cmc cm0_no_admit.cm` | **rejected**, exit **2** (see below). |
+| **AC2-full** full-source byte-identity | `diff <(cmc --source cm0.cm) <(cue export ../schema.cue ../examples/cm0/cm.cue --out json -e cm0)` | **empty**; `cmp` identical (7726 bytes, digests included). CUE-exact. |
+| **AC3** CUE oracle (IR) | `cue vet <ir.json> ../schema.cue -d '#NormalizedCMIR'` | exit **0** |
+| AC3 CUE oracle (source) | `cue vet <source.json> ../schema.cue -d '#CMSource'` | exit **0** |
+| **AC4** no semantics reopened | `git status`; `git diff main -- schema.cue examples compiled` | only `surface/` changed; frozen files byte-identical (empty diff). |
+| Negative probe | `cmc cm0_no_admit.cm` (and `--source`) | **rejected**, exit **2** (see below). |
 
 ## Surface → IR mapping (how the notation collapses)
 
@@ -66,12 +76,34 @@ $ dune exec bin/main.exe -- cm0.cm        # → normalized JSON IR on stdout
    than recomputing CUE's hash from a different (`.cm`) source form. It is
    information the IR encodes, so the surface carries it — losslessly.
 
-2. **The surface is richer than the IR (as intended).** Each step's `via <pk>
-   <provider_id>` names the concrete provider (`ir_contract_checker`, …); the IR
-   projects only `provider_kind`, dropping the id — exactly as the CUE `cm0` source
-   carries full provider refs while the `cm0_ir` projection keeps only
-   `provider.kind`. The surface is the authored program; the IR is its normalized
-   projection.
+2. **The surface carries the full source; the IR is its projection.** Each step's
+   `via <pk> <provider_id> @<digest>` and its `{ reads / output / evidence … }`
+   block carry the concrete provider, its content-addressed digest, and its typed
+   contracts. The default (`cmc`) projects these to the IR shape (`provider_kind`
+   only, no per-step contracts) — exactly as CUE's `cm0_ir` comprehension projects
+   the rich `cm0` source. `cmc --source` re-emits the **full** source byte-identical
+   to `cue export … -e cm0` (7726 bytes). Nothing the source encodes is dropped by
+   the surface — the earlier spike's lossiness (digests, per-step contracts) is
+   closed. β's flag addressed: the content-addressing #112 made canonical now
+   survives the round-trip through `.cm`.
+
+## Full-source surface syntax (what the follow-on added)
+
+Small, uniform additions — the grammar stays < 15 constructs:
+
+- `question "…"`, `target <kind> "…"`, `standing "…"`, `boundary_note "…"` — the
+  four source-level string fields the IR drops.
+- `@sha256:<hex>` — a content-address digest, on a provider (`via tool foo
+  @sha256:ic0`), a child-CM `methodology` ref, or a `skill` ref.
+- an optional per-step `{ … }` block with `reads a, b`, `protocol x`,
+  `methodology <id> @<digest>`, `skill <id> <kind> @<digest> v<ver>`,
+  `output k: v, …`, `evidence k: v, …` (value `true`/`false` → bool, else string).
+
+The `--source` emitter reconstructs the constant scaffolding CUE materializes
+(`ref: null`, empty artifact lists, `contract_integrity:
+"assessable_from_normalized_ir"`, the `output.subject` duplication of `input`, and
+the fixed `emits_*`/`may_*` = false of a measure-only CM) so the surface need not
+restate it.
 
 ### Overlapping invariant checks (compiler + CUE — #114 AC4)
 
