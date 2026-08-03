@@ -1,5 +1,13 @@
 # CM Language — Product Direction
 
+> **Governed by [`NORTH-STAR.md`](NORTH-STAR.md).** TSC's center is *generative
+> reasoning* — recovering a higher-order generator from opposed articulations and
+> warranting the recovery. The methodology-as-code / repository-coherence framing
+> below is the **first application and self-hosting calibration domain**, and the
+> warranting substrate the generative operation needs — **not** TSC's identity.
+> *A CM language that can only assess existing artifacts has not yet recovered
+> TSC's generative purpose.*
+
 > **Status:** living direction doc. Tracks the north star, the architecture, what
 > is proven today, and what remains. Execution detail lives in the linked GitHub
 > issues; this doc is the coherent whole they are slices of.
@@ -77,16 +85,27 @@ Ordered by leverage, not urgency. Each is a tracked slice.
 - **#112 slice 2–4** — `#RunRequest`/`#MeasurementReceipt` (separate methodology from run), `#CompilationReceipt`, and the runtime artifacts (`#CompiledCM`/`#CalibrationReceipt`/`#AuthorizedCM`).
 - **#113** — the standard **provider library** (`providers.cue`), `AUTHORING.md`, the Hello-World-first curriculum, and the `coh cm` toolchain (`check/compile/link/test/assess/run`, `receipt verify`).
 - **#116** — **assessed property libraries** + the Core-warrant binding (the IR carries `H_M`/search-claims/bounds/identification behind every warrant-bearing construct).
-- **#110 CM0 4B–4D** — CM0's assessment *function*: calibration/fixture corpus (migrating the frozen v3.2 assets as fixtures, not semantics), assessments of the three CMs, self-application.
+- **#110 CM0 4B–4D** — CM0's assessment *function*: calibration/fixture corpus (migrating the frozen v3.2 assets as fixtures, not semantics), assessments of the three CMs, self-application. **CM0 is the instrument-calibration layer, not the flagship.**
+- **Articulation Ascent — the flagship generative CM** (`research/ascent/`; see [`NORTH-STAR.md`](NORTH-STAR.md)). The decisive test: articulation primitives in the `.cm` stdlib (`compileView`/`polarize`/`nameObstruction`/`lift`/`retainFiber`/`descend`/`roundTrip`/`testGenerativity`) and a CM that *generates and discovers* rather than only checks — with held-out descent, retained fibers, and `forbid decorativeLift`. **This is what proves the language recovered TSC's generative purpose; public positioning waits until it exists.**
 - **The runtime** — execute the providers a `.cm` names; today the surface *declares* typed steps, nothing runs them yet.
 
 ## 7. The north star
 
-A fresh developer, given the language guide and the assessed property libraries,
-**composes** a new methodology out of trusted, CM0-verified properties — and it
-compiles, validates, runs in a sandbox, and is assessed as an instrument before
-its verdict counts. That is a genuine methodology ecosystem: coherence
-methodologies as inspectable, composable, trustworthy-by-construction software.
+**The true north star is [`NORTH-STAR.md`](NORTH-STAR.md): generative reasoning
+with proof-carrying receipts** — an agent moves from a point of view to its
+polarity, recovers candidate higher-order generators that make both lawful,
+*generates new articulations* from those candidates, and states exactly what the
+evidence warrants. *Articulate. Lift. Generate. Warrant.*
+
+The methodology-ecosystem goal below is the **delivery vehicle and warranting
+substrate** for that operation, not a substitute for it: a fresh developer, given
+the guide and the assessed property libraries, **composes** a methodology out of
+trusted, CM0-verified properties that compiles, validates, runs sandboxed, and is
+instrument-assessed before its verdict counts — coherence methodologies as
+inspectable, composable, trustworthy-by-construction software. That substrate
+exists so a CM can *generate and discover* (Articulation Ascent), not only check
+(Repository Coherence). A language that can only assess existing artifacts has not
+yet recovered TSC's generative purpose.
 
 ## 8. How it is built (process)
 

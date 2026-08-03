@@ -6,6 +6,12 @@ the model: the existing Markdown CMs under `research/repository-coherence/`
 remain the source of truth and the human/explanatory layer, and are not edited
 here.
 
+> **Why does this exist?** [`NORTH-STAR.md`](NORTH-STAR.md) governs — TSC is a
+> system for **generative reasoning with proof-carrying receipts** (recover a
+> higher-order generator from opposed articulations; warrant or refuse it). The
+> repository-coherence work below is the **first application and self-hosting
+> calibration**, not the identity.
+>
 > **Where is this going?** See [`DIRECTION.md`](DIRECTION.md) — the product
 > direction: the layered architecture, frozen principles, what is proven today,
 > and the roadmap (the coherent whole that the CM-language issues are slices of).

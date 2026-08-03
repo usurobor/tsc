@@ -1,5 +1,16 @@
 # CM / TSC — Adoption & Go-to-Market Direction
 
+> **Governed by [`NORTH-STAR.md`](NORTH-STAR.md).** This doc is the go-to-market
+> mechanics for TSC's **first application** — repository coherence. Two load-
+> bearing corrections it must not lose: (1) TSC's true public identity is
+> *generative reasoning with proof-carrying receipts* ("From opposed views to a
+> generative whole — with receipts"), **not** repository-quality tooling — the
+> repo story is *evidence of generality*; (2) **public positioning should wait
+> until Articulation Ascent (the flagship generative CM) exists**, or the audience
+> will reasonably conclude TSC is an elaborate quality-assessment framework. The
+> landing copy in §15 is the *first-application* wedge, correct only once the
+> generative flagship backs it.
+
 > **Status:** living strategy doc. Companion to [`DIRECTION.md`](DIRECTION.md):
 > DIRECTION is the *technical* north star (architecture, principles, roadmap);
 > this is the *adoption* north star (who, why, what to ship first, how to frame
