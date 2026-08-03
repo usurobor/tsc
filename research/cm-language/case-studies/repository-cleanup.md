@@ -216,8 +216,10 @@ So the destructive wholesale delete was **cancelled and re-scoped**. Commit
 > superseded** role-grammar snapshots to Git history (no archive/ tree). …
 > `git rm docs/alpha/ docs/gamma/ docs/beta/` (superseded, **no live consumer**)."*
 
-By the time `75cca01` deletes the trees (2,926 line deletions across
-`docs/{alpha,beta,gamma}/`), the live material is already gone from them —
+By the time `75cca01` deletes the trees (≈2,891 lines removed across
+`docs/{alpha,beta,gamma}/`, within a 2,926-deletion commit that also drops the
+trees' now-dead `ci.yml` exclusions and repoints their live artifacts), the live
+material is already gone from them —
 extracted by `7b70bda` — and the last live doc, `OPERATOR-MANUAL.md`, is lifted
 out in the same commit (`docs/{beta => }/guides/OPERATOR-MANUAL.md`) with its
 consumers repointed (`src/skills/{cm-of-cms,self-measure}/SKILL.md`,
