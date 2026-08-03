@@ -415,12 +415,23 @@ let execute (st : state) (pl : plan) : unit =
 type verdict = { result_class : string; admissible : bool; oracle_run : bool }
 
 let evaluate (st : state) : verdict =
+  (* admissible is a property of the PROPOSAL (a valid #CompiledView / typed
+     generator witnessed), decoupled from fit — exactly as the frozen Sub-1
+     Result rule requires. Folding fit>0 in here would make the
+     NO_REALIZATION_IN_MODEL branch dead code and collapse the case3 (empty fit
+     after complete search) vs case4 (proposal refused before realization)
+     distinction. *)
   let admissible =
-    (match st.compiled_view with Some _ -> true | None -> false)
-    && List.length st.fit > 0 in
+    (match st.compiled_view with Some _ -> true | None -> false) in
   let oracle_run = st.oracle <> None in
   let f_id = List.length st.id_fiber in
   let rc =
+    (* Defensive guard, NOT exercised by the case1-only runtime: a
+       non-#CompiledView proposal crashes at the semantic step, so compiled_view
+       is always Some here and admissible is always true. Genuine DECORATIVE_LIFT
+       — a WELL-FORMED *decorative* proposal (admissible=false over realizable
+       data, Sub-1 case4) — is wired in #122. Kept so the Result rule is total
+       and matches the rule the receipt prints. *)
     if not admissible then "DECORATIVE_LIFT"
     else if List.length st.fit = 0 then "NO_REALIZATION_IN_MODEL"
     else begin
