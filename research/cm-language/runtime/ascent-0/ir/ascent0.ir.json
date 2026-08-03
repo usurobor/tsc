@@ -1,0 +1,187 @@
+{
+    "format": "tsc-cm-ir/0.1",
+    "cm_id": "tsc.ascent0",
+    "cm_version": "0.1",
+    "source_digest": "sha256:7d9b252a98faff8a3c9e9658663b2af7fd3b8b4422f658c5df17574036557e82",
+    "input_contract": {
+        "kind": "ascent_black_box_subject",
+        "required_artifacts": [
+            {
+                "role": "one_pov_behavior_primary_viewpoint",
+                "kind": "semantic_input",
+                "required": true
+            },
+            {
+                "role": "training_traces",
+                "kind": "observation_set",
+                "required": true
+            },
+            {
+                "role": "public_methodology_contract",
+                "kind": "h_m_declaration",
+                "required": true
+            },
+            {
+                "role": "heldout_input_query",
+                "kind": "query_word",
+                "required": true
+            },
+            {
+                "role": "oracle_commitment",
+                "kind": "commit_digest",
+                "required": true
+            }
+        ],
+        "artifact_lists": [],
+        "runtime_binding": "INCOMPLETE"
+    },
+    "procedure": {
+        "steps": [
+            {
+                "id": "semantic",
+                "kind": "semantic_judgment",
+                "provider_kind": "llm",
+                "provider_class": "semantic",
+                "reads": [
+                    "one_pov_behavior_primary_viewpoint",
+                    "training_traces",
+                    "public_methodology_contract"
+                ],
+                "produces": "compiled_view",
+                "search_strength": "sampled",
+                "may_access": [],
+                "failure": "DECORATIVE_LIFT"
+            },
+            {
+                "id": "finite_model_enumerate",
+                "kind": "mechanical",
+                "provider_kind": "tool",
+                "provider_class": "finite_model",
+                "reads": [
+                    "H_M_declaration",
+                    "search_bounds"
+                ],
+                "produces": "enumerated_class",
+                "search_strength": "complete_within_bound",
+                "may_access": [],
+                "failure": "UNRESOLVED"
+            },
+            {
+                "id": "realization_fit",
+                "kind": "mechanical",
+                "provider_kind": "tool",
+                "provider_class": "realization_fit",
+                "reads": [
+                    "enumerated_class",
+                    "training_traces"
+                ],
+                "produces": "fit_candidate_set",
+                "search_strength": "exact",
+                "may_access": [],
+                "failure": "NO_REALIZATION_IN_MODEL"
+            },
+            {
+                "id": "realization_quotient",
+                "kind": "mechanical",
+                "provider_kind": "tool",
+                "provider_class": "realization_quotient",
+                "reads": [
+                    "fit_candidate_set",
+                    "equivalence_relation"
+                ],
+                "produces": "identification_fiber",
+                "search_strength": "exact",
+                "may_access": [],
+                "failure": "UNRESOLVED"
+            },
+            {
+                "id": "descent_predict",
+                "kind": "mechanical",
+                "provider_kind": "tool",
+                "provider_class": "descent",
+                "reads": [
+                    "fit_candidate_set",
+                    "heldout_input_query"
+                ],
+                "produces": "candidate_predictions",
+                "search_strength": "exact",
+                "may_access": [
+                    "heldout_input_query"
+                ],
+                "failure": "UNRESOLVED"
+            },
+            {
+                "id": "oracle_reveal_compare",
+                "kind": "oracle",
+                "provider_kind": "oracle",
+                "provider_class": "oracle",
+                "reads": [
+                    "candidate_predictions",
+                    "oracle_commitment",
+                    "oracle_reveal_bundle",
+                    "heldout_input_query"
+                ],
+                "produces": "oracle_outcome",
+                "search_strength": "exact",
+                "may_access": [
+                    "oracle_reveal",
+                    "hidden_machine",
+                    "heldout_output_pre_reveal",
+                    "heldout_input_query"
+                ],
+                "failure": "UNRESOLVED"
+            },
+            {
+                "id": "roundtrip_check",
+                "kind": "mechanical",
+                "provider_kind": "tool",
+                "provider_class": "roundtrip",
+                "reads": [
+                    "fit_candidate_set",
+                    "descent_evidence",
+                    "equivalence_relation"
+                ],
+                "produces": "roundtrip_fiber",
+                "search_strength": "exact",
+                "may_access": [],
+                "failure": "UNRESOLVED"
+            }
+        ]
+    },
+    "result_contract": {
+        "kind": "ascent_measurement",
+        "subcontracts": [
+            "semantic",
+            "finite_model_enumerate",
+            "realization_fit",
+            "realization_quotient",
+            "descent_predict",
+            "oracle_reveal_compare",
+            "roundtrip_check"
+        ],
+        "runtime_binding": "INCOMPLETE",
+        "emits": {
+            "admission_verdict": false,
+            "authorization": false,
+            "boundary_decision": false
+        },
+        "derivation": "result_class is a pure function of derived facts (README result rule): not admissible -> DECORATIVE_LIFT; else |C_train|=0 (complete search) -> NO_REALIZATION_IN_MODEL; else oracle_run and separating and pass>=1 and tested_fiber=1 -> LIFT_VALIDATED; else |F_id|>=2 -> ASCENT_UNDERDETERMINED; else IDENTIFIED_IN_MODEL. Computed by the runtime at execute time, never hand-set."
+    },
+    "receipt_contract": {
+        "kind": "ascent_measurement",
+        "reports": [
+            "compiled_view",
+            "enumerated_class_size",
+            "fit_candidate_count",
+            "identification_fiber_size",
+            "candidate_predictions",
+            "heldout_separation",
+            "oracle_outcome",
+            "retained_alternatives",
+            "oracle_seal_ordering",
+            "roundtrip",
+            "result_class"
+        ],
+        "measure_only": true
+    }
+}

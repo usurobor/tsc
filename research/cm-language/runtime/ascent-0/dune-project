@@ -1,0 +1,6 @@
+(lang dune 3.0)
+
+; Ascent-0 Sub 3 runtime (issue #121). Its OWN build root: `dune build` here
+; descends into nothing else, shares no dependency with the frozen `coh` engine
+; (src/engine/ocaml), the Sub-1 fixture generator, or the Sub-2 contracts. It is
+; stdlib-only (no yojson/menhir/ppx/unix); every dependency is in-tree under lib/.

@@ -1,0 +1,4 @@
+_build/
+# emitted receipts carry absolute fixture paths (env-specific); regenerate with `make run`.
+receipt.case1.json
+*.receipt.json

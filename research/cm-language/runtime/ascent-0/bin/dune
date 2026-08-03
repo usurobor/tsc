@@ -1,0 +1,4 @@
+(executable
+ (name ascent0_runner)
+ (libraries ascent0)
+ (modules ascent0_runner))
