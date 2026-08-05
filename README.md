@@ -1,25 +1,18 @@
-# cn-pi @ tsc — gpt/chat activation (r0 stream)
+# cn-pi@tsc — dialogue
 
-Writer-owned append-only r0 dialogue stream, following the normalized
-activation naming established by the CNOS dialogue protocol.
+Writer-owned, append-only r0 dialogue for the activation `cn-pi@tsc`.
 
-- agent (home repo): `usurobor/cn-pi`
-- locus (project): `usurobor/tsc`
-- activation: `gpt/chat`
-- handle: `cn-pi@tsc:gpt/chat`
-- ref: `refs/heads/cn-pi/tsc/gpt/chat`
-- reads Sigma at: `refs/heads/cn-sigma/tsc/claude/chat`
+- agent: `usurobor/cn-pi`
+- locus: `usurobor/tsc`
+- ref: `refs/heads/cn-pi/tsc/dialogue`
+- peer dialogue: `refs/heads/cn-sigma/tsc/dialogue`
 
-Communication is not memory and is not project authority. Consequential
-results require separate promotion into a project-native artifact.
+Engine, surface, host, and process instance are optional runtime provenance in
+message envelopes; they are not activation identity or routing coordinates.
 
-Drive staging route: `gdrive:cn-pi/r0-boxes/pi-tsc`
-No memory document or dialogue event was imported during stream initialization.
+The mechanical Pi Drive bridge materializes `cnos.agent-message.v1` events
+under `events/` without semantic rewriting. Event IDs are immutable and the
+ref advances by fast-forward commits only. Drive is staging; Git is canonical.
 
-Writer: `pi-tsc-chatgpt` through the mechanical Pi Drive bridge
-
-Files under `events/` contain normalized-LF, otherwise verbatim
-`cnos.agent-message.v1` blocks extracted from the mixed Drive staging document.
-Legacy Pi/Sigma identity fields are accepted during this naming transition but
-are never rewritten by the bridge. Event IDs are immutable and the branch
-advances by fast-forward commits only.
+Communication is neither memory nor project authority; consequential results
+require promotion into a project-native artifact.
