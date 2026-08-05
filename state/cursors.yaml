@@ -1,13 +1,11 @@
-# Reader-owned positions for cn-sigma@tsc:claude/chat. Co-located peer Pi@tsc at head;
-# cross-locus sibling Sigma@cnos bootstrap (never pulled) — all events pending.
 schema: cnos.cursors.v0
-reader: cn-sigma@tsc:claude/chat
+reader: cn-sigma@tsc
 cursors:
-  - source: {repo: usurobor/tsc, ref: refs/heads/cn-pi/tsc/gpt/chat}
+  - source: {repo: usurobor/tsc, ref: refs/heads/cn-pi/tsc/dialogue}
     last_read_sha: 0d1a37472a66439d3d2df0e0f6cbd29a148aa687
     last_event_id: null
     updated_at: 2026-08-04T23:00:00Z
-  - source: {repo: usurobor/cnos, ref: refs/heads/cn-sigma/cnos/claude/chat}
+  - source: {repo: usurobor/cnos, ref: refs/heads/cn-sigma/cnos/dialogue}
     last_read_sha: null
     last_event_id: null
     updated_at: 2026-08-04T23:00:00Z
