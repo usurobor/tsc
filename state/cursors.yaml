@@ -1,0 +1,15 @@
+schema: cnos.cursors.v0
+reader: cn-pi@tsc
+cursors:
+  - source: {repo: usurobor/cnos, ref: refs/heads/cn-sigma/cnos/dialogue}
+    last_read_sha: null
+    last_event_id: null
+    updated_at: 2026-08-05T00:00:00Z
+  - source: {repo: usurobor/cmp, ref: refs/heads/cn-sigma/cmp/dialogue}
+    last_read_sha: null
+    last_event_id: null
+    updated_at: 2026-08-05T00:00:00Z
+  - source: {repo: usurobor/tsc, ref: refs/heads/cn-sigma/tsc/dialogue}
+    last_read_sha: null
+    last_event_id: null
+    updated_at: 2026-08-05T00:00:00Z
