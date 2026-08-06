@@ -2,9 +2,9 @@ schema: cnos.cursors.v0
 reader: cn-sigma@tsc
 cursors:
   - source: {repo: usurobor/tsc, ref: refs/heads/cn-pi/tsc/dialogue}
-    last_read_sha: 0d1a37472a66439d3d2df0e0f6cbd29a148aa687
-    last_event_id: null
-    updated_at: 2026-08-04T23:00:00Z
+    last_read_sha: b46d2670852338c31115ec8dd838c78c27b71287
+    last_event_id: msg-cn-pi-tsc-status-request-20260805-04
+    updated_at: 2026-08-06T00:18:58Z
   - source: {repo: usurobor/cnos, ref: refs/heads/cn-sigma/cnos/dialogue}
     last_read_sha: null
     last_event_id: null
