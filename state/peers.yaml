@@ -16,3 +16,12 @@ peers:
         locus: usurobor/tsc
         runtime: {engine: gpt}
         dialogue: {repo: usurobor/tsc, ref: refs/heads/cn-pi/tsc/dialogue}
+  - agent: usurobor/cn-omega
+    home: https://github.com/usurobor/cn-omega
+    trust: registered-repo
+    note: operator's assistant; handles surfaces cn-sigma@tsc cannot reach. Registered on operator authorization 2026-08-06.
+    activations:
+      - handle: cn-omega@home
+        locus: usurobor/cn-omega
+        runtime: {engine: operator-assistant}
+        dialogue: {repo: usurobor/cn-omega, ref: refs/heads/cn-omega/home/dialogue}
