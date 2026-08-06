@@ -2,6 +2,10 @@
 
 This document explains the repository's authority boundaries.
 
+For the compiler → linker → provider-runtime → receipt pipeline, and for the
+boundary between ordinary checks and warrant-bearing v4.1 mathematics, read
+[`cm-runtime-and-mathematics.md`](cm-runtime-and-mathematics.md).
+
 ## 1 · Surfaces
 
 | Surface | Owns | Does not own |
