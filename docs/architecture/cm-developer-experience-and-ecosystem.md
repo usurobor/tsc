@@ -1,7 +1,7 @@
 # TSC — CM Developer Experience and Ecosystem Architecture
 **Vision Draft 0.1**
 
-Status: architecture vision for review; not TSC project authority until promoted into a main-reachable artifact.  
+Status: architecture vision for review; not TSC project authority until promoted into a main-reachable artifact.
 Basis: the converged Pi–Omega–Sigma dialogue on methodology-as-code, Core semantics, the general CM runtime, and the two-sided ordinary-CM / Ascent-0 kernel.
 
 ## Governing sentence
@@ -16,14 +16,14 @@ Architecture should be derived from the experience we want to make possible, not
 
 The target experience is ordinary software development:
 
-- start a CM project;  
-- install existing methodology, property, provider, schema, and fixture packages;  
-- state one governing question in a top-level CM;  
-- compose existing properties where they fit;  
-- leave explicit typed holes where the methodology is not yet understood;  
-- progressively decompose high-level properties into smaller child CMs;  
-- terminate only at primitive mechanical, semantic/LLM, oracle, or pure-transform effects;  
-- compile, test, run, inspect, and verify receipts;  
+- start a CM project;
+- install existing methodology, property, provider, schema, and fixture packages;
+- state one governing question in a top-level CM;
+- compose existing properties where they fit;
+- leave explicit typed holes where the methodology is not yet understood;
+- progressively decompose high-level properties into smaller child CMs;
+- terminate only at primitive mechanical, semantic/LLM, oracle, or pure-transform effects;
+- compile, test, run, inspect, and verify receipts;
 - publish the resulting package for others to reuse.
 
 This is closer to a synthesis of npm/NuGet/Maven/Cargo, a typed functional language, a build system, and proof-oriented development than to a checklist engine.
@@ -36,46 +36,46 @@ The command names and manifest filename below are illustrative. The workflow and
 
 The developer installs two distinct tools:
 
-- `cn`: project, package, registry, environment, and host integration;  
+- `cn`: project, package, registry, environment, and host integration;
 - `coh`: CM compiler, linker, runtime, and receipt verifier.
 
 The separation is intentional. A runtime must not depend on the package manager for its semantics, just as Node can execute JavaScript without npm being online and the JVM can execute bytecode without Maven.
 
 ### 1.2 Create a CM project
 
-    cn init cm acme-repository-coherence  
+    cn init cm acme-repository-coherence
     cd acme-repository-coherence
 
 Illustrative generated tree:
 
-    acme-repository-coherence/  
-    ├── cn.toml                  # package manifest; exact filename TBD  
-    ├── cn.lock                  # exact dependency/provider digests  
-    ├── src/  
-    │   └── Main.cm             # package entry CM  
-    ├── tests/  
-    │   ├── fixtures/  
-    │   └── expected/  
-    ├── schemas/  
+    acme-repository-coherence/
+    ├── cn.toml                  # package manifest; exact filename TBD
+    ├── cn.lock                  # exact dependency/provider digests
+    ├── src/
+    │   └── Main.cm             # package entry CM
+    ├── tests/
+    │   ├── fixtures/
+    │   └── expected/
+    ├── schemas/
     └── README.md
 
 The manifest declares at least:
 
-- package identity and version;  
-- package kind;  
-- entry CM;  
-- target types;  
-- CM/property dependencies;  
-- provider capability dependencies;  
-- schema and fixture dependencies;  
-- compatibility constraints;  
+- package identity and version;
+- package kind;
+- entry CM;
+- target types;
+- CM/property dependencies;
+- provider capability dependencies;
+- schema and fixture dependencies;
+- compatibility constraints;
 - publication metadata.
 
 ### 1.3 Find and install a relevant methodology
 
 A developer should rarely begin from a blank universe. They search the registry for the closest existing articulation:
 
-    cn search cm "repository coherence"  
+    cn search cm "repository coherence"
     cn add @tsc/repository-coherence
 
 That package may already define child CMs such as Legibility, Structure, or Operability. The developer composes it; they do not need to inherit from an opaque framework class.
@@ -88,23 +88,23 @@ The domain CM asks whether the target is coherent under the declared methodology
 
 ### 1.4 Install reusable property libraries
 
-    cn add @tsc/property-legibility  
-    cn add @tsc/property-structure  
+    cn add @tsc/property-legibility
+    cn add @tsc/property-structure
     cn add @tsc/property-operability
 
 A property package states what is being assessed and how results derive from evidence. A property is not the same thing as its provider implementation.
 
 ### 1.5 Install primitive provider implementations
 
-    cn add @cn/provider-git  
-    cn add @cn/provider-schema  
-    cn add @cn/provider-llm  
+    cn add @cn/provider-git
+    cn add @cn/provider-schema
+    cn add @cn/provider-llm
     cn add @cn/provider-child-cm
 
 This distinction is load-bearing:
 
-- property / child CM = what question is being answered;  
-- provider = how a primitive observation, cognition step, oracle call, or transform is performed;  
+- property / child CM = what question is being answered;
+- provider = how a primitive observation, cognition step, oracle call, or transform is performed;
 - runtime = what links, schedules, bounds, caches, executes, and records those providers.
 
 Calling every package a “property provider” would collapse the methodology/effect boundary. CN should support multiple package kinds, even if all are distributed through one registry.
@@ -115,23 +115,23 @@ Illustrative F#-influenced syntax—not a syntax freeze:
 
     module Acme.RepositoryCoherence
 
-    let main target = cm {  
-        question  
-            "What makes this repository coherent for a technical newcomer  
+    let main target = cm {
+        question
+            "What makes this repository coherent for a technical newcomer
              and safe for routine engineering operation?"
 
-        let! legibility = run Repository.Legibility target  
+        let! legibility = run Repository.Legibility target
         and! structure  = run Repository.Structure target
 
-        and! operability =  
-            unresolved<AspectReceipt>  
+        and! operability =
+            unresolved<AspectReceipt>
                 "Operability is declared but not yet decomposed."
 
-        return  
-            compose {  
-                retain [ legibility; structure; operability ]  
-                precedence [ Failed; Incomplete; Defect; Pass ]  
-            }  
+        return
+            compose {
+                retain [ legibility; structure; operability ]
+                precedence [ Failed; Incomplete; Defect; Pass ]
+            }
     }
 
 This source already expresses a valid methodology shape even though one property is not implemented.
@@ -144,12 +144,12 @@ The hole is not a hidden TODO and is never interpreted as success. It is typed, 
 
 The build performs:
 
-- package and import resolution;  
-- parsing and type checking;  
-- property/provider capability checking;  
-- elaboration of any TSC Core obligations required by strong constructs;  
-- normalized CM IR generation;  
-- typed-hole reporting;  
+- package and import resolution;
+- parsing and type checking;
+- property/provider capability checking;
+- elaboration of any TSC Core obligations required by strong constructs;
+- normalized CM IR generation;
+- typed-hole reporting;
 - deterministic dependency locking.
 
 A build may succeed structurally while reporting unresolved methodology holes. A run that reaches such a hole yields `INCOMPLETE`, not `PASS` and not a runtime crash.
@@ -160,34 +160,34 @@ This is analogous to typed-hole-driven development: the developer starts from th
 
 The developer next opens Operability and asks what it means in this problem domain:
 
-    let operability target = cm {  
+    let operability target = cm {
         question "Can a newcomer build, test, and run this repository?"
 
-        let! build = Build.succeeds target  
-        and! tests = Test.succeeds target  
-        and! runbook = Semantic.judge {  
-            evidence = Documentation.localSetup target  
-            question = "Can the declared procedure be followed from a fresh checkout?"  
-            bounds = SemanticBounds.singleArtifact  
+        let! build = Build.succeeds target
+        and! tests = Test.succeeds target
+        and! runbook = Semantic.judge {
+            evidence = Documentation.localSetup target
+            question = "Can the declared procedure be followed from a fresh checkout?"
+            bounds = SemanticBounds.singleArtifact
         }
 
-        return  
-            derive {  
-                pass when build.pass && tests.pass && runbook.supported  
-                defect from [ build.findings; tests.findings; runbook.findings ]  
-                incomplete when anyIncomplete [ build; tests; runbook ]  
-                failed when anyExecutionFailed [ build; tests; runbook ]  
-            }  
+        return
+            derive {
+                pass when build.pass && tests.pass && runbook.supported
+                defect from [ build.findings; tests.findings; runbook.findings ]
+                incomplete when anyIncomplete [ build; tests; runbook ]
+                failed when anyExecutionFailed [ build; tests; runbook ]
+            }
     }
 
 Each of those operations may itself be:
 
-- another reusable CM;  
-- a locally defined child CM;  
-- a primitive mechanical provider;  
-- an isolated semantic/LLM provider;  
-- an oracle provider;  
-- a pure typed transform;  
+- another reusable CM;
+- a locally defined child CM;
+- a primitive mechanical provider;
+- an isolated semantic/LLM provider;
+- an oracle provider;
+- a pure typed transform;
 - an explicit refusal or unresolved hole.
 
 Recursive decomposition stops only at primitive effects. Everything above the primitive boundary remains inspectable CM source.
@@ -198,54 +198,54 @@ Recursive decomposition stops only at primitive effects. Everything above the pr
 
 A serious CM package carries:
 
-- positive fixtures;  
-- negative fixtures;  
-- incomplete-evidence fixtures;  
-- provider-failure fixtures;  
-- refusal fixtures;  
-- deterministic source-to-IR checks;  
-- result-derivation checks;  
-- regression fixtures from real failures;  
+- positive fixtures;
+- negative fixtures;
+- incomplete-evidence fixtures;
+- provider-failure fixtures;
+- refusal fixtures;
+- deterministic source-to-IR checks;
+- result-derivation checks;
+- regression fixtures from real failures;
 - CM0 assessment evidence when maturity requires it.
 
 The developer can test the methodology without running it against a private production target.
 
 ### 1.10 Run against an exact target
 
-    coh cm run \\  
-      --target git:https://example/repo.git@<commit-sha> \\  
+    coh cm run \\
+      --target git:https://example/repo.git@<commit-sha> \\
       --profile technical-newcomer
 
 Conceptual pipeline:
 
-    .cm source  
-      → normalized CM IR  
-      → exact RunRequest  
-      → provider linking  
-      → SandboxExecutionPlan  
-      → bounded execution  
-      → MeasurementReceipt  
+    .cm source
+      → normalized CM IR
+      → exact RunRequest
+      → provider linking
+      → SandboxExecutionPlan
+      → bounded execution
+      → MeasurementReceipt
       → independent receipt verification
 
 Every run is bound to exact methodology, target, provider, schema, instruction/model, runtime, and package digests.
 
 ### 1.11 Inspect and verify the receipt
 
-    coh receipt show runs/<run-id>.json  
+    coh receipt show runs/<run-id>.json
     coh receipt verify runs/<run-id>.json
 
 The receipt preserves:
 
-- target snapshot;  
-- methodology and dependency versions;  
-- provider identities and capabilities;  
-- evidence and evidence references;  
-- coverage and unobserved surfaces;  
-- alternatives retained before lawful collapse;  
-- refusals, truncation, and search strength;  
-- per-step failures;  
-- result derivation;  
-- the final categorical result;  
+- target snapshot;
+- methodology and dependency versions;
+- provider identities and capabilities;
+- evidence and evidence references;
+- coverage and unobserved surfaces;
+- alternatives retained before lawful collapse;
+- refusals, truncation, and search strength;
+- per-step failures;
+- result derivation;
+- the final categorical result;
 - optional downstream score projections without making those projections authoritative.
 
 ### 1.12 Publish the package
@@ -262,12 +262,12 @@ The language should have a small conceptual vocabulary.
 
 An executable, versioned inquiry that defines:
 
-- a governing question;  
-- accepted target and scope;  
-- required properties or child CMs;  
-- provider-bound observations;  
-- evidence and refusal contracts;  
-- result derivation;  
+- a governing question;
+- accepted target and scope;
+- required properties or child CMs;
+- provider-bound observations;
+- evidence and refusal contracts;
+- result derivation;
 - receipt shape.
 
 ### 2.2 Property
@@ -300,25 +300,25 @@ The layer that creates or changes artifacts and holds lifecycle authority. It ma
 
 Proposed package kinds:
 
-1. Methodology package  
-   - top-level or composite CMs;  
+1. Methodology package
+   - top-level or composite CMs;
    - examples: RepositoryCoherence, ReviewReadiness, CM0, ArticulationAscent.
 
-2. Property library package  
-   - reusable child CMs and property contracts;  
+2. Property library package
+   - reusable child CMs and property contracts;
    - examples: OneAuthoritativeHome, StatusTruth, AcceptanceCoverage.
 
-3. Provider package  
-   - primitive runtime implementations;  
+3. Provider package
+   - primitive runtime implementations;
    - examples: Git inventory, schema validation, bounded LLM judgment, theorem prover, external oracle.
 
-4. Schema/type package  
+4. Schema/type package
    - evidence, input, output, receipt, and target types.
 
-5. Profile/policy package  
+5. Profile/policy package
    - audience profiles, organizational thresholds, accepted query families, score projections.
 
-6. Fixture/calibration package  
+6. Fixture/calibration package
    - public synthetic targets, positive/negative cases, regression corpora, CM0 evidence.
 
 These may share one manifest and registry protocol while retaining different package kinds and validation rules.
@@ -331,12 +331,12 @@ The analogies are useful only if the boundaries stay explicit.
 
 TSC defines:
 
-- the CM language and semantics;  
-- normalized IR contracts;  
-- receipt contracts;  
-- result and refusal semantics;  
-- TSC Core obligations for warrant-bearing constructs;  
-- CM0 calibration semantics;  
+- the CM language and semantics;
+- normalized IR contracts;
+- receipt contracts;
+- result and refusal semantics;
+- TSC Core obligations for warrant-bearing constructs;
+- CM0 calibration semantics;
 - standard property and methodology libraries.
 
 ### 4.2 `coh`
@@ -345,10 +345,10 @@ TSC defines:
 
 Target commands:
 
-    coh cm check  
-    coh cm build  
-    coh cm test  
-    coh cm run  
+    coh cm check
+    coh cm build
+    coh cm test
+    coh cm run
     coh receipt verify
 
 The current released `coh` remains a v3.2-era repository proxy. The vision requires a new general CM path; it must not be falsely described as already shipped.
@@ -357,12 +357,12 @@ The current released `coh` remains a v3.2-era repository proxy. The vision requi
 
 `cn` is the package and workspace plane:
 
-- initialize projects;  
-- resolve/install packages;  
-- maintain lockfiles;  
-- discover provider implementations;  
-- publish packages;  
-- manage trusted registries;  
+- initialize projects;
+- resolve/install packages;
+- maintain lockfiles;
+- discover provider implementations;
+- publish packages;
+- manage trusted registries;
 - integrate local and remote execution environments.
 
 It is analogous to npm/NuGet/Maven/Cargo, but it also participates in CNOS capability and agent infrastructure.
@@ -371,14 +371,14 @@ It is analogous to npm/NuGet/Maven/Cargo, but it also participates in CNOS capab
 
 CNOS is the preferred host substrate for the ecosystem:
 
-- package distribution and discovery;  
-- activation and agent identity;  
-- provider registration;  
-- credentials and permissions;  
-- sandbox execution;  
-- LLM invocation;  
-- caching and restart;  
-- distributed provider hosts;  
+- package distribution and discovery;
+- activation and agent identity;
+- provider registration;
+- credentials and permissions;
+- sandbox execution;
+- LLM invocation;
+- caching and restart;
+- distributed provider hosts;
 - actor/CDS lifecycle and authority.
 
 However, `coh` should retain a minimal standalone execution boundary. A compiled CM with installed local providers should be runnable and verifiable without requiring a live CNOS control plane. CNOS is the preferred ecosystem host, not the owner of TSC semantics.
@@ -389,10 +389,10 @@ This portability boundary is the lesson shared by successful language ecosystems
 
 The complete path is:
 
-    surface construct  
-      → compiler elaborates types and warrant obligations into normalized IR  
-      → linker proves that selected providers expose required capabilities  
-      → runtime preserves evidence, bounds, alternatives, phases, and refusals  
+    surface construct
+      → compiler elaborates types and warrant obligations into normalized IR
+      → linker proves that selected providers expose required capabilities
+      → runtime preserves evidence, bounds, alternatives, phases, and refusals
       → receipt verifier checks that the emitted result is supported
 
 Core mathematics is not a separate stage that “runs.” It is the semantic contract behind strong language constructs.
@@ -401,20 +401,20 @@ For ordinary checks such as “does the file exist?” or “did every moved fil
 
 For claims such as:
 
-- Identified;  
-- Equivalent;  
-- no realization in the declared model class;  
-- underdetermined;  
-- held-out generalization;  
+- Identified;
+- Equivalent;
+- no realization in the declared model class;
+- underdetermined;
+- held-out generalization;
 - recovered generator;
 
 the compiler must make the obligations impossible to omit. The IR and receipt may need to retain:
 
-- declared model/generator class;  
-- search strength and bounds;  
-- fit and complexity regime;  
-- equivalence/query family;  
-- candidate alternatives or fibers;  
+- declared model/generator class;
+- search strength and bounds;
+- fit and complexity regime;
+- equivalence/query family;
+- candidate alternatives or fibers;
 - held-out, oracle, intervention, proof, or construction evidence.
 
 Most CM developers should use standard library constructs that carry those obligations rather than write the mathematics directly.
@@ -425,52 +425,52 @@ The first public demonstration should be an ordinary practical CM. It should not
 
 The shared kernel must be extracted from the intersection of:
 
-- ordinary check-style CMs such as Repository Coherence or Review Readiness;  
+- ordinary check-style CMs such as Repository Coherence or Review Readiness;
 - the already executed Ascent-0 hard case.
 
 The resulting domain-neutral kernel requires:
 
-1. Typed provider effects  
-   - explicit input/output schemas;  
-   - capabilities;  
-   - resource limits;  
-   - evidence contract;  
-   - cache identity;  
+1. Typed provider effects
+   - explicit input/output schemas;
+   - capabilities;
+   - resource limits;
+   - evidence contract;
+   - cache identity;
    - failure/refusal semantics.
 
-2. DAG and readiness semantics  
-   - deterministic dependency ordering;  
-   - principled skip/incomplete behavior;  
+2. DAG and readiness semantics
+   - deterministic dependency ordering;
+   - principled skip/incomplete behavior;
    - no accidental crash-as-verdict.
 
-3. Singleton- and collection-valued evidence  
-   - alternatives retained until evidence lawfully permits collapse;  
+3. Singleton- and collection-valued evidence
+   - alternatives retained until evidence lawfully permits collapse;
    - a fiber is the general case of retained admissible alternatives, not an Ascent-only special object.
 
-4. Bounded collection dataflow  
-   - typed map/fanout/fold;  
-   - stable item identities;  
-   - deterministic aggregation order;  
-   - declared cardinality/resource budgets;  
-   - per-item evidence/receipts;  
-   - partial-failure semantics;  
+4. Bounded collection dataflow
+   - typed map/fanout/fold;
+   - stable item identities;
+   - deterministic aggregation order;
+   - declared cardinality/resource budgets;
+   - per-item evidence/receipts;
+   - partial-failure semantics;
    - caching and restart.
 
-5. Explicit phases and information barriers  
-   - later evidence cannot contaminate an earlier proposal or judgment;  
+5. Explicit phases and information barriers
+   - later evidence cannot contaminate an earlier proposal or judgment;
    - commit/reveal is one Ascent implementation of the general barrier contract, not the only possible mechanism.
 
-6. Runtime-derived results  
-   - providers emit observations or proposals;  
-   - the runtime computes the result from retained evidence and declared derivation rules;  
+6. Runtime-derived results
+   - providers emit observations or proposals;
+   - the runtime computes the result from retained evidence and declared derivation rules;
    - a provider cannot notarize its own conclusion merely by returning a result-shaped value.
 
-7. Recomputable receipts  
-   - independent verification from retained inputs/evidence;  
+7. Recomputable receipts
+   - independent verification from retained inputs/evidence;
    - derivation is executable, not narrative only.
 
-8. Extensible warrant obligations  
-   - ordinary checks carry small obligations;  
+8. Extensible warrant obligations
+   - ordinary checks carry small obligations;
    - Core-bearing claims progressively require stronger evidence structures without a second runtime ontology.
 
 KISS boundary: the ABI and receipt schema must have typed places for these structures, and Ascent-0 must exercise them before the ABI freezes. We should not implement every generic combinator or every Core obligation catalog before a concrete CM requires it.
@@ -481,18 +481,18 @@ The runtime may be demonstrated first with an ordinary CM, but the ABI is not st
 
 Product proof:
 
-    an ordinary methodology runs end to end  
-    → useful practical result  
-    → mechanical + semantic + child-CM providers  
+    an ordinary methodology runs end to end
+    → useful practical result
+    → mechanical + semantic + child-CM providers
     → reproducible receipts
 
 Semantic-hardness proof:
 
-    Ascent-0 runs through the same generalized ABI  
-    → same retained-fiber counts  
-    → same phase/seal ordering  
-    → zero unauthorized reveal access  
-    → same runtime-computed result  
+    Ascent-0 runs through the same generalized ABI
+    → same retained-fiber counts
+    → same phase/seal ordering
+    → zero unauthorized reveal access
+    → same runtime-computed result
     → no second scheduler, receipt ontology, or host-language escape hatch
 
 The ordinary pilot proves the platform is useful. Ascent-0 proves the platform did not define away the hard case.
@@ -501,42 +501,42 @@ The ordinary pilot proves the platform is useful. Ascent-0 proves the platform d
 
 A CM author can:
 
-- discover an existing methodology from a registry;  
-- compose it into a local top-level CM;  
-- install reusable properties and provider implementations;  
-- start from a high-level question with typed holes;  
-- refine the methodology top down;  
-- compile to deterministic normalized IR;  
-- run locally or on CNOS;  
-- receive a typed evidence-bound receipt;  
-- verify the receipt independently;  
+- discover an existing methodology from a registry;
+- compose it into a local top-level CM;
+- install reusable properties and provider implementations;
+- start from a high-level question with typed holes;
+- refine the methodology top down;
+- compile to deterministic normalized IR;
+- run locally or on CNOS;
+- receive a typed evidence-bound receipt;
+- verify the receipt independently;
 - publish the methodology as a package.
 
 A property-library author can:
 
-- publish reusable child CMs with fixtures, types, and result derivations;  
-- leave provider selection to the linker/host where lawful;  
+- publish reusable child CMs with fixtures, types, and result derivations;
+- leave provider selection to the linker/host where lawful;
 - version semantics independently of report presentation.
 
 A provider author can:
 
-- implement one primitive capability against the stable ABI;  
-- declare schemas, resources, provenance, and warrant contract;  
+- implement one primitive capability against the stable ABI;
+- declare schemas, resources, provenance, and warrant contract;
 - be mechanically or semantically specialized without changing CM source.
 
 A repository or engineering owner can:
 
-- select the methodology and policy profile they actually endorse;  
-- see categorical findings, incomplete evidence, failures, refusals, and retained disagreement;  
-- add a scorecard or manager report as a versioned projection without making the score the truth source;  
-- rerun only affected providers/CMs on a new snapshot;  
+- select the methodology and policy profile they actually endorse;
+- see categorical findings, incomplete evidence, failures, refusals, and retained disagreement;
+- add a scorecard or manager report as a versioned projection without making the score the truth source;
+- rerun only affected providers/CMs on a new snapshot;
 - compare change receipts across time.
 
 An agent/CDS system can:
 
-- generate or repair an artifact;  
-- execute the same CM used by CI, an independent reviewer, or a customer;  
-- consume the receipt;  
+- generate or repair an artifact;
+- execute the same CM used by CI, an independent reviewer, or a customer;
+- consume the receipt;
 - keep merge/release/authorization outside the methodology runtime.
 
 ## 9. Current state and the gap
@@ -545,25 +545,25 @@ As of the current TSC state around `main` `e2172fd`:
 
 Exists:
 
-- compact `.cm` source language research;  
-- an OCaml source-to-normalized-IR compiler;  
-- CUE validation and normalized JSON artifacts;  
-- composite and leaf CM examples;  
-- a specialized Ascent-0 runtime with typed providers, candidate retention, phase sealing, and MeasurementReceipts;  
-- Repository Coherence, Legibility, and Structure methodologies/receipts;  
+- compact `.cm` source language research;
+- an OCaml source-to-normalized-IR compiler;
+- CUE validation and normalized JSON artifacts;
+- composite and leaf CM examples;
+- a specialized Ascent-0 runtime with typed providers, candidate retention, phase sealing, and MeasurementReceipts;
+- Repository Coherence, Legibility, and Structure methodologies/receipts;
 - CM0 research artifacts.
 
 Does not yet exist as a general shipped path:
 
-- a settled CN package manifest/kind model for CM ecosystems;  
-- general provider ABI and digest-pinned registry;  
-- ordinary leaf CMs using typed provider-bound steps consistently;  
-- general linker and sandbox runtime;  
-- generic child-CM invocation;  
-- generic bounded collection dataflow;  
-- a general receipt verifier;  
-- `coh cm` as the production runtime path;  
-- CN registry publication and installation of CM packages;  
+- a settled CN package manifest/kind model for CM ecosystems;
+- general provider ABI and digest-pinned registry;
+- ordinary leaf CMs using typed provider-bound steps consistently;
+- general linker and sandbox runtime;
+- generic child-CM invocation;
+- generic bounded collection dataflow;
+- a general receipt verifier;
+- `coh cm` as the production runtime path;
+- CN registry publication and installation of CM packages;
 - conforming CM0 assessment of the completed instrument.
 
 ## 10. Recommended sequence from here
@@ -572,11 +572,11 @@ Does not yet exist as a general shipped path:
 
 2. Reconcile `#112`, `#113`, and `#116` against the vision and current `main`; amend rather than duplicate where possible.
 
-3. Define the minimum package model:  
-   - manifest;  
-   - package kinds;  
-   - lockfile;  
-   - dependency/provider resolution;  
+3. Define the minimum package model:
+   - manifest;
+   - package kinds;
+   - lockfile;
+   - dependency/provider resolution;
    - publication boundary.
 
 4. Extract the shared runtime kernel from the ordinary-CM requirements and `ascent0_runner`.
@@ -585,8 +585,8 @@ Does not yet exist as a general shipped path:
 
 6. Implement the minimal provider ABI/linker and typed ordinary leaf steps.
 
-7. Run one open practical methodology family end to end. Strong candidates remain:  
-   - IssueContract → ChangeCoherence → ReviewReadiness;  
+7. Run one open practical methodology family end to end. Strong candidates remain:
+   - IssueContract → ChangeCoherence → ReviewReadiness;
    - an open/synthetic WA-style repository-audit slice.
 
 8. Re-run Ascent-0 through the same generalized kernel.
@@ -601,12 +601,12 @@ Does not yet exist as a general shipped path:
 
 The architecture is converged enough to guide work, but these exact choices still require design:
 
-- final manifest and lockfile names;  
-- package namespace and registry naming convention;  
-- exact `.cm` syntax for imports, typed holes, bounded collections, and profiles;  
-- provider transport ABI (in-process, subprocess, RPC, or multiple bindings);  
-- exact standalone-`coh` versus CNOS-hosted execution packaging;  
-- how package trust, signatures, and CM0 standing are represented in registry metadata;  
+- final manifest and lockfile names;
+- package namespace and registry naming convention;
+- exact `.cm` syntax for imports, typed holes, bounded collections, and profiles;
+- provider transport ABI (in-process, subprocess, RPC, or multiple bindings);
+- exact standalone-`coh` versus CNOS-hosted execution packaging;
+- how package trust, signatures, and CM0 standing are represented in registry metadata;
 - which practical CM family is the first public end-to-end pilot.
 
 Those should be derived from the developer journey and tested by concrete packages, not invented independently.
@@ -615,24 +615,24 @@ Those should be derived from the developer journey and tested by concrete packag
 
 The final system is an ecosystem of TSC programs, libraries, and primitive effects:
 
-    CM developer writes methodology.cm  
-      → `cn` resolves methodology/property/provider packages  
-      → `coh` compiles and elaborates obligations  
-      → linker selects capability-compatible providers  
-      → CNOS or the local host executes the bounded graph  
-      → typed receipts compose upward  
-      → verifier checks the claim  
+    CM developer writes methodology.cm
+      → `cn` resolves methodology/property/provider packages
+      → `coh` compiles and elaborates obligations
+      → linker selects capability-compatible providers
+      → CNOS or the local host executes the bounded graph
+      → typed receipts compose upward
+      → verifier checks the claim
       → an external actor decides what to do
 
 In that ecosystem:
 
-- `cn` is the package/workspace plane;  
-- `coh` is the CM compiler/runtime/verifier;  
-- TSC Core supplies the semantics of warrant-bearing constructs;  
-- CN packages carry methodologies, properties, providers, schemas, profiles, and fixtures;  
-- CNOS supplies the preferred execution, identity, capability, caching, agent, and lifecycle substrate;  
-- CM0 calibrates the instrument;  
-- CDS/actors retain mutation and authority;  
+- `cn` is the package/workspace plane;
+- `coh` is the CM compiler/runtime/verifier;
+- TSC Core supplies the semantics of warrant-bearing constructs;
+- CN packages carry methodologies, properties, providers, schemas, profiles, and fixtures;
+- CNOS supplies the preferred execution, identity, capability, caching, agent, and lifecycle substrate;
+- CM0 calibrates the instrument;
+- CDS/actors retain mutation and authority;
 - receipts are the stable boundary between judgment and action.
 
-That is the concrete destination: not a repository scorer, not a collection of prompt skills, and not one monolithic TSC engine, but a programmable ecosystem for transparent, reusable, independently verifiable methodologies.  
+That is the concrete destination: not a repository scorer, not a collection of prompt skills, and not one monolithic TSC engine, but a programmable ecosystem for transparent, reusable, independently verifiable methodologies.
