@@ -1,7 +1,7 @@
 # TSC — CM Developer Experience and Ecosystem Architecture
-**Vision Draft 0.1**
+**Vision Draft 0.2**
 
-Status: architecture vision for review; not TSC project authority until promoted into a main-reachable artifact.
+Status: architecture vision under review — Sigma review applied and converged with Pi in the runtime-implementation dialogue. Not TSC project authority until promoted into a main-reachable artifact. **Subordinate to `docs/product/NORTH-STAR.md`** (generative reasoning remains TSC's identity; this note is the ecosystem layer beneath it) and **reconciles with `docs/product/DIRECTION.md`**.
 Basis: the converged Pi–Omega–Sigma dialogue on methodology-as-code, Core semantics, the general CM runtime, and the two-sided ordinary-CM / Ascent-0 kernel.
 
 ## Governing sentence
@@ -385,6 +385,19 @@ However, `coh` should retain a minimal standalone execution boundary. A compiled
 
 This portability boundary is the lesson shared by successful language ecosystems: the runtime, package manager, and orchestration environment cooperate, but no package manager is allowed to redefine the language’s truth conditions.
 
+### 4.5 The portable-runtime / host-integration split
+
+The portability boundary above is not just a nice-to-have; it decides where work lives and who owns which contract. The runtime effort divides into two masters with a one-directional dependency.
+
+- **TSC / `coh` — the portable-runtime master.** Owns the host-independent kernel: the ABI, the normalized IR contracts, the evidence and receipt model, the receipt verifier, and a standalone executor that can run a compiled CM with locally installed providers and no live control plane. This side owns the *meaning* of a run and the *safety invariant* — expressed as a verifier plus conformance fixtures that any conforming runtime must pass.
+
+- **CNOS / `cn` — the host-integration master.** Owns provider registration and discovery, credentials and permissions, sandbox execution, scheduling, distributed provider hosts, caching/restart, and CDS/actor authority. This side owns the *transport* of a run and the *enforcement* of the safety invariant in a real environment.
+
+The dependency runs one way: the host lowers its concerns to the portable contracts. There is exactly one RunRequest, one SandboxExecutionPlan contract, and one MeasurementReceipt ontology, defined by `coh`; CNOS does not introduce a second run/receipt ontology and cannot redefine the truth conditions of a receipt. Two refinements make the division precise:
+
+- **Package meaning vs. transport.** `coh` fixes what a package *means* (its typed contents, obligations, and evidence model); `cn`/CNOS fix how a package is *transported* (resolved, distributed, cached, hosted).
+- **Safety invariant vs. enforcement.** `coh` defines the safety *invariant* and ships the verifier and conformance fixtures that pin it; CNOS *enforces* that invariant with real sandboxing, credentials, and capability gating. A standalone `coh` still checks the invariant; a host cannot weaken it.
+
 ## 5. Compilation, execution, and Core mathematics
 
 The complete path is:
@@ -436,7 +449,10 @@ The resulting domain-neutral kernel requires:
    - resource limits;
    - evidence contract;
    - cache identity;
-   - failure/refusal semantics.
+   - failure/refusal semantics;
+   - fail-closed handling of adversarial inputs: path confinement (no escape outside declared roots), rejection of include/import cycles, structured separation of prompt text from data so untrusted content cannot become instructions, and denial of any undeclared network or file access.
+
+   This safety behavior is the portable invariant `coh` owns per §4.5: the invariant and its conformance fixtures ship with the runtime and are checked by the verifier even standalone, while CNOS enforces it with real sandboxing and capability gating.
 
 2. DAG and readiness semantics
    - deterministic dependency ordering;
@@ -541,7 +557,7 @@ An agent/CDS system can:
 
 ## 9. Current state and the gap
 
-As of the current TSC state around `main` `e2172fd`:
+As of the current TSC state around `main` `32dfda8`:
 
 Exists:
 
@@ -549,7 +565,7 @@ Exists:
 - an OCaml source-to-normalized-IR compiler;
 - CUE validation and normalized JSON artifacts;
 - composite and leaf CM examples;
-- a specialized Ascent-0 runtime with typed providers, candidate retention, phase sealing, and MeasurementReceipts;
+- a specialized Ascent-0 runtime with typed providers, candidate retention, phase sealing, and MeasurementReceipts — which proves firewall-safe, mechanism-side identification, not blind-provider generative correctness (a driven blind run predicted `ab→00` against oracle `01` yet the mechanism still validated the lift via the fit-set fiber; measuring generative correctness is the deferred `#123` gap);
 - Repository Coherence, Legibility, and Structure methodologies/receipts;
 - CM0 research artifacts.
 
@@ -572,26 +588,26 @@ Does not yet exist as a general shipped path:
 
 2. Reconcile `#112`, `#113`, and `#116` against the vision and current `main`; amend rather than duplicate where possible.
 
-3. Define the minimum package model:
+3. Extract the shared runtime kernel from the ordinary-CM requirements and `ascent0_runner`.
+
+4. Finish Source → IR → RunRequest → SandboxExecutionPlan → MeasurementReceipt contracts.
+
+5. Implement the minimal provider ABI/linker and typed ordinary leaf steps. The first tracer may use explicit local, digest-pinned bindings — no package manager is required yet; package resolution is deferred until the runtime is proven.
+
+6. Run one open practical methodology family end to end. Strong candidates remain:
+   - IssueContract → ChangeCoherence → ReviewReadiness;
+   - an open/synthetic WA-style repository-audit slice.
+
+7. Re-run Ascent-0 through the same generalized kernel.
+
+8. Freeze the ABI only after both the practical and semantic-hardness proofs pass.
+
+9. Define the minimum package model — only once the runtime is proven and the ABI is frozen, so the manifest describes a real, stable contract rather than a guessed one:
    - manifest;
    - package kinds;
    - lockfile;
    - dependency/provider resolution;
    - publication boundary.
-
-4. Extract the shared runtime kernel from the ordinary-CM requirements and `ascent0_runner`.
-
-5. Finish Source → IR → RunRequest → SandboxExecutionPlan → MeasurementReceipt contracts.
-
-6. Implement the minimal provider ABI/linker and typed ordinary leaf steps.
-
-7. Run one open practical methodology family end to end. Strong candidates remain:
-   - IssueContract → ChangeCoherence → ReviewReadiness;
-   - an open/synthetic WA-style repository-audit slice.
-
-8. Re-run Ascent-0 through the same generalized kernel.
-
-9. Freeze the ABI only after both the practical and semantic-hardness proofs pass.
 
 10. Promote the surviving runtime into `coh cm`, integrate package workflows through `cn`, and run CM0 against the completed instrument.
 
