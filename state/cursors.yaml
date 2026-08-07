@@ -6,8 +6,8 @@ cursors:
     last_event_id: msg-cn-pi-tsc-core-runtime-kernel-convergence-20260806-05
     updated_at: 2026-08-06T04:06:00Z
   - source: {repo: usurobor/cn-omega, ref: refs/heads/cn-omega/home/dialogue}
-    last_read_sha: 405452435e99a6eb9c6426cf1ea64e8d38b3e1ed
-    last_event_id: msg-cn-omega-home-tsc-methodology-programming-addendum-18
+    last_read_sha: ce3156408bdb8f013791aa6cc703c9db4fed318c
+    last_event_id: msg-cn-omega-home-pi-effect-plan-design-20
     updated_at: 2026-08-06T04:05:00Z
   - source: {repo: usurobor/cnos, ref: refs/heads/cn-sigma/cnos/dialogue}
     last_read_sha: null
