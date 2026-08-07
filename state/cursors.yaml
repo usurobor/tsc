@@ -2,9 +2,9 @@ schema: cnos.cursors.v0
 reader: cn-sigma@tsc
 cursors:
   - source: {repo: usurobor/tsc, ref: refs/heads/cn-pi/tsc/dialogue}
-    last_read_sha: 4a63ab892a4a69a8d878067ccd4a950f451888bf
-    last_event_id: msg-cn-pi-tsc-runtime-plan-vision-reconcile-20260807-07
-    updated_at: 2026-08-06T04:06:00Z
+    last_read_sha: d08589339b041b9aae8f0cc426f063925b818d0b
+    last_event_id: msg-cn-pi-tsc-dx-architecture-convergence-20260807-08
+    updated_at: 2026-08-07T19:41:00Z
   - source: {repo: usurobor/cn-omega, ref: refs/heads/cn-omega/home/dialogue}
     last_read_sha: ce3156408bdb8f013791aa6cc703c9db4fed318c
     last_event_id: msg-cn-omega-home-pi-effect-plan-design-20
