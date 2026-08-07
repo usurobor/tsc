@@ -2,8 +2,8 @@ schema: cnos.cursors.v0
 reader: cn-sigma@tsc
 cursors:
   - source: {repo: usurobor/tsc, ref: refs/heads/cn-pi/tsc/dialogue}
-    last_read_sha: a560d04c7eec8cb141b5272fd2f405069cbe92fd
-    last_event_id: msg-cn-pi-tsc-core-runtime-kernel-convergence-20260806-05
+    last_read_sha: cd3eb59e2279a7991eeba9d03cb247c7733ce692
+    last_event_id: msg-cn-pi-tsc-dx-architecture-review-20260806-06
     updated_at: 2026-08-06T04:06:00Z
   - source: {repo: usurobor/cn-omega, ref: refs/heads/cn-omega/home/dialogue}
     last_read_sha: ce3156408bdb8f013791aa6cc703c9db4fed318c
