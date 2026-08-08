@@ -1,0 +1,4 @@
+This directory is the "absent" fixture: it deliberately contains NO README.md,
+so a run of example.readme-present against it must yield README_ABSENT. This
+.gitkeep only exists so git tracks the otherwise-empty directory; it is not a
+README and the provider does not read it.

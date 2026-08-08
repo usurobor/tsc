@@ -1,0 +1,25 @@
+// example.readme-present — the first ordinary CM to execute end to end.
+//
+// Governing question: does the subject repository present a README at its root?
+//
+// This is deliberately the smallest useful methodology: one leaf that terminates
+// at a single primitive mechanical provider (`file.exists`). It exists to prove
+// the runtime path — compile-time contract, link, execute a real provider,
+// evidence, receipt — not to say anything deep about repositories.
+//
+// NOTE ON STATUS: the executed artifact is the hand-authored NormalizedCMIR in
+// `ir/readme-present.ir.json`, exactly as the Ascent-0 runtime consumes a
+// hand-authored IR today. This `.cm` records author intent; the surface
+// compiler does not yet emit this IR. When `coh cm compile` can lower a leaf of
+// this shape, this file becomes the source and the IR becomes a build output.
+
+methodology "example.readme-present" version "0.1" {
+  subject repository as target_root
+
+  measure readme_presence
+    by file.exists { relative_path = "README.md" } over target_root
+
+  decide
+    | README_PRESENT when readme_presence
+    | README_ABSENT  otherwise
+}

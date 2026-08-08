@@ -1,0 +1,46 @@
+name: coh-min
+
+# Verification oracle for the minimal standalone CM runtime tracer (M2/M3).
+# Builds the stdlib-only OCaml runner, executes example.readme-present against
+# both fixtures, CUE-validates the receipts, and asserts the receipt is
+# fixture-sensitive (present -> README_PRESENT, absent -> README_ABSENT, and the
+# two receipts differ). Runs on the development branch and on demand.
+
+on:
+  push:
+    branches:
+      - main
+      - 'cycle/**'
+      - 'claude/tsc-recent-changes-onfjpj'
+    paths:
+      - 'research/cm-language/runtime/coh-min/**'
+      - '.github/workflows/coh-min.yml'
+  pull_request:
+    paths:
+      - 'research/cm-language/runtime/coh-min/**'
+      - '.github/workflows/coh-min.yml'
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install cue
+        run: |
+          set -euo pipefail
+          ver=v0.9.2
+          curl -fsSL "https://github.com/cue-lang/cue/releases/download/${ver}/cue_${ver}_linux_amd64.tar.gz" \
+            | tar xz cue
+          sudo mv cue /usr/local/bin/cue
+          cue version
+
+      - name: Build · run · vet · gate
+        working-directory: research/cm-language/runtime/coh-min
+        run: opam exec -- make gate
