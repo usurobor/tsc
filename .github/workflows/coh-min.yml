@@ -1,0 +1,55 @@
+name: coh-min
+
+# AC7: the coh-min slice's CI gate. Builds the stdlib-only runtime under the
+# canonical `dune`, runs its unit + end-to-end tests, then the M3 gate (AC1-5)
+# and the path-confinement fail-closed check (AC6). Triggers on the cycle
+# branch so β sees it green before merge.
+
+on:
+  push:
+    branches: [ main, master, 'cycle/**' ]
+  pull_request:
+
+defaults:
+  run:
+    working-directory: research/cm-language/runtime/coh-min
+
+jobs:
+  coh-min:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install dune
+        # coh-min is stdlib-only and carries no .opam file, so there are no
+        # deps to resolve — only the build tool itself.
+        run: opam install dune -y
+
+      - name: Fetch cue
+        # Fetched as a pinned release binary (the same pattern the linkcheck
+        # job uses for lychee), so the receipt-validation gate is deterministic
+        # and needs no opam/go toolchain.
+        run: |
+          set -euo pipefail
+          ver=v0.9.2
+          curl -fsSL "https://github.com/cue-lang/cue/releases/download/${ver}/cue_${ver}_linux_amd64.tar.gz" \
+            | tar xz cue
+          sudo mv cue /usr/local/bin/cue
+          cue version
+
+      - name: Build
+        run: opam exec -- dune build
+
+      - name: Test (unit + end-to-end)
+        run: opam exec -- dune runtest
+
+      - name: Gate (AC1-5)
+        run: opam exec -- make gate
+
+      - name: Path confinement (AC6)
+        run: opam exec -- make confine

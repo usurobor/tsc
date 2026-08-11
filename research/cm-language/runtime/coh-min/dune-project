@@ -1,0 +1,11 @@
+(lang dune 3.0)
+
+; coh-min: the minimal standalone CM runtime tracer (M2), destined to become
+; `coh cm run`. Its OWN build root, stdlib-only (no yojson/menhir/ppx/unix);
+; every dependency is in-tree under lib/. It shares NO code with the frozen
+; `coh` engine (src/engine/ocaml) or the Ascent-0 project. It HARVESTS the
+; link/execute/emit skeleton and VENDORS the JSON serializer + SHA-256
+; (verbatim) from the Ascent-0 runtime, generalized to run an ordinary CM: load
+; a NormalizedCMIR, link a SandboxExecutionPlan, execute a finite provider DAG
+; by input readiness, invoke a real provider backend, and emit one
+; MeasurementReceipt. The first CM it runs is `example.readme-present`.

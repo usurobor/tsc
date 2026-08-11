@@ -1,0 +1,4 @@
+(test
+ (name test_coh_min)
+ (libraries coh_min)
+ (modules test_coh_min))
