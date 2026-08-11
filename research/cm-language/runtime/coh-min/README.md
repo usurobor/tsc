@@ -34,13 +34,25 @@ project schema, `research/cm-language/schema.cue` — not a private JSON shape:
 make vet-ir
 ```
 
-vets **every** `*.ir.json` under `examples/` against `#NormalizedCMIR`, and
+vets every discovered IR under `examples/` against `#NormalizedCMIR`, and
 `make gate` depends on it, so no IR reaches the runtime without having been
 proved canonical first. Negative fixtures are not excused: the escape IR
 (`readme-present.escape.ir.json`) is vetted too, and differs from the good one
-in exactly one line. The target list is *discovered* (`find`), so a new example
-cannot be added without also being gated, and an empty list fails rather than
-passing vacuously.
+in exactly one line. An empty target list fails rather than passing vacuously.
+
+The target list is *discovered*, never enumerated. Every `*.json` under
+`examples/` falls into exactly one of three classes, and the gate acts on all
+three — which is what lets the closure claim be stated without hedging:
+
+| Class | Rule | `make vet-ir` |
+|---|---|---|
+| **IR** | any `*.json` inside an `ir/` directory, or any `*.ir.json` anywhere | vetted against `#NormalizedCMIR` |
+| **Subject data** | anything under a `fixtures/` directory | ignored — a subject repository may legitimately contain JSON that is not a methodology, and vetting a `package.json` would be a false failure |
+| **Unclassified** | any other `*.json` | **refused**, with a message naming the file and both conventions |
+
+So a `*.json` cannot be added under `examples/` without being either gated or
+explicitly classified. Naming alone is not load-bearing: the same non-conforming
+IR is caught as `naming.ir.json` *and* as `naming.json`.
 
 ### Two mechanisms, one contract
 

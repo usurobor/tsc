@@ -11,9 +11,25 @@ RUNNER   = dune exec ./bin/coh_min.exe --
 # The canonical CM IR contract. NOT a local copy: coh-min conforms to the
 # project schema, it does not carry its own.
 SCHEMA   = ../../schema.cue
-# EVERY IR under examples/, discovered — never enumerated by hand, so a new
-# example cannot be added without also being gated.
-IRS     := $(shell find examples -name '*.ir.json' | sort)
+# IR DISCOVERY. An IR is any *.json inside an `ir/` directory, or any file named
+# *.ir.json anywhere under examples/. $(sort) unions the two and de-duplicates.
+# Discovered, never enumerated by hand.
+IRS     := $(sort $(shell find examples -path '*/ir/*' -name '*.json') \
+                  $(shell find examples -name '*.ir.json'))
+
+# SUBJECT DATA. fixtures/ holds the repositories under measurement, and a subject
+# may legitimately contain JSON that is not a methodology (a package.json is not
+# an IR). Vetting those would be a false failure, so they are excluded.
+#
+# Everything else — a *.json under examples/ that is neither discovered as an IR
+# nor subject data — is UNCLASSIFIED, and vet-ir refuses it instead of skipping
+# it silently. That refusal is what makes the closure claim true: no *.json can
+# be added under examples/ without being either gated or explicitly classified.
+# (Before this, discovery was `-name '*.ir.json'` alone, so the same
+# non-conforming IR was gated as `naming.ir.json` and silently skipped as
+# `naming.json` — β #127 round-1 F2.)
+UNCLASSIFIED := $(filter-out $(IRS), \
+                  $(shell find examples -name '*.json' -not -path '*/fixtures/*'))
 
 .PHONY: build test run-present run-absent run vet-ir vet gate confine clean
 
@@ -41,7 +57,13 @@ run: run-present run-absent
 # the escape IR is vetted too.
 vet-ir:
 	@test -n "$(IRS)" || { \
-	  echo "FAIL(vet-ir): no *.ir.json found under examples/ — the gate would pass vacuously"; \
+	  echo "FAIL(vet-ir): no IR found under examples/ — the gate would pass vacuously"; \
+	  exit 1; }
+	@test -z "$(UNCLASSIFIED)" || { \
+	  echo "FAIL(vet-ir): JSON under examples/ that is neither an IR nor subject data:"; \
+	  for f in $(UNCLASSIFIED); do echo "    $$f"; done; \
+	  echo "  an IR belongs in an ir/ directory or is named *.ir.json;"; \
+	  echo "  subject data belongs under a fixtures/ directory."; \
 	  exit 1; }
 	@for ir in $(IRS); do \
 	  printf 'vet-ir: %s ... ' "$$ir"; \

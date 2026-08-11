@@ -482,3 +482,132 @@ consumed by the test so the required set and its table cannot drift.
   (§Peer and harness audit).
 
 **Ready for β.**
+
+---
+
+# Round 2 — β round-1 findings
+
+**Round:** 2 · **Reviewed at:** `bb785ff` · **β verdict:** REQUEST CHANGES (F1 `ci-status`, F2 honest-claim)
+
+β verified all 7 ACs PASS and all 7 contract axes conforming, and independently
+reproduced the §Finding above. Two findings; one is mine.
+
+| # | Finding | Owner | Disposition |
+|---|---|---|---|
+| F1 | `CDD Artifact Validate` red on the review SHA — cycle 126's missing close-outs | **not α** | Untouched. Pre-exists on `origin/main`; `.cdd/unreleased/126/` is outside #127's pinned scope and outside α's ownership. β states it is δ/γ/β work and is being repaired on a separate branch. `git diff --name-only origin/main...HEAD -- .cdd/unreleased/126/` is empty, before and after this round. |
+| F2 | `Makefile:16-17` claimed a closure the code did not deliver | **α** | Fixed — below. |
+
+## F2 — the closure claim now holds, mechanically
+
+**The defect.** The comment said *"EVERY IR under examples/, discovered … so a new
+example cannot be added without also being gated"*, but discovery was
+`find examples -name '*.ir.json'`. Closure held only for that glob. Reproduced
+before fixing, with β's own probe — one file, two names:
+
+```
+$ ls examples/naming/ir/            # non-conforming IR (receipt_contract deleted)
+naming.ir.json
+$ make vet-ir   → exit 2   (gated)
+
+$ mv …/naming.ir.json …/naming.json # THE SAME BYTES, renamed
+$ make vet-ir   → exit 0   (silently skipped — F2 confirmed)
+$ cue vet examples/naming/ir/naming.json ../../schema.cue -d '#NormalizedCMIR'
+receipt_contract.kind: incomplete value string   → exit 1
+```
+
+**The limb chosen: widen discovery**, rather than shrink the claim. Shrinking
+would have been honest but would have left the naming convention load-bearing —
+and a gate that a rename defeats is exactly the drift class #127 exists to close.
+Discovery is now:
+
+- **IR** — any `*.json` inside an `ir/` directory, **or** any `*.ir.json`
+  anywhere under `examples/` (`$(sort)` unions and de-duplicates the two finds);
+- **Subject data** — anything under `fixtures/`, deliberately excluded: a subject
+  repository may legitimately contain JSON that is not a methodology, and
+  vetting a `package.json` would be the false failure β warned about;
+- **Unclassified** — any other `*.json`, which `vet-ir` now **refuses** rather
+  than skipping, naming the file and both conventions.
+
+The third class is what makes the claim true rather than merely wider: a `*.json`
+cannot be added under `examples/` without being either gated or explicitly
+classified.
+
+**Demonstration — all four classes, each reverted after:**
+
+| # | Probe | `make vet-ir` |
+|---|---|---|
+| 1 | β's counterexample, `examples/naming/ir/naming.json` (non-conforming) | **exit 2** — `FAIL(vet-ir): examples/naming/ir/naming.json does not conform to #NormalizedCMIR` — **now gated under the name that previously escaped** |
+| 2 | non-conforming IR named `*.ir.json` but *outside* an `ir/` dir (`examples/loose.ir.json`) | **exit 2** — the union covers both conventions |
+| 3 | subject data `examples/readme-present/fixtures/present/package.json` | **exit 0** — ignored, no false failure |
+| 4 | unclassified `examples/stray.json` | **exit 2** — `FAIL(vet-ir): JSON under examples/ that is neither an IR nor subject data: examples/stray.json` + both conventions named |
+
+Baseline after every probe was reverted: `VET-IR PASSED: 2 IR(s) conform to
+#NormalizedCMIR.`, exit 0. `git status --porcelain` shows only `Makefile` and
+`README.md` modified — no probe artifact survives.
+
+**Peer enumeration for the claim (α §2.3 intra-doc repetition).** The overclaimed
+sentence appeared at **three** sites, not the one β named. β noted `README.md:37`
+stated the bound correctly, but `README.md:42` carried the same *"cannot be added
+without also being gated"* sentence — the #266 F3-bis pattern (fixing only the
+named site leaves a sibling). All live sites reconciled:
+
+| Site | Disposition |
+|---|---|
+| `Makefile:15-17` (β's named site) | rewritten: states the three classes exactly, and names the F2 regression it closes |
+| `README.md:37-43` | rewritten as the three-class table; both the bound and the closure sentence now match the code |
+| `.cdd/unreleased/127/self-coherence.md` §ACs AC2 (round-1 text) | **left intact as the round-1 record** — that sentence *is* the overclaim F2 names. It is superseded by this section, not rewritten; falsifying the round-1 record would hide the finding. |
+
+`grep -n "cannot be added"` over the slice now returns only this round-2 entry
+and the superseded round-1 line, both correctly framed.
+
+## Re-verification after the F2 fix
+
+Nothing outside `Makefile` and `README.md` changed, but the full local suite was
+re-run rather than assumed:
+
+```
+flat ocamlopt build (4.14.1)  → exit 0
+test suite                    → 32 ok, 0 FAIL, exit 0
+make vet-ir                   → VET-IR PASSED: 2 IR(s) conform, exit 0
+cue vet readme-present.ir.json        -d '#NormalizedCMIR' → exit 0
+cue vet readme-present.escape.ir.json -d '#NormalizedCMIR' → exit 0
+present fixture → README_PRESENT (computed=true complete=true), exit 0
+absent  fixture → README_ABSENT  (computed=true complete=true), exit 0
+receipts differ → ok
+cue vet both receipts -d '#MeasurementReceipt' → exit 0, exit 0
+escape IR → exit 1, stdout 0 bytes, "✗ coh_min: relative_path "../README.md" contains a ".." segment…"
+```
+
+No OCaml source changed this round, so `lib/json.ml` and `lib/sha256.ml` remain
+byte-identical to `../ascent-0/lib/`, and `schema.cue` remains untouched.
+
+## §Debt update
+
+Debt item 1 (`#NormalizedCMIR` cannot distinguish an absent block from an empty
+one) is unchanged and still out of scope. No new debt from this round. Debt item
+2 (test fixtures as a second writer of the IR shape) is unaffected — the
+fixtures live in OCaml, not under `examples/`, so the new classification does not
+reach them.
+
+## §Self-check — round 2
+
+F2 is the **same defect class as my round-1 F1 in cycle 126**: a comment claiming
+more than the code delivered. Twice now the code was correct and the prose around
+it was not, and both times β found it rather than my own pre-review gate. The
+gate rows I ran check that *evidence exists for each AC*; neither round had a row
+that re-reads each **comment** as a claim and asks what would falsify it. That is
+the α-side pattern for my close-out — not a fix I should improvise into a skill
+here.
+
+## §Review-readiness | round 2
+
+- **Base:** `origin/main` = `e8b8319281cc5aea85ad9856a864000477faaa0d`, re-checked
+  at readiness time; merge-base still equals main tip, no rebase needed.
+- **Fix SHA:** see branch HEAD; round-2 change is `Makefile` + `README.md` only.
+- **Tests:** 32/32, exit 0 (flat proxy; count from runner output).
+- **F1:** deliberately untouched, per β's own note and the pinned scope. β should
+  confirm it is discharged via path (a) or (b) before merge — it is not α's to
+  clear and no α-side change can clear it.
+- **F2:** fixed and demonstrated in four probes above.
+
+**Ready for β re-review.**
