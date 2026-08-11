@@ -8,7 +8,30 @@ ESCAPE_IR= $(EX)/ir/readme-present.escape.ir.json
 CONTRACT = $(EX)/contracts/receipt.cue
 RUNNER   = dune exec ./bin/coh_min.exe --
 
-.PHONY: build test run-present run-absent run vet gate confine clean
+# The canonical CM IR contract. NOT a local copy: coh-min conforms to the
+# project schema, it does not carry its own.
+SCHEMA   = ../../schema.cue
+# IR DISCOVERY. An IR is any *.json inside an `ir/` directory, or any file named
+# *.ir.json anywhere under examples/. $(sort) unions the two and de-duplicates.
+# Discovered, never enumerated by hand.
+IRS     := $(sort $(shell find examples -path '*/ir/*' -name '*.json') \
+                  $(shell find examples -name '*.ir.json'))
+
+# SUBJECT DATA. fixtures/ holds the repositories under measurement, and a subject
+# may legitimately contain JSON that is not a methodology (a package.json is not
+# an IR). Vetting those would be a false failure, so they are excluded.
+#
+# Everything else — a *.json under examples/ that is neither discovered as an IR
+# nor subject data — is UNCLASSIFIED, and vet-ir refuses it instead of skipping
+# it silently. That refusal is what makes the closure claim true: no *.json can
+# be added under examples/ without being either gated or explicitly classified.
+# (Before this, discovery was `-name '*.ir.json'` alone, so the same
+# non-conforming IR was gated as `naming.ir.json` and silently skipped as
+# `naming.json` — β #127 round-1 F2.)
+UNCLASSIFIED := $(filter-out $(IRS), \
+                  $(shell find examples -name '*.json' -not -path '*/fixtures/*'))
+
+.PHONY: build test run-present run-absent run vet-ir vet gate confine clean
 
 build:
 	dune build
@@ -27,22 +50,47 @@ run-absent: build
 
 run: run-present run-absent
 
+# #127 AC1/AC2: EVERY IR under examples/ must validate against the canonical
+# #NormalizedCMIR in $(SCHEMA). This is the gate that was missing in #126 — the
+# runtime consumed a private JSON shape and nothing asked. A non-conforming IR
+# fails here, loudly, before anything runs. Negative fixtures are NOT excused:
+# the escape IR is vetted too.
+vet-ir:
+	@test -n "$(IRS)" || { \
+	  echo "FAIL(vet-ir): no IR found under examples/ — the gate would pass vacuously"; \
+	  exit 1; }
+	@test -z "$(UNCLASSIFIED)" || { \
+	  echo "FAIL(vet-ir): JSON under examples/ that is neither an IR nor subject data:"; \
+	  for f in $(UNCLASSIFIED); do echo "    $$f"; done; \
+	  echo "  an IR belongs in an ir/ directory or is named *.ir.json;"; \
+	  echo "  subject data belongs under a fixtures/ directory."; \
+	  exit 1; }
+	@for ir in $(IRS); do \
+	  printf 'vet-ir: %s ... ' "$$ir"; \
+	  if cue vet "$$ir" $(SCHEMA) -d '#NormalizedCMIR'; then echo "conforms"; else \
+	    echo "FAIL(vet-ir): $$ir does not conform to #NormalizedCMIR"; exit 1; fi; \
+	done
+	@echo "VET-IR PASSED: $(words $(IRS)) IR(s) conform to #NormalizedCMIR."
+
 # AC5: both receipts validate against the #MeasurementReceipt contract.
 vet: run
 	cue vet receipt.present.json $(CONTRACT) -d '#MeasurementReceipt'
 	cue vet receipt.absent.json  $(CONTRACT) -d '#MeasurementReceipt'
 
-# AC7: `make gate` runs AC1-5 and fails loudly on any violation.
+# #126 AC7: `make gate` runs AC1-5 and fails loudly on any violation.
 #   AC1 build; AC2 present -> README_PRESENT; AC3 absent -> README_ABSENT;
 #   AC4 the two receipts are not byte-identical; AC5 both vet.
-gate: vet
+# #127 AC2: the gate now DEPENDS on vet-ir, so no IR reaches the runtime
+# without having been proved a canonical #NormalizedCMIR first. vet-ir is
+# listed first and make honours prerequisite order for a serial build.
+gate: vet-ir vet
 	@p=$$(grep -o '"result_class": "[A-Z_]*"' receipt.present.json | head -1); \
 	 a=$$(grep -o '"result_class": "[A-Z_]*"' receipt.absent.json  | head -1); \
 	 echo "present: $$p"; echo "absent:  $$a"; \
 	 test "$$p" = '"result_class": "README_PRESENT"' || { echo "FAIL(AC2): present is not README_PRESENT"; exit 1; }; \
 	 test "$$a" = '"result_class": "README_ABSENT"'  || { echo "FAIL(AC3): absent is not README_ABSENT"; exit 1; }; \
 	 if cmp -s receipt.present.json receipt.absent.json; then echo "FAIL(AC4): receipts are byte-identical"; exit 1; fi; \
-	 echo "GATE PASSED (AC1-5): coh-min executed a real provider; the receipt tracks the subject."
+	 echo "GATE PASSED (AC1-5, over schema-vetted IRs): coh-min executed a real provider; the receipt tracks the subject."
 
 # AC6: path confinement (the portable fail-closed invariant). An IR whose
 # provider config escapes the subject root MUST be denied: the run fails closed

@@ -3,15 +3,19 @@
    Usage:
      coh_min run --ir <ir.json> --target <subject-dir> [--out <path>]
 
-   Loads the NormalizedCMIR, links the SandboxExecutionPlan, executes the finite
-   provider DAG against the subject directory, and emits one MeasurementReceipt
-   (canonical JSON) to stdout (and to --out if given). A short human summary goes
-   to stderr; the machine artifact is on stdout.
+   Loads and VALIDATES the NormalizedCMIR, links the SandboxExecutionPlan,
+   executes the finite provider DAG against the subject directory, and emits one
+   MeasurementReceipt (canonical JSON) to stdout (and to --out if given). A short
+   human summary goes to stderr; the machine artifact is on stdout.
 
    Exit codes:
      0  a receipt was computed
-     1  the run failed closed (e.g. a denied path, a malformed IR) — NO receipt
-     2  a usage error
+     1  the run failed closed — NO receipt. Every fault in the run itself lands
+        here: a denied path, an unreadable/malformed IR, an IR missing a
+        canonical `#NormalizedCMIR` block or a field the runtime reads, an
+        unknown provider_class, and a derived result_class the IR does not
+        declare in `result_contract.result_classes`.
+     2  a usage error (argv only — no input artifact can reach this code)
 
    This is the M2 tracer for the portable runtime; it is NOT yet the production
    `coh cm run`. *)
