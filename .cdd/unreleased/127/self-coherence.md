@@ -383,3 +383,102 @@ Harness audit (schema-bearing change → audit non-OCaml writers):
 | Runtime dependencies | none beyond stdlib; `cue` only in Makefile/CI gates | build and tests need only the compiler; `cue` appears only in `vet-ir`/`vet` recipes and the workflow. |
 | JSON/wire contract | canonical JSON unchanged; receipt `format` unchanged; IR keeps `tsc-cm-ir/0.1` | receipt keys/shape unchanged and re-vetted; `format: "tsc-cm-ir/0.1"` retained *and now enforced*. |
 | Backward-compat | all #126 ACs hold; receipt's observable shape does not regress | AC3 above, plus the 14 retained assertions. |
+
+## §Self-check — did α push ambiguity onto β?
+
+- **Every claim above is a transcript I ran**, not a description of what should
+  happen. Where my result differed from the scaffold's prediction (AC7's `cmc`
+  error), I recorded what I observed and said why it differs.
+- **The one judgment call β should scrutinize** is the `result_classes` field
+  name and placement. `#NormalizedCMIR` leaves `result_contract` open, so the
+  vocabulary had to be *invented* somewhere; ascent-0 has no equivalent field
+  (its classes appear only in prose `derivation` and per-step `failure`). AC4
+  mandates that the vocabulary live in `result_contract`, so this is mandated
+  invention, not improvisation — but the *name* is mine.
+- **Deliberate strictness beyond the schema**: the runtime requires
+  `result_contract.result_classes`, which `cue vet` does not. A vetted IR is
+  therefore not automatically runnable. I chose this over defaulting the
+  vocabulary, because a default would silently restore the class of drift #127
+  exists to close. Stated in `ir.ml`, the README, and here.
+- **Scope discipline**: I did not tighten `schema.cue` even though §Finding shows
+  it would close 3 of 8 missing-block cases at vet time — the issue scopes it out
+  and the contract forbids editing it. Recorded as debt instead of acted on.
+- **No claim of universal closure**: the runner validates the canonical block set
+  and the fields it consumes. It does **not** re-implement the schema, and I have
+  not claimed it does.
+
+## §Debt (explicit)
+
+1. **`#NormalizedCMIR` cannot distinguish an absent block from an empty one** for
+   `format`, `procedure`, `result_contract` (§Finding). Mitigated at run time by
+   `Ir.of_json`; the schema-side repair is out of this slice's scope. This is the
+   highest-value follow-up in the finding set — it is the same defect *class*
+   #127 closes, one layer up.
+2. **The test suite's IR fixtures are a second writer of the IR shape.** They are
+   built in OCaml and cannot be `cue vet`-ed from inside a stdlib-only test, so
+   they could drift from `examples/`'s canonical IRs. Bounded: the shipped IRs
+   are gated by `make vet-ir` against the real schema, and the fixtures mirror
+   their block structure. A test that vets its own generated fixtures would need
+   either a `cue` subprocess (forbidden — no Unix) or a Makefile step that
+   renders them; neither is justified at this size.
+3. **The result-class derivation is still OCaml and still CM-specific**
+   (`Runner.classify` keys on `cm_id = "example.readme-present"`). AC4 explicitly
+   allows this; it is named in the IR's `derivation` prose, in `runner.ml`, and
+   in README §Honest scope. Lowering derivation into data is the natural next
+   case.
+4. **`dune build` / `dune runtest` were not run locally** — dune is not
+   installable in this cell (γ-verified). Local evidence is a flat `ocamlopt`
+   4.14.1 build; canonical evidence is CI on branch head, which β should confirm
+   green before merge.
+5. **Commit identity** follows the dispatch's explicit instruction
+   (`usurobor <usurobor@gmail.com>`, no tool/model trailers) rather than the
+   α-skill §2.6 row-14 pattern `alpha@{project}.cdd.cnos`. Flagged so the
+   divergence is a recorded decision, not drift.
+
+## §CDD Trace
+
+| Step | Artifact | State |
+|---|---|---|
+| 1 Gap | issue #127 + §Gap above (failing `cue vet` reproduced first) | done |
+| 2 Branch | `cycle/127` (γ-created; α verified base == `origin/main` tip, no rebase needed) | done |
+| 3 Design | **not required** — the issue's 7-axis contract and 7 ACs fully determine the shape; no new architecture, one new pure module inside an existing library | justified |
+| 4 Plan | **not required** — linear: canonicalize IRs → typed validator → vocabulary gate → gate wiring → rename → docs | justified |
+| 5 Tests | `test/test_coh_min.ml` 14 → 32 checks (table-driven block omissions; vocabulary-gate discriminating pair) | done |
+| 6 Code | `lib/ir.ml` (new), `lib/runner.ml`, `lib/dune`, `bin/coh_min.ml`, both `*.ir.json`, `Makefile`, `.github/workflows/coh-min.yml` | done |
+| 7 Docs | `README.md` (§The IR is canonical, §Two mechanisms, §Result-class vocabulary, §Honest scope, targets), `readme-present.intent.md` (new, replaces the `.cm`) | done |
+
+**Artifact enumeration matches diff** (α gate row 11) — every file in
+`git diff --name-status origin/main..HEAD` is named in step 6 or 7 above:
+`.github/workflows/coh-min.yml`, `Makefile`, `README.md`, `bin/coh_min.ml`,
+`ir/readme-present.escape.ir.json`, `ir/readme-present.ir.json`,
+`readme-present.cm` (D) → `readme-present.intent.md` (A), `lib/dune`,
+`lib/ir.ml` (A), `lib/runner.ml`, `test/test_coh_min.ml`, plus this file and
+γ's `gamma-scaffold.md` / `issue-127.md`.
+
+**Caller-path trace for new modules** (α gate row 12) — `lib/ir.ml` is not dead
+code: `Runner.run` calls `Ir.of_json` (`runner.ml`, the driver's first stage),
+`Runner.evaluate` calls `Ir.declares` and `Ir.undeclared_class_error`,
+`Runner.invoke` calls `Ir.field`, `Runner.link`/`execute` consume `Ir.t`/`Ir.step`
+fields, and `Ir.canonical_blocks` drives the AC5 regression table. Every exported
+value has a non-test caller except `canonical_blocks`, which is deliberately
+consumed by the test so the required set and its table cannot drift.
+
+## §Review-readiness | round 1
+
+- **Base:** `origin/main` = `e8b8319281cc5aea85ad9856a864000477faaa0d`, observed
+  after `git fetch origin main` at readiness time; merge-base == main tip, so the
+  cycle branch has **not** drifted behind main and no rebase was needed.
+- **Implementation SHA:** `c3a2a37cb9b88131de3666010a1967682fe77256`
+  (self-coherence commits follow it; review head is branch HEAD).
+- **γ artifact:** `γ-artifact at canonical §5.1 path` —
+  `.cdd/unreleased/127/gamma-scaffold.md` present on `origin/cycle/127`.
+- **Tests:** 32/32 checks, exit 0 (flat `ocamlopt` proxy; count from runner
+  output).
+- **Branch CI:** not observable from this cell — **β should confirm the `coh-min`
+  workflow is green on branch head before merge.** The workflow gained one step
+  (`make vet-ir`) whose local equivalent passes here.
+- **Every AC has evidence** (§ACs, AC1–AC7 all PASS); **known debt is explicit**
+  (§Debt, 5 items); **schema/shape audit** and **harness audit** completed
+  (§Peer and harness audit).
+
+**Ready for β.**
