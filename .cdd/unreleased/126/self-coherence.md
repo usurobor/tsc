@@ -170,3 +170,49 @@ both:    plan_digest = sha256:75b804180005c762c36fa42927f7995aa024446a6e82155473
 - **γ-artifact of record:** `.cdd/unreleased/126/gamma-scaffold.md` present at the canonical §5.1 path on `cycle/126`.
 
 Ready for β.
+
+## Fix round 2 — β round-1 findings
+
+**β verdict (round 1):** REQUEST CHANGES; all 7 ACs pass under β's independent
+verification; one C finding.
+
+### F1 — malformed-IR faults escaping the clean Error channel (honest-claim + exit-code contract)
+
+- **Finding:** `Runner.run` caught only `Sys_error`/`J.Parse_error` while its
+  comment claimed every IR fault yields "a clean [Error], never an escaping
+  exception," and the CLI documents exit 1 for malformed IRs. β counterexamples:
+  a malformed number literal (`12e`) escaped as `Failure("float_of_string")` and
+  a truncated `\u` escape as `Invalid_argument("String.sub / Bytes.sub")`, both
+  at exit 2 (reserved for usage errors).
+- **Fix (commit `a563beb`):** widened the catch in `Runner.run` — α's code only;
+  vendored `json.ml`/`sha256.ml` remain byte-identical to ascent-0 — adding
+  `Failure msg` and `Invalid_argument msg` arms that funnel to
+  `Error ("IR error: " ^ msg)`. The comment now names the two vendored-parser
+  exception classes explicitly, so it is true of the code as written.
+  `Sha256.self_test ()` deliberately stays outside the guard: a broken hash
+  implementation is a programmer-error invariant that must abort, not a
+  malformed-IR fault.
+- **Regression pair (required by β, added in the same commit):**
+  `test_coh_min.ml` now pins both named inputs — malformed number `12e` and
+  truncated `\u00` escape — asserting `R.run` returns `Error` with the
+  `IR error` prefix and that no exception escapes (`| exception _ -> false`
+  arm). Before the fix these two inputs crashed the test process itself.
+- **Negative-space check (β's "no IR input reaches exit 2"):** both
+  counterexamples probed through the CLI channel after the fix: exit **1** with
+  `IR error: float_of_string` / `IR error: String.sub / Bytes.sub` diagnostics,
+  no receipt on stdout. Exit 2 remains reachable only from argv parsing.
+
+### Round-2 local verification (flat `ocamlopt` proxy; dune in CI)
+
+- Rebuild of lib + driver + test: clean (same non-fatal warning set as round 1).
+- Test suite: **14/14** checks `ok` (12 prior + the 2 F1 regressions), exit 0.
+- AC2/AC3 re-run: present → `README_PRESENT`, absent → `README_ABSENT`.
+- AC4 re-run: `cmp -s` → receipts DIFFER.
+- AC5 re-run: both receipts vet against `#MeasurementReceipt` (cue v0.9.2).
+- AC6 re-run: escape IR denied, exit 1, no receipt.
+- β counterexamples: `12e` IR → exit 1, `IR error: float_of_string`; truncated
+  `\u00` IR → exit 1, `IR error: String.sub / Bytes.sub`.
+
+Surfaces touched this round: `lib/runner.ml`, `test/test_coh_min.ml`, this file.
+No other artifact changed; the vendored files were re-verified untouched by the
+diff. Ready for β round-2 re-review.
