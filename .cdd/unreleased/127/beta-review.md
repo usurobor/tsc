@@ -373,3 +373,173 @@ measured `cue vet` matrix: `#NormalizedCMIR` admits an IR missing `format`,
 `procedure` or `result_contract`. β independently confirms it. The project should
 stop treating "vets against `#NormalizedCMIR`" as equivalent to "is a runnable CM
 IR" until that schema is tightened.
+
+---
+
+# Round 2
+
+**Verdict:** APPROVED
+
+**Round:** 2
+**Review SHA (head):** `619b15c6abec0facb2efd8ce1bfaf2c85543022a`
+**Diff base:** `origin/main` = `b18dd2468254b7cfd30146e9a0498b5e6495eb4e` (re-fetched synchronously this round; main advanced from `e8b8319` when cycle 126's close-outs merged, and the branch has been merged up so `git merge-base origin/main HEAD` == main tip)
+**Fixed this round:** `27df6d1` closes **F2**. **F1** discharged by δ out-of-band (see below).
+**Branch CI state:** `coh-min` success, `ci` success; `CDD Artifact Validate` red for a self-clearing protocol reason, analysed below.
+**Merge instruction:** `git merge cycle/127` into `main` with `Closes #127` — **for δ/γ to execute; β was instructed not to merge this cycle.**
+
+This is a bounded re-verification of F2 plus a no-regression sweep, not a fresh
+full review. Round 1's AC and contract-axis verification stands and was not
+re-litigated, except where the no-regression sweep re-ran it.
+
+## Disposition of round-1 findings
+
+### F1 (`ci-status`, B) — **DISCHARGED**, by δ, not by α
+
+δ reports the root cause was its own: #126 was merged without collecting the
+protocol-required close-outs. Cycle 126's α and β were re-dispatched, both
+close-outs landed, and they are merged to main at `b18dd24`. β verified this
+directly rather than accepting the report:
+
+- `.cdd/unreleased/126/` now contains `alpha-closeout.md` and `beta-closeout.md`
+  alongside the pre-existing `beta-review.md`, `gamma-scaffold.md`,
+  `issue-126.md`, `self-coherence.md`.
+- β ran the gate script itself: `bash scripts/validate-release-gate.sh --mode pre-merge`
+  → **`✅ cycle 126 (triadic): all required artifacts present`**. The cycle-126
+  cause of F1 is gone.
+- **β accepts δ's correction.** β's round-1 note cited the gate generically; δ is
+  right that the script's *default* mode is `release`, which additionally
+  requires `RELEASE.md` and a `gamma-closeout.md` per cycle, while CI invokes
+  `--mode pre-merge`, where those are skipped as release-time-only. β confirmed
+  the distinction by running **both** modes: `--mode pre-merge` reports only the
+  cycle-127 close-outs missing; the default mode additionally reports
+  `RELEASE.md missing at repo root` and `cycle 126: missing gamma-closeout.md`.
+  The correction is accurate and β records it as such — the release-mode output
+  β would otherwise have quoted describes a tag-time gate, not a merge-time one.
+- α correctly left `.cdd/unreleased/126/` untouched throughout: `git show --name-only 27df6d1 -- .cdd/unreleased/126/` is **empty**. The only branch commits touching that directory are the cycle-126 close-out commits themselves (`47b5976`, `ac84308`), which arrived via main.
+
+### F2 (honest-claim / closure, A) — **FIXED**, verified by β's own probes
+
+α took the **widening** limb rather than rewording, which β regards as the
+stronger choice: a gate a rename defeats is the drift class #127 exists to close.
+Discovery is now a three-class rule. β re-ran its original counterexample and
+three more, each reverted afterwards:
+
+| # | Probe | Expected | `make vet-ir` result |
+|---|---|---|---|
+| 1 | **β's round-1 counterexample** — non-conforming IR at `examples/naming/ir/naming.json` (the exact name that silently escaped in round 1) | gated | **exit 2** — `FAIL(vet-ir): examples/naming/ir/naming.json does not conform to #NormalizedCMIR`. **F2's counterexample is dead.** |
+| 2 | same bytes as `examples/loose.ir.json` — `*.ir.json` *outside* an `ir/` dir | gated | **exit 2** — the union covers both conventions |
+| 3 | unclassified `examples/stray.json` | refused | **exit 2** — `FAIL(vet-ir): JSON under examples/ that is neither an IR nor subject data:` + the file + both conventions named |
+| 4 | subject data `examples/readme-present/fixtures/present/package.json` | ignored, **no false failure** | **exit 0** — `VET-IR PASSED: 2 IR(s) conform` |
+
+Probe 3 is what makes the closure claim true rather than merely wider: a `*.json`
+cannot now be added under `examples/` without being either gated or explicitly
+classified. Baseline restored to exit 0 after every probe, `git status --porcelain`
+clean.
+
+β also confirms α's **second site**: `README.md` carried the same
+"cannot be added without also being gated" sentence in a second sentence β did
+**not** flag in round 1. β's round-1 finding named `Makefile:16-17` and explicitly
+credited the README as stating the bound correctly — that was true of the
+sentence β read and false of the file as a whole. **α's peer-enumeration caught a
+site β's finding missed**, and β records that as a miss on β's side, not a
+courtesy. Both live sites now state the three-class rule; the round-1
+self-coherence sentence is correctly left intact as the record of the finding
+rather than rewritten.
+
+## No-regression sweep (β's own commands, at `619b15c`)
+
+| Check | Result |
+|---|---|
+| flat `ocamlopt` build (driver + tests), `-warn-error +a-4-70` | **exit 0**, clean |
+| test suite | **32 ok, 0 FAIL, exit 0** — unchanged from round 1 |
+| `readme-present.ir.json` vs `#NormalizedCMIR` | exit 0 |
+| `readme-present.escape.ir.json` vs `#NormalizedCMIR` | exit 0 |
+| present fixture | exit 0, `README_PRESENT` |
+| absent fixture | exit 0, `README_ABSENT` |
+| receipts differ | differ |
+| both receipts vs `#MeasurementReceipt` | exit 0, exit 0 |
+| escape IR denied | **exit 1, stdout 0 bytes**, `relative_path "../README.md" contains a ".." segment…` |
+| `lib/json.ml`, `lib/sha256.ml` vs `../ascent-0/lib/` | **IDENTICAL** (both) |
+| `git diff --name-only bb785ff..HEAD -- schema.cue '*.ml'` | **empty** — no schema and no OCaml changed this round |
+| scope confinement vs `origin/main` | **nothing outside** `runtime/coh-min/**`, `.github/workflows/coh-min.yml`, `.cdd/unreleased/127/` |
+
+## §CI status (rule 3.10)
+
+On review SHA `619b15c`:
+
+| Workflow | Conclusion | Run |
+|---|---|---|
+| `coh-min` | **success** | [31503344606](https://github.com/usurobor/tsc/actions/runs/31503344606) |
+| `ci` | **success** | [31503341815](https://github.com/usurobor/tsc/actions/runs/31503341815) |
+| `CDD Artifact Validate` | failure | [31503342383](https://github.com/usurobor/tsc/actions/runs/31503342383) |
+| `CDD Telegram Notifier` | skipped | 31503343670 |
+
+**Why the remaining red is not a round-2 finding.** β read the job breakdown: of
+the run's two jobs, `skill-bundle-integrity` is **success**; only
+`artifact-validate` step 4 "Validate CDD artifact presence (pre-merge gate)"
+fails. β reproduced that step locally and the cause is now **exclusively cycle
+127's own close-outs**:
+
+```
+✅ cycle 126 (triadic): all required artifacts present
+❌ cycle 127: missing alpha-closeout.md
+❌ cycle 127: missing beta-closeout.md
+```
+
+That is the ordinary state of every cycle before its close-outs are written, and
+the artifacts are the remedy, not a defect in the work under review. β's
+`beta-closeout.md` lands in the same commit as this verdict and clears one of the
+two; **α's `alpha-closeout.md` remains outstanding** and is the last artifact
+before the gate goes green.
+
+**This is not a conditional approval** (rule 3.4a). There is no unresolved review
+finding at any severity. The close-out requirement is a lifecycle artifact
+obligation the CDD protocol places on *every* cycle irrespective of review
+outcome — β's own artifact is part of it — so naming it is a status fact for δ,
+not a condition attached to β's judgment of the code.
+
+## Findings
+
+**None.** F1 discharged, F2 fixed and verified. No new finding at any severity.
+
+## Observation for δ triage (explicitly *not* a finding)
+
+The three-class rule documents subject data as *"anything under a `fixtures/`
+directory → ignored"*, but classification by path/name wins over location:
+`IRS` matches `*/ir/*.json` and `*.ir.json` with **no** `fixtures/` exclusion,
+while only `UNCLASSIFIED` excludes `fixtures/`. β demonstrated the seam:
+
+- `examples/readme-present/fixtures/present/ir/some-subject-file.json` → **exit 2**, vetted and failed
+- `examples/readme-present/fixtures/present/vendored.ir.json` → **exit 2**, vetted and failed
+
+So a subject repository that itself contains an `ir/` directory, or a vendored
+`*.ir.json`, would be vetted as a methodology. For a runtime whose whole purpose
+is measuring repositories — and which lives in a repo full of `ir/` directories —
+that subject is not far-fetched.
+
+**Why β does not raise this as a finding, stated so δ can overrule.** The failure
+direction is the opposite of F2's. F2 was a false **pass**: a non-conforming IR
+escaped silently, defeating the gate. This is a false **failure**: loud,
+immediate, and self-announcing to whoever adds such a fixture. The gate's
+protective claim — no non-conforming IR escapes — is fully true; what is stated
+slightly too broadly is the convenience claim that fixtures are never vetted.
+There is no live exposure (today's fixtures hold only `README.md`), and δ scoped
+this round as bounded re-verification. Under rule 3.6 (approve when coherent, not
+when perfect) and rule 3.5 (no phantom blockers) β judges this below the bar.
+If δ wants the documented rule literally exact, the fix is one line: add
+`-not -path '*/fixtures/*'` to both `IRS` finds and reconcile the two prose sites.
+
+## Closing the search space (rule 3.7)
+
+Stated with the scope discipline β failed to apply to its own #126 verdict.
+**What β searched this round:** the F2 fix across all four discovery classes plus
+two adversarial path/location edges; the full no-regression battery above; vendored-file
+byte identity; scope confinement against the new base; the gate script in both
+modes; CI conclusions and the per-job breakdown on `619b15c`. **What β did not
+re-search:** the round-1 AC1–AC7 verification and the seven contract axes were
+re-run only to the extent the no-regression sweep covers them; β did not rebuild
+the missing-block matrix or the AC4 vocabulary experiment, because no OCaml, no
+IR and no schema changed since round 1 (`git diff` empty for `*.ml` and
+`schema.cue`), which is the precondition that makes not re-running them sound.
+Within that scope β found no remaining blocker, and one sub-threshold seam
+recorded above rather than suppressed.
