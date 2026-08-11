@@ -114,3 +114,59 @@ Rule 3.10: on review SHA `18ce1dee` — `coh-min` run 31469158338 conclusion **s
 - Search space closure: apart from F1, no remaining blocker was found in the AC set, the 7-axis implementation contract, or the diff/architecture walk above.
 
 *Verdict restated: REQUEST CHANGES — one C finding (F1). All 7 ACs pass under β's independent verification; the cycle is one small on-branch fix + regression pair away from approval.*
+
+---
+
+# Round 2 — re-review of the F1 fix
+
+**Verdict:** APPROVED
+
+**Round:** 2
+**Fixed this round:** `a563beb` (+ self-coherence entry `515b233`) closes F1
+**Review base:** `origin/main` = `32dfda833a8dea0db765ea9332d3fab122f9d7d6` (unchanged since round 1; merge-base still equals main tip)
+**Review head:** `515b2333e9f36b0b9edd6bdae02bd6ef18cae215` (tip of `cycle/126`)
+**Branch CI state:** green on review SHA (coh-min run 31470000111 → success)
+**Merge instruction:** `git merge cycle/126` into `main` with `Closes #126`
+
+Bounded re-verification per γ's round-2 dispatch; all evidence below produced by β's own flat `ocamlopt` rebuild (scratch space, OCaml 4.14.1) — α's round-2 self-coherence entry treated as hypothesis and confirmed, not trusted.
+
+## Diff scope (704b57f..515b233)
+
+- `git diff --name-status`: exactly three files — `lib/runner.ml` (M), `test/test_coh_min.ml` (M), `.cdd/unreleased/126/self-coherence.md` (M). No other surface touched.
+- The fix: two new arms in `Runner.run`'s existing handler — `| Failure msg -> Error ("IR error: " ^ msg)` and `| Invalid_argument msg -> Error ("IR error: " ^ msg)` (runner.ml:266-267) — plus a comment that now names both vendored-parser exception classes, making the "never an escaping exception" claim true of the code as written.
+- `Sha256.self_test ()` remains **outside** the `try` (runner.ml:249) — correct: a broken hash implementation still aborts as a programmer-error invariant rather than being mislabeled "IR error". Within the guarded block, `Failure`/`Invalid_argument` can realistically only originate in the vendored parser (`link`/`emit`/`evaluate` are pure over parsed values; provider faults ride `result`), so the "IR error" label is accurate in scope.
+- Vendored-verbatim axis re-verified by β's own diff on the round-2 tree: `json.ml` IDENTICAL, `sha256.ml` IDENTICAL to `ascent-0/lib/`.
+
+## F1 counterexamples re-run (CLI channel, β's build)
+
+| Input | Round-1 behavior | Round-2 behavior (β-run) |
+|---|---|---|
+| IR with malformed number literal `12e` | `Fatal error: exception Failure("float_of_string")`, exit 2 | exit **1**, stderr `✗ coh_min: IR error: float_of_string`, 0 bytes on stdout (no receipt) |
+| IR with truncated `\u00` escape | `Fatal error: exception Invalid_argument("String.sub / Bytes.sub")`, exit 2 | exit **1**, stderr `✗ coh_min: IR error: String.sub / Bytes.sub`, 0 bytes on stdout (no receipt) |
+
+Exit-code contract restored: exit 1 = fail-closed run fault (malformed IR included), exit 2 reserved for argv/usage errors. No uncaught exception.
+
+## Regression quality check
+
+The two new tests assert the **Error path** (message must carry the `IR error` prefix) with an explicit `| exception _ -> false` arm — not merely "no crash". β proved they bite: rebuilding the round-1 (pre-fix) `runner.ml` from `18ce1de` against the round-2 test file yields exactly `FAIL - malformed number literal (12e) IR -> clean IR error (no exception)` and `FAIL - truncated \u escape IR -> clean IR error (no exception)`, suite exit 1. On the round-2 runner: **14/14** checks ok, exit 0.
+
+## Happy path re-verified (no regression)
+
+- present fixture → exit 0, `"result_class": "README_PRESENT"`; absent fixture → exit 0, `"result_class": "README_ABSENT"` (AC2/AC3).
+- `cmp -s` → receipts differ (AC4).
+- `cue vet` (v0.9.2) both receipts against `#MeasurementReceipt` → clean (AC5).
+- Escape IR still denied: exit 1, no receipt (AC6).
+
+## CI status (rule 3.10)
+
+On review SHA `515b2333`: `coh-min` run 31470000111 (run #4, push event) conclusion **success** — build → runtest (now 14 checks) → gate → confine on OCaml 5.2. Gate satisfied.
+
+## Findings
+
+None. F1 is closed with the required regression pair; no new finding emerged from the round-2 diff.
+
+## Closure
+
+Search space closed (rule 3.7): with F1 resolved, no remaining blocker exists in the AC set (1–7 all pass, round-1 evidence + round-2 re-runs above), the 7-axis implementation contract (re-verified where the round-2 diff could touch it: vendored-verbatim, stdlib-only, additive-plus-cycle-artifacts, α-code-only fix), or the diff walk. Verdict-shape lint: single terminal verdict, no conditions, zero unresolved findings.
+
+**Merge instruction:** β (or the merging role per CDS step 8) merges `cycle/126` into `main` with `Closes #126`. Not executed by this re-review session per γ's bounded dispatch ("do NOT merge").
