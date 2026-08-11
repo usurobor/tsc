@@ -1,8 +1,9 @@
 name: coh-min
 
-# AC7: the coh-min slice's CI gate. Builds the stdlib-only runtime under the
-# canonical `dune`, runs its unit + end-to-end tests, then the M3 gate (AC1-5)
-# and the path-confinement fail-closed check (AC6). Triggers on the cycle
+# The coh-min slice's CI gate. Builds the stdlib-only runtime under the
+# canonical `dune`, vets every example IR against the canonical #NormalizedCMIR
+# (#127 AC2), runs its unit + end-to-end tests, then the M3 gate (#126 AC1-5)
+# and the path-confinement fail-closed check (#126 AC6). Triggers on the cycle
 # branch so β sees it green before merge.
 
 on:
@@ -45,10 +46,19 @@ jobs:
       - name: Build
         run: opam exec -- dune build
 
+      # #127 AC2: every IR under examples/ must be a canonical #NormalizedCMIR.
+      # Run as its OWN step (as well as being a `make gate` prerequisite) so a
+      # schema violation is visible in the job summary without reading the gate
+      # log.
+      # Quoted: an unquoted `#` starts a YAML comment and would silently
+      # truncate this step's name to "Vet IRs against".
+      - name: "Vet IRs against #NormalizedCMIR"
+        run: make vet-ir
+
       - name: Test (unit + end-to-end)
         run: opam exec -- dune runtest
 
-      - name: Gate (AC1-5)
+      - name: Gate (AC1-5, over schema-vetted IRs)
         run: opam exec -- make gate
 
       - name: Path confinement (AC6)

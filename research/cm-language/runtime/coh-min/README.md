@@ -25,14 +25,69 @@ Changing the subject changes the receipt because a real provider read the disk �
 which is exactly what "the runtime executes providers" means, and what static IR
 validation cannot show.
 
+## The IR is canonical, and the build proves it
+
+The artifact `coh-min` executes is a **`#NormalizedCMIR`** as defined by the
+project schema, `research/cm-language/schema.cue` — not a private JSON shape:
+
+```
+make vet-ir
+```
+
+vets **every** `*.ir.json` under `examples/` against `#NormalizedCMIR`, and
+`make gate` depends on it, so no IR reaches the runtime without having been
+proved canonical first. Negative fixtures are not excused: the escape IR
+(`readme-present.escape.ir.json`) is vetted too, and differs from the good one
+in exactly one line. The target list is *discovered* (`find`), so a new example
+cannot be added without also being gated, and an empty list fails rather than
+passing vacuously.
+
+### Two mechanisms, one contract
+
+`cue vet` and the runtime's own `Ir.of_json` are complementary, and the overlap
+is smaller than it looks. CUE's unification makes some **absent** blocks
+indistinguishable from empty ones — a concrete schema literal (`format`) unifies
+to itself when omitted, and an open struct or list (`procedure`,
+`result_contract`) is complete as `{}` / `[]`. Deleting one canonical block from
+the shipped IR (cue v0.9.2):
+
+| Missing block | `cue vet` | the runtime |
+|---|---|---|
+| `format`, `procedure`, `result_contract` | **passes** | fails closed |
+| `cm_id`, `cm_version`, `source_digest`, `input_contract`, `receipt_contract` | fails | fails closed |
+
+So the schema owns **exactness** (the closed top-level field set and the shape of
+every block present — a stray field or a wrong type is rejected), and the
+runtime owns **presence and fail-closed consumption** (all eight canonical
+blocks, plus every field it reads). Neither alone is sufficient. Tightening
+`#NormalizedCMIR` is the other half of the repair and is deliberately out of
+this slice's scope; the schema is conformed to, never edited.
+
+### Result-class vocabulary
+
+The receipt's `result_class` is **the IR's word, not the runner's**. The CM
+declares its vocabulary in `result_contract.result_classes`; the runtime reads
+that list and refuses to emit a receipt carrying a class the CM never declared:
+
+```
+✗ coh_min: result_class "README_PRESENT" is not declared in the IR's
+  result_contract.result_classes ["PRESENT", "ABSENT", "INCOMPLETE"]; …
+```
+
+The *derivation* is still OCaml (`Runner.classify`), exactly as ascent-0's
+`result_contract.derivation` is still prose. Lowering a derivation into
+executable data is a later slice; separating vocabulary from derivation is what
+this one buys.
+
 ## Design (harvested from Ascent-0, generalized)
 
 | Stage | What it does |
 |---|---|
-| `link` | normalize `procedure.steps` into a plan; bind each step's capability (`may_access`) |
+| `Ir.of_json` | validate the document into a typed IR: canonical blocks present, consumed fields typed — or a fail-closed `IR error` |
+| `link` | normalize the validated steps into a plan; bind each step's capability (`may_access`) |
 | `execute` | run a step only when its typed `reads` surfaces are all present; unrun steps are principled skips, never crashes |
 | `backend` | invoke the real provider; `file.exists` confines the path, then stats the subject and reports what it saw |
-| `evaluate` | derive the result from the produced evidence (runtime-derived, not provider-notarized) |
+| `evaluate` | derive the result from the produced evidence (runtime-derived, not provider-notarized), then gate it on the vocabulary the IR declares |
 | `emit` | canonical-JSON `MeasurementReceipt` with a content-addressed plan digest |
 
 It vendors the JSON serializer and SHA-256 from the Ascent-0 runtime (verbatim,
@@ -43,6 +98,10 @@ reproduces it through the same shared ABI before any freeze.
 ### Module layout
 
 - `lib/json.ml`, `lib/sha256.ml` — vendored verbatim from `../ascent-0/lib/`.
+- `lib/ir.ml` — the `#NormalizedCMIR` contract as a typed value. **Pure and
+  total**: parsing the IR either yields a value every later stage can rely on or
+  an error naming the dotted path at fault. It reads through its own
+  `result`-returning accessors because the vendored `Json.member` raises.
 - `lib/provider.ml` — the provider layer. `confine` is a **pure** path-confinement
   function (its whole negative space is testable without a filesystem);
   `file_exists` is the thin effectful shell that stats the confined path. Both
@@ -69,9 +128,19 @@ and the contract forbids Unix, so admission never depends on I/O.
 ## Honest scope
 
 - The executed artifact is the **hand-authored** IR (`ir/readme-present.ir.json`),
-  exactly as the Ascent-0 runtime consumes a hand-authored IR today. The `.cm`
-  records intent; the surface compiler does not yet emit this IR, nor lower its
-  `decide` block (the runtime carries the decision projection for this one CM).
+  exactly as the Ascent-0 runtime consumes a hand-authored IR today. It is now
+  canonical (`#NormalizedCMIR`) and gated, but it is still hand-authored: the
+  surface compiler for ordinary CMs is deliberately deferred until the runtime
+  target stops moving.
+- There is **no `.cm` source** for this example, and no file pretends to be one.
+  `readme-present.intent.md` is a prose note recording author intent; the three
+  program forms `cm_surface.ml` implements (`InstrumentAssessment`,
+  `AspectReceipt`, `CompositeReceipt`) cannot express an ordinary CM emitting a
+  `MeasurementReceipt`, so writing one would mean building the deferred
+  compiler. The IR is the authoritative executable artifact and says so.
+- The result-class **derivation** is still OCaml (`Runner.classify`) for this one
+  CM; only the vocabulary is data. Any other `cm_id` is left unclassified and
+  fails closed.
 - `file.exists` is the **only** wired provider.
 - Receipt format `tsc-measurement-receipt/0.1` is the ordinary-CM projection of
   the shared receipt shape M1 will unify with Ascent-0's.
@@ -79,13 +148,14 @@ and the contract forbids Unix, so admission never depends on I/O.
 ## Build and run
 
 Stdlib-only OCaml; no opam dependencies (the canonical build is `dune`; `cue` is
-needed only for `make vet` / `make gate`).
+needed only for `make vet-ir` / `make vet` / `make gate`).
 
 ```
 make build      # dune build
 make test       # dune runtest (unit + end-to-end assertions)
 make run        # execute both fixtures
-make vet        # cue vet both receipts
-make gate       # the full M3 gate (AC1-5)
+make vet-ir     # cue vet every example IR against #NormalizedCMIR
+make vet        # cue vet both receipts against #MeasurementReceipt
+make gate       # vet-ir, then the full M3 gate (AC1-5)
 make confine    # the path-confinement fail-closed check (AC6)
 ```
