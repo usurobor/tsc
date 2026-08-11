@@ -143,3 +143,134 @@ is load-bearing rather than redundant.
 After restore: `make vet-ir` → exit 0, and the two IRs diff by one line (above).
 
 **STATUS: PASS.**
+
+### AC3 — no regression (all of #126's ACs continue to hold)
+
+```
+$ coh_min run --ir …/readme-present.ir.json --target …/fixtures/present --out r.present.json
+coh_min: cm=example.readme-present target=…/fixtures/present result_class=README_PRESENT (computed=true complete=true)
+  exit=0
+$ coh_min run --ir …/readme-present.ir.json --target …/fixtures/absent  --out r.absent.json
+coh_min: cm=example.readme-present target=…/fixtures/absent  result_class=README_ABSENT  (computed=true complete=true)
+  exit=0
+$ cmp -s r.present.json r.absent.json  →  receipts differ: ok
+$ cue vet r.present.json …/contracts/receipt.cue -d '#MeasurementReceipt'   exit=0
+$ cue vet r.absent.json  …/contracts/receipt.cue -d '#MeasurementReceipt'   exit=0
+```
+
+Escape IR still denied fail-closed (exit 1, **zero** bytes on stdout — no receipt):
+```
+$ coh_min run --ir …/readme-present.escape.ir.json --target …/fixtures/present
+  exit=1 · stdout bytes: 0
+  stderr: ✗ coh_min: relative_path "../README.md" contains a ".." segment and could escape the subject root
+```
+
+Honest-claim spot-checks (the same ones β ran in #126, re-run because the IR
+changed underneath them):
+
+- `source_digest` is genuine, not fabricated — it is the SHA-256 of the authored
+  intent document it names:
+  `sha256sum readme-present.intent.md` → `939abe2e69c865e77e2ff25395112db6b724c5c601ae26804d9ce8e154191667`,
+  and the IR carries `"source_digest": "sha256:939abe2e…1667"`.
+- `plan_digest` reproduces independently — re-rendering the receipt's own
+  embedded `sandbox_execution_plan` under canonical rules (sorted keys, 2-space,
+  LF, trailing newline) outside OCaml gives
+  `sha256:a00e5306c5111c5f97f8ce3849e23db59f3b9645bdfde6cbbbf75ae5a0746c9c`,
+  byte-equal to the receipt's `plan_digest`.
+- Evidence tracks the real disk: present → `exists=True size_bytes=100`, absent →
+  `exists=False size_bytes=-1`; `wc -c` of the fixture README is **100**.
+- Receipt shape unchanged: `format: tsc-measurement-receipt/0.1`, same keys,
+  same `#MeasurementReceipt` contract, unedited. (`plan_digest`'s *value* moved,
+  because `source_digest` is part of the plan and the intent document was
+  renamed; no AC pins that value, and it is still self-consistent and externally
+  reproducible.)
+
+**STATUS: PASS.**
+
+### AC4 — the result-class vocabulary is read from the IR
+
+The IR declares its vocabulary in `result_contract.result_classes`
+(`["README_PRESENT", "README_ABSENT", "INCOMPLETE"]`). `Ir.of_json` **requires**
+that list, `Ir.declares` gates the derived class against it, and `Runner.evaluate`
+returns `Error` — no receipt — when the class is not declared. The derivation
+stays in OCaml (`Runner.classify`), exactly as the AC's parenthetical allows and
+as ascent-0's `derivation` field is still prose.
+
+The discriminating experiment (test skill §2.12 — prove the derivation, not a
+coincidence): hold subject, provider and derivation fixed, change **only** the
+IR's declared set. A runner with the vocabulary hardcoded would emit the same
+receipt either way.
+
+| IR's `result_classes` | run against `fixtures/present` |
+|---|---|
+| `["README_PRESENT","README_ABSENT","INCOMPLETE"]` | receipt, `result_class: README_PRESENT` |
+| `["PRESENT","ABSENT","INCOMPLETE"]` | **fails closed, no receipt** |
+
+and the refusal names the offending class and the field, so an operator can act:
+
+```
+result_class "README_PRESENT" is not declared in the IR's result_contract.result_classes
+["PRESENT", "ABSENT", "INCOMPLETE"]; the runtime refuses to emit a receipt carrying a
+class the CM does not declare
+```
+
+`INCOMPLETE` is gated by the same rule, not special-cased: an IR carrying a step
+whose `reads` surface nothing produces drives the derivation to `INCOMPLETE`,
+which is emitted only when declared —
+
+| IR | result |
+|---|---|
+| unrun step, `INCOMPLETE` declared | receipt, `result_class: INCOMPLETE`, `complete=false` |
+| unrun step, `INCOMPLETE` **not** declared | fails closed, no receipt |
+
+All four rows are pinned as regression tests. **STATUS: PASS.**
+
+### AC5 — an IR missing a required canonical block fails closed
+
+At the CLI (exit 1, no receipt, clean `IR error`-class message):
+
+```
+$ coh_min run --ir no-result-contract.ir.json --target …/fixtures/present
+  exit=1 · stdout bytes: 0
+  stderr: ✗ coh_min: IR error: result_contract is missing
+```
+
+Pinned by a **table-driven** regression that iterates `Ir.canonical_blocks` — the
+same list the validator itself uses — so a block added to the contract cannot
+acquire an untested regression. All eight blocks, plus a wrong `format` literal,
+three nested required fields (`procedure.steps`,
+`input_contract.required_artifacts`, `result_contract.result_classes`) and a step
+missing `produces`, each assert `Error` + the `IR error` prefix + no receipt,
+with an explicit `| exception _ -> false` arm so an escaping exception fails the
+test rather than passing it (β #126 F1's bug class).
+
+**STATUS: PASS.**
+
+### §Finding — `cue vet` and the runtime are complementary, not redundant
+
+While proving the gate bites I broke the *escape* IR by deleting its
+`result_contract` and `make vet-ir` **passed**. That is not a bug in the gate: it
+is a property of CUE unification. A schema field whose value is already concrete
+(`format: "tsc-cm-ir/0.1"`) unifies to that literal when the data omits it, and
+an open struct or list (`procedure`, `result_contract`) is complete as `{}`/`[]`.
+Only fields that are *incomplete* when absent (`cm_id: string`, …) fail.
+
+Measured, deleting one canonical block at a time from the shipped IR
+(cue v0.9.2, `-d '#NormalizedCMIR'`):
+
+| Missing block | `cue vet` | the runtime |
+|---|---|---|
+| `format`, `procedure`, `result_contract` | **PASSES** | fails closed |
+| `cm_id`, `cm_version`, `source_digest`, `input_contract`, `receipt_contract` | fails | fails closed |
+
+So `cue vet` alone would let an IR with **no procedure and no result_contract**
+reach the runtime — 3 of 8 cases uncaught — while the runtime refuses 8 of 8.
+This is exactly why AC5's runtime enforcement is load-bearing and not a
+re-statement of AC2. The division is now explicit in code and docs: **the schema
+owns exactness** (closed top-level field set, shape of every block present), **the
+runtime owns presence** and fail-closed consumption of the fields it reads.
+
+The other half of the repair — tightening `#NormalizedCMIR` so absence and
+emptiness are distinguishable — is deliberately **out of scope** (issue §Scope
+excludes tightening the schema's run-side stub; the contract forbids editing
+`schema.cue`). Recorded in §Debt for δ's triage.
