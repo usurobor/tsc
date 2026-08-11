@@ -1,0 +1,5 @@
+# absent fixture
+
+This directory intentionally has NO README.md at its root, so `coh-min`
+must emit `README_ABSENT`. This placeholder keeps the empty directory in git
+and is deliberately NOT named README.md.
