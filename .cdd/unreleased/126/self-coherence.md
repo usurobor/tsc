@@ -154,3 +154,19 @@ both:    plan_digest = sha256:75b804180005c762c36fa42927f7995aa024446a6e82155473
    `.github/workflows/coh-min.yml`. Every file in the diff is named here or in
    §ACs / §Debt.
 7. **Self-coherence** — this file.
+
+## Review-readiness | round 1
+
+- **Base:** `origin/main` (0 commits ahead of HEAD; merge-base == main tip, cycle branch not behind).
+- **Implementation SHA:** `459437c` (this readiness commit follows it).
+- **Local verification (dune unavailable locally; flat `ocamlopt` proxy for `dune build`):**
+  - AC1 build: flat `ocamlopt` compile of lib + driver + test — clean (warning-4 only, non-fatal, matches vendored ascent-0).
+  - AC2 present → `README_PRESENT`; AC3 absent → `README_ABSENT`.
+  - AC4 receipts differ: `cmp -s` → DIFFER.
+  - AC5 `cue vet` (v0.9.2) both receipts against `#MeasurementReceipt` → pass.
+  - AC6 path-confinement denial: escape IR + 8 unit cases + malformed-IR fail-closed → all deny/fail-closed.
+  - `dune runtest` proxy: 12/12 checks `ok`, exit 0.
+- **CI (transient row):** `.github/workflows/coh-min.yml` triggers on `cycle/**`; green not yet observed on the remote at signal time (β should confirm the run is green before merge). All local proxies green.
+- **γ-artifact of record:** `.cdd/unreleased/126/gamma-scaffold.md` present at the canonical §5.1 path on `cycle/126`.
+
+Ready for β.
