@@ -274,3 +274,112 @@ The other half of the repair — tightening `#NormalizedCMIR` so absence and
 emptiness are distinguishable — is deliberately **out of scope** (issue §Scope
 excludes tightening the schema's run-side stub; the contract forbids editing
 `schema.cue`). Recorded in §Debt for δ's triage.
+
+### AC6 — `dune runtest` passes with the new regressions added to the existing suite
+
+Local proxy (flat build; canonical `dune runtest` runs in CI). Assertion count
+taken from the runner's own output, not enumerated by hand:
+
+```
+$ ./test_flat
+  exit=0
+  ok lines:   32
+  FAIL lines: 0
+  all checks passed
+```
+
+**14 → 32 checks.** The 14 pre-existing #126 assertions are retained verbatim in
+meaning (confine ×8, present/absent/differ, escape fail-closed, and β's F1
+malformed-number / truncated-`\u` pair); 18 are new (8 canonical-block omissions,
+wrong `format`, 3 nested required fields, step missing `produces`, and 5
+vocabulary-gate rows).
+
+The suite's IR fixtures were rebuilt as JSON **values** rather than a printf'd
+string, so each negative fixture differs from the canonical one in exactly one
+field (`List.remove_assoc` / one swapped vocabulary). A negative fixture retyped
+by hand as a whole string proves much less.
+
+**STATUS: PASS** locally; canonical `dune runtest` pending CI on branch head.
+
+### AC7 — `readme-present.cm` no longer implies a compile path that does not exist
+
+Chose the **rename** limb. The other limb (express it in the real surface
+grammar) is not available without building the deferred compiler: `LANGUAGE.md`
+§2 dispatches on the header's output type into exactly three program forms —
+`-> InstrumentAssessment`, `-> AspectReceipt`, `-> CompositeReceipt` — and
+`example.readme-present` is an ordinary CM emitting a
+`tsc-measurement-receipt/0.1` `MeasurementReceipt`, which is none of the three.
+Writing it in the grammar would mean adding a fourth form to `cm_surface.ml`,
+i.e. exactly the surface compiler the issue scopes **out**.
+
+Premise confirmed independently — `cmc` built flat from
+`surface/{lib/cm_surface.ml,bin/main.ml}` rejects the #126 file:
+
+```
+$ ./cmc readme-present.cm
+cmc: line 1: unexpected character '\226'
+  exit=2
+```
+
+(The scaffold predicted `expected "cm", got identifier "methodology"`. Both are
+rejections; mine trips one token earlier — the lexer treats `#` as the comment
+marker, so the file's `//` comment is not a comment and the em-dash in it is the
+first illegal byte. Recorded as observed rather than as predicted.)
+
+`readme-present.cm` → **`readme-present.intent.md`** (`git mv`, history
+preserved). Its header states, first line: *"The authoritative executable
+artifact for this CM is `ir/readme-present.ir.json`"*, that the file is a prose
+note, that nothing compiles or reads it, and why the real grammar cannot express
+it. The intent sketch is fenced as `text` and labelled *not a program in any
+implemented grammar; do not feed it to `cmc`*.
+
+No file that a reader or a `*.cm` glob could mistake for compilable source
+remains:
+
+```
+$ ls examples/*/*.cm
+  (none — no file can be mistaken for compilable source)
+```
+
+**STATUS: PASS.**
+
+## §Peer and harness audit
+
+Peer set for the rename = every reference to `readme-present.cm` in the repo:
+
+| Site | Disposition |
+|---|---|
+| `examples/readme-present/readme-present.cm` | renamed (`git mv`) |
+| IR `source_digest` (both IRs) | recomputed against the renamed file; verified equal to `sha256sum` |
+| `README.md` §Honest scope, §Module layout, §Build and run | updated |
+| `lib/runner.ml` comment ("the `.cm`'s `decide` block") | reworded — no longer claims a `.cm` exists |
+| `.cdd/unreleased/126/*` (β review, α self-coherence), `.cdd/unreleased/127/*` (issue, scaffold) | **exempt** — frozen historical records of prior/current cycle state; rewriting them would falsify the record |
+| `dune-project` | no change needed — it names the `cm_id` `example.readme-present`, not the file |
+
+Harness audit (schema-bearing change → audit non-OCaml writers):
+
+- **Makefile** — new `vet-ir`; `gate` now depends on it; target list discovered
+  by `find`, empty list fails loudly.
+- **YAML workflow** — audited by parsing it, not by reading it. `yaml.safe_load`
+  showed the step name had been silently truncated to `"Vet IRs against"`: an
+  unquoted `#` starts a YAML comment. Fixed by quoting, with a comment naming
+  the trap; re-parsed to confirm all 9 steps and the full name. **This is the
+  α-skill §2.4 audit earning its place — reading the file would not have caught
+  it.**
+- **Test fixtures** — the suite is a second writer of the IR shape; rebuilt to
+  mirror the shipped IR's canonical blocks (see §Debt for the residual).
+- **`contracts/receipt.cue`** — unchanged and re-verified: both receipts still
+  vet, and `#Result.result_class` still pins the same three classes, so the
+  IR-declared vocabulary and the receipt contract agree.
+
+## §Implementation contract (δ's 7 axes)
+
+| Axis | Pin | Conformance |
+|---|---|---|
+| Language | OCaml stdlib-only; `json.ml`/`sha256.ml` byte-identical to `../ascent-0/lib/` | `diff` vs ascent-0: **json.ml IDENTICAL, sha256.ml IDENTICAL** (neither opened). Grep for `Unix.`/`Str.`/yojson/ppx across coh-min: hits are *comments naming the prohibition* only, no code. New `lib/ir.ml` is stdlib-only. |
+| CLI integration target | existing `coh_min` exe and flags unchanged | `run --ir --target [--out]` unchanged; no new flag, no `coh cm`. Only the exit-code *doc comment* changed, to stay true (β #126 F1's lesson). |
+| Package scoping | confined to `runtime/coh-min/**` + `.github/workflows/coh-min.yml` | `git diff --name-status`: 12 files, all under those two paths (+ γ's own `.cdd/unreleased/127/` artifacts). |
+| Existing-binary disposition | additive/repair only; **do not edit `schema.cue`** | `schema.cue` untouched (verified: not in the diff). No other binary, schema or example touched. |
+| Runtime dependencies | none beyond stdlib; `cue` only in Makefile/CI gates | build and tests need only the compiler; `cue` appears only in `vet-ir`/`vet` recipes and the workflow. |
+| JSON/wire contract | canonical JSON unchanged; receipt `format` unchanged; IR keeps `tsc-cm-ir/0.1` | receipt keys/shape unchanged and re-vetted; `format: "tsc-cm-ir/0.1"` retained *and now enforced*. |
+| Backward-compat | all #126 ACs hold; receipt's observable shape does not regress | AC3 above, plus the 14 retained assertions. |
