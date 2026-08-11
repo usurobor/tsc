@@ -97,7 +97,30 @@ let test_end_to_end () =
    | _ -> check "both runs produced receipts for the differ check" false);
   (* AC6 end to end: an escaping config denies the whole run (no receipt). *)
   check "escaping relative_path fails the run closed"
-    (is_error (R.run { R.ir_path = ir_escape; target_root = present_dir }))
+    (is_error (R.run { R.ir_path = ir_escape; target_root = present_dir }));
+  (* β round-1 F1 regression pair: the vendored parser raises exception
+     classes beyond Parse_error — [Failure] on a malformed number literal and
+     [Invalid_argument] on a truncated `\u` escape. Both must funnel to the
+     clean fail-closed [Error] channel (never an escaping exception; the CLI
+     maps that channel to exit 1). Before the fix these two inputs crashed
+     this very test process, which is why the earlier malformed-IR coverage
+     did not catch them. *)
+  let ir_bad_number = Filename.concat base "bad-number.ir.json" in
+  let ir_bad_escape = Filename.concat base "bad-escape.ir.json" in
+  write_file ir_bad_number {|{ "cm_id": "x", "n": 12e }|};
+  write_file ir_bad_escape {|{ "cm_id": "\u00|};
+  let run_error ir_path =
+    match R.run { R.ir_path; target_root = present_dir } with
+    | Error msg ->
+      (* the fault must surface on the documented channel with its prefix *)
+      String.length msg >= 8 && String.sub msg 0 8 = "IR error"
+    | Ok _ -> false
+    | exception _ -> false   (* an escaping exception is exactly the F1 bug *)
+  in
+  check "malformed number literal (12e) IR -> clean IR error (no exception)"
+    (run_error ir_bad_number);
+  check "truncated \\u escape IR -> clean IR error (no exception)"
+    (run_error ir_bad_escape)
 
 let () =
   test_confine ();

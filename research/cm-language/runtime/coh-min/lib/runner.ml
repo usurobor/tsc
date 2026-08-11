@@ -249,7 +249,12 @@ let run (rr : run_request) : (J.t, string) result =
   Sha256.self_test ();
   (* One guard around the whole pipeline: `parse_file` and the `link` accessors
      both raise on a malformed IR, so catching here keeps every IR fault
-     fail-closed (a clean [Error], never an escaping exception). *)
+     fail-closed (a clean [Error], never an escaping exception). The vendored
+     parser is not limited to [Parse_error]: a malformed number literal raises
+     [Failure] (json.ml `int_of_string`/`float_of_string`) and a truncated
+     `\u` escape raises [Invalid_argument] (json.ml `String.sub`), so both are
+     caught here too — in α's code, keeping the vendored files byte-identical
+     to ascent-0 (β round-1 F1). *)
   try
     let ir = J.parse_file rr.ir_path in
     let pl = link ir in
@@ -258,3 +263,5 @@ let run (rr : run_request) : (J.t, string) result =
   with
   | Sys_error msg -> Error msg
   | J.Parse_error msg -> Error ("IR error: " ^ msg)
+  | Failure msg -> Error ("IR error: " ^ msg)
+  | Invalid_argument msg -> Error ("IR error: " ^ msg)
