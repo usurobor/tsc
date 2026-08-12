@@ -557,7 +557,7 @@ An agent/CDS system can:
 
 ## 9. Current state and the gap
 
-As of the current TSC state around `main` `32dfda8`:
+As of the current TSC state around `main` `274342f`:
 
 Exists:
 
@@ -566,6 +566,7 @@ Exists:
 - CUE validation and normalized JSON artifacts;
 - composite and leaf CM examples;
 - a specialized Ascent-0 runtime with typed providers, candidate retention, phase sealing, and MeasurementReceipts — which proves firewall-safe, mechanism-side identification, not blind-provider generative correctness (a driven blind run predicted `ab→00` against oracle `01` yet the mechanism still validated the lift via the fit-set fiber; measuring generative correctness is the deferred `#123` gap);
+- **an executing ordinary-CM runtime tracer** (`coh-min`, `#126`/`#127`): it loads a canonical `#NormalizedCMIR`, links a SandboxExecutionPlan, executes a finite provider DAG by input readiness, invokes a real `file.exists` provider against the subject, derives the result, and emits a CUE-valid MeasurementReceipt whose class tracks the subject (`README_PRESENT` / `README_ABSENT`), with fail-closed path confinement and a reproducible plan digest. Its IR is schema-vetted in the build. **Scope:** one hand-authored IR, one wired provider, and a CM-specific result derivation in OCaml — a tracer on the path to `coh cm run`, not that path;
 - Repository Coherence, Legibility, and Structure methodologies/receipts;
 - CM0 research artifacts.
 
@@ -574,13 +575,19 @@ Does not yet exist as a general shipped path:
 - a settled CN package manifest/kind model for CM ecosystems;
 - general provider ABI and digest-pinned registry;
 - ordinary leaf CMs using typed provider-bound steps consistently;
-- general linker and sandbox runtime;
+- a **generic** linker and runtime — one parser, linker, scheduler, result evaluator, receipt writer, and verifier that run a second, structurally different CM without `cm_id` dispatch or a CM-specific classifier;
+- a **single** run/plan/receipt ontology: the two runtimes still carry local receipt contracts under different format strings, and `schema.cue` defines no `#MeasurementReceipt` or `#RunRequest` at all;
+- an executable, declarative result derivation (both runtimes hardcode theirs; only the result-class vocabulary is data);
 - generic child-CM invocation;
 - generic bounded collection dataflow;
 - a general receipt verifier;
 - `coh cm` as the production runtime path;
 - CN registry publication and installation of CM packages;
 - conforming CM0 assessment of the completed instrument.
+
+The gaps in that second list are the subject of the CM execution model under review
+on `design/cm-execution-model`, which specifies the shared artifact family and the
+two-sided acceptance gates that must pass before the ABI is frozen.
 
 ## 10. Recommended sequence from here
 
