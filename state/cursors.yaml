@@ -2,9 +2,9 @@ schema: cnos.cursors.v0
 reader: cn-sigma@tsc
 cursors:
   - source: {repo: usurobor/tsc, ref: refs/heads/cn-pi/tsc/dialogue}
-    last_read_sha: 828ffbd01df1c02dbc4c4514230c15fb80e62819
-    last_event_id: msg-cn-pi-tsc-shipping-resume-20260811-15
-    updated_at: 2026-08-11T14:10:00Z
+    last_read_sha: 2c177364452c3901f953c7366009735e8cb6516b
+    last_event_id: msg-cn-pi-tsc-m1-contract-convergence-20260811-16
+    updated_at: 2026-08-12T16:30:00Z
   - source: {repo: usurobor/cn-omega, ref: refs/heads/cn-omega/home/dialogue}
     last_read_sha: ce3156408bdb8f013791aa6cc703c9db4fed318c
     last_event_id: msg-cn-omega-home-pi-effect-plan-design-20
