@@ -252,3 +252,121 @@ and, on a clean round 2, merges with:
 ```
 git merge --no-ff cycle/129    # into main, with "Closes #129"
 ```
+
+---
+---
+
+# Round 2
+
+**Verdict:** APPROVED
+
+**Round:** 2
+**Review head:** `d5976be`
+**Diff base:** `origin/main` = `c8ffc2a`
+**Fixed this round:** `d5976be` closes F1 (B) and F2 (A) from round 1.
+**Branch CI state:** green — `coh-min` **success**, `ci` **success** on `d5976be`
+**Findings:** none. No finding at any severity remains open.
+**Merge instruction:** `git merge --no-ff cycle/129` into `main` with `Closes #129` — withheld by β because this dispatch reserved the merge.
+
+## Scope of this round
+
+Bounded re-verification, not a fresh review. R1 established all 13 ACs pass on
+evidence β generated; this round confirms the two findings are closed and nothing
+regressed.
+
+**Prose-only claim verified first:** `git diff df4e64b..d5976be -- '*.ml' '*.cue'`
+is **empty**. Zero code and zero contract changes. The diff is 4 prose files
+(README, Makefile, `cases.tsv`, the repo-legibility intent note) plus 3 `.cdd/`
+artifacts.
+
+## F1 — closed, and closed wider than the finding
+
+α did not patch the single line β cited. It enumerated the whole family of
+extension points and found the original sentence mis-warned in **both**
+directions: two of seven rows need OCaml but **no** CUE edit, which β's finding
+had not noticed either. β verified the resulting boundary table **empirically**,
+testing every row against `cue vet` and against the runtime rather than reading
+it for plausibility:
+
+| Row | Claim | β measured | Verdict |
+|---|---|---|---|
+| existing capabilities + existing family | neither | verified in R1 by authoring a third CM | accurate |
+| new **provider capability** | OCaml only | `capability: "fs.brand-new"` + arbitrary config **conforms** to CUE (`cm-ir.cue:52` `capability!: string`; `:61` `config!: {[string]: #Value}`); runtime refuses at link | accurate |
+| new **receipt extension family** | OCaml **+** CUE | receipt with a foreign `extension.family` **rejected** by `#MeasurementReceipt` (`receipt.cue:148`) | accurate |
+| new **snapshot scheme** | OCaml **+** CUE | request with `scheme: "git-tree/0.1"` **rejected** by `#RunRequest` | accurate |
+| new **step kind** | OCaml **+** CUE | IR with `kind: "invoke_cm"` **rejected** | accurate |
+| new **algebra operator** | OCaml **+** CUE | IR with an `xor` node **rejected** | accurate |
+| new **warrant obligation form** | OCaml only | `requires: ["warrant.human-review"]` **conforms** (`cm-ir.cue:111`); runtime declines to discharge it | accurate |
+
+All seven rows accurate. Sweep for survivors: β grepped every site carrying the
+claim across `*.md`, `Makefile` and `*.tsv`. **No unqualified form survives.**
+All six sites (README ×2, Makefile ×2, `examples/readme-present/cases.tsv`,
+`examples/repo-legibility/repo-legibility.intent.md`) now carry the qualified
+wording and cross-reference the boundary table. The one remaining absolute
+statement — the intent note's "the commit that introduced this directory touches
+no `.ml` file" — is a factual claim about `f97d57e`, which β verified in R1.
+
+**F1 resolved.**
+
+## F2 — closed, and did not overcorrect
+
+β re-measured both cases independently:
+
+- **symlink loop:** terminates in **10 ms** (α measured 8 ms — consistent), exit
+  1, **0 receipt bytes**, `scheme directory-merkle/0.1 cannot walk …`. The
+  alleged non-termination hazard does not exist, as β reported in R1.
+- **symlink to a file inside the subject** (the case β had *not* run): measured,
+  run succeeds. β verified the double-counting claim the hard way — reconstructing
+  the manifest by hand per the documented format (`"<sha256hex>  <path>\n"`,
+  sorted) reproduced the emitted subject digest **exactly**
+  (`sha256:5589bd64…`), with `ALIAS.md` and `README.md` carrying the identical
+  content hash. Two manifest entries for one file: **confirmed**, and the
+  manifest really is coreutils-reproducible as the code comment claims.
+
+D4 now records a **fidelity** limitation, states explicitly that it is "not
+safety," and still recommends a future scheme version record symlinks. It does
+**not** overcorrect into claiming symlinks are handled well.
+
+**F2 resolved.**
+
+## No regression
+
+- `make gate` — **GATE PASSED**, all stages green, rebuilt from `d5976be` sources.
+- Test binary — **167 checks run, all passed**.
+- Both shipped CMs correct: `README_PRESENT` / `README_ABSENT`;
+  `LEGIBLE` / `SHALLOW` / `SHALLOW` / `NO_ENTRY_DOC` / `INCOMPLETE`.
+- β's third methodology from R1 (`example.changelog-hygiene`) still runs unchanged
+  at `d5976be`, producing all five classes — genericity is not merely preserved
+  but re-demonstrated.
+- Contract axes re-checked: `json.ml` / `sha256.ml` byte-identical to
+  `../ascent-0/lib/`; `schema.cue` untouched; changes confined to permitted paths.
+
+## CI status (rule 3.10)
+
+| Workflow | `d5976be` |
+|---|---|
+| `coh-min` | **success** |
+| `ci` | **success** |
+| `CDD Artifact Validate` | failure → **`beta-closeout.md` absent** |
+| `CDD Telegram Notifier` | skipped (not required) |
+
+β pulled the failing job log rather than inferring: `❌ cycle 129: missing
+beta-closeout.md — required before merge (CDD.md §5.3b)`. Nothing else is
+missing. That artifact is delivered in this same commit, and
+`scripts/validate-release-gate.sh --mode pre-merge` passes locally with it in
+place (`✅ cycle 129 (triadic): all required artifacts present`). The red check
+was the closure gate correctly demanding β's own remaining artifact, not a defect
+in α's work.
+
+## Search space closed
+
+No blocker remains in the issue contract, the 7-axis implementation contract, the
+design authority at `61ba4d2`, or the diff. All 13 ACs pass on evidence β
+generated independently across two rounds. Both R1 findings are resolved. No new
+finding is raised.
+
+One non-blocking observation (TSV rows failing the parser's field-count filter are
+silently skipped) is recorded in `beta-closeout.md` §Review-Quality Assessment,
+with β's explicit reasoning for why it is an observation rather than a finding.
+
+**APPROVED.**
