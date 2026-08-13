@@ -3,7 +3,7 @@
 **Issue:** usurobor/tsc#129 — *coh-min M1a: generic CM execution — a second methodology runs as data, results derived from the IR*
 **Branch:** `cycle/129` (from `main` `274342f`)
 **Canonical issue text:** `.cdd/unreleased/129/issue-129.md` (this cell has no `gh`).
-**Design authority:** `.cdd/unreleased/129/CM-EXECUTION-MODEL.pinned-511b548.md` — a verbatim copy of the design doc at PR #128 head `511b548`. It is **not on `main`**; this pinned copy is your authority. Do not go looking for it elsewhere and do not use a different version.
+**Design authority:** `.cdd/unreleased/129/CM-EXECUTION-MODEL.pinned-61ba4d2.md` — a verbatim copy of the design doc at PR #128 head `61ba4d2` (Pi's seven-point correction pass applied). It is **not on `main`**; this pinned copy is your authority. Do not go looking for it elsewhere and do not use a different version.
 **Predecessors:** #126 (runtime executes) and #127 (IR is canonical), both merged.
 
 ## Why this cycle exists (read this — it changes what "done" means)
@@ -35,7 +35,7 @@ do not merge.
    `SKILLS_ROOT/eng/code/SKILL.md`, `SKILLS_ROOT/eng/test/SKILL.md`,
    `SKILLS_ROOT/eng/ux-cli/SKILL.md`.
 3. `.cdd/unreleased/129/issue-129.md` — the 11 ACs + the 7-axis contract.
-4. `.cdd/unreleased/129/CM-EXECUTION-MODEL.pinned-511b548.md` — the design. Read at
+4. `.cdd/unreleased/129/CM-EXECUTION-MODEL.pinned-61ba4d2.md` — the design. Read at
    minimum: *JSON document family*, *Declarative result semantics*, *Graph execution
    semantics*, *Acceptance gates* (especially gate 9), *Design invariants*.
 5. `.cdd/unreleased/127/beta-review.md` and `.cdd/unreleased/126/beta-review.md` —
@@ -104,3 +104,35 @@ verification results. δ dispatches β to review the diff against the contract.
 
 **Close-outs are pre-merge blockers here** (`CDD.md` §5.3b): after β's verdict you
 will be re-dispatched to write `.cdd/unreleased/129/alpha-closeout.md`. Expect it.
+
+---
+
+## Amendment — dispatch released, and the frame this cycle sits in (δ, 2026-08-13)
+
+**Released by the operator.** The earlier hold pending Pi's exact-head GO is lifted:
+Pi's seven corrections are applied and the pinned design here is the corrected head
+`61ba4d2`. Build within Pi's constraints as written in that document — the design is
+settled; this cycle is execution, not negotiation.
+
+**The frame.** The goal is *run an arbitrary CM expressed in JSON*. It splits:
+
+- **FLAT** — every step terminates at a primitive provider; no CM invokes another CM.
+- **NESTED** — a CM invokes other CMs and receipts compose.
+
+**This cycle is FLAT, over the built-in provider set.** Nesting is not in scope and
+must not be anticipated in the code: no `invoke_cm`, no child `RunRequest`, no
+receipt-inside-receipt. Adding a *provider* is OCaml; adding a *methodology* is data
+— that boundary is the whole point of the cycle and must be stated in the README.
+
+Two consequences worth holding in mind while you build, neither of which is scope:
+
+- The result evaluator, the linker, and the receipt writer must not acquire any
+  knowledge of a specific CM. If a third methodology would require touching OCaml,
+  the cycle has failed regardless of the tests.
+- A standalone `verify` subcommand is the immediate successor cell, so the receipt
+  must **carry** everything a verifier needs (matched `rule_id`, fact refs, the
+  request/IR/plan digests of AC10) even though you do not build the verifier here.
+
+**Tests are a first-class deliverable, not a trailer.** Every acceptance criterion
+gets its own executable check. The gate must fail loudly on each. A criterion
+verified only by reading the code is not verified.
