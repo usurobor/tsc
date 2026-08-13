@@ -1,0 +1,264 @@
+{
+  "format": "tsc-cm-ir/0.2",
+  "cm": {
+    "id": "example.repo-legibility",
+    "version": "0.1",
+    "source_digest": "sha256:777cb4f71b51c5ebfb4b15a82971a0244d5bd6ad9935be0d0c49e875769ac1d0"
+  },
+  "question": "Does the repository present an entry document with enough substance to read, under a declared licence?",
+  "inputs": {
+    "repository": {
+      "kind": "directory",
+      "schema": "tsc://schema/directory-artifact/0.1",
+      "required": true
+    }
+  },
+  "steps": [
+    {
+      "id": "readme_locate",
+      "kind": "mechanical",
+      "checker": {
+        "capability": "fs.file-exists",
+        "interface": "tsc-checker/0.1"
+      },
+      "inputs": {
+        "root": {
+          "from": {
+            "input": "repository"
+          },
+          "schema": "tsc://schema/directory-artifact/0.1"
+        }
+      },
+      "outputs": {
+        "present": {
+          "schema": "tsc://schema/boolean/0.1",
+          "required": true
+        },
+        "path": {
+          "schema": "tsc://schema/relative-path/0.1",
+          "required": false
+        }
+      },
+      "config": {
+        "relative_path": "README.md"
+      },
+      "evidence": {
+        "schema": "tsc://schema/file-observation/0.1",
+        "required": true,
+        "predicates": [
+          "exists",
+          "size_bytes"
+        ]
+      },
+      "capabilities": {
+        "request": [
+          "subject.fs.read"
+        ]
+      },
+      "bounds": {
+        "wall_time_ms": 1000,
+        "output_bytes": 4096
+      },
+      "failure_policy": {
+        "incomplete": "fact_unavailable",
+        "refused": "fact_unavailable",
+        "failed": "run_failed"
+      }
+    },
+    {
+      "id": "license_locate",
+      "kind": "mechanical",
+      "checker": {
+        "capability": "fs.file-exists",
+        "interface": "tsc-checker/0.1"
+      },
+      "inputs": {
+        "root": {
+          "from": {
+            "input": "repository"
+          },
+          "schema": "tsc://schema/directory-artifact/0.1"
+        }
+      },
+      "outputs": {
+        "present": {
+          "schema": "tsc://schema/boolean/0.1",
+          "required": true
+        }
+      },
+      "config": {
+        "relative_path": "LICENSE"
+      },
+      "evidence": {
+        "schema": "tsc://schema/file-observation/0.1",
+        "required": true,
+        "predicates": [
+          "exists"
+        ]
+      },
+      "capabilities": {
+        "request": [
+          "subject.fs.read"
+        ]
+      },
+      "bounds": {
+        "wall_time_ms": 1000,
+        "output_bytes": 4096
+      },
+      "failure_policy": {
+        "incomplete": "fact_unavailable",
+        "refused": "fact_unavailable",
+        "failed": "run_failed"
+      }
+    },
+    {
+      "id": "readme_depth",
+      "kind": "mechanical",
+      "checker": {
+        "capability": "fs.text-metrics",
+        "interface": "tsc-checker/0.1"
+      },
+      "inputs": {
+        "root": {
+          "from": {
+            "input": "repository"
+          },
+          "schema": "tsc://schema/directory-artifact/0.1"
+        },
+        "target": {
+          "from": {
+            "step": "readme_locate",
+            "output": "path"
+          },
+          "schema": "tsc://schema/relative-path/0.1"
+        }
+      },
+      "outputs": {
+        "line_count": {
+          "schema": "tsc://schema/integer/0.1",
+          "required": true
+        },
+        "non_empty": {
+          "schema": "tsc://schema/boolean/0.1",
+          "required": true
+        }
+      },
+      "config": {
+        "max_bytes": 32
+      },
+      "evidence": {
+        "schema": "tsc://schema/text-metrics-observation/0.1",
+        "required": true,
+        "predicates": [
+          "checked_path",
+          "read_bytes"
+        ]
+      },
+      "capabilities": {
+        "request": [
+          "subject.fs.read"
+        ]
+      },
+      "bounds": {
+        "wall_time_ms": 2000,
+        "output_bytes": 65536
+      },
+      "failure_policy": {
+        "incomplete": "fact_unavailable",
+        "refused": "fact_unavailable",
+        "failed": "run_failed"
+      }
+    }
+  ],
+  "result": {
+    "classes": [
+      "LEGIBLE",
+      "SHALLOW",
+      "NO_ENTRY_DOC",
+      "INCOMPLETE"
+    ],
+    "rules": [
+      {
+        "id": "no-entry-doc",
+        "when": {
+          "eq": [
+            {
+              "fact": "readme_locate.present"
+            },
+            false
+          ]
+        },
+        "emit": "NO_ENTRY_DOC"
+      },
+      {
+        "id": "depth-unavailable",
+        "when": {
+          "not": {
+            "step_status": [
+              "readme_depth",
+              "success"
+            ]
+          }
+        },
+        "emit": "INCOMPLETE"
+      },
+      {
+        "id": "legible",
+        "when": {
+          "and": [
+            {
+              "ge": [
+                {
+                  "fact": "readme_depth.line_count"
+                },
+                5
+              ]
+            },
+            {
+              "eq": [
+                {
+                  "fact": "license_locate.present"
+                },
+                true
+              ]
+            }
+          ]
+        },
+        "emit": "LEGIBLE"
+      }
+    ],
+    "default": {
+      "id": "shallow",
+      "emit": "SHALLOW"
+    },
+    "obligations": [
+      {
+        "class": "LEGIBLE",
+        "requires": [
+          "evidence.readme_depth",
+          "evidence.license_locate"
+        ]
+      }
+    ]
+  },
+  "receipt": {
+    "family": "repository_measurement",
+    "schema": "tsc://receipt/repository-measurement/0.1",
+    "reports": [
+      "readme_locate.present",
+      "license_locate.present",
+      "readme_depth.line_count",
+      "evidence:readme_depth.checked_path"
+    ],
+    "measure_only": true
+  },
+  "permissions": {
+    "capabilities": [
+      "subject.fs.read"
+    ],
+    "bounds": {
+      "wall_time_ms": 10000,
+      "output_bytes": 65536
+    }
+  }
+}

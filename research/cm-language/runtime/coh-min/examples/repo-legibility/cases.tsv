@@ -1,0 +1,15 @@
+# Measurement cases for example.repo-legibility. Tab-separated; `#` comments.
+#
+# Four subjects exercise all four declared classes, and the two branches of the
+# optional-port dependency: `rich`/`thin`/`unlicensed` satisfy it, `bare`
+# cannot (readme_locate withholds `path`, so readme_depth is a principled skip).
+# `tight` reuses the `rich` subject under an IR whose max_bytes forces the
+# dependent checker to REFUSE, which is a different route to INCOMPLETE than a
+# skip.
+#
+# case	ir	subject	expect_class
+rich	ir/repo-legibility.ir.json	fixtures/rich	LEGIBLE
+thin	ir/repo-legibility.ir.json	fixtures/thin	SHALLOW
+unlicensed	ir/repo-legibility.ir.json	fixtures/unlicensed	SHALLOW
+bare	ir/repo-legibility.ir.json	fixtures/bare	NO_ENTRY_DOC
+tight	ir/repo-legibility.tight.ir.json	fixtures/rich	INCOMPLETE
