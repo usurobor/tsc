@@ -19,6 +19,14 @@ evaluator and receipt writer, with no `cm_id` dispatch and no CM-specific
 classifier. The commit that adds the second methodology touches no `.ml` file,
 no Makefile rule and no CUE contract.
 
+*(Round-2 correction, β F1: that last sentence is true of the commit but was
+being read as an unconditional boundary claim. It holds for a methodology built
+from the **capabilities and receipt family that already exist** — which covers
+both shipped CMs and β's third. A methodology needing a new receipt extension
+family, snapshot scheme, step kind or algebra operator does require OCaml, and
+for most of those a CUE edit too. The README now carries the full table; see
+§Round 2.)*
+
 **Scope held:** FLAT. Every step terminates at a primitive provider. There is no
 `invoke_cm`, no child `RunRequest`, no receipt-inside-receipt — and the step
 kinds that would imply nesting are **refused**, not silently accepted.
@@ -771,11 +779,33 @@ accepts boolean/integer/string only. Neither capability needs more, and the
 capability contract could grow, but a methodology needing a structured config
 would need this widened first. Stated in `contracts/cm-ir.cue` and the README.
 
-**D4 — `directory-merkle/0.1` follows symlinks and cannot see them.** Without
-Unix the stdlib cannot distinguish a symlink from its target, so the scheme
-digests targets. This is *named* in the scheme rather than hidden, and a scheme
-that treats them differently must take a different version — but a subject
-containing a symlink loop would not terminate. No shipped fixture has one.
+**D4 — `directory-merkle/0.1` follows symlinks and cannot see them.**
+*(Corrected in round 2 after β F2 — the original entry alleged a non-termination
+hazard that does not exist. See §Round 2.)*
+
+Without Unix the stdlib cannot distinguish a symlink from its target, so the
+scheme walks *through* symlinked directories and digests link *targets*. This is
+named in the scheme rather than hidden, and a scheme that treats symlinks
+differently must take a different version.
+
+The limitation is one of **fidelity, not safety**. Measured on the branch head:
+
+| Subject | Outcome |
+|---|---|
+| symlink loop (`sub/up -> ../`) | **terminates**, 0.008 s, exit 1, **0 receipt bytes**, `scheme directory-merkle/0.1 cannot walk …` |
+| dangling symlink | exit 1, **0 receipt bytes**, same refusal shape |
+| symlink to a file inside the subject | measured — but the link and its target are digested as **two separate entries** |
+
+The first two terminate because the OS's own path-resolution failure surfaces as
+`Sys_error` from `Sys.readdir`, which the snapshot walk already classifies and
+converts into a fail-closed refusal.
+
+What remains genuinely wrong is narrower and worth declaring: any subject
+containing a symlink is either **refused** (loop, dangling) or **double-counted**
+(link plus target), so the snapshot digest is not a faithful content identity for
+such subjects. No shipped fixture contains a symlink. This is a reason a future
+scheme version should record symlinks explicitly — not a reason to distrust the
+current one's termination or its fail-closed behaviour.
 
 **D5 — the warrant obligation catalog has exactly one requirement form.**
 `evidence.<step_id>`. That is what the two CMs exercise, per the design's "the
@@ -839,3 +869,143 @@ of all 13 library modules plus the driver and the test — clean, exit 0, with
 warnings as errors.
 
 Ready for β.
+
+---
+
+## §Round 2 — β R1 findings addressed
+
+**β verdict R1:** REQUEST CHANGES at `df4e64b` — 1×B, 1×A, both
+`honest-claim`, **zero code changes required**. All 13 ACs verified as passing
+under β's own independently generated evidence, including a third methodology β
+authored and ran without touching a `.ml` file.
+
+Both findings are documentation truth. Nothing in `lib/`, `bin/`, `contracts/`
+or `test/` changed this round:
+
+```
+$ git status --porcelain | grep -cE '\.(ml|cue)$'
+0
+```
+
+### F1 (B) — the boundary claim was stated absolutely, and one axis falsifies it
+
+**Accepted without reservation.** `README.md:19-21` said adding a methodology
+means "**No OCaml, no Makefile rule, no CUE contract**". A methodology declaring
+a receipt extension family other than `repository_measurement` must edit both
+`lib/receipt.ml` (`families`) and `contracts/receipt.cue` (`#Extension`). I
+reproduced β's case before writing the fix:
+
+```
+$ cue vet /tmp/famtest.json contracts/*.cue -d '#NormalizedCMIR'
+conforms                       # the IR contract does not close the family
+$ coh_min run --ir /tmp/famtest.json --target examples/repo-legibility/fixtures/rich
+exit=1  receipt-bytes=0
+✗ coh_min: emitted receipt is not admissible: extension.family
+  "changelog_measurement" is not a known receipt family ["repository_measurement"]
+```
+
+β named the receipt family. Applying the peer-enumeration rule (α SKILL §2.3), I
+enumerated the **whole family of closed sets** rather than fixing the one
+instance, and checked each against both the OCaml and the CUE side:
+
+| Extension point | OCaml | CUE | Verified by |
+|---|---|---|---|
+| methodology over existing capabilities + `repository_measurement` | — | — | `f97d57e` touches 0 `.ml`; β's third CM |
+| new provider capability | `lib/provider.ml` | **none** | `checker.capability!: string`, `config!: {[string]: #Value}` — `contracts/cm-ir.cue:52,61` |
+| new receipt extension family | `lib/receipt.ml:62` | `contracts/receipt.cue:148` | reproduction above |
+| new snapshot scheme | `lib/request.ml` | `contracts/run-request.cue:25` | `#SnapshotScheme` is a one-element disjunction |
+| new step kind | `lib/ir.ml` | `contracts/cm-ir.cue:50` | `kind!: "mechanical"` |
+| new algebra operator | `lib/rule.ml` | `contracts/cm-ir.cue:80` | `#Expr` closed disjunction |
+| new warrant obligation form | `lib/rule.ml` | **none** | `requires!: [...string]` — `contracts/cm-ir.cue:111` |
+
+Two of the seven rows need OCaml but **no** CUE — a distinction the original
+prose flattened in the other direction, and which a reader adding a provider
+would have been mis-warned about.
+
+**Fixed at five sites**, found by grepping the distinctive phrasing across the
+whole slice before writing anything (β's instruction, and §2.3's intra-doc rule):
+
+| Site | Was | Now |
+|---|---|---|
+| `README.md:19-21` | "No OCaml, no Makefile rule, no CUE contract." | qualified claim + the 7-row boundary table + the fail-closed refusal transcript |
+| `README.md` §Honest scope | listed every other closed set, omitted these | receipt family and snapshot scheme added as their own bullets, each naming **both** files; provider and obligation bullets now say "no CUE edit" explicitly |
+| `Makefile:9` (header) | "no Makefile edit, no OCaml" | qualified, and points at the README table |
+| `Makefile` `genericity` success line | "adding a methodology touches no .ml file" | now states what the gate actually proved, then the qualified consequence |
+| `examples/readme-present/cases.tsv:5` | "no Makefile edit and no OCaml" | qualified |
+| `examples/repo-legibility/repo-legibility.intent.md:17-18` | "data alone … no CUE contract" | qualified, with a paragraph naming which sets this CM stays inside |
+
+`self-coherence.md` §Gap carried the same sentence and now carries an inline
+round-2 correction rather than being left standing.
+
+Post-fix grep — the only surviving occurrences are the qualified forms:
+
+```
+$ grep -rIn -e 'no CUE contract' -e 'no Makefile edit, no OCaml' \
+            -e 'touches no .ml file' Makefile README.md examples/
+Makefile:267:  a methodology over existing capabilities and receipt families touches no .ml file.
+README.md:22: exist needs no OCaml, no Makefile rule and no CUE contract.** That is the case
+```
+
+### F2 (A) — a declared debt alleged a bug that does not exist
+
+**Accepted.** D4 asserted "a subject containing a symlink loop would not
+terminate". I measured it rather than re-reasoning about it:
+
+```
+$ ln -s ../ symtest/loop/sub/up
+$ time coh_min run --ir …/repo-legibility.ir.json --target symtest/loop
+real   0m0.008s
+exit=1   receipt-bytes=0
+✗ coh_min: scheme directory-merkle/0.1 cannot walk "…/symtest/loop":
+  …/loop/sub/up/sub/up/sub/up/… (OS path resolution fails; surfaces as Sys_error)
+
+$ ln -s /nonexistent/target symtest/dangling/broken
+exit=1   receipt-bytes=0   (same refusal shape)
+```
+
+β is right, and right about the direction: the runtime is **more** robust than
+its own report claimed. The OS's path-resolution failure surfaces as `Sys_error`
+from `Sys.readdir`, which the snapshot walk already classifies — the same
+fail-closed conversion added in `476909d` for unreadable entries. There was no
+non-termination hazard to fix.
+
+I also measured the case β did not, so the corrected entry is not merely the
+negation of the wrong one: a symlink **to a file inside the subject** is
+measured, and the link and its target are digested as two separate manifest
+entries. So the true residual limitation is **fidelity, not safety** — any
+subject containing a symlink is either refused (loop, dangling) or
+double-counted (link plus target), and the snapshot digest is therefore not a
+faithful content identity for such subjects. D4 now says that, with the
+measurement table, and explicitly does not claim symlinks are handled well.
+
+### Debt carried forward
+
+| # | State |
+|---|---|
+| D1 | **Open, and δ-side.** The scaffold left `SKILLS_ROOT` unsubstituted, so the `eng/*` bundle was unresolvable from this cell. β holds those skills and checked the diff against `eng/ocaml`'s own smell list: zero `with _ ->`, zero partial functions, `Result` for expected failure, purity boundary held, `Fun.protect`, exceptions classified by name, determinism enforced before digesting. No code consequence found. |
+| D2 | Open — `bounds.wall_time_ms` carried and propagated but not enforced (no monotonic clock without Unix). |
+| D3 | Open — checker configuration is scalar-valued in v0. |
+| D4 | **Corrected this round** (F2). Fidelity limitation, not a termination hazard. |
+| D5 | Open — one warrant obligation form; Ascent-0 will need more. |
+| D6 | **Closed by β.** CI green on `df4e64b`: `coh-min`, `ci`, `CDD Artifact Validate` all success. |
+| D7 | **Closed by β.** The `DUNE` shim's `runtest` really executes the test binary (β re-ran it that way independently), and CI runs real `dune build`/`dune runtest` on OCaml 5.2 — a second compiler and build system over the same sources, same result. |
+| D8 | **Closed this round** — `.cdd/unreleased/129/alpha-closeout.md` written. |
+| **D9** | **New, from β's Notes.** `make cases` ends with `test $$rows -ge 0`, which is always true and asserts nothing. β explicitly did not raise it as a finding (`genericity` and `vet-ir` both fail loudly on an empty discovery set and run *before* `cases` in the gate, so the gate as a whole is not vacuous). Recorded so it is not lost; left in place rather than fixed in a documentation-only round. |
+
+### Verification re-run at round 2
+
+- flat `ocamlopt -w +a-4-70 -warn-error +a-4-70` over all 13 library modules plus
+  driver and test — **clean, exit 0**;
+- **167 checks run, all passed** — unchanged, as expected for a prose-only round;
+- `make gate` — **exit 0**, all stages including the 30-block gate-9 matrix;
+- `git status --porcelain | grep -cE '\.(ml|cue)$'` → **0**.
+
+## §Review-readiness | round 2
+
+**Round 2** · **implementation SHA `41195a7`** (unchanged — this round touches no
+code) · documentation SHA: this commit · base: `origin/main` `c8ffc2a` ·
+**branch CI: green on `df4e64b`** per β §CI status; this round changes only
+Markdown, a Makefile echo line and a TSV comment, so the `coh-min` workflow is
+re-run on the new head by the same `push` trigger.
+
+F1 and F2 both closed. Ready for β round 2.

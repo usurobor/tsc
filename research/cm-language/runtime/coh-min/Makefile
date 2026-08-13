@@ -6,8 +6,12 @@
 # THE ORGANISING RULE OF THIS FILE: nothing about a methodology is enumerated
 # here. Examples, IRs, measurement cases and fail-closed cases are all
 # DISCOVERED. Adding a third methodology means adding `examples/<name>/` with an
-# IR, subjects, `cases.tsv` and `refusals.tsv` — no Makefile edit, no OCaml. If
-# a target below had to name a CM, the cycle's headline claim would be false.
+# IR, subjects, `cases.tsv` and `refusals.tsv` — no Makefile edit and, when it is
+# built from the capabilities and the receipt family that already exist, no
+# OCaml either. If a target below had to name a CM, the cycle's headline claim
+# would be false. (Stepping outside a closed set — a new capability, receipt
+# family, snapshot scheme, step kind, algebra operator — does need code; the
+# README's boundary table says which, and needs no Makefile edit regardless.)
 
 # The binary is invoked by path rather than through `dune exec` because the
 # gate runs it dozens of times; `build` is a prerequisite of every target that
@@ -259,7 +263,8 @@ genericity:
 	     grep -RIn -- "\"$$c\"" lib bin; exit 1; fi; \
 	   echo "absent from lib/ and bin/"; \
 	 done
-	@echo "GENERICITY PASSED: adding a methodology touches no .ml file."
+	@echo "GENERICITY PASSED: no CM identity, vocabulary or classifier in lib/ or bin/;"
+	@echo "  a methodology over existing capabilities and receipt families touches no .ml file."
 
 # ── #126 AC6: path confinement still denies fail-closed, zero receipt ────
 # Kept as its own target (it is the invariant #126 shipped on) even though the

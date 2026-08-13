@@ -16,10 +16,42 @@ lines, and reports what it saw. There are exactly two, they live in
 A **methodology** is a JSON document. It declares a question, typed inputs, a
 graph of checker requirements, and an executable rule table over the facts those
 checkers publish. Adding one means adding `examples/<name>/` — an IR, some
-subject fixtures, and two small TSV tables that the gate discovers. **No OCaml,
-no Makefile rule, no CUE contract.**
+subject fixtures, and two small TSV tables that the gate discovers.
 
-That boundary is the whole point, so it is checked rather than asserted:
+**A methodology built from the capabilities and the receipt family that already
+exist needs no OCaml, no Makefile rule and no CUE contract.** That is the case
+this cycle set out to make true, and it is true: `example.repo-legibility` was
+added in a commit touching zero `.ml` files, and a third could be too.
+
+The qualifier is load-bearing, because the runtime closes several other sets and
+a methodology that steps outside one of them does require code. Precisely:
+
+| What you are adding | OCaml | CUE contract |
+|---|---|---|
+| a methodology over existing capabilities, into the `repository_measurement` receipt family | — | — |
+| a new **provider capability** | `lib/provider.ml` (`registry`) | — the IR contract is capability-agnostic: `checker.capability` is a free string and `config` is `{[string]: #Value}` |
+| a new **receipt extension family** | `lib/receipt.ml` (`families`) | `contracts/receipt.cue` (`#Extension`) |
+| a new **snapshot scheme** | `lib/request.ml` (`snapshot_schemes`) | `contracts/run-request.cue` (`#SnapshotScheme`) |
+| a new **step kind** (e.g. nesting) | `lib/ir.ml` (`executable_kinds`) | `contracts/cm-ir.cue` (`kind!`) |
+| a new **algebra operator** | `lib/rule.ml` | `contracts/cm-ir.cue` (`#Expr`) |
+| a new **warrant obligation form** | `lib/rule.ml` (the catalog) | — `requires` is `[...string]` |
+
+Every row after the first is a **deliberately closed set**, and each refuses
+fail-closed rather than degrading. An IR declaring an unknown receipt family, for
+instance, is refused with zero receipt bytes:
+
+```
+✗ coh_min: emitted receipt is not admissible: extension.family
+  "changelog_measurement" is not a known receipt family
+  ["repository_measurement"]; an extension whose schema cannot be checked is not
+  evidence
+```
+
+That is the intended behaviour — an extension nobody can check is not evidence —
+but it means "adding a methodology touches no CUE" holds for the first row and
+not for the others. §Honest scope lists each closed set again alongside the rest.
+
+The first row is the whole point, so it is checked rather than asserted:
 
 ```
 make genericity
@@ -357,10 +389,24 @@ fail-closed (no receipt bytes), `2` on a usage error.
 - The executed artifact is a **hand-authored** IR. The `.cm` surface compiler for
   ordinary CMs stays deferred until the runtime target stops moving; the IR is
   the authoritative executable artifact and says so.
-- **Two** providers are wired: `fs.file-exists` and `fs.text-metrics`.
+- **Two** providers are wired: `fs.file-exists` and `fs.text-metrics`. Adding a
+  third is OCaml (`lib/provider.ml`) but **no** CUE edit — the IR contract is
+  capability-agnostic.
+- **One** receipt extension family exists: `repository_measurement`. A
+  methodology needing a different one must edit **both** `lib/receipt.ml`
+  (`families`) and `contracts/receipt.cue` (`#Extension`); an unknown family is
+  refused with zero receipt bytes rather than carried through, because an
+  extension whose schema cannot be checked is not evidence. This is the one axis
+  on which "adding a methodology touches no CUE" does not hold — see the boundary
+  table at the top.
+- **One** snapshot scheme exists: `directory-merkle/0.1`. Adding another is the
+  same two-file edit — `lib/request.ml` (`snapshot_schemes`) and
+  `contracts/run-request.cue` (`#SnapshotScheme`).
 - The **warrant obligation catalog** has exactly one requirement form,
   `evidence.<step_id>`. An unknown obligation is never treated as discharged, so
   a class cannot be strengthened by inventing a requirement nobody can check.
+  Adding a form is OCaml only (`lib/rule.ml`); `requires` is `[...string]` in the
+  contract.
 - `bounds.wall_time_ms` is **carried and propagated but not enforced**: the
   stdlib offers no monotonic clock without Unix, which the contract forbids.
   `output_bytes` and `evidence_bytes` are enforced.

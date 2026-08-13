@@ -14,12 +14,20 @@ reads it at run time.
 ## Why this CM exists
 
 It is the second methodology, and it exists to make one claim checkable: that
-adding a methodology to `coh-min` is **data alone**. The commit that introduced
-this directory touches no `.ml` file, no `Makefile` rule and no CUE contract —
-it is a JSON IR, four subject fixtures, two TSV tables and this note. It then
-runs end to end through the same parser, linker, scheduler, result evaluator and
-receipt writer as `example.readme-present`, which is structurally nothing like
-it.
+adding a methodology to `coh-min` — **built from the checker capabilities and the
+receipt family that already exist** — is **data alone**. The commit that
+introduced this directory touches no `.ml` file, no `Makefile` rule and no CUE
+contract; it is a JSON IR, four subject fixtures, two TSV tables and this note.
+It then runs end to end through the same parser, linker, scheduler, result
+evaluator and receipt writer as `example.readme-present`, which is structurally
+nothing like it.
+
+The qualifier is real: this CM reports into the `repository_measurement` receipt
+family and binds only `fs.file-exists` and `fs.text-metrics`. A methodology that
+needed a *different* receipt extension family, snapshot scheme, step kind or
+algebra operator would require an OCaml edit and, for most of those, a CUE edit
+too — see the README's boundary table. Every one of those sets is deliberately
+closed and refuses fail-closed rather than degrading.
 
 So it is deliberately built from the shapes the first CM does not have:
 
