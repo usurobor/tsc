@@ -73,9 +73,16 @@ ready only when its required inputs are available.
 ### 3. Bounded execution
 
 The v0 graph is finite and acyclic. Every checker declares its resource and
-capability envelope. Recursion, mutation, unbounded loops, and unrestricted
-general-purpose control flow are absent. Bounded collection operators may be
-added only with explicit size and depth limits.
+capability envelope. Mutation, unbounded loops, and unrestricted general-purpose
+control flow are absent. Bounded collection operators may be added only with
+explicit size and depth limits.
+
+**Unbounded recursion is forbidden; bounded `invoke_cm` recursion is permitted.** A
+CM may invoke a child CM, and a child may do the same, but only under the limits the
+`RunRequest` names — `child_cm_depth`, `child_cm_calls`, and a digest stack that
+refuses direct or indirect cycles. Exceeding any limit, or re-entering a digest
+already on the stack, refuses fail-closed. Recursion with no named ceiling is not
+expressible: the ceiling is part of the request, not a runtime default.
 
 ### 4. Evidence before claim strength
 
@@ -213,7 +220,7 @@ Required top-level semantics:
     }
   },
   "outputs": {
-    "present": { "schema": "tsc://schema/boolean/0.1" }
+    "present": { "schema": "tsc://schema/boolean/0.1", "required": true }
   },
   "config": { "relative_path": "README.md" },
   "evidence": {
@@ -265,7 +272,11 @@ The run request is a first-class, canonical, content-addressed artifact.
   "format": "tsc-run-request/0.1",
   "cm_ir": { "kind": "normalized_cm_ir", "digest": "sha256:..." },
   "subject": {
-    "repository": { "kind": "directory_snapshot", "digest": "sha256:..." }
+    "repository": {
+      "kind": "directory_snapshot",
+      "scheme": "directory-merkle/0.1",
+      "digest": "sha256:..."
+    }
   },
   "profile": "default",
   "parameters": {},
@@ -283,6 +294,12 @@ Artifact digests identify inputs. Local paths, mount points, URLs, credentials,
 and process handles are locators supplied by the host during linking; they do
 not replace content identity. Repeating the same request may create a new
 execution id, but must not change the canonical request digest.
+
+Every subject entry MUST name a versioned `scheme` alongside its `kind` and
+`digest`. The scheme fixes how the snapshot is constructed and digested, so a
+verifier can recompute identity rather than trust it. An absent or unrecognized
+scheme refuses fail-closed — see §Deferred decisions, which defers the catalog of
+schemes, not the requirement to name one.
 
 ### `SandboxExecutionPlan`
 
@@ -385,6 +402,20 @@ Only `success` may populate normal output ports. All statuses may retain
 diagnostic evidence. The runtime validates the outcome against the step
 contracts before making any output available downstream.
 
+**Required and optional output ports.** Each declared output is `required: true`
+(default) or `required: false`. A `success` outcome MUST publish every **required**
+output; missing one is a contract violation and the outcome is rejected, not
+downgraded. An **optional** output may be absent from a `success` outcome — this is
+lawful withholding, not failure. A downstream step whose required input binds an
+absent optional port is a principled `skipped` entry in the receipt trace, naming
+the unpublished port.
+
+This is what makes conditional progress expressible without conditional nodes: a
+semantic checker that declares `admissible_proposal` as an optional output can
+succeed while withholding it, and the realization steps that require it skip
+visibly. Without the required/optional distinction, "success publishes its declared
+outputs" and "a successful checker may withhold a proposal" contradict each other.
+
 A provider cannot see undeclared subject data, grant itself capabilities,
 invoke arbitrary peers, mutate shared state, or notarize the CM's final result.
 If a provider returns a final result field, `coh` rejects or ignores it according
@@ -399,7 +430,9 @@ to the closed checker schema; it never treats it as authoritative.
 3. Ready steps may execute concurrently. Observable results must not depend on
    scheduling order; receipts record actual ordering for audit.
 4. A successful, schema-valid outcome publishes its named output ports as
-   immutable run facts.
+   immutable run facts. Every **required** output must be present or the outcome is
+   rejected; an absent **optional** output is lawful and publishes nothing for that
+   port.
 5. `incomplete`, `refused`, and `failed` outcomes are retained as run facts and
    processed through `failure_policy`. Required downstream inputs that cannot be
    produced cause principled `skipped` trace entries, never fabricated values.
@@ -408,9 +441,11 @@ to the closed checker schema; it never treats it as authoritative.
 7. The result evaluator then runs exactly once over the immutable fact set.
 
 The initial model has no general conditional nodes. Conditional progress is
-expressed by typed output availability: for example, a semantic checker may
-withhold an `admissible_proposal` output, causing realization steps that require
-it to be skipped. The result rule interprets that trace explicitly.
+expressed by typed output availability: a semantic checker declaring
+`admissible_proposal` as an **optional** output may succeed while withholding it,
+causing realization steps that require it to skip. The result rule interprets that
+trace explicitly. Withholding a **required** output is not available as a control
+mechanism — it is a rejected outcome.
 
 ## Declarative result semantics
 
@@ -607,10 +642,18 @@ The execution model is not ready to freeze until all of these are executable:
    cue v0.9.2: deleting `format`, `procedure`, or `result_contract` still passes
    `cue vet -d '#NormalizedCMIR'` — a concrete literal unifies to itself when
    omitted, and an open struct or list is complete as `{}` / `[]`. The runtime
-   refuses all eight. Two obligations therefore bind independently:
-   - every canonical block and every runtime-consumed field must be **provably
-     required** by the schema (concrete-typed, not an open struct or list), not
-     merely protected against extras;
+   refuses all eight. Note the direction: the **concrete literal is the case that
+   slips through** — it unifies to itself when omitted — while `cm_id: string` is
+   not concrete and *is* caught. Concreteness is therefore not the lever. Two
+   obligations bind independently:
+   - every canonical block and every runtime-consumed field must be **required by
+     construction**, using CUE's required-field marker `field!:` (or a mechanism
+     proved equivalent by fixture), not merely protected against extras. Measured
+     with cue v0.9.2: `format!:` / `procedure!:` / `result!:` reject exactly the
+     absences that `format:` / `procedure:` / `result:` admit. The schema must also
+     be **non-vacuous** — carry a fixture proving it rejects something it ought to
+     reject, so an accidentally-empty or misreferenced definition cannot pass by
+     validating nothing;
    - the runtime and the verifier must **independently refuse absence**, so
      neither mechanism is load-bearing alone.
 
@@ -619,6 +662,22 @@ The execution model is not ready to freeze until all of these are executable:
    selected closed receipt extension — and per runtime-consumed canonical block for
    `RunRequest` and `SandboxExecutionPlan`. This is deliberately stronger than
    `cue vet` alone. An IR declaring no work and no vocabulary must not validate.
+
+10. **Digest binding.** A receipt whose `request`, `cm_ir`, or `plan` digest does
+    not match the artifact it was produced from is refused by the verifier. Carry a
+    negative fixture per binding — a receipt with a mutated request digest, one with
+    a mutated IR digest, one with a mutated plan digest — each of which must fail
+    verification even though every field is individually well-typed. Digests that
+    are never checked are decoration.
+
+11. **Checker configuration schemas are owned and validated.** A step's `config` is
+    methodology-owned and portable, so its shape is owned by the **checker
+    capability contract**, not by the CM and not by the provider: the capability
+    declares a config schema, the linker validates the normalized step's `config`
+    against the schema of the capability it binds, and a config that does not
+    validate refuses at link time rather than reaching the provider. A provider may
+    narrow nothing and widen nothing. Carry a negative fixture: a step whose
+    `config` violates its capability's schema fails linking.
 
 The Ascent gate is structural, not a claim that Ascent-0 proved blind-LLM
 generative correctness. It historically proved firewall-safe mechanism-side
@@ -644,11 +703,14 @@ identification; that scope remains unchanged.
    block — `separating`, `pass_count`, `tested_fiber_size`, the identification
    fiber size, the fitting-candidate count. Under the fact-provenance invariant
    every one of these must be republished through its producing step's typed
-   output ports or evidence contract: `realization_quotient` publishes the fiber
-   size, `oracle_reveal_compare` publishes pass count and tested-fiber size,
-   `descent_predict` publishes separation. Re-shaping those steps — not the
+   output ports or evidence contract: `realization_fit` publishes the
+   fitting-candidate count, `realization_quotient` publishes the identification
+   fiber size, `descent_predict` publishes separation, and `oracle_reveal_compare`
+   publishes pass count and tested-fiber size. Re-shaping those steps — not the
    scheduler — is the bulk of the work here, and it is what the generic evaluator
-   requires in order to classify Ascent-0 without privileged access.
+   requires in order to classify Ascent-0 without privileged access. Any rule input
+   with no producing step named here is a gap to close before conversion, not a
+   fact the evaluator may reach for.
 
 ## Deferred decisions
 
