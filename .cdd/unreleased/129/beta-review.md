@@ -370,3 +370,20 @@ silently skipped) is recorded in `beta-closeout.md` §Review-Quality Assessment,
 with β's explicit reasoning for why it is an observation rather than a finding.
 
 **APPROVED.**
+
+### CI confirmation on the final SHA
+
+β pushed the round-2 verdict and `beta-closeout.md` as `6f3ffd9` and then
+observed the result rather than predicting it. All required workflows on
+`6f3ffd9`:
+
+| Workflow | Conclusion |
+|---|---|
+| `coh-min` | **success** |
+| `ci` | **success** |
+| `CDD Artifact Validate` | **success** |
+| `CDD Telegram Notifier` | skipped (not required) |
+
+The closure gate flipped from failure to success on the arrival of
+`beta-closeout.md`, confirming β's diagnosis that the red check was the missing
+β artifact and nothing in α's work. Rule 3.10 is satisfied on the final SHA.

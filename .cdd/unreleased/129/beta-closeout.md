@@ -167,6 +167,10 @@ from its cell) and adequately covers **D7** (α's local gate ran under a `DUNE`
 shim, so real `dune build` was never exercised locally): CI exercises it, and β's
 independent 4.14.1 flat build is a second compiler over the same sources.
 
+**Confirmed on the final SHA `6f3ffd9`** (this close-out's own commit):
+`coh-min` **success**, `ci` **success**, `CDD Artifact Validate` **success**.
+The closure gate flipped to green on the arrival of this file.
+
 **The `CDD Artifact Validate` failure was this close-out's own absence.** β
 pulled the job log rather than inferring: `❌ cycle 129: missing beta-closeout.md
 — required before merge (CDD.md §5.3b)`. Nothing else is missing. β ran
