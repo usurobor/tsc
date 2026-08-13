@@ -1,0 +1,9 @@
+# Measurement cases for example.readme-present. Tab-separated; `#` comments.
+#
+# Every row must produce a receipt whose `result.class` is the declared value.
+# `make gate` discovers this file — adding a case, or a whole methodology, needs
+# no Makefile edit and no OCaml.
+#
+# case	ir	subject	expect_class
+present	ir/readme-present.ir.json	fixtures/present	README_PRESENT
+absent	ir/readme-present.ir.json	fixtures/absent	README_ABSENT

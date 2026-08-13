@@ -1,0 +1,14 @@
+# Fail-closed cases for example.readme-present. Tab-separated; `#` comments.
+#
+# Every row must FAIL the runtime with a non-zero exit and ZERO receipt bytes,
+# and the stderr must contain the declared substring. The `cue` column records
+# the `cue vet -d '#NormalizedCMIR'` verdict for the same file and the gate
+# ASSERTS it, so the schema/runtime division of labour is measured rather than
+# asserted in prose: `conforms` means CUE cannot see this fault and the runtime
+# is the only thing standing between it and execution.
+#
+# case	ir	subject	cue	expect_substring
+escape-path	refusals/escape-path.json	fixtures/present	conforms	could escape the subject root
+no-default	refusals/no-default.json	fixtures/present	rejects	result.default is missing
+undeclared-class	refusals/undeclared-class.json	fixtures/present	conforms	which result.classes does not declare
+undeclared-fact	refusals/undeclared-fact.json	fixtures/present	conforms	does not declare as an output port

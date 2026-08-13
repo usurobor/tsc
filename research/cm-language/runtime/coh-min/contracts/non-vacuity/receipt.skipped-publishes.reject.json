@@ -1,0 +1,192 @@
+{
+  "cm_ir": {
+    "digest": "sha256:91f3fb0a0ed2f53c07f133517dfcb06baca072c23f3b5963766f690b74f8f0b1"
+  },
+  "evidence": [
+    {
+      "digest": "sha256:869631264057ccbe2fb25ea4131475f61304b7db8f53d8346366da7ee167e883",
+      "predicates": [
+        {
+          "digest": "sha256:2ed27c1421e6928dbe13dbfdb5c59e1045b30341fe7ebe05700006bc5ac572c0",
+          "name": "exists",
+          "value": false
+        },
+        {
+          "digest": "sha256:2ed27c1421e6928dbe13dbfdb5c59e1045b30341fe7ebe05700006bc5ac572c0",
+          "name": "is_directory",
+          "value": false
+        },
+        {
+          "digest": "sha256:ee3aa64bb94a50845d5024cd4bd20202a4567aed5cd5328c0d97e9920775fc28",
+          "name": "size_bytes",
+          "value": -1
+        },
+        {
+          "digest": "sha256:10f4cc51a96d042853d6ccc0d6912f596d2026213b7b4700fd7b2e8e2ba7d6de",
+          "name": "checked_path",
+          "value": "examples/repo-legibility/fixtures/bare/README.md"
+        }
+      ],
+      "schema": "tsc://schema/file-observation/0.1",
+      "step_id": "readme_locate"
+    },
+    {
+      "digest": "sha256:86d9ba00b33ce387aac6a20c21692fcb81603450d0fa6a5ee11ddde7f82496a8",
+      "predicates": [
+        {
+          "digest": "sha256:2ed27c1421e6928dbe13dbfdb5c59e1045b30341fe7ebe05700006bc5ac572c0",
+          "name": "exists",
+          "value": false
+        },
+        {
+          "digest": "sha256:2ed27c1421e6928dbe13dbfdb5c59e1045b30341fe7ebe05700006bc5ac572c0",
+          "name": "is_directory",
+          "value": false
+        },
+        {
+          "digest": "sha256:ee3aa64bb94a50845d5024cd4bd20202a4567aed5cd5328c0d97e9920775fc28",
+          "name": "size_bytes",
+          "value": -1
+        },
+        {
+          "digest": "sha256:f5de2b0d7753f5d9ee0a3f14d986a3014b71f05c846dd6945b2634b135210167",
+          "name": "checked_path",
+          "value": "examples/repo-legibility/fixtures/bare/LICENSE"
+        }
+      ],
+      "schema": "tsc://schema/file-observation/0.1",
+      "step_id": "license_locate"
+    }
+  ],
+  "execution_id": "exec:c245660178711adbfd45258a4d12541c7cf1c27c1863b5d83d2bb4024bd1fedc",
+  "extension": {
+    "family": "repository_measurement",
+    "schema": "tsc://receipt/repository-measurement/0.1",
+    "value": {
+      "measure_only": true,
+      "question": "Does the repository present an entry document with enough substance to read, under a declared licence?",
+      "reports": [
+        {
+          "available": true,
+          "digest": "sha256:2ed27c1421e6928dbe13dbfdb5c59e1045b30341fe7ebe05700006bc5ac572c0",
+          "kind": "step_output",
+          "ref": "readme_locate.present",
+          "value": false
+        },
+        {
+          "available": true,
+          "digest": "sha256:2ed27c1421e6928dbe13dbfdb5c59e1045b30341fe7ebe05700006bc5ac572c0",
+          "kind": "step_output",
+          "ref": "license_locate.present",
+          "value": false
+        },
+        {
+          "available": false,
+          "kind": "step_output",
+          "reason": "the producing step published no such fact in this run",
+          "ref": "readme_depth.line_count"
+        },
+        {
+          "available": false,
+          "kind": "evidence_predicate",
+          "reason": "the producing step published no such fact in this run",
+          "ref": "readme_depth.checked_path"
+        }
+      ],
+      "subject": [
+        {
+          "digest": "sha256:1e599a67151d03f2b92bf27b67c75d54f49d401e2b3753129e2c618ecd4aada9",
+          "kind": "directory_snapshot",
+          "manifest_digest": "sha256:1e599a67151d03f2b92bf27b67c75d54f49d401e2b3753129e2c618ecd4aada9",
+          "name": "repository",
+          "scheme": "directory-merkle/0.1"
+        }
+      ]
+    }
+  },
+  "format": "tsc-measurement-receipt/0.2",
+  "obligations": [],
+  "plan": {
+    "digest": "sha256:af7f2241d18c71773cef32c83eef4cda921484532d1cafe8acef89c473daa70a"
+  },
+  "request": {
+    "digest": "sha256:c82ed1cbb399d032b877c558657f8b07f95c3904c23cbb276685c00883136af1"
+  },
+  "result": {
+    "class": "NO_ENTRY_DOC",
+    "fact_refs": [
+      {
+        "available": true,
+        "digest": "sha256:2ed27c1421e6928dbe13dbfdb5c59e1045b30341fe7ebe05700006bc5ac572c0",
+        "kind": "step_output",
+        "ref": "readme_locate.present",
+        "value": false
+      }
+    ],
+    "rule_id": "no-entry-doc"
+  },
+  "runtime": {
+    "digest": "sha256:ca73eb9b501d80fda4ea0dd9978b5c1bb508e88622cac3e5c6f91fe90835a902",
+    "id": "coh-min",
+    "version": "0.2.0"
+  },
+  "trace": [
+    {
+      "diagnostics": [],
+      "order": 0,
+      "provider": {
+        "digest": "sha256:adbd050b321bbfb334a8633a985ee45ce0eccdfe1201a0a626db5fe3025568d7",
+        "id": "coh-min.fs.file-exists"
+      },
+      "published": [
+        {
+          "digest": "sha256:2ed27c1421e6928dbe13dbfdb5c59e1045b30341fe7ebe05700006bc5ac572c0",
+          "port": "present",
+          "value": false
+        }
+      ],
+      "status": "success",
+      "step_id": "readme_locate",
+      "withheld": [
+        "path"
+      ]
+    },
+    {
+      "diagnostics": [],
+      "order": 1,
+      "provider": {
+        "digest": "sha256:adbd050b321bbfb334a8633a985ee45ce0eccdfe1201a0a626db5fe3025568d7",
+        "id": "coh-min.fs.file-exists"
+      },
+      "published": [
+        {
+          "digest": "sha256:2ed27c1421e6928dbe13dbfdb5c59e1045b30341fe7ebe05700006bc5ac572c0",
+          "port": "present",
+          "value": false
+        }
+      ],
+      "status": "success",
+      "step_id": "license_locate",
+      "withheld": []
+    },
+    {
+      "diagnostics": [],
+      "order": 2,
+      "provider": {
+        "digest": "sha256:a49a82778d39e10725b56e2c07af521d5ba68864c9577168777a2fad15d3fd87",
+        "id": "coh-min.fs.text-metrics"
+      },
+      "published": [
+        {
+          "port": "line_count",
+          "value": 42,
+          "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "skipped_because": "required input \"target\" of step \"readme_depth\" binds readme_locate.path, which step \"readme_locate\" did not publish (step \"readme_locate\" ended success)",
+      "status": "skipped",
+      "step_id": "readme_depth",
+      "withheld": []
+    }
+  ]
+}
