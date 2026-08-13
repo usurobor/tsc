@@ -1,0 +1,23 @@
+{
+  "bounds": {
+    "evidence_bytes": 1048576,
+    "output_bytes": 65536,
+    "wall_time_ms": 10000
+  },
+  "capability_ceiling": [
+    "subject.fs.read"
+  ],
+  "cm_ir": {
+    "digest": "sha256:91f3fb0a0ed2f53c07f133517dfcb06baca072c23f3b5963766f690b74f8f0b1",
+    "kind": "normalized_cm_ir"
+  },
+  "format": "tsc-run-request/0.1",
+  "parameters": {},
+  "profile": "default",
+  "subject": {
+    "repository": {
+      "digest": "sha256:c7b1c6729d94ec68f4f96febb02b1f67d235fbef77397be01160b833858ec0ad",
+      "kind": "directory_snapshot"
+    }
+  }
+}

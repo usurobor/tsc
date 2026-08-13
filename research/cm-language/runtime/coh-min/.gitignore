@@ -1,4 +1,2 @@
 _build/
-receipt.present.json
-receipt.absent.json
-receipt.*.json
+out/

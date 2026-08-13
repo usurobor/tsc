@@ -1,3 +1,25 @@
+; coh-min's runtime library. Stdlib-only (no yojson/menhir/ppx/unix); every
+; dependency is in-tree. It shares NO code with the frozen `coh` engine
+; (src/engine/ocaml) or the Ascent-0 project; it VENDORS `json.ml` and
+; `sha256.ml` verbatim from `../ascent-0/lib/` and is otherwise its own.
+;
+; Module order is the pipeline order, and it is a dependency order too — each
+; module depends only on the ones above it, so the layering is checkable by
+; reading this list:
+;
+;   sha256 json      vendored, byte-identical to ascent-0
+;   value            the closed scalar domain of a run fact
+;   jread            total, result-returning JSON accessors
+;   rule             the CM-owned result algebra, and its generic evaluator
+;   ir               tsc-cm-ir/0.2 — what the methodology REQUIRES
+;   provider         capability contracts and the mechanical providers
+;   request          tsc-run-request/0.1 and the subject snapshot scheme
+;   plan             tsc-sandbox-plan/0.1 — what the linker GRANTED
+;   linker           selection + the discharge obligations
+;   exec             the checker DAG scheduler
+;   receipt          tsc-measurement-receipt/0.2
+;   runner           the pipeline, and the artifact-family table
 (library
  (name coh_min)
- (modules sha256 json ir provider runner))
+ (modules sha256 json value jread rule ir provider request plan linker exec
+          receipt runner))

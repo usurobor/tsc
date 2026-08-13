@@ -23,21 +23,38 @@
       },
       "inputs": {
         "root": {
-          "from": { "input": "repository" },
+          "from": {
+            "input": "repository"
+          },
           "schema": "tsc://schema/directory-artifact/0.1"
         }
       },
       "outputs": {
-        "present": { "schema": "tsc://schema/boolean/0.1", "required": true }
+        "present": {
+          "schema": "tsc://schema/boolean/0.1",
+          "required": true
+        }
       },
-      "config": { "relative_path": "README.md" },
+      "config": {
+        "relative_path": "README.md"
+      },
       "evidence": {
         "schema": "tsc://schema/file-observation/0.1",
         "required": true,
-        "predicates": ["exists", "size_bytes"]
+        "predicates": [
+          "exists",
+          "size_bytes"
+        ]
       },
-      "capabilities": { "request": ["subject.fs.read"] },
-      "bounds": { "wall_time_ms": 1000, "output_bytes": 4096 },
+      "capabilities": {
+        "request": [
+          "subject.fs.read"
+        ]
+      },
+      "bounds": {
+        "wall_time_ms": 1000,
+        "output_bytes": 4096
+      },
       "failure_policy": {
         "incomplete": "fact_unavailable",
         "refused": "fact_unavailable",
@@ -46,32 +63,62 @@
     }
   ],
   "result": {
-    "classes": ["README_PRESENT", "README_ABSENT", "INCOMPLETE"],
+    "classes": [
+      "README_PRESENT",
+      "README_ABSENT",
+      "INCOMPLETE"
+    ],
     "rules": [
       {
         "id": "incomplete-run",
-        "when": { "not": { "step_status": ["readme_exists", "success"] } },
+        "when": {
+          "not": {
+            "step_status": [
+              "readme_exists",
+              "success"
+            ]
+          }
+        },
         "emit": "INCOMPLETE"
       },
       {
         "id": "present",
-        "when": { "eq": [{ "fact": "readme_exists.present" }, true] },
+        "when": {
+          "eq": [
+            {
+              "fact": "readme_exists.present"
+            },
+            true
+          ]
+        },
         "emit": "README_PRESENT"
       }
     ],
-    "default": { "id": "absent", "emit": "README_ABSENT" },
     "obligations": [
-      { "class": "README_PRESENT", "requires": ["evidence.readme_exists"] }
+      {
+        "class": "README_PRESENT",
+        "requires": [
+          "evidence.readme_exists"
+        ]
+      }
     ]
   },
   "receipt": {
     "family": "repository_measurement",
     "schema": "tsc://receipt/repository-measurement/0.1",
-    "reports": ["readme_exists.present", "evidence:readme_exists.size_bytes"],
+    "reports": [
+      "readme_exists.present",
+      "evidence:readme_exists.size_bytes"
+    ],
     "measure_only": true
   },
   "permissions": {
-    "capabilities": ["subject.fs.read"],
-    "bounds": { "wall_time_ms": 10000, "output_bytes": 65536 }
+    "capabilities": [
+      "subject.fs.read"
+    ],
+    "bounds": {
+      "wall_time_ms": 10000,
+      "output_bytes": 65536
+    }
   }
 }

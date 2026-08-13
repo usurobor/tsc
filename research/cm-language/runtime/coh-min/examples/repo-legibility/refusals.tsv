@@ -1,0 +1,18 @@
+# Fail-closed cases for example.repo-legibility. Tab-separated; `#` comments.
+#
+# Nine faults, none of which CUE can see: capability config violations (gate
+# 11), a required/withholdable port mismatch, missing and excess capability, an
+# unregistered capability, a slot-kind category error, and a cyclic graph. Every
+# one is a `conforms` row — which is exactly the point of gate 9's "the runtime
+# must refuse independently".
+#
+# case	ir	subject	cue	expect_substring
+config-wrong-type	refusals/config-wrong-type.json	fixtures/rich	conforms	but capability "fs.text-metrics" declares it as integer
+config-undeclared-field	refusals/config-undeclared-field.json	fixtures/rich	conforms	a provider may widen nothing and narrow nothing
+config-missing-required	refusals/config-missing-required.json	fixtures/rich	conforms	config is missing "max_bytes"
+required-withholdable-port	refusals/required-withholdable-port.json	fixtures/rich	conforms	may lawfully withhold it
+excess-capability	refusals/excess-capability.json	fixtures/rich	conforms	outside the CM's declared permissions.capabilities
+missing-capability	refusals/missing-capability.json	fixtures/rich	conforms	are missing
+unknown-capability	refusals/unknown-capability.json	fixtures/rich	conforms	for which no provider is registered
+slot-kind-mismatch	refusals/slot-kind-mismatch.json	fixtures/rich	conforms	a value slot takes another step's output port
+cyclic-graph	refusals/cyclic-graph.json	fixtures/rich	conforms	the step graph is cyclic

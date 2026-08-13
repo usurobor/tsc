@@ -1,173 +1,415 @@
-# coh-min — the minimal standalone CM runtime tracer
+# coh-min — a CM runtime, where a methodology is data
 
-`coh-min` is the smallest thing that runs an **ordinary CM end to end**: it loads
-a NormalizedCMIR, links a SandboxExecutionPlan, executes a finite provider DAG by
-input readiness, invokes a **real** provider (`file.exists`), and emits one
-`MeasurementReceipt`. It is the M2 tracer for the portable `coh` runtime, on the
-path to becoming `coh cm run` — **not** the production toolchain yet.
+`coh-min` loads a `NormalizedCMIR`, binds a `RunRequest`, links a
+`SandboxExecutionPlan`, executes a finite typed checker DAG, evaluates the CM's
+**own** result rule, and emits one `MeasurementReceipt`. It is the standalone
+runtime on the path to `coh cm run` — **not** the production toolchain yet.
 
-## What it proves (the M3 gate)
+## The boundary this repository draws
 
-Execution, not static validation. Run the first CM, `example.readme-present`,
-against two subject directories:
+> **Adding a *provider* is OCaml. Adding a *methodology* is not.**
+
+A **provider** implements a checker capability — it reads the disk, counts
+lines, and reports what it saw. There are exactly two, they live in
+`lib/provider.ml`, and adding a third means writing OCaml.
+
+A **methodology** is a JSON document. It declares a question, typed inputs, a
+graph of checker requirements, and an executable rule table over the facts those
+checkers publish. Adding one means adding `examples/<name>/` — an IR, some
+subject fixtures, and two small TSV tables that the gate discovers.
+
+**A methodology built from the capabilities and the receipt family that already
+exist needs no OCaml, no Makefile rule and no CUE contract.** That is the case
+this cycle set out to make true, and it is true: `example.repo-legibility` was
+added in a commit touching zero `.ml` files, and a third could be too.
+
+The qualifier is load-bearing, because the runtime closes several other sets and
+a methodology that steps outside one of them does require code. Precisely:
+
+| What you are adding | OCaml | CUE contract |
+|---|---|---|
+| a methodology over existing capabilities, into the `repository_measurement` receipt family | — | — |
+| a new **provider capability** | `lib/provider.ml` (`registry`) | — the IR contract is capability-agnostic: `checker.capability` is a free string and `config` is `{[string]: #Value}` |
+| a new **receipt extension family** | `lib/receipt.ml` (`families`) | `contracts/receipt.cue` (`#Extension`) |
+| a new **snapshot scheme** | `lib/request.ml` (`snapshot_schemes`) | `contracts/run-request.cue` (`#SnapshotScheme`) |
+| a new **step kind** (e.g. nesting) | `lib/ir.ml` (`executable_kinds`) | `contracts/cm-ir.cue` (`kind!`) |
+| a new **algebra operator** | `lib/rule.ml` | `contracts/cm-ir.cue` (`#Expr`) |
+| a new **warrant obligation form** | `lib/rule.ml` (the catalog) | — `requires` is `[...string]` |
+
+Every row after the first is a **deliberately closed set**, and each refuses
+fail-closed rather than degrading. An IR declaring an unknown receipt family, for
+instance, is refused with zero receipt bytes:
+
+```
+✗ coh_min: emitted receipt is not admissible: extension.family
+  "changelog_measurement" is not a known receipt family
+  ["repository_measurement"]; an extension whose schema cannot be checked is not
+  evidence
+```
+
+That is the intended behaviour — an extension nobody can check is not evidence —
+but it means "adding a methodology touches no CUE" holds for the first row and
+not for the others. §Honest scope lists each closed set again alongside the rest.
+
+The first row is the whole point, so it is checked rather than asserted:
+
+```
+make genericity
+```
+
+discovers every shipped CM's identity and result vocabulary *from its IR* and
+fails if any of them appears anywhere under `lib/` or `bin/`. If a third
+methodology would require touching a `.ml` file, this gate is what would have to
+be deleted first.
+
+## Two structurally different methodologies, one binary
+
+| | `example.readme-present` | `example.repo-legibility` |
+|---|---|---|
+| question | is there a `README.md`? | is the entry document substantial, and licensed? |
+| steps | 1 | 3 — two independent, one dependent |
+| capabilities | `fs.file-exists` | `fs.file-exists` **and** `fs.text-metrics` |
+| optional output ports | none | `readme_locate.path` |
+| principled skip reachable | no | yes |
+| result classes | 3 | 4 |
+| algebra | `eq`, `not`, `step_status` | `eq`, `ge`, `and`, `not`, `step_status` |
+
+They share every stage: one parser, one linker, one scheduler, one result
+evaluator, one receipt writer. Nothing in that path knows either of them exists.
 
 ```
 make gate
 ```
 
-- `examples/readme-present/fixtures/present/` has a `README.md` → receipt
-  `result_class: README_PRESENT`
-- `examples/readme-present/fixtures/absent/` has none → receipt
-  `result_class: README_ABSENT`
+runs both end to end over every discovered case, vets every emitted artifact,
+sweeps the negative space, and prints an AC-by-AC summary.
 
-The gate fails if either class is wrong or if the two receipts are byte-identical.
-Changing the subject changes the receipt because a real provider read the disk —
-which is exactly what "the runtime executes providers" means, and what static IR
-validation cannot show.
+## The pieces, and why each is separate
 
-## The IR is canonical, and the build proves it
-
-The artifact `coh-min` executes is a **`#NormalizedCMIR`** as defined by the
-project schema, `research/cm-language/schema.cue` — not a private JSON shape:
-
-```
-make vet-ir
-```
-
-vets every discovered IR under `examples/` against `#NormalizedCMIR`, and
-`make gate` depends on it, so no IR reaches the runtime without having been
-proved canonical first. Negative fixtures are not excused: the escape IR
-(`readme-present.escape.ir.json`) is vetted too, and differs from the good one
-in exactly one line. An empty target list fails rather than passing vacuously.
-
-The target list is *discovered*, never enumerated. Every `*.json` under
-`examples/` falls into exactly one of three classes, and the gate acts on all
-three — which is what lets the closure claim be stated without hedging:
-
-| Class | Rule | `make vet-ir` |
+| Stage | Module | Owns |
 |---|---|---|
-| **IR** | any `*.json` inside an `ir/` directory, or any `*.ir.json` anywhere | vetted against `#NormalizedCMIR` |
-| **Subject data** | anything under a `fixtures/` directory | ignored — a subject repository may legitimately contain JSON that is not a methodology, and vetting a `package.json` would be a false failure |
-| **Unclassified** | any other `*.json` | **refused**, with a message naming the file and both conventions |
+| validate | `lib/ir.ml` | `tsc-cm-ir/0.2` as a typed value: canonical blocks, port resolution, graph acyclicity, **fact provenance**, rule-table totality |
+| bind | `lib/request.ml` | `tsc-run-request/0.1`: the subject by **content digest** under a named snapshot scheme |
+| link | `lib/linker.ml` | provider selection and the discharge obligations — interface, schemas, **config**, grants, bounds, adapters |
+| execute | `lib/exec.ml` | the DAG: readiness, lawful withholding, principled skips, provider-contract enforcement |
+| derive | `lib/rule.ml` | the v0 algebra and the ordered first-match evaluator |
+| emit | `lib/receipt.ml` | `tsc-measurement-receipt/0.2`: one closed core, one closed family extension |
 
-So a `*.json` cannot be added under `examples/` without being either gated or
-explicitly classified. Naming alone is not load-bearing: the same non-conforming
-IR is caught as `naming.ir.json` *and* as `naming.json`.
+`lib/json.ml` and `lib/sha256.ml` are vendored **byte-identical** from
+`../ascent-0/lib/`. Everything is stdlib-only: no yojson, no ppx, no Unix.
 
-### Two mechanisms, one contract
+### Normalized requirement vs. linked binding
 
-`cue vet` and the runtime's own `Ir.of_json` are complementary, and the overlap
-is smaller than it looks. CUE's unification makes some **absent** blocks
-indistinguishable from empty ones — a concrete schema literal (`format`) unifies
-to itself when omitted, and an open struct or list (`procedure`,
-`result_contract`) is complete as `{}` / `[]`. Deleting one canonical block from
-the shipped IR (cue v0.9.2):
+`Ir.step` is what the **methodology requires**: a capability, typed ports, a
+config, a capability request, bounds. `Plan.step` is what the **linker selected
+and granted**: a provider pinned by version and digest, the adapters bound to
+each slot, the grants actually issued, and a `discharge` record naming what was
+proved. Fusing them would mean a methodology names a provider — and running the
+same CM on another host would mean editing the methodology.
 
-| Missing block | `cue vet` | the runtime |
-|---|---|---|
-| `format`, `procedure`, `result_contract` | **passes** | fails closed |
-| `cm_id`, `cm_version`, `source_digest`, `input_contract`, `receipt_contract` | fails | fails closed |
+## The result rule is data
 
-So the schema owns **exactness** (the closed top-level field set and the shape of
-every block present — a stray field or a wrong type is rejected), and the
-runtime owns **presence and fail-closed consumption** (all eight canonical
-blocks, plus every field it reads). Neither alone is sufficient. Tightening
-`#NormalizedCMIR` is the other half of the repair and is deliberately out of
-this slice's scope; the schema is conformed to, never edited.
+The derivation lives in the IR's `result` block: an ordered first-match table
+with a **mandatory** `default`, so evaluation is total.
 
-### Result-class vocabulary
+```json
+{
+  "classes": ["README_PRESENT", "README_ABSENT", "INCOMPLETE"],
+  "rules": [
+    { "id": "incomplete-run",
+      "when": { "not": { "step_status": ["readme_exists", "success"] } },
+      "emit": "INCOMPLETE" },
+    { "id": "present",
+      "when": { "eq": [{ "fact": "readme_exists.present" }, true] },
+      "emit": "README_PRESENT" }
+  ],
+  "default": { "id": "absent", "emit": "README_ABSENT" }
+}
+```
 
-The receipt's `result_class` is **the IR's word, not the runner's**. The CM
-declares its vocabulary in `result_contract.result_classes`; the runtime reads
-that list and refuses to emit a receipt carrying a class the CM never declared:
+The **v0 algebra**, and nothing else: `and` / `or` / `not`, `eq` / `ne`,
+`lt` / `le` / `gt` / `ge`, `present`, `step_status`. There is no way to spell a
+provider call, a mutation, a recursion or an unbounded loop in this AST, which is
+a stronger guarantee than checking for them.
+
+Two properties are deliberate:
+
+- **Totality.** A table with no `default` is refused at load, so "no rule
+  matched" is unrepresentable rather than handled.
+- **No short-circuiting.** `and`/`or` evaluate every operand. The algebra is
+  pure, so this cannot change a verdict — but it makes the set of facts
+  *consulted* equal to the set appearing in the clauses that were *evaluated*.
+  That is what lets the receipt's `fact_refs` be exact, and lets a verifier
+  replay the derivation from the receipt alone.
+
+### Fact provenance
+
+Every non-scheduler fact a rule reads must originate in a **declared typed
+output port** or a **declared evidence predicate**. Scheduler-owned facts are
+limited to execution status. A rule reaching for anything else is refused **at
+load** — before any provider runs — so it cannot be discovered by whichever
+subject happens to reach that clause:
 
 ```
-✗ coh_min: result_class "README_PRESENT" is not declared in the IR's
-  result_contract.result_classes ["PRESENT", "ABSENT", "INCOMPLETE"]; …
+✗ coh_min: IR error: result rule "peek" reads fact "readme_exists.size", which
+  step "readme_exists" does not declare as an output port ["present"]
 ```
 
-The *derivation* is still OCaml (`Runner.classify`), exactly as ascent-0's
-`result_contract.derivation` is still prose. Lowering a derivation into
-executable data is a later slice; separating vocabulary from derivation is what
-this one buys.
+This is what keeps the evaluator generic. A fact that exists only inside one
+runtime's internals cannot be named by a portable rule, so a CM that needs it
+must publish it through a typed port.
 
-## Design (harvested from Ascent-0, generalized)
+## Required and optional output ports
 
-| Stage | What it does |
-|---|---|
-| `Ir.of_json` | validate the document into a typed IR: canonical blocks present, consumed fields typed — or a fail-closed `IR error` |
-| `link` | normalize the validated steps into a plan; bind each step's capability (`may_access`) |
-| `execute` | run a step only when its typed `reads` surfaces are all present; unrun steps are principled skips, never crashes |
-| `backend` | invoke the real provider; `file.exists` confines the path, then stats the subject and reports what it saw |
-| `evaluate` | derive the result from the produced evidence (runtime-derived, not provider-notarized), then gate it on the vocabulary the IR declares |
-| `emit` | canonical-JSON `MeasurementReceipt` with a content-addressed plan digest |
+Each declared output is `required` (the default) or `optional`.
 
-It vendors the JSON serializer and SHA-256 from the Ascent-0 runtime (verbatim,
-stdlib-only) but has **no** oracle, sealed reveal, or model enumeration: this is
-the ordinary-CM side of the two-sided kernel. Ascent-0 is the hard side; M4
-reproduces it through the same shared ABI before any freeze.
+- A `success` outcome **must** publish every required output. Missing one is a
+  provider contract violation: the outcome is **rejected**, not downgraded.
+  Downgrading would let a provider convert "I broke my contract" into "the fact
+  is unavailable" — a status the methodology reasons about, and would then be
+  reasoning about falsely.
+- An absent **optional** output is **lawful withholding**, and it is recorded as
+  `withheld` in the trace rather than left as silence.
+- A dependent step whose input binds an absent optional port is a **principled
+  skip** naming the unpublished port.
 
-### Module layout
+`fs.file-exists` publishes `present` always and `path` only when the file
+exists. On a subject with no `README.md`:
 
-- `lib/json.ml`, `lib/sha256.ml` — vendored verbatim from `../ascent-0/lib/`.
-- `lib/ir.ml` — the `#NormalizedCMIR` contract as a typed value. **Pure and
-  total**: parsing the IR either yields a value every later stage can rely on or
-  an error naming the dotted path at fault. It reads through its own
-  `result`-returning accessors because the vendored `Json.member` raises.
-- `lib/provider.ml` — the provider layer. `confine` is a **pure** path-confinement
-  function (its whole negative space is testable without a filesystem);
-  `file_exists` is the thin effectful shell that stats the confined path. Both
-  report expected failure through `result`, never exceptions.
-- `lib/runner.ml` — `link` / `execute` / `evaluate` / `emit`. The DAG executor is
-  a recursion over an immutable state record; every expected failure is carried
-  in `result` and surfaces at the CLI as a fail-closed non-zero exit.
-- `bin/coh_min.ml` — the CLI (`run --ir … --target … [--out …]`).
-- `test/test_coh_min.ml` — stdlib assertions (`dune runtest`).
+```json
+{ "step_id": "readme_locate", "status": "success",
+  "published": [ { "port": "present", "value": false, "digest": "sha256:…" } ],
+  "withheld": [ "path" ] }
+{ "step_id": "readme_depth", "status": "skipped",
+  "published": [], "withheld": [],
+  "skipped_because": "required input \"target\" of step \"readme_depth\" binds
+                      readme_locate.path, which step \"readme_locate\" did not
+                      publish (step \"readme_locate\" ended success)" }
+```
 
-## Path confinement (the portable fail-closed invariant)
+Nothing is fabricated — no default, no empty string, no zero. This is how
+conditional progress is expressed without any conditional node, and a
+methodology may **not** declare a withholdable port `required: true`: the linker
+refuses that, because the capability never promised it.
 
-`file.exists` **denies** any `relative_path` that is empty, absolute, or carries a
-`..` segment — anything that could climb out of the subject root. A denied path
-fails the whole run closed: non-zero exit, **no** receipt. Prove it:
+## The subject is a digest, not a path
+
+`--target ./fixtures/present` is a **locator**: it says where this host keeps
+the bytes. A receipt that binds a path proves nothing, because the same path can
+hold different bytes on two hosts and neither can be checked afterwards.
+
+Every `RunRequest` subject entry names a `kind`, a versioned **`scheme`**, and a
+`digest`. `run --ir … --target …` synthesizes the request (computing the
+digests); `run --request …` verifies an authored one against the bytes it finds
+and refuses a mismatch. An absent or unrecognized scheme refuses fail-closed.
+
+**`directory-merkle/0.1`**, the one scheme implemented:
+
+1. walk the located directory recursively; every **regular file** reachable from
+   the root is included, with **no exclusions** — not `.git`, not dotfiles;
+2. compute `sha256(contents)` per file, with `/`-separated subject-relative
+   paths;
+3. sort by **path**, so the digest is independent of readdir order;
+4. emit `"<hex>  <path>\n"` per file — the `sha256sum` convention, so the
+   manifest is reproducible with coreutils;
+5. the snapshot digest is `sha256` of that concatenation.
+
+Symlinks are followed (the stdlib cannot distinguish one without Unix, which the
+contract forbids), so `0.1` digests link *targets*. That is a property of the
+named scheme, not an unrecorded accident: a scheme that treats them differently
+must take a different name.
+
+## Two mechanisms, one contract
+
+A closed CUE struct rejects *extra* fields; it does not by itself reject an
+*absent* one. On the shipped `0.1` IR, deleting `format`, `procedure` or
+`result_contract` still passed `cue vet` — a concrete literal unifies to itself
+when omitted. **Concreteness is not the lever**, and the direction is the
+opposite of the intuition: the concrete literal is the case that slips through.
+
+The lever is CUE's required-field marker. Every canonical block and
+runtime-consumed field in `contracts/*.cue` is written `field!:`, which refuses
+exactly the absences that `field:` admits. Measured per block, for all four
+artifact families:
+
+| Family | Canonical blocks | `cue vet` refuses absence | runtime refuses absence |
+|---|---|---|---|
+| `#NormalizedCMIR` | 8 | 8 / 8 | 8 / 8 |
+| `#RunRequest` | 7 | 7 / 7 | 7 / 7 |
+| `#SandboxExecutionPlan` | 4 | 4 / 4 | 4 / 4 |
+| `#MeasurementReceipt` | 11 | 11 / 11 | 11 / 11 |
+
+No CUE-blind block remains, which is the `0.1 → 0.2` improvement. Both columns
+are still required: gate 9 asks for two independent mechanisms precisely so that
+neither is load-bearing alone. `make vet-negative` regenerates that matrix on
+every run, deriving each negative from a **real emitted artifact** by deleting
+exactly one block.
+
+The schemas are also proved **non-vacuous** — a definition that validated
+everything would pass every positive test:
+
+```
+make vet-non-vacuity
+```
+
+Each family carries fixtures under `contracts/non-vacuity/` that it must reject,
+including subtle ones: a rule using an operator outside the algebra, a subject
+entry with no scheme, a plan with an unproved discharge flag, and a receipt in
+which a *skipped* step publishes a fact.
+
+What CUE cannot see at all — graph acyclicity, port resolution, fact provenance,
+rule-table totality, capability config compatibility — is refused by
+`lib/ir.ml` and `lib/linker.ml`.
+
+> The `0.2` contracts live here, under `contracts/`.
+> `research/cm-language/schema.cue` still owns `#NormalizedCMIR` at `0.1` and is
+> **not** edited by this slice; promoting `0.2` into the project schema is a
+> later cycle.
+
+## The capability owns its config (and confinement follows)
+
+A step's `config` is methodology-owned and portable, so its **shape** is owned by
+the **checker capability contract** — not by the CM (each methodology would
+invent its own) and not by the provider (an implementation could widen or narrow
+what the interface promises). The linker validates it, and a config that does not
+validate refuses at **link time**:
+
+```
+✗ coh_min: link error: step "readme_depth" config.max_bytes is "big" (string),
+  but capability "fs.text-metrics" declares it as integer >= 1
+```
+
+Path confinement falls out of the same mechanism. `relative_path` has the config
+type *subject-relative path*, so an escaping literal is a static property of the
+document and is refused before anything runs — which is exactly what keeps
+"**denied with zero receipt bytes**" true:
 
 ```
 make confine
 ```
 
-Lexical (component-wise) confinement is deliberate: the stdlib has no `realpath`
-and the contract forbids Unix, so admission never depends on I/O.
+`Provider.confine` is still applied inside the provider as defence in depth,
+because a path arriving through an input port is not statically known. It is a
+pure, total function, so its whole negative space is tested without a
+filesystem.
 
-## Honest scope
+## `check` is not `verify`
 
-- The executed artifact is the **hand-authored** IR (`ir/readme-present.ir.json`),
-  exactly as the Ascent-0 runtime consumes a hand-authored IR today. It is now
-  canonical (`#NormalizedCMIR`) and gated, but it is still hand-authored: the
-  surface compiler for ordinary CMs is deliberately deferred until the runtime
-  target stops moving.
-- There is **no `.cm` source** for this example, and no file pretends to be one.
-  `readme-present.intent.md` is a prose note recording author intent; the three
-  program forms `cm_surface.ml` implements (`InstrumentAssessment`,
-  `AspectReceipt`, `CompositeReceipt`) cannot express an ordinary CM emitting a
-  `MeasurementReceipt`, so writing one would mean building the deferred
-  compiler. The IR is the authoritative executable artifact and says so.
-- The result-class **derivation** is still OCaml (`Runner.classify`) for this one
-  CM; only the vocabulary is data. Any other `cm_id` is left unclassified and
-  fails closed.
-- `file.exists` is the **only** wired provider.
-- Receipt format `tsc-measurement-receipt/0.1` is the ordinary-CM projection of
-  the shared receipt shape M1 will unify with Ascent-0's.
+```
+coh_min check --kind <cm-ir|run-request|sandbox-plan|receipt> --file <f>
+```
+
+performs **structural admission**: are the canonical blocks present, well-typed
+and internally coherent? It deliberately does *not* check digests against the
+artifacts they bind, replay the result rule, or apply obligation rules.
+
+A standalone **verifier** is the next cell. This cycle's job is to make sure the
+receipt *carries* everything that verifier will need, and to refuse one that does
+not: the three digest bindings, the matched `rule_id`, every fact reference the
+evaluator read with its value and content digest, the runtime and provider
+identities, and the full trace including principled skips.
+
+Digest binding is already checked at the producing end: `Receipt.binding_error`
+is applied by the runtime to its **own** receipt before a byte is written, and
+the test suite carries one negative per binding — a receipt with a mutated
+`request`, `cm_ir` or `plan` digest, each still individually well-typed and
+structurally admissible, each refused. A digest that is never checked is
+decoration.
+
+## Adding a methodology
+
+```
+examples/<name>/
+  <name>.intent.md          prose note recording author intent
+  ir/<name>.ir.json         the NormalizedCMIR — the executable artifact
+  fixtures/<subject>/…      subject repositories under measurement
+  cases.tsv                 case → ir, subject, expected result class
+  refusals/<case>.json      IRs that must be refused
+  refusals.tsv             case → ir, subject, cue verdict, expected message
+```
+
+`make gate` discovers all of it. Every `*.json` under `examples/` falls into
+exactly one of four classes and the gate acts on all four, which is what lets the
+closure claim be stated without hedging:
+
+| Class | Rule | Gate behaviour |
+|---|---|---|
+| **IR** | any `*.json` inside an `ir/` directory | must conform to `#NormalizedCMIR` |
+| **Refusal fixture** | any `*.json` inside a `refusals/` directory | must be refused by the runtime; its `cue` verdict is recorded in `refusals.tsv` and **asserted** |
+| **Subject data** | anything under a `fixtures/` directory | ignored — a subject may legitimately contain JSON that is not a methodology |
+| **Unclassified** | anything else | **refused**, naming the file and the conventions |
+
+The `cue` column is worth dwelling on. A row marked `conforms` means CUE cannot
+see that fault and the runtime is the only thing standing between it and
+execution — of the thirteen shipped refusal fixtures, twelve are `conforms`.
+The gate asserts the recorded verdict in **both** directions, so the division of
+labour between schema and runtime is measured rather than described.
 
 ## Build and run
 
-Stdlib-only OCaml; no opam dependencies (the canonical build is `dune`; `cue` is
-needed only for `make vet-ir` / `make vet` / `make gate`).
+Stdlib-only OCaml; no opam dependencies (`cue` v0.9.2 is needed only for the
+vetting targets).
 
 ```
-make build      # dune build
-make test       # dune runtest (unit + end-to-end assertions)
-make run        # execute both fixtures
-make vet-ir     # cue vet every example IR against #NormalizedCMIR
-make vet        # cue vet both receipts against #MeasurementReceipt
-make gate       # vet-ir, then the full M3 gate (AC1-5)
-make confine    # the path-confinement fail-closed check (AC6)
+make build            # dune build
+make test             # dune runtest — 167 assertions
+make cases            # run every discovered measurement case
+make refusals         # run every discovered fail-closed case
+make vet-ir           # every IR against #NormalizedCMIR; refusal cue verdicts
+make vet              # every emitted receipt/plan/request against its contract
+make vet-non-vacuity  # each schema rejects what it must reject
+make vet-negative     # the gate-9 matrix, all four families
+make genericity       # no CM identity or classifier in lib/ or bin/
+make confine          # path confinement, fail-closed, zero receipt bytes
+make gate             # all of the above
 ```
+
+`DUNE` and `RUNNER` are overridable so the gate can be exercised where `dune` is
+not installable — verification there is a flat `ocamlopt` build of `lib/*.ml`
+plus a driver derived from `bin/coh_min.ml`. CI always uses the real toolchain.
+
+```
+coh_min run --ir <ir.json> (--target <dir> | --bind <name>=<dir>)…
+            [--request <run-request.json>]
+            [--out <receipt.json>] [--plan-out <p>] [--request-out <q>]
+coh_min check     --kind <family> --file <f>
+coh_min negatives --kind <family> --from <artifact.json> --out-dir <dir>
+```
+
+`--target` binds the sole declared CM input and is a usage error for a CM
+declaring more than one; `--bind` is the general form. Exit `0` on success, `1`
+fail-closed (no receipt bytes), `2` on a usage error.
+
+## Honest scope
+
+- **FLAT only.** Every step terminates at a primitive provider. `invoke_cm`,
+  `semantic_judgment`, `oracle` and `transform` step kinds are **refused**, not
+  silently accepted — nesting is a later cycle and is not anticipated in the
+  code.
+- The executed artifact is a **hand-authored** IR. The `.cm` surface compiler for
+  ordinary CMs stays deferred until the runtime target stops moving; the IR is
+  the authoritative executable artifact and says so.
+- **Two** providers are wired: `fs.file-exists` and `fs.text-metrics`. Adding a
+  third is OCaml (`lib/provider.ml`) but **no** CUE edit — the IR contract is
+  capability-agnostic.
+- **One** receipt extension family exists: `repository_measurement`. A
+  methodology needing a different one must edit **both** `lib/receipt.ml`
+  (`families`) and `contracts/receipt.cue` (`#Extension`); an unknown family is
+  refused with zero receipt bytes rather than carried through, because an
+  extension whose schema cannot be checked is not evidence. This is the one axis
+  on which "adding a methodology touches no CUE" does not hold — see the boundary
+  table at the top.
+- **One** snapshot scheme exists: `directory-merkle/0.1`. Adding another is the
+  same two-file edit — `lib/request.ml` (`snapshot_schemes`) and
+  `contracts/run-request.cue` (`#SnapshotScheme`).
+- The **warrant obligation catalog** has exactly one requirement form,
+  `evidence.<step_id>`. An unknown obligation is never treated as discharged, so
+  a class cannot be strengthened by inventing a requirement nobody can check.
+  Adding a form is OCaml only (`lib/rule.ml`); `requires` is `[...string]` in the
+  contract.
+- `bounds.wall_time_ms` is **carried and propagated but not enforced**: the
+  stdlib offers no monotonic clock without Unix, which the contract forbids.
+  `output_bytes` and `evidence_bytes` are enforced.
+- Checker configuration is **scalar-valued** in v0.
+- Ascent-0 is the hard side of the two-sided kernel and is not converted here;
+  reproducing it through this ABI is a later step, and a larger one than a port.
