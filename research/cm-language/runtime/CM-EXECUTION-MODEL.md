@@ -1,8 +1,8 @@
 # CM Execution Model: JSON Property Graph and `coh` Runtime
 
-Status: proposed foundational design; exact wire details may be clarified by implementation evidence before ABI freeze  
-Scope: executable JSON IR, linking, execution, evidence, and verification  
-Deferred: `.cm` surface syntax and compiler implementation  
+Status: proposed foundational design; exact wire details may be clarified by implementation evidence before ABI freeze
+Scope: executable JSON IR, linking, execution, evidence, and verification
+Deferred: `.cm` surface syntax and compiler implementation
 Authority: review candidate until accepted through the project-native review path
 
 ## Decision
@@ -755,4 +755,3 @@ The implementation is conformant only while these statements remain true:
 - CMs measure; actors and project-native processes retain mutation and authority.
 - Ordinary-CM usability and Ascent-0 evidence semantics jointly constrain the
   ABI before freeze.
-
