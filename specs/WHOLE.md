@@ -33,6 +33,19 @@ cross-cut.
 Cross-cutting does not imply non-derivability. One articulation may be derived
 from a description of the other without sharing its criterion of identity.
 
+## Notation
+
+    A ≡_X B
+
+holds when A and B are cross-cutting continuities carried by one change — X
+articulating itself as A and B.
+
+It is defined, not posited: it fails when either condition fails. Temperature
+and microstate are nested rather than cross-cutting, so no X relates them.
+
+≡ is never a bare relation between A and B. The whole is part of the claim,
+and the subscript carries it.
+
 ## Open
 
 - Whether these two continuities are exhaustive.
