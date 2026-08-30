@@ -129,6 +129,72 @@ itself, it is transformed by something not in it. The glider remains an
 excellent illustration of cross-cutting identity — no fixed set of cells is the
 glider — and should be used for that and nothing more.
 
+## Emergence and reduction
+
+The glider is the standard example of emergence, and on this account nothing
+emerges. That is a corollary, not a further claim: if the two articulations are
+co-primordial, there is no level for anything to emerge to. Emergence requires
+the differentiated to be real and the formation to appear above it once
+complexity suffices. Replace levels with cross-cutting criteria of identity and
+the ladder is gone. The glider is not produced by the cells. It is the same
+whole individuated the other way, and it was available throughout.
+
+But *illusion* is one word too strong, and the overshoot does damage. An
+illusion is something one seems to see that is not there. The glider is there.
+Affordance is constraint and not interpretation, so the second articulation is
+genuine. What is illusory is the emerging — the coming-into-being at a level
+above. The glider is real. The emergence is not.
+
+That distinction has to be held, because the sentence which comes naturally
+next — *so it is really just cells* — is the opposite error, and it destroys
+this account. Reduction collapses everything to differentiation alone, which
+the first commitment denies.
+
+**Emergentism and reduction are one mistake with opposite signs.** Both take
+levels as given, both take one level as fundamental, and they disagree only
+about which. The emergentist says the whole is more than its parts. The
+reductionist says it is nothing but. Both sentences presuppose that the
+comparison is meaningful. Here it is not: the two articulations are not
+quantities of one thing, to be greater or less than one another. Denying the
+shared premise is not a compromise between the two positions.
+
+The word also covers two unrelated things, and separating them is most of the
+work.
+
+The first: gliders are formations not named in the rule. This is the vantage
+error unmixed. Nothing occurred; the criterion of identity changed.
+
+The second: at *t=0* a random field holds no gliders and at *t=500* it holds
+several. Something did occur. But that is change described wholly within the
+second articulation — the whole modulated into formations it was not in. It is
+not a passage from one level to another. A single word covering both a shift of
+vantage and a change in time is how the confusion sustains itself.
+
+The cellular automaton is in passing the weakest available showcase for strong
+emergence, since complete derivability is guaranteed by construction. The
+canonical illustration is a case in which the strong thesis is trivially false.
+
+What emergence-talk reaches for is nonetheless real, and has a better name. The
+genuine question is why one rule is remarkable when most are not. Most rules
+afford no second articulation whatever: they die, or they go to noise, and no
+persistent formation arises for form-identity to attach to. That difference is a
+fact about the rule and not about our attention. The intuition that something
+notable occurs in Life is correct. The description — that a new level appeared —
+is wrong. What varies between rules is **affordance**: whether the whole admits
+a second articulation at all.
+
+One objection survives and is recorded rather than dismissed. Affordance is not
+static. A random field affords no second articulation, there being no persistent
+formation for form-identity to attach to; after settling, it does. So what
+articulations are available did genuinely change, and *nothing emerged* is too
+quick if it is taken to mean that nothing changed.
+
+What changed is the whole's organization, such that a second criterion of
+identity gains purchase. That is still not a level appearing above another; it
+is the whole becoming articulable in a way it was not. Should anyone wish to
+call that emergence, the word has been redefined to contain no levels — at which
+point it is no longer the thesis in dispute.
+
 ## Two orders, and why the difference matters
 
 Ontologically the whole grounds both articulations:
