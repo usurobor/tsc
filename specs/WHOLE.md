@@ -10,13 +10,11 @@ through the change across what changes.
 
 Each can hold where the other does not.
 
-These are not two changes.
-
 The whole differs without division; its changing differs without division.
 
-The two continuities articulate one change.
+One change carries both continuities.
 
-That one change is cohering.
+That change is cohering.
 
 Its order is rhythm.
 
@@ -38,5 +36,5 @@ from a description of the other without sharing its criterion of identity.
 ## Open
 
 - Whether these two continuities are exhaustive.
-- How one change of the whole constrains both articulations.
+- What it means for one change to carry both continuities.
 - The structure of rhythm.
