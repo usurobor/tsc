@@ -10,8 +10,6 @@ A wave can persist while its parcels change.
 
 The identities cross-cut. The change is one.
 
-The water does not assemble molecules into a wave.
-
 The water waves.
 
 ## Glider
@@ -36,28 +34,12 @@ to that shift happens in the whole.
 
 Neither establishes a new ontological level.
 
-The question is therefore not whether a second level emerges from a first, but
-whether the changing whole supports cross-cutting continuities of identity.
-
-## Cone
-
-The cone is scaffolding.
-
-A triangle and a circle can differ while both being expressions of one whole.
-
-But projection requires an apparatus: an axis, light, a screen.
-
-The wave does not.
-
-The water waves.
-
 ## Refusal
 
 Cross-cutting requires both directions.
 
-Under a fixed coarse-graining, many microstates may have the same temperature,
-while one microstate does not have several temperatures.
+Two occurrences can have the same temperature while differing in microstate.
 
-The identity relations differ, but they are nested rather than cross-cutting.
+Two occurrences with the same microstate cannot differ in temperature.
 
-The pairing is refused.
+The relations are nested, not cross-cutting.

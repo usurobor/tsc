@@ -10,8 +10,11 @@ through the change across what changes.
 
 Each can hold where the other does not.
 
-These are not two changes. The whole differs without division; so does its
-changing. They are two articulations of one change.
+These are not two changes.
+
+The whole differs without division; its changing differs without division.
+
+The two continuities articulate one change.
 
 That one change is cohering.
 
