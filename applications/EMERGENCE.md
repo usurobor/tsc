@@ -2,59 +2,62 @@
 
 An application of `specs/WHOLE.md`.
 
-## The wave
+## Wave
 
-The wave makes the two articulations visible.
+A parcel can persist while the waves through it change.
 
-A parcel can persist while the waves through it change. A wave can persist
-while its parcels change.
+A wave can persist while its parcels change.
 
 The identities cross-cut. The change is one.
 
-The water does not assemble molecules into a wave. The water waves.
+The water does not assemble molecules into a wave.
 
-## The glider
+The water waves.
 
-A glider shows the same crossing cleanly. A cell persists through different
-formations; a glider persists through different cells.
+## Glider
 
-This establishes different criteria of identity. **It does not establish
-non-derivability.** A glider's behaviour is completely calculable from the
-cellular history. That it is calculable and that it does not share cell
-identity are both true, and neither bears on the other.
+A cell can persist through different formations. A glider can persist through
+different cells.
 
-## Two things called emergence
+Again, the identities cross-cut.
 
-A formation can appear in time. That is a change of the whole.
+This says nothing about derivability. Given the cellular rule and states, the
+glider is calculable. Its derivability and its different criterion of identity
+are compatible facts.
 
-A criterion of identity can become applicable. That is a new articulation of
-the whole.
+## Emergence
 
-Neither, by itself, establishes a new level.
+Two different things are easily confused.
 
-The first is an event. The second is not, and treating it as one is the
-confusion. Nothing occurred at the moment a formation became describable.
+A formation can arise in time. Something changes.
 
-## The cone
+A description can shift from one articulation to another. Nothing corresponding
+to that shift happens in the whole.
 
-Useful as scaffolding, for one thing only: a triangle and a circle can differ
-while belonging to one source.
+Neither establishes a new ontological level.
 
-Its limit is that projection requires an apparatus outside the cone — light, a
-screen, a selected axis.
+The question is therefore not whether a second level emerges from a first, but
+whether the changing whole supports cross-cutting continuities of identity.
 
-The wave does not. The water waves.
+## Cone
 
-## A refusal
+The cone is scaffolding.
 
-The test refuses cases it might be expected to accept, and temperature is the
-clearest.
+A triangle and a circle can differ while both being expressions of one whole.
 
-Same temperature, different microstate: this occurs. Same microstate, different
-temperature: this does not, since the microstate fixes the temperature.
+But projection requires an apparatus: an axis, light, a screen.
 
-So only one direction holds, and cross-cutting requires both. Temperature and
-microstate are not two articulations by this test.
+The wave does not.
 
-A theory that dissolved everything would explain nothing. This is what it costs
-for the test to mean something.
+The water waves.
+
+## Refusal
+
+Cross-cutting requires both directions.
+
+Under a fixed coarse-graining, many microstates may have the same temperature,
+while one microstate does not have several temperatures.
+
+The identity relations differ, but they are nested rather than cross-cutting.
+
+The pairing is refused.

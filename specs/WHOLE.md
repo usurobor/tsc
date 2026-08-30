@@ -2,63 +2,38 @@
 
 A whole differs within itself without division.
 
-When a whole changes, identity persists in two cross-cutting ways.
+In a changing whole, identity can persist in two cross-cutting ways:
 
-One follows what changes.
+through what changes;
 
-The other follows the change through what changes.
+through the change across what changes.
 
-Either can persist while the other changes.
+Each can hold where the other does not.
 
-These are not two changes. They are two articulations of one change of the
-whole.
+These are not two changes. The whole differs without division; so does its
+changing. They are two articulations of one change.
 
 That one change is cohering.
 
 Its order is rhythm.
 
-## Names
-
-**Differentiating** is identity followed through what changes.
-
-**Modulating** is identity followed through the change itself.
-
-These name the two ways identity persists. They do not name two things, two
-processes, or two levels.
-
-**Vantage** is which articulation a description follows. It is a property of
-descriptions. A whole does not have vantages; it articulates, and nothing in it
-selects one.
-
 ## Cross-cutting
 
-Two continuities of identity cross-cut when each holds where the other fails:
+Let `~₁` and `~₂` trace continuity among occurrences in the whole's changing.
+
+They cross-cut when:
 
     ∃ x, y :   x ~₁ y   ∧   ¬(x ~₂ y)
     ∃ x, y :   x ~₂ y   ∧   ¬(x ~₁ y)
 
-Both directions are required. One direction alone is not two articulations.
+If only one direction holds, one continuity refines the other. They do not
+cross-cut.
 
-The relations trace occurrences in a whole's changing. They are not relations
-over its state at an instant.
-
-## Boundary
-
-Cross-cutting identity does not mean that one articulation cannot be
-calculated, predicted, or derived from a description of the other. A formation
-may be wholly derivable from the history it forms in and still not share that
-history's identity. Both hold at once.
-
-What is established here is: one whole; difference without division; two
-cross-cutting continuities of identity; one change.
-
-What is not established is that a whole is more than, irreducible to, or
-unproducible from either articulation. Those are further claims and none of
-them follows from the above.
+Cross-cutting does not imply non-derivability. One articulation may be derived
+from a description of the other without sharing its criterion of identity.
 
 ## Open
 
-- Whether the two continuities are exhaustive.
-- Whether one transformation of a whole induces both. This is the form
-  covariance has to take, and it is not yet stated.
-- Rhythm, beyond the one sentence above.
+- Whether these two continuities are exhaustive.
+- How one change of the whole constrains both articulations.
+- The structure of rhythm.
