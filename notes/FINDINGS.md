@@ -16,20 +16,37 @@ while its machinery grew. Recording a finding is not adopting it.
 The operation has four outcomes, and dissolution is one of them:
 
 - **holds** — both are articulations; *which is really identity?* was malformed.
-- **nested** — one continuity refines the other.
+- **nested** — one continuity refines the other; the *both are equally
+  articulations* answer is removed, and nothing else is.
 - **untyped** — nothing is changing; the question does not arise.
 - **uncarried** — undecided; the open item.
 
 This corrects an earlier framing in which the theory was described as dissolving
 debates generally. It does not. Most cases put to it will not return *holds*.
 
-**Contested, and left open here.** Whether *nested* adjudicates a debate or
-merely narrows it. Against adjudication: microstate refines temperature, and
-nobody concludes that microstate is the real identity and temperature a fiction
-— both are genuine continuities, and nesting privileges neither. On that
-reading, nested removes the *both are equally articulations* answer and leaves
-the rest of the dispute untouched, since which continuity *matters* is not a
-question the theory takes. Unresolved.
+**Nested narrows; it does not adjudicate.** An earlier draft had it taking sides
+— that a nested result in the personal-identity case puts the theory behind
+animalism. It does not, for two reasons.
+
+Microstate refines temperature, and nobody concludes from this that microstate
+is the real identity and temperature a fiction. Both are genuine continuities.
+Nesting privileges neither term, and a verdict that privileged one here would
+have to privilege one there.
+
+And the side supposedly defeated can welcome the verdict. A Lockean may say:
+*yes, the psychological continuity refines the bodily one — and it is the
+refinement that matters for personhood.* Nothing in the nested result contradicts
+that. If the losing party can accept your finding intact, you were not
+adjudicating.
+
+What nested removes is the even-handed answer, that both are articulations of
+one changing and the question of which is real was malformed. The rest of the
+dispute survives untouched, because it turns on which continuity *matters*, and
+mattering is not in this theory's jurisdiction.
+
+This is the theory's service and its limit together: it relocates the argument
+onto checkable ground — is the second direction attested, is the whole
+well-typed — and then stops.
 
 **What it does not establish.** Any verdict about a particular debate. Every
 case named in discussion — personal identity, money, genotype and phenotype,
@@ -50,6 +67,11 @@ without fixing a viewpoint).
 
 If the theory's service is relocating arguments onto checkable ground, the
 labels should track the checks one-to-one. They do not yet.
+
+**Future work.** Split them, one label per check. Provisionally: *unchanging*
+and *not-temporal* and *two-wholes* in place of untyped; *ungrounded* and
+*grounded-outside* in place of uncarried. Naming is not the point; one check per
+label is.
 
 ## Carrying cannot be another relation
 
