@@ -182,3 +182,85 @@ of cases.
 
 Worth holding as a canonical instance: it is checkable by anyone without being
 taught the theory first, which the wave and the glider are not.
+
+## Composition holds only within an articulation
+
+*Bears on: consequences of the kernel. Proposed, under review.*
+
+The first result derived *from* the kernel rather than a verdict on a case.
+
+**Claim.** Where `A ≡_X B` holds, the identity-fixing reading of "B consists of
+As" has no single referent for the persisting B. It refers only to B's footprint
+at an instant.
+
+**Derivation.** "Consists of" in the identity-fixing sense asserts that
+A-sameness, together with arrangement, refines B-sameness: fix the As and their
+arrangement and you have fixed which B. Cross-cutting says neither continuity
+refines the other. So the pair cannot stand in that relation.
+
+**Concretely.** Cells are neither necessary nor sufficient for the glider.
+Replace every cell and the same glider persists; take the same cells otherwise
+arranged, or occupied at another time, and there is no glider.
+
+**What survives.** The glider's footprint at *t* consists of cells, and that is
+correct. A frozen frame holds no glider at all — only a configuration. The
+equivocation between a persisting thing and its footprint is what makes the
+composition claim feel true.
+
+**The four-dimensionalist reply.** If the glider is the sum of its stages, each
+made of cells, then it consists of cell-stages. Answer: which stages belong to
+the sum is fixed by the glider criterion, not by the cells, so the composition
+is parasitic on the identity it claims to build. Note this cuts symmetrically —
+which stages belong to *this parcel* is equally fixed by the parcel criterion.
+It shows 4D composition is criterion-relative, not that it is wrong.
+
+**Recursive in the body.** Matter turns over, so same body and different matter;
+matter passes on, so same matter and different body. Organs are themselves
+persisting forms through turning-over cells. So "the body consists of organs" is
+footprint-true and persistence-empty at every level.
+
+**Consequence.** Composition is a relation *within* one articulation, among the
+many that appear once a limited criterion of identity is adopted. It is never a
+relation *across* an articulated pair. "Consists of" works only after a cut.
+
+**Corrections applied to the argument as first stated.**
+
+*Refinement is by arrangement too.* "Consists of" asserts that A-sameness
+together with arrangement refines B-sameness, not A-sameness alone. The
+contradiction is therefore not immediate, and the claim to defeat is specifically
+that A-*identity* constitutes B-*identity*.
+
+*Determination is not constitution.* Cell-level facts fully determine the glider
+— that is derivability, which `applications/EMERGENCE.md` affirms. An argument
+phrased as *the cells do not fix the glider* is false. Phrased as *cell-sameness
+does not constitute glider-sameness*, it holds. The "not sufficient" step must be
+read as constitution, never as determination.
+
+*Not false — without referent.* The persisting glider has no fixed set of cells,
+so the identity-fixing claim has nothing to refer to. Type-level talk — gliders
+are made of cells — is untouched.
+
+**What it does not establish.** Nothing where ≡ does not hold; it inherits open
+item 2, and for an uncarried pair "consists of" might fail for unrelated
+reasons. It does not privilege the formation side: *the cell consists of
+glider-stages* is false by the same argument. And it says nothing about
+causation — the heart really does pressurize blood.
+
+## The determination/constitution slide recurs
+
+*Bears on: working with this material.*
+
+Three times in development, from two directions independently:
+
+- **T3**, retracted. Claimed no production relation obtains between two
+  articulations, on the ground that neither lies in the other's image. False: a
+  history determines the formation.
+- **"The rule does not contain the glider, so the pattern holds extra truths."**
+  Retracted for the same reason.
+- **Latent in the composition argument above**, where "the cells are not
+  sufficient" reads as a determination claim unless explicitly scoped to
+  constitution.
+
+The attractor: cross-cutting identity feels as though it should entail
+non-derivability. It does not, and the application file says so outright. Expect
+to reach for it anyway; check every occurrence.
