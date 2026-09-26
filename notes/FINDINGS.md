@@ -223,6 +223,36 @@ footprint-true and persistence-empty at every level.
 many that appear once a limited criterion of identity is adopted. It is never a
 relation *across* an articulated pair. "Consists of" works only after a cut.
 
+**Stated in quotients.** Each continuity induces a quotient of the occurrences.
+Quotient by cell-sameness and the elements are cell-histories; quotient by
+glider-sameness and the elements are gliders, and no cells appear there at all.
+So *consists of* is a relation among elements of one quotient. There is no
+composition across quotients, because the terms are not there to relate. "Works
+only after a cut" is "works only within a quotient" — the same claim in what the
+kernel already provides.
+
+This also says what the glider is without reaching for abstraction. It is not a
+relation among cells with the particular cells left out: that would be a
+coarsening of the cell quotient, and a coarsening nests rather than cross-cuts.
+Two gliders on one board share an arrangement and are not the same glider, so
+glider-sameness is not arrangement-sameness. The glider is a particular traced
+through the changing, and it is an element of the other quotient.
+
+**Guard: not orthogonal dimensions.** The two quotients are quotients *of one
+set*. Cross-cutting quantifies over occurrences shared by both relations — `x`
+and `y` are the same objects in both clauses of the test — so separate domains
+would leave nothing to quantify over and make the condition vacuous. Two
+dimensions give two unrelated structures, not an articulated pair.
+
+Worse, orthogonality is the signature of the case the theory refuses.
+Independent factors are exactly what colour and shape are, and that pair is
+uncarried. Parcel and wave are not independent; they are bound together by the
+water's changing, which is what carrying was introduced to name. Independence
+fights carrying rather than expressing it.
+
+*Dimension* is also a word the theory removed. Spatial metaphors reinstate
+stacking; that is how horizontal, vertical and deep became levels.
+
 **Corrections applied to the argument as first stated.**
 
 *Refinement is by arrangement too.* "Consists of" asserts that A-sameness
