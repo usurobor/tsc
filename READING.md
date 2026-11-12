@@ -112,6 +112,24 @@ state and glider-sameness collapses into arrangement-sameness, which nests.
 *Where.* D3. FINDINGS: two gliders on one board share an arrangement and are
 not the same glider.
 
+### 7. Sameness
+
+*Feels right.* `A ≡_X B` says A and B are identified as the same under X's
+articulation. So when X carries several articulations, ≡ needs a further index
+to say which.
+
+*Refused.* That reads ≡ as the sameness relation `~` of D1, and takes `A` and
+`B` for things. They are continuities. Each is its own sameness relation, and ≡
+says the two cross-cut and are carried by one changing. They are not the same
+relation; cross-cutting guarantees that. `A` and `B` already name the
+articulations, so no further index is needed.
+
+*Also refused.* Making carrying something further that *makes* a relation
+hold. Carrying is a predicate on the relation, not a third term behind it; the
+third term regresses.
+
+*Where.* D1, D8, D11.
+
 ## Probes
 
 Questions a reader should answer from the kernel alone. A reader who misses one
@@ -127,5 +145,6 @@ has taken the misreading named beside it.
 | Does choosing an articulation make the glider exist? | No. It must be carried; carrying is open. | 4 |
 | Would a history constrained as a whole change ≡? | No. Determination is a separate axis. | 5 |
 | Is a glider's configuration its state? | No. Configuration is its footprint. | 6 |
+| Does `cell ≡_field glider` say a cell is the same as a glider? | No. It says cell-sameness and glider-sameness are two articulations of one field. | 7 |
 | Is temperature ≡ microstate? | No. Nested. | — |
 | Is colour ≡ shape? | Cannot yet be refused. Uncarried; O2. | — |

@@ -166,6 +166,12 @@ and cross-cut (D7). Read: *X articulates itself as A and as B*.
 The subscript is required. ≡ is never a bare relation between `A` and `B`.
 Applications abbreviate by naming the persistences: `cell ≡_field glider`.
 
+*Not sameness.* `A` and `B` are continuities, not occurrences or persistences,
+and ≡ does not say they are the same. They cross-cut, so they are not the same
+relation. Sameness lives in each of them (D1). ≡ says the two are carried by one
+changing. No index beyond `X` is needed: `A` and `B` already name the
+articulations.
+
 **D12 — Cohering.** The one change (P2) that carries both articulations when
 `A ≡_X B`. *Rhythm* is the order of cohering. *Declared*: both names wait on
 O2 and O3.
