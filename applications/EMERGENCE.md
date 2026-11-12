@@ -30,6 +30,18 @@ This says nothing about derivability. Given the cellular rule and states, the
 glider is calculable. Its derivability and its different criterion of identity
 are compatible facts.
 
+## Field
+
+A site can persist while the excitations through it change. An excitation can
+persist while its sites change.
+
+    site ≡_field excitation
+
+The glider case in physics. A particle is on the excitation side, not the site
+side — so by the composition result a particle is not made of field sites, and
+"consists of" has no referent for the persisting particle, only for its
+footprint.
+
 ## Emergence
 
 Two different things are easily confused.
@@ -43,7 +55,7 @@ Neither establishes a new ontological level.
 
 ## Where ≡ does not hold
 
-Three ways it fails. Two can be shown.
+Four ways it fails. Three can be shown.
 
 ### Nested
 
@@ -53,6 +65,16 @@ Two occurrences with the same microstate cannot differ in temperature.
 
 Cross-cutting requires both directions. Here one continuity refines the other,
 so no X relates them.
+
+### Coincident
+
+In electrostatics the charge distribution and the field each determine the
+other: Gauss's law fixes the field from the charge, and the charge from the
+field. So two occurrences agree on one exactly when they agree on the other.
+
+Here *both* directions fail, not one. This is not nesting, which is proper
+refinement in a single direction. The two relations coincide, and there is one
+continuity wearing two names.
 
 ### Untyped
 

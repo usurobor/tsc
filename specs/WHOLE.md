@@ -28,10 +28,15 @@ They cross-cut when:
     ∃ x, y :   x ~₂ y   ∧   ¬(x ~₁ y)
 
 If only one direction holds, one continuity refines the other. They do not
-cross-cut.
+cross-cut. If neither holds, the two relations coincide: one continuity under
+two names.
 
 Cross-cutting does not imply non-derivability. One articulation may be derived
 from a description of the other without sharing its criterion of identity.
+
+Nor does ≡ concern determination. Whether the changing is generated forward from
+an instant or constrained as a whole history, ≡ says the same. Identity and
+determination are separate axes.
 
 ## Notation
 
