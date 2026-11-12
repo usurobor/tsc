@@ -2,8 +2,8 @@
 
 An application of `specs/ARTICULATION.md`.
 
-Throughout, `A ≡_X B` is written with the names of the continuities rather
-than the relations themselves: `parcel ≡_water wave` abbreviates *sameness of
+Throughout, `A < X > B` is written with the names of the continuities rather
+than the relations themselves: `parcel < water > wave` abbreviates *sameness of
 parcel and sameness of wave cross-cut, and the water's changing carries both*.
 The relata are continuities, not things.
 
@@ -13,7 +13,7 @@ A parcel can persist while the waves through it change.
 
 A wave can persist while its parcels change.
 
-    parcel ≡_water wave
+    parcel < water > wave
 
 The identities cross-cut. The change is one.
 
@@ -24,7 +24,7 @@ The water waves.
 A cell can persist through different formations. A glider can persist through
 different cells.
 
-    cell ≡_field glider
+    cell < field > glider
 
 This says nothing about derivability. Given the cellular rule and states, the
 glider is calculable. Its derivability and its different criterion of identity
@@ -35,7 +35,7 @@ are compatible facts.
 A site can persist while the excitations through it change. An excitation can
 persist while its sites change.
 
-    site ≡_field excitation
+    site < field > excitation
 
 The glider case in physics. A particle is on the excitation side, not the site
 side — so by the composition result a particle is not made of field sites, and
@@ -53,7 +53,7 @@ to that shift happens in the whole.
 
 Neither establishes a new ontological level.
 
-## Where ≡ does not hold
+## Where co-articulation does not hold
 
 Four ways it fails. Three can be shown.
 
@@ -81,7 +81,7 @@ continuity wearing two names.
 A cone does not change. There are no occurrences in its changing, so there are
 no continuities to trace and nothing for a change to carry.
 
-    triangle ≡_cone circle
+    triangle < cone > circle
 
 is not a false claim. It is not a claim.
 
@@ -100,5 +100,5 @@ changing carries them; they are laid across it.
 not sufficient, and what is missing is exactly O2 in `specs/ARTICULATION.md` — what it means
 for one change to carry both continuities.
 
-Until that is answered, ≡ can be refused for nesting and for type, and cannot
+Until that is answered, co-articulation can be refused for nesting and for type, and cannot
 be refused for arbitrariness.

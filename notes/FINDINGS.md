@@ -189,7 +189,7 @@ taught the theory first, which the wave and the glider are not.
 
 The first result derived *from* the kernel rather than a verdict on a case.
 
-**Claim.** Where `A ≡_X B` holds, the identity-fixing reading of "B consists of
+**Claim.** Where `A < X > B` holds, the identity-fixing reading of "B consists of
 As" has no single referent for the persisting B. It refers only to B's footprint
 at an instant.
 
@@ -270,7 +270,7 @@ read as constitution, never as determination.
 so the identity-fixing claim has nothing to refer to. Type-level talk — gliders
 are made of cells — is untouched.
 
-**What it does not establish.** Nothing where ≡ does not hold; it inherits open
+**What it does not establish.** Nothing where co-articulation does not hold; it inherits open
 item 2, and for an uncarried pair "consists of" might fail for unrelated
 reasons. It does not privilege the formation side: *the cell consists of
 glider-stages* is false by the same argument. And it says nothing about

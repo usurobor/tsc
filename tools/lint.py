@@ -5,7 +5,8 @@ A term may appear before its defining item only as an explicit forward
 reference: the same paragraph must cite the defining ID. Open items (O*) may
 be cited from anywhere. The preamble sections are exempt.
 
-Also checks that every ID cited in the repository's markdown exists.
+Also checks that every ID cited in the repository's markdown exists, and that
+no co-articulation is written unspaced (`A<X>B` renders as an HTML tag).
 """
 import re
 import sys
@@ -30,7 +31,7 @@ TERMS = {
     "D8": r"\bcarr(?:y|ied|ies|ying)\b",
     "D9": r"\barticulat\w*",
     "D10": r"\belemental\b",
-    "D11": r"≡",
+    "D11": r"\bco-articulat\w*| < \S+ > ",
     "D12": r"\bcohering\b|\brhythm\b",
 }
 ITEM = re.compile(r"^\*\*([PADRO]\d+) — ")
@@ -86,9 +87,24 @@ def check_citations(spec_text):
     return errors
 
 
+UNSPACED = re.compile(r"\w<\w[^<>\s]*>\w")
+
+
+def check_render():
+    errors = []
+    for md in ROOT.rglob("*.md"):
+        if ".git" in md.parts:
+            continue
+        for n, line in enumerate(md.read_text().splitlines(), 1):
+            if UNSPACED.search(line):
+                errors.append(f"{md.relative_to(ROOT)}:{n}: unspaced "
+                              f"co-articulation renders as an HTML tag")
+    return errors
+
+
 def main():
     text = SPEC.read_text()
-    errors = check_order(text) + check_citations(text)
+    errors = check_order(text) + check_citations(text) + check_render()
     for e in errors:
         print(e)
     print(f"{len(errors)} error(s)")

@@ -43,6 +43,7 @@ The kernel in one breath. The sections below govern; this summarizes them.
 | refines | D4 | reduces to | implies ranking |
 | carried | D8 | real, objective | asserts what O2 has not shown |
 | articulation | D9 | perspective, view, description | implies an articulator other than the whole |
+| `A < X > B` | D11 | `A ≡_X B`, `A ~ B`, `A > X < B` | asserts sameness, reuses D1's sign, or points the parts into the whole |
 | cohering | D12 | emergence, causation between levels | names a second process |
 
 ## 1. Primitives
@@ -50,7 +51,7 @@ The kernel in one breath. The sections below govern; this summarizes them.
 **P1 — Whole.** Not defined. Written `X`. Everything below is defined in some
 `X`.
 
-*Why.* ≡ is never a bare relation. The whole is part of every claim (D11).
+*Why.* Every claim this theory makes names its whole (D11).
 *Excludes.* A whole assembled from pieces given beforehand. A whole differs
 within itself without division.
 
@@ -158,22 +159,31 @@ the Statement names:
 *Why informal.* Nothing yet defines the two kinds except by example. Whether
 they are the only kinds is O1.
 
-## 5. Equivalence of articulations
+## 5. Co-articulation
 
-**D11 — ≡.** `A ≡_X B` holds when `A` and `B` are articulations of `X` (D9)
-and cross-cut (D7). Read: *X articulates itself as A and as B*.
+**D11 — Co-articulation.** Written `A < X > B`. Read: *X articulates itself as
+A and as B*.
 
-The subscript is required. ≡ is never a bare relation between `A` and `B`.
-Applications abbreviate by naming the persistences: `cell ≡_field glider`.
+    A < X > B   ⟺   CrossCut(A, B)  ∧  Carries(X, A)  ∧  Carries(X, B)
+
+that is, `A` and `B` cross-cut (D7) and are both articulations of `X` (D9).
+
+`X` is required. `A < > B` is not an expression. Applications abbreviate by
+naming the persistences: `cell < field > glider`.
+
+*The signs.* `<` and `>` are not causal arrows, derivation operators,
+composition operators or inequalities. The outward orientation, from the whole
+to what it carries, is mnemonic and makes no further claim. Write the
+expression with spaces or in code: unspaced `<X>` renders as an HTML tag and
+disappears. `tools/lint.py` checks this.
 
 *Not sameness.* `A` and `B` are continuities, not occurrences or persistences,
-and ≡ does not say they are the same. They cross-cut, so they are not the same
-relation. Sameness lives in each of them (D1). ≡ says the two are carried by one
-changing. No index beyond `X` is needed: `A` and `B` already name the
-articulations.
+and co-articulation does not say they are the same. They cross-cut, so they are
+not the same relation. Sameness lives in each of them (D1). No index beyond
+`X` is needed: `A` and `B` already name the articulations.
 
 **D12 — Cohering.** The one change (P2) that carries both articulations when
-`A ≡_X B`. *Rhythm* is the order of cohering. *Declared*: both names wait on
+`A < X > B`. *Rhythm* is the order of cohering. *Declared*: both names wait on
 O2 and O3.
 
 ## 6. Verdicts
@@ -187,7 +197,7 @@ checks run in order, and each verdict corresponds to one check.
 | 2 | `A`, `B` do not coincide (D5) | one continuity, two names | **coincident** |
 | 3 | neither refines the other (D6) | one refines the other | **nested** |
 | 4 | both are carried (D8) | carrying not shown | **uncarried**: undecided while O2 is open |
-| — | all pass | — | **holds**: `A ≡_X B` |
+| — | all pass | — | **holds**: `A < X > B` |
 
 These labels are under-resolved: some cover several distinct checks
 (FINDINGS).
@@ -195,7 +205,7 @@ These labels are under-resolved: some cover several distinct checks
 ## 7. Results
 
 **R1 — Identity is not determination.** D1–D11 mention no law by which the
-changing is generated. So ≡ comes out the same whether the history is
+changing is generated. So co-articulation comes out the same whether the history is
 generated forward from an instant, constrained as a whole, or neither.
 
 *Proof.* By inspection: no definition refers to generation.
@@ -210,18 +220,33 @@ definition ranks them. Microstate refines temperature, and temperature is not
 a fiction.
 
 **R4 — Composition holds only within an articulation.** *Proposed.* Where
-`A ≡_X B`, the identity-fixing reading of "B consists of As" has no referent
+`A < X > B`, the identity-fixing reading of "B consists of As" has no referent
 for a persisting `B`, only for its footprint (D3). Derivation, corrections and
 limits are in FINDINGS.
 
-**R5 — No second change.** *Proposed.* Where `A ≡_X B`, there is one change
+**R5 — No second change.** *Proposed.* Where `A < X > B`, there is one change
 (P2, D12). A causal claim across the two articulations is a claim about that
 change, read through two criteria. It can be true. It cannot name a further
 process running between them.
 
+**R6 — Algebra.** For a fixed `X`, co-articulation induces a binary relation
+on continuities. That relation is symmetric, irreflexive and not transitive.
+
+*Symmetric.* CrossCut (D7) is symmetric, and carrying (D8) is a property of
+each continuity separately.
+*Irreflexive.* No continuity cross-cuts itself: it coincides with itself (D5).
+*Not transitive.* `A < X > B` and `B < X > A` hold together, and `A < X > A`
+never does. Nor is it cotransitive, so it is not an apartness.
+*Check.* `tools/algebra.py` enumerates the continuities on a small set of
+occurrences and confirms each property for CrossCut. Carrying can only remove
+pairs, so it adds no reflexivity or transitivity.
+
+These are properties of the induced relation, not of the three-place
+expression. It is not an equivalence, which is why its sign is not `≡`.
+
 ## 8. Open
 
 - **O1.** Whether elemental and pattern (D10) are the only two kinds.
-- **O2.** What carrying is (D8). Until it is answered, ≡ can be refused for
+- **O2.** What carrying is (D8). Until it is answered, co-articulation can be refused for
   coincidence, nesting and type, and cannot be refused for arbitrariness.
 - **O3.** The structure of rhythm (D12).

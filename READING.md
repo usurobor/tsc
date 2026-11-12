@@ -94,7 +94,8 @@ dynamics, or constrain the history beyond what initial data fix.
 
 *Refused.* Identity and determination are separate axes. Forward generation,
 two-time boundary conditions, global constraint and variational formulations
-are all claims about determination. ≡ says the same under each.
+are all claims about determination. Co-articulation comes out the same
+under each.
 
 *Where.* R1. FINDINGS: the determination/constitution slide recurs.
 
@@ -112,23 +113,26 @@ state and glider-sameness collapses into arrangement-sameness, which nests.
 *Where.* D3. FINDINGS: two gliders on one board share an arrangement and are
 not the same glider.
 
-### 7. Sameness
+### 7. The signs
 
-*Feels right.* `A ≡_X B` says A and B are identified as the same under X's
-articulation. So when X carries several articulations, ≡ needs a further index
-to say which.
+*Feels right.* In `A < X > B`, the arrows say something: A and B combine into
+X, or X produces A and B, or X is greater than both. Or the expression says A
+and B are the same.
 
-*Refused.* That reads ≡ as the sameness relation `~` of D1, and takes `A` and
-`B` for things. They are continuities. Each is its own sameness relation, and ≡
-says the two cross-cut and are carried by one changing. They are not the same
-relation; cross-cutting guarantees that. `A` and `B` already name the
-articulations, so no further index is needed.
+*Refused.* The expression says three things and no more: A and B cross-cut,
+and X carries each. The outward orientation is mnemonic. It is not causation,
+derivation, composition or order. And A and B are continuities, each its own
+sameness relation, and cross-cutting guarantees they are not the same one. They
+already name the articulations, so no further index is needed.
+
+The sign was `≡` and was abandoned because it asserted sameness and an
+equivalence's algebra. The relation is neither (R6).
 
 *Also refused.* Making carrying something further that *makes* a relation
 hold. Carrying is a predicate on the relation, not a third term behind it; the
 third term regresses.
 
-*Where.* D1, D8, D11.
+*Where.* D1, D8, D11, R6.
 
 ## Probes
 
@@ -143,8 +147,10 @@ has taken the misreading named beside it.
 | Is the glider a redescription of the cells? | No. Different criterion, same occurrences. Derivable, not constituted. | 2 |
 | Does the cell articulation see only instants? | No. Cell-histories persist. | 3 |
 | Does choosing an articulation make the glider exist? | No. It must be carried; carrying is open. | 4 |
-| Would a history constrained as a whole change ≡? | No. Determination is a separate axis. | 5 |
+| Would a history constrained as a whole change co-articulation? | No. Determination is a separate axis. | 5 |
 | Is a glider's configuration its state? | No. Configuration is its footprint. | 6 |
-| Does `cell ≡_field glider` say a cell is the same as a glider? | No. It says cell-sameness and glider-sameness are two articulations of one field. | 7 |
-| Is temperature ≡ microstate? | No. Nested. | — |
-| Is colour ≡ shape? | Cannot yet be refused. Uncarried; O2. | — |
+| Does `cell < field > glider` say a cell is the same as a glider? | No. It says cell-sameness and glider-sameness are two articulations of one field. | 7 |
+| Do cells and gliders combine to make the field, as the arrows suggest? | No. The orientation is mnemonic; the expression states only cross-cutting and carrying. | 7 |
+| Is `A < X > A` ever true? | No. Irreflexive. | 7 |
+| Is `temperature < gas > microstate`? | No. Nested. | — |
+| Is `colour < cars > shape`? | Cannot yet be refused. Uncarried; O2. | — |
