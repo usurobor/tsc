@@ -5,6 +5,9 @@ A clean restart.
 `specs/WHOLE.md` is the foundation. Nothing else here is authoritative, and
 the ontology is stated there and nowhere else.
 
+`READING.md` comes next, before writing anything about the foundation. It
+states no ontology; it lists the readings the foundation excludes.
+
 `applications/` tests the foundation against cases. An application may not
 reach a conclusion the foundation does not contain.
 
