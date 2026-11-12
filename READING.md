@@ -134,6 +134,19 @@ third term regresses.
 
 *Where.* D1, D8, D11, R6.
 
+### 8. The whole as articulator
+
+*Feels right.* Nobody outside the whole imposes the articulation, so the whole
+must do it: X articulates itself.
+
+*Refused.* There is no act to assign. In Game of Life nothing performs any
+articulating: the board changes, and cell-sameness and glider-sameness are
+relations its history has. Making the whole the agent removes the observer by
+putting `X` in the observer's seat, which is the same mistake. A criterion may
+be proposed by anyone. Whether it is carried is not up to the proposer.
+
+*Where.* D9.
+
 ## Probes
 
 Questions a reader should answer from the kernel alone. A reader who misses one
@@ -153,4 +166,5 @@ has taken the misreading named beside it.
 | Do cells and gliders combine to make the field, as the arrows suggest? | No. The orientation is mnemonic; the expression states only cross-cutting and carrying. | 7 |
 | Is `A < X > A` ever true? | No. Irreflexive. | 7 |
 | Is `temperature < gas > microstate`? | No. Nested. | — |
+| Does the field articulate itself into cells and gliders? | No. There is no articulator, the field included. | 8 |
 | Is `colour < cars > shape`? | Cannot yet be refused. Uncarried; O2. | — |
