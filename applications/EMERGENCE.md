@@ -1,6 +1,6 @@
 # Emergence
 
-An application of `specs/WHOLE.md`.
+An application of `specs/ARTICULATION.md`.
 
 Throughout, `A ≡_X B` is written with the names of the continuities rather
 than the relations themselves: `parcel ≡_water wave` abbreviates *sameness of
@@ -97,8 +97,8 @@ differing in colour. They are not two articulations of anything. Nothing in the
 changing carries them; they are laid across it.
 
 **The written test does not exclude this case.** Cross-cutting is necessary and
-not sufficient, and what is missing is exactly the second open item in
-`specs/WHOLE.md` — what it means for one change to carry both continuities.
+not sufficient, and what is missing is exactly O2 in `specs/ARTICULATION.md` — what it means
+for one change to carry both continuities.
 
 Until that is answered, ≡ can be refused for nesting and for type, and cannot
 be refused for arbitrariness.

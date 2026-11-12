@@ -1,6 +1,6 @@
 # Notes
 
-Working notes, not theory. Nothing here is authoritative; `specs/WHOLE.md`
+Working notes, not theory. Nothing here is authoritative; `specs/ARTICULATION.md`
 governs. Each note says which open item it bears on and what it does **not**
 establish.
 
@@ -75,7 +75,7 @@ label is.
 
 ## Carrying cannot be another relation
 
-*Bears on: open item 2 — what it is for one change to carry both continuities.*
+*Bears on: O2 — what it is for one change to carry both continuities.*
 
 Suppose carrying were a relation among occurrences. It would then sit alongside
 the two continuities as a third relation, and we would immediately owe an
@@ -104,7 +104,7 @@ What it names is belonging, and belonging is what carrying names.
 
 ## Disentanglement meets the same wall
 
-*Bears on: open item 2.*
+*Bears on: O2.*
 
 **Checked.** Locatello et al., *Challenging Common Assumptions in the
 Unsupervised Learning of Disentangled Representations*, ICML 2019. The
@@ -116,7 +116,7 @@ accompanied by a study of over 12,000 trained models.
 <https://proceedings.mlr.press/v97/locatello19a.html>
 
 In this vocabulary: **cross-cutting relations over a collection do not determine
-which are carried.** That is open item 2, proven unanswerable in a special case.
+which are carried.** That is O2, proven unanswerable in a special case.
 
 **Not checked, and a separate claim.** That what breaks the impossibility is
 interventional or temporal structure — data in which one factor can be varied
@@ -126,7 +126,7 @@ supervision must be made explicit. The interventional route belongs to
 subsequent literature which has not been read here. The two must not be run
 together, because the first is checked and the second is not.
 
-If the second does hold, it converges on what `specs/WHOLE.md` already demands:
+If the second does hold, it converges on what `specs/ARTICULATION.md` already demands:
 occurrences in a *changing*, not items in a set. The demand for a changing would
 then be doing more work than it looks like — the same constraint reached
 independently elsewhere, for the same reason. It would also fit the regress note
@@ -154,7 +154,7 @@ of this gap have been wrong. Treat as a lead.
 
 ## A part is a persistence
 
-*Bears on: vocabulary; possibly open item 2.*
+*Bears on: vocabulary; possibly O2.*
 
 *A is a part of B* when A's sameness persists through B's changing. Nobody has
 to be watching. A part is then not a piece a whole is made from but a
