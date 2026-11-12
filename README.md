@@ -1,5 +1,7 @@
 # TSC
 
+> **The theory has moved.** The conceptual reset that began on the `tsc-reset` branch continues as *Identity in Changing Wholes* (ICW) at [usurobor/icw](https://github.com/usurobor/icw). This repository holds the earlier runtime and measurement framework, which is not continued.
+
 TSC is a framework for deciding whether several observations can be explained by one lawful process, while preserving the evidence, the alternative explanations, and the questions left unresolved.
 
 It returns a proof-carrying receipt — not a single score — so a coherence decision can be inspected, disputed, and traced back to its evidence.
